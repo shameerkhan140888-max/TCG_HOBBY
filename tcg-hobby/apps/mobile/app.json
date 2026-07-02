@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "TCG Hobby",
+    "slug": "tcg-hobby",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "tcghobby",
+    "userInterfaceStyle": "dark"
+  }
+}

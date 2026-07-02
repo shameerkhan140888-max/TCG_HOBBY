@@ -1,0 +1,34 @@
+# TCG Hobby
+
+TCG Hobby is a Turborepo monorepo for a premium trading card game commerce platform.
+
+## Workspaces
+
+- `apps/storefront`: Next.js 15 customer storefront.
+- `apps/admin`: Next.js 15 admin portal.
+- `apps/api`: NestJS API.
+- `apps/mobile`: React Native Expo mobile app.
+- `packages/auth`: shared authorization helpers.
+- `packages/config`: shared TypeScript and Tailwind configuration.
+- `packages/database`: Prisma schema and database client boundary.
+- `packages/types`: shared API and domain-facing TypeScript types.
+- `packages/ui`: shadcn/ui-style Tailwind React primitives.
+- `packages/utils`: shared utility functions.
+
+## Verification
+
+Run these commands from this folder:
+
+```bash
+npm install
+npm run db:generate
+npm run typecheck
+npm run test
+npm run build
+```
+
+## Infrastructure
+
+- PostgreSQL is defined in `docker-compose.yml`.
+- CI is defined in `.github/workflows/ci.yml`.
+- Docker verification image is defined in `docker/Dockerfile`.

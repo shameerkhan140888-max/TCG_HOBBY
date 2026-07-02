@@ -1,0 +1,22 @@
+{
+  "name": "@tcg-hobby/database",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "db:generate": "prisma generate",
+    "lint": "prisma validate && tsc -p tsconfig.json --noEmit",
+    "test": "prisma validate",
+    "typecheck": "prisma validate && tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.10.1"
+  },
+  "devDependencies": {
+    "@tcg-hobby/config": "*",
+    "prisma": "^6.10.1"
+  }
+}
