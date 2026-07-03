@@ -1,6 +1,12 @@
 export { Button, buttonVariants } from './button';
 export type { ButtonProps } from './button';
+export { Badge } from './badge';
+export type { BadgeProps } from './badge';
+export { Breadcrumbs } from './breadcrumbs';
+export type { BreadcrumbItem, BreadcrumbsProps } from './breadcrumbs';
 export { Card, CardContent, CardHeader, CardTitle } from './card';
+export { EmptyState, Pagination, Price, ProductCard, ProductDetailHero } from './commerce';
+export type { EmptyStateProps, PaginationProps, PriceProps, ProductCardProps, ProductDetailHeroProps } from './commerce';
 export { Input } from './input';
 export type { InputProps } from './input';
 export { Container, PageShell, Section, SplitLayout, Stack } from './layout';

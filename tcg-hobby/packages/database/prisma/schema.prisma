@@ -13,12 +13,30 @@ enum UserRole {
   ADMIN
 }
 
-enum ProductCategory {
+enum ProductCondition {
+  MINT
+  NEAR_MINT
+  LIGHTLY_PLAYED
+  MODERATELY_PLAYED
+  HEAVILY_PLAYED
+  DAMAGED
   SEALED
-  SINGLE
-  ACCESSORY
-  SUPPLY
-  EVENT_ENTRY
+}
+
+enum CartStatus {
+  ACTIVE
+  ABANDONED
+  CONVERTED
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PAID
+  FULFILLING
+  SHIPPED
+  CANCELLED
+  REFUNDED
 }
 
 model User {
@@ -28,23 +46,61 @@ model User {
   role      UserRole @default(CUSTOMER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  cart      Cart?
   orders    Order[]
 }
 
-model Product {
-  id          String          @id @default(cuid())
-  sku         String          @unique
+model Category {
+  id          String    @id @default(cuid())
   name        String
-  slug        String          @unique
-  game        String
-  category    ProductCategory
-  priceMinor  Int
-  currency    String          @default("GBP")
-  published   Boolean         @default(false)
-  inventory   InventoryItem?
-  orderLines  OrderLine[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  slug        String    @unique
+  description String
+  sortOrder   Int       @default(0)
+  imageLabel  String
+  products    Product[]
+}
+
+model Supplier {
+  id              String            @id @default(cuid())
+  name            String
+  slug            String            @unique
+  email           String?
+  website         String?
+  active          Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  supplierProducts SupplierProduct[]
+}
+
+model Product {
+  id            String           @id @default(cuid())
+  sku           String           @unique
+  slug          String           @unique
+  name          String
+  game          String
+  setName       String?
+  description   String
+  longDescription String
+  condition     ProductCondition @default(SEALED)
+  priceMinor    Int
+  currency      String           @default("GBP")
+  featured      Boolean          @default(false)
+  published     Boolean          @default(true)
+  searchText    String
+  imageLabel    String
+  categoryId    String
+  category      Category         @relation(fields: [categoryId], references: [id])
+  inventory     InventoryItem?
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  supplierProducts SupplierProduct[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([categoryId])
+  @@index([featured, published])
+  @@index([name])
+  @@index([searchText])
 }
 
 model InventoryItem {
@@ -52,27 +108,87 @@ model InventoryItem {
   productId     String   @unique
   stockOnHand   Int      @default(0)
   reservedStock Int      @default(0)
-  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  reorderPoint  Int      @default(0)
+  locationCode  String   @default("MAIN")
   updatedAt     DateTime @updatedAt
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  status    CartStatus @default(ACTIVE)
+  currency  String     @default("GBP")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+}
+
+model CartItem {
+  id             String   @id @default(cuid())
+  cartId         String
+  productId      String
+  productName    String
+  productSlug    String
+  quantity       Int
+  unitPriceMinor Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  cart           Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
 }
 
 model Order {
-  id            String      @id @default(cuid())
-  userId        String
-  subtotalMinor Int
-  totalMinor    Int
-  currency      String      @default("GBP")
-  user          User        @relation(fields: [userId], references: [id])
-  lines         OrderLine[]
-  createdAt     DateTime    @default(now())
+  id                 String      @id @default(cuid())
+  orderNumber        String      @unique
+  userId             String
+  status             OrderStatus @default(DRAFT)
+  subtotalMinor      Int
+  shippingMinor      Int
+  taxMinor           Int
+  totalMinor         Int
+  currency           String      @default("GBP")
+  shippingFullName   String
+  shippingEmail      String
+  shippingLine1      String
+  shippingLine2      String?
+  shippingCity       String
+  shippingRegion     String?
+  shippingPostalCode String
+  shippingCountry    String
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items              OrderItem[]
 }
 
-model OrderLine {
-  id             String  @id @default(cuid())
+model OrderItem {
+  id             String   @id @default(cuid())
   orderId        String
   productId      String
+  productName    String
+  productSlug    String
   quantity       Int
   unitPriceMinor Int
-  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product        Product @relation(fields: [productId], references: [id])
+  totalMinor     Int
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model SupplierProduct {
+  id             String   @id @default(cuid())
+  supplierId     String
+  productId      String
+  supplierSku    String
+  costMinor      Int
+  currency       String   @default("GBP")
+  leadTimeDays   Int      @default(7)
+  active         Boolean  @default(true)
+  supplier       Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierId, supplierSku])
 }
