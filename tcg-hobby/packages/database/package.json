@@ -10,10 +10,11 @@
     "db:generate": "node ./scripts/prisma-generate.mjs",
     "db:seed": "prisma db seed",
     "lint": "prisma validate && tsc -p tsconfig.json --noEmit",
-    "test": "vitest run && prisma validate",
+    "test": "node ./scripts/prisma-generate.mjs && vitest run && prisma validate",
     "typecheck": "prisma validate && tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@tcg-hobby/auth": "*",
     "@prisma/client": "^6.10.1"
   },
   "devDependencies": {

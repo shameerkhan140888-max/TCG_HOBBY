@@ -9,6 +9,8 @@ import {
   seedOrders,
   seedProductImages,
   seedProducts,
+  seedWishlists,
+  seedWishlistItems,
   seedSupplierProducts,
   seedSuppliers,
   seedUsers,
@@ -16,6 +18,8 @@ import {
 
 async function main() {
   await prisma.orderItem.deleteMany();
+  await prisma.wishlistItem.deleteMany();
+  await prisma.wishlist.deleteMany();
   await prisma.cartItem.deleteMany();
   await prisma.supplierProduct.deleteMany();
   await prisma.productImage.deleteMany();
@@ -32,6 +36,7 @@ async function main() {
   await prisma.address.createMany({ data: seedAddresses });
   await prisma.category.createMany({ data: seedCategories });
   await prisma.supplier.createMany({ data: seedSuppliers });
+  await prisma.wishlist.createMany({ data: seedWishlists });
 
   await prisma.product.createMany({
     data: seedProducts.map((product) => {
@@ -167,6 +172,23 @@ async function main() {
         costMinor: item.costMinor,
         currency: item.currency,
         leadTimeDays: item.leadTimeDays,
+      };
+    }),
+  });
+
+  await prisma.wishlistItem.createMany({
+    data: seedWishlistItems.map((item) => {
+      const product = seedProducts.find((entry) => entry.slug === item.productSlug);
+      const wishlist = seedWishlists.find((entry) => entry.id === item.wishlistId);
+
+      if (!product || !wishlist) {
+        throw new Error(`Missing seed relation for wishlist item ${item.id}`);
+      }
+
+      return {
+        id: item.id,
+        wishlistId: wishlist.id,
+        productId: product.id,
       };
     }),
   });

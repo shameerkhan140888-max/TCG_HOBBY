@@ -38,6 +38,30 @@ npm run dev -w @tcg-hobby/storefront
 
 Then open `http://localhost:3000/catalogue`.
 
+## Sprint 4 Identity Flow
+
+```bash
+npm run dev -w @tcg-hobby/storefront
+```
+
+Then open:
+
+- `http://localhost:3000/login`
+- `http://localhost:3000/register`
+- `http://localhost:3000/account`
+
+Seeded customer login:
+
+- Email: `sam.customer@tcghobby.test`
+- Password: `SamCollector123!`
+
+If you reset the database, rerun:
+
+```bash
+npm run db:generate
+npm run db:seed
+```
+
 ## Infrastructure
 
 - PostgreSQL is defined in `docker-compose.yml`.

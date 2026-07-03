@@ -1,45 +1,24 @@
-import { Button, Card, CardContent, Container, PageShell, Section, Badge, ProductCard, Price } from '@tcg-hobby/ui';
+import { Badge, Button, Card, CardContent, Container, PageShell, ProductCard, Price, Section, WishlistButton } from '@tcg-hobby/ui';
 import { getCatalogueHomeData } from '@tcg-hobby/database';
+import { getWishlistProductIds } from '@tcg-hobby/database';
+import { SiteHeader } from '../components/site-header';
+import { getCurrentCustomerSession } from '../lib/auth';
+import { toggleWishlistAction } from '../lib/wishlist';
 
 export const dynamic = 'force-dynamic';
 
-const navItems = [
-  { label: 'Catalogue', href: '/catalogue' },
-  { label: 'Deck Builder', href: '/catalogue?category=singles' },
-  { label: 'Buylist', href: '/catalogue?category=singles' },
-  { label: 'Events', href: '/catalogue?category=events' },
-  { label: 'Rewards', href: '/catalogue?category=accessories' },
-];
-
 export default async function HomePage() {
-  const { categories, featuredProducts } = await getCatalogueHomeData();
+  const [homeData, session] = await Promise.all([
+    getCatalogueHomeData(),
+    getCurrentCustomerSession(),
+  ]);
+  const wishlistIds = session?.user.role === 'CUSTOMER' ? await getWishlistProductIds(session.user.id) : [];
+  const { categories, featuredProducts } = homeData;
   const heroProduct = featuredProducts[0];
 
   return (
     <PageShell>
-      <header className="sticky top-0 z-20 border-b border-surface-line bg-surface-ink/90 backdrop-blur">
-        <Container className="flex h-16 items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-md border border-accent/50 bg-accent/15 text-sm font-black text-accent">TCG</div>
-            <span className="text-base font-bold tracking-wide">TCG Hobby</span>
-          </div>
-          <nav className="hidden items-center gap-6 text-sm text-neutral-300 lg:flex">
-            {navItems.map((item) => (
-              <a key={item.label} href={item.href} className="transition-colors hover:text-accent-soft">
-                {item.label}
-              </a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" className="hidden sm:inline-flex" asChild>
-              <a href="/catalogue">Sign in</a>
-            </Button>
-            <Button asChild>
-              <a href="/catalogue">Shop now</a>
-            </Button>
-          </div>
-        </Container>
-      </header>
+      <SiteHeader />
 
       <main>
         <Section className="overflow-hidden border-b border-surface-line bg-[radial-gradient(circle_at_top_right,rgba(255,122,26,0.18),transparent_34%),linear-gradient(135deg,#08080a_0%,#101014_55%,#17120e_100%)] py-14 sm:py-20">
@@ -143,7 +122,21 @@ export default async function HomePage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} href={`/catalogue/${product.slug}`} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  href={`/catalogue/${product.slug}`}
+                  actionSlot={
+                    <WishlistButton
+                      productId={product.id}
+                      wishlisted={wishlistIds.includes(product.id)}
+                      authenticated={session?.user.role === 'CUSTOMER'}
+                      action={toggleWishlistAction}
+                      loginHref={`/login?callbackUrl=${encodeURIComponent('/')}`}
+                      returnTo="/"
+                    />
+                  }
+                />
               ))}
             </div>
           </Container>

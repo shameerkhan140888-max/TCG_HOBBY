@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
-import { Breadcrumbs, Button, Container, EmptyState, ProductCard, ProductDetailHero, Section } from '@tcg-hobby/ui';
-import { getCatalogueCategories, getCatalogueProductBySlug } from '@tcg-hobby/database';
+import { Breadcrumbs, Button, Container, EmptyState, ProductCard, ProductDetailHero, Section, WishlistButton } from '@tcg-hobby/ui';
+import { getCatalogueCategories, getCatalogueProductBySlug, getWishlistProductIds } from '@tcg-hobby/database';
+import { SiteHeader } from '../../../components/site-header';
+import { getCurrentCustomerSession } from '../../../lib/auth';
+import { toggleWishlistAction } from '../../../lib/wishlist';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,17 +27,24 @@ export async function generateMetadata({ params }: { params: Promise<ParamsValue
 
 export default async function ProductPage({ params }: { params: Promise<ParamsValue> }) {
   const { slug } = await params;
-  const product = await getCatalogueProductBySlug(slug);
+  const [product, session] = await Promise.all([
+    getCatalogueProductBySlug(slug),
+    getCurrentCustomerSession(),
+  ]);
+  const wishlistIds = session?.user.role === 'CUSTOMER' ? await getWishlistProductIds(session.user.id) : [];
 
   if (!product) {
     notFound();
   }
 
   const categories = await getCatalogueCategories();
+  const currentHref = `/catalogue/${slug}`;
 
   return (
-    <main className="min-h-screen bg-surface-ink text-neutral-50">
-      <Section className="border-b border-surface-line bg-surface-base/70 py-8">
+    <>
+      <SiteHeader />
+      <main className="min-h-screen bg-surface-ink text-neutral-50">
+        <Section className="border-b border-surface-line bg-surface-base/70 py-8">
         <Container className="space-y-4">
           <Breadcrumbs
             items={[
@@ -57,7 +67,19 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
       </Section>
 
       <Container className="py-8">
-        <ProductDetailHero product={product} />
+        <ProductDetailHero
+          product={product}
+          actionSlot={
+            <WishlistButton
+              productId={product.id}
+              wishlisted={wishlistIds.includes(product.id)}
+              authenticated={session?.user.role === 'CUSTOMER'}
+              action={toggleWishlistAction}
+              loginHref={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}
+              returnTo={currentHref}
+            />
+          }
+        />
 
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {categories.map((category) => (
@@ -84,7 +106,21 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
           {product.relatedProducts.length ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {product.relatedProducts.map((item) => (
-                <ProductCard key={item.id} product={item} href={`/catalogue/${item.slug}`} />
+                <ProductCard
+                  key={item.id}
+                  product={item}
+                  href={`/catalogue/${item.slug}`}
+                  actionSlot={
+                    <WishlistButton
+                      productId={item.id}
+                      wishlisted={wishlistIds.includes(item.id)}
+                      authenticated={session?.user.role === 'CUSTOMER'}
+                      action={toggleWishlistAction}
+                      loginHref={`/login?callbackUrl=${encodeURIComponent(`/catalogue/${item.slug}`)}`}
+                      returnTo={`/catalogue/${item.slug}`}
+                    />
+                  }
+                />
               ))}
             </div>
           ) : (
@@ -100,6 +136,7 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
           )}
         </Section>
       </Container>
-    </main>
+      </main>
+    </>
   );
 }

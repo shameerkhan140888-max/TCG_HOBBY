@@ -1,3 +1,4 @@
+import { hashPassword } from '@tcg-hobby/auth';
 import type { CatalogueCategory, CatalogueProduct, CatalogueProductDetail, Money } from '@tcg-hobby/types';
 
 type CategorySeed = {
@@ -22,6 +23,7 @@ type UserSeed = {
   email: string;
   name: string;
   role: 'CUSTOMER' | 'STAFF';
+  passwordHash: string;
 };
 
 type AddressSeed = {
@@ -135,6 +137,17 @@ type ProductImageSeed = {
   isPrimary: boolean;
 };
 
+type WishlistSeed = {
+  id: string;
+  userId: string;
+};
+
+type WishlistItemSeed = {
+  id: string;
+  wishlistId: string;
+  productSlug: string;
+};
+
 export const seedCategories: CategorySeed[] = [
   {
     id: 'cat-sealed',
@@ -193,12 +206,14 @@ export const seedUsers: UserSeed[] = [
     email: 'sam.customer@tcghobby.test',
     name: 'Sam Collector',
     role: 'CUSTOMER',
+    passwordHash: hashPassword('SamCollector123!'),
   },
   {
     id: 'user-staff-ops',
     email: 'ops@tcghobby.test',
     name: 'Operations Desk',
     role: 'STAFF',
+    passwordHash: hashPassword('OpsDesk123!'),
   },
 ];
 
@@ -554,6 +569,26 @@ export const seedProductImages: ProductImageSeed[] = seedProducts.flatMap((produ
     },
   ];
 });
+
+export const seedWishlists: WishlistSeed[] = [
+  {
+    id: 'wishlist-sam',
+    userId: 'user-customer-sam',
+  },
+];
+
+export const seedWishlistItems: WishlistItemSeed[] = [
+  {
+    id: 'wishlist-item-arcane',
+    wishlistId: 'wishlist-sam',
+    productSlug: 'arcane-booster-box',
+  },
+  {
+    id: 'wishlist-item-sleeves',
+    wishlistId: 'wishlist-sam',
+    productSlug: 'matte-black-dragon-shield-sleeves',
+  },
+];
 
 export function isCatalogueProductVisible(product: ProductSeed): boolean {
   return product.published;

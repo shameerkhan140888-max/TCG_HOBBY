@@ -8,3 +8,11 @@ export {
   getCatalogueProducts,
   getFeaturedCatalogueProducts,
 } from './catalogue';
+export {
+  addProductToWishlist,
+  getWishlistItems,
+  getWishlistProductIds,
+  isProductWishlisted,
+  removeProductFromWishlist,
+  toggleWishlistItem,
+} from './wishlist';

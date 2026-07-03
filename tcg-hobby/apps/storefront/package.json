@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@tcg-hobby/auth": "*",
     "@tcg-hobby/database": "*",
     "@tcg-hobby/types": "*",
     "@tcg-hobby/utils": "*",

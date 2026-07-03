@@ -1,5 +1,15 @@
 export { Button, buttonVariants } from './button';
 export type { ButtonProps } from './button';
+export {
+  AccountNav,
+  AccountShell,
+  AuthCard,
+  ErrorMessage,
+  FormField,
+  UserMenu,
+  WishlistButton,
+} from './auth';
+export type { AccountNavItem, AccountNavProps, AccountShellProps, AuthCardProps, FormFieldProps, UserMenuProps, WishlistButtonProps } from './auth';
 export { Badge } from './badge';
 export type { BadgeProps } from './badge';
 export { Breadcrumbs } from './breadcrumbs';

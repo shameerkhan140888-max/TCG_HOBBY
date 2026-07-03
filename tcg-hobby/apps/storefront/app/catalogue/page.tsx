@@ -1,6 +1,9 @@
-import { Button, Container, EmptyState, Input, Pagination, ProductCard } from '@tcg-hobby/ui';
-import { getCatalogueProducts } from '@tcg-hobby/database';
+import { Button, Container, EmptyState, Input, Pagination, ProductCard, WishlistButton } from '@tcg-hobby/ui';
+import { getCatalogueProducts, getWishlistProductIds } from '@tcg-hobby/database';
 import type { CatalogueSort } from '@tcg-hobby/types';
+import { SiteHeader } from '../../components/site-header';
+import { getCurrentCustomerSession } from '../../lib/auth';
+import { toggleWishlistAction } from '../../lib/wishlist';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,18 +49,25 @@ export default async function CataloguePage({
   const category = asString(params.category);
   const sort = asSort(asString(params.sort));
   const page = Math.max(Number(asString(params.page) || '1') || 1, 1);
+  const currentHref = createHref({ search, category, sort, page });
 
-  const data = await getCatalogueProducts({
-    search,
-    category,
-    sort,
-    page,
-    pageSize,
-  });
+  const [data, session] = await Promise.all([
+    getCatalogueProducts({
+      search,
+      category,
+      sort,
+      page,
+      pageSize,
+    }),
+    getCurrentCustomerSession(),
+  ]);
+  const wishlistIds = session?.user.role === 'CUSTOMER' ? await getWishlistProductIds(session.user.id) : [];
 
   return (
-    <main className="min-h-screen bg-surface-ink text-neutral-50">
-      <section className="border-b border-surface-line bg-surface-base/80">
+    <>
+      <SiteHeader />
+      <main className="min-h-screen bg-surface-ink text-neutral-50">
+        <section className="border-b border-surface-line bg-surface-base/80">
         <Container className="py-8 sm:py-10">
           <div className="space-y-3">
             <p className="text-sm font-semibold uppercase tracking-wide text-accent">Catalogue</p>
@@ -113,7 +123,21 @@ export default async function CataloguePage({
           <>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {data.products.map((product) => (
-                <ProductCard key={product.id} product={product} href={`/catalogue/${product.slug}`} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  href={`/catalogue/${product.slug}`}
+                  actionSlot={
+                    <WishlistButton
+                      productId={product.id}
+                      wishlisted={wishlistIds.includes(product.id)}
+                      authenticated={session?.user.role === 'CUSTOMER'}
+                      action={toggleWishlistAction}
+                      loginHref={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}
+                      returnTo={currentHref}
+                    />
+                  }
+                />
               ))}
             </div>
             <div className="mt-8">
@@ -134,6 +158,7 @@ export default async function CataloguePage({
           </div>
         )}
       </Container>
-    </main>
+      </main>
+    </>
   );
 }

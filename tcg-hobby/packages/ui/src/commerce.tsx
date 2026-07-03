@@ -29,13 +29,14 @@ export function Price({ value, label, className, ...props }: PriceProps) {
 export type ProductCardProps = HTMLAttributes<HTMLDivElement> & {
   product: CatalogueProduct;
   href: string;
+  actionSlot?: ReactNode;
 };
 
-export function ProductCard({ product, href, className, ...props }: ProductCardProps) {
+export function ProductCard({ product, href, actionSlot, className, ...props }: ProductCardProps) {
   return (
     <Card className={cn('group h-full overflow-hidden transition-colors hover:border-accent/60', className)} {...props}>
-      <a className="flex h-full flex-col" href={href}>
-        <CardContent className="flex h-full flex-col gap-4">
+      <CardContent className="flex h-full flex-col gap-4">
+        <a className="flex h-full flex-col gap-4" href={href}>
           <div className="aspect-[5/4] rounded-md border border-surface-line bg-gradient-to-br from-surface-panel via-surface-ink to-accent/20 p-4 transition-transform group-hover:scale-[1.01]">
             <div className="flex h-full flex-col justify-between">
               <div className="flex items-center justify-between gap-3">
@@ -52,15 +53,20 @@ export function ProductCard({ product, href, className, ...props }: ProductCardP
             <h3 className="min-h-14 text-lg font-bold leading-7 text-neutral-50">{product.name}</h3>
             <p className="line-clamp-3 text-sm leading-6 text-neutral-400">{product.description}</p>
           </div>
-          <div className="mt-auto flex items-end justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-neutral-500">{product.categoryName}</p>
-              <Price value={product.price} />
-            </div>
-            <span className={buttonVariants({ variant: 'secondary', size: 'sm' })}>View</span>
+        </a>
+        <div className="mt-auto flex items-end justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-neutral-500">{product.categoryName}</p>
+            <Price value={product.price} />
           </div>
-        </CardContent>
-      </a>
+          <div className="flex items-center gap-2">
+            {actionSlot}
+            <Button asChild size="sm" variant="secondary">
+              <a href={href}>View</a>
+            </Button>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 }
@@ -137,9 +143,10 @@ export function Pagination({ meta, hrefForPage, className, ...props }: Paginatio
 
 export type ProductDetailHeroProps = HTMLAttributes<HTMLDivElement> & {
   product: CatalogueProductDetail;
+  actionSlot?: ReactNode;
 };
 
-export function ProductDetailHero({ product, className, ...props }: ProductDetailHeroProps) {
+export function ProductDetailHero({ product, actionSlot, className, ...props }: ProductDetailHeroProps) {
   return (
     <Card className={cn('overflow-hidden', className)} {...props}>
       <CardContent className="grid gap-6 p-0 lg:grid-cols-[1.1fr_0.9fr]">
@@ -185,7 +192,10 @@ export function ProductDetailHero({ product, className, ...props }: ProductDetai
               <p className="text-xs uppercase tracking-wide text-neutral-500">Price</p>
               <p className="text-2xl font-black text-accent-soft">{formatMoney(product.price)}</p>
             </div>
-            <Button>Add to cart</Button>
+            <div className="flex items-center gap-2">
+              {actionSlot}
+              <Button disabled>Add to cart</Button>
+            </div>
           </div>
         </div>
       </CardContent>
