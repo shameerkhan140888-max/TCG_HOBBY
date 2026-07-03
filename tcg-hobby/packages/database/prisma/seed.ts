@@ -1,11 +1,13 @@
 import { prisma } from '../src/client';
 import {
+  seedAddresses,
   seedCategories,
   seedCartItems,
   seedCarts,
   seedInventory,
   seedOrderItems,
   seedOrders,
+  seedProductImages,
   seedProducts,
   seedSupplierProducts,
   seedSuppliers,
@@ -16,8 +18,10 @@ async function main() {
   await prisma.orderItem.deleteMany();
   await prisma.cartItem.deleteMany();
   await prisma.supplierProduct.deleteMany();
+  await prisma.productImage.deleteMany();
   await prisma.order.deleteMany();
   await prisma.cart.deleteMany();
+  await prisma.address.deleteMany();
   await prisma.inventoryItem.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
@@ -25,6 +29,7 @@ async function main() {
   await prisma.user.deleteMany();
 
   await prisma.user.createMany({ data: seedUsers });
+  await prisma.address.createMany({ data: seedAddresses });
   await prisma.category.createMany({ data: seedCategories });
   await prisma.supplier.createMany({ data: seedSuppliers });
 
@@ -72,6 +77,26 @@ async function main() {
         reservedStock: inventory.reservedStock,
         reorderPoint: inventory.reorderPoint,
         locationCode: inventory.locationCode,
+      };
+    }),
+  });
+
+  await prisma.productImage.createMany({
+    data: seedProductImages.map((image) => {
+      const product = seedProducts.find((entry) => entry.slug === image.productSlug);
+
+      if (!product) {
+        throw new Error(`Missing product for image ${image.id}`);
+      }
+
+      return {
+        id: image.id,
+        productId: product.id,
+        url: image.url,
+        altText: image.altText,
+        imageType: image.imageType,
+        sortOrder: image.sortOrder,
+        isPrimary: image.isPrimary,
       };
     }),
   });

@@ -2,6 +2,8 @@ import { Button, Container, EmptyState, Input, Pagination, ProductCard } from '@
 import { getCatalogueProducts } from '@tcg-hobby/database';
 import type { CatalogueSort } from '@tcg-hobby/types';
 
+export const dynamic = 'force-dynamic';
+
 type SearchParamsValue = Record<string, string | string[] | undefined>;
 
 const pageSize = 4;
@@ -22,24 +24,24 @@ function asSort(value: string | undefined): CatalogueSort {
   return 'featured';
 }
 
-function createHref(baseParams: URLSearchParams, page: number) {
-  const params = new URLSearchParams(baseParams);
-  if (page <= 1) {
-    params.delete('page');
-  } else {
-    params.set('page', String(page));
-  }
+function createHref(params: { search: string; category: string; sort: CatalogueSort; page: number }) {
+  const query = new URLSearchParams();
 
-  const query = params.toString();
-  return query ? `/catalogue?${query}` : '/catalogue';
+  if (params.search) query.set('q', params.search);
+  if (params.category) query.set('category', params.category);
+  if (params.sort !== 'featured') query.set('sort', params.sort);
+  if (params.page > 1) query.set('page', String(params.page));
+
+  const queryString = query.toString();
+  return queryString ? `/catalogue?${queryString}` : '/catalogue';
 }
 
 export default async function CataloguePage({
   searchParams,
 }: {
-  searchParams?: SearchParamsValue | Promise<SearchParamsValue>;
+  searchParams: Promise<SearchParamsValue>;
 }) {
-  const params = (await Promise.resolve(searchParams ?? {})) ?? {};
+  const params = (await searchParams) ?? {};
   const search = asString(params.q);
   const category = asString(params.category);
   const sort = asSort(asString(params.sort));
@@ -52,11 +54,6 @@ export default async function CataloguePage({
     page,
     pageSize,
   });
-
-  const baseParams = new URLSearchParams();
-  if (search) baseParams.set('q', search);
-  if (category) baseParams.set('category', category);
-  if (sort !== 'featured') baseParams.set('sort', sort);
 
   return (
     <main className="min-h-screen bg-surface-ink text-neutral-50">
@@ -91,11 +88,11 @@ export default async function CataloguePage({
 
         <div className="mt-5 flex flex-wrap gap-2">
           <Button asChild size="sm" variant={category ? 'outline' : 'primary'}>
-            <a href={createHref(baseParams, 1)}>All</a>
+            <a href={createHref({ search, category: '', sort, page: 1 })}>All</a>
           </Button>
           {data.categories.map((item) => (
             <Button key={item.slug} asChild size="sm" variant={category === item.slug ? 'primary' : 'outline'}>
-              <a href={createHref(new URLSearchParams({ ...Object.fromEntries(baseParams.entries()), category: item.slug }), 1)}>{item.name}</a>
+              <a href={createHref({ search, category: item.slug, sort, page: 1 })}>{item.name}</a>
             </Button>
           ))}
         </div>
@@ -120,7 +117,7 @@ export default async function CataloguePage({
               ))}
             </div>
             <div className="mt-8">
-              <Pagination meta={data.pagination} hrefForPage={(nextPage) => createHref(baseParams, nextPage)} />
+              <Pagination meta={data.pagination} hrefForPage={(nextPage) => createHref({ search, category, sort, page: nextPage })} />
             </div>
           </>
         ) : (

@@ -27,6 +27,17 @@ npm run test
 npm run build
 ```
 
+## Sprint 3 Local Commerce Flow
+
+```bash
+docker compose up -d
+npm run db:generate
+npm run db:seed
+npm run dev -w @tcg-hobby/storefront
+```
+
+Then open `http://localhost:3000/catalogue`.
+
 ## Infrastructure
 
 - PostgreSQL is defined in `docker-compose.yml`.

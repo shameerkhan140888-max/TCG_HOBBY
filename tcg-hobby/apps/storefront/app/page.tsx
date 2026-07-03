@@ -1,6 +1,8 @@
 import { Button, Card, CardContent, Container, PageShell, Section, Badge, ProductCard, Price } from '@tcg-hobby/ui';
 import { getCatalogueHomeData } from '@tcg-hobby/database';
 
+export const dynamic = 'force-dynamic';
+
 const navItems = [
   { label: 'Catalogue', href: '/catalogue' },
   { label: 'Deck Builder', href: '/catalogue?category=singles' },

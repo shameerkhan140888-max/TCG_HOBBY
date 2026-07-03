@@ -24,6 +24,19 @@ type UserSeed = {
   role: 'CUSTOMER' | 'STAFF';
 };
 
+type AddressSeed = {
+  id: string;
+  userId: string | null;
+  fullName: string;
+  email: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  region: string | null;
+  postalCode: string;
+  country: string;
+};
+
 type ProductSeed = {
   id: string;
   sku: string;
@@ -88,6 +101,7 @@ type OrderSeed = {
   shippingRegion: string | null;
   shippingPostalCode: string;
   shippingCountry: string;
+  shippingAddressId: string | null;
 };
 
 type OrderItemSeed = {
@@ -109,6 +123,16 @@ type SupplierProductSeed = {
   costMinor: number;
   currency: Money['currency'];
   leadTimeDays: number;
+};
+
+type ProductImageSeed = {
+  id: string;
+  productSlug: string;
+  url: string;
+  altText: string;
+  imageType: string;
+  sortOrder: number;
+  isPrimary: boolean;
 };
 
 export const seedCategories: CategorySeed[] = [
@@ -175,6 +199,33 @@ export const seedUsers: UserSeed[] = [
     email: 'ops@tcghobby.test',
     name: 'Operations Desk',
     role: 'STAFF',
+  },
+];
+
+export const seedAddresses: AddressSeed[] = [
+  {
+    id: 'addr-sam-home',
+    userId: 'user-customer-sam',
+    fullName: 'Sam Collector',
+    email: 'sam.customer@tcghobby.test',
+    line1: '14 Aurora Street',
+    line2: null,
+    city: 'Bristol',
+    region: null,
+    postalCode: 'BS1 4TR',
+    country: 'GB',
+  },
+  {
+    id: 'addr-order-1001',
+    userId: 'user-customer-sam',
+    fullName: 'Sam Collector',
+    email: 'sam.customer@tcghobby.test',
+    line1: '14 Aurora Street',
+    line2: null,
+    city: 'Bristol',
+    region: null,
+    postalCode: 'BS1 4TR',
+    country: 'GB',
   },
 ];
 
@@ -440,6 +491,7 @@ export const seedOrders: OrderSeed[] = [
     shippingRegion: null,
     shippingPostalCode: 'BS1 4TR',
     shippingCountry: 'GB',
+    shippingAddressId: 'addr-order-1001',
   },
 ];
 
@@ -478,6 +530,30 @@ export const seedSupplierProducts: SupplierProductSeed[] = [
   { id: 'sp-friday', supplierSlug: 'card-citadel', productSlug: 'friday-night-magic-entry', supplierSku: 'CC-EVT-009', costMinor: 250, currency: 'GBP', leadTimeDays: 2 },
   { id: 'sp-prerelease', supplierSlug: 'gamegrid-wholesale', productSlug: 'pre-release-bundle', supplierSku: 'GG-EVT-010', costMinor: 1200, currency: 'GBP', leadTimeDays: 2 },
 ];
+
+export const seedProductImages: ProductImageSeed[] = seedProducts.flatMap((product) => {
+  const baseUrl = `https://images.tcghobby.test/products/${product.slug}`;
+  return [
+    {
+      id: `img-${product.slug}-primary`,
+      productSlug: product.slug,
+      url: `${baseUrl}/primary.jpg`,
+      altText: `${product.name} primary image`,
+      imageType: 'gallery',
+      sortOrder: 1,
+      isPrimary: true,
+    },
+    {
+      id: `img-${product.slug}-secondary`,
+      productSlug: product.slug,
+      url: `${baseUrl}/secondary.jpg`,
+      altText: `${product.name} secondary image`,
+      imageType: 'gallery',
+      sortOrder: 2,
+      isPrimary: false,
+    },
+  ];
+});
 
 export function isCatalogueProductVisible(product: ProductSeed): boolean {
   return product.published;
@@ -535,6 +611,6 @@ export function toCatalogueProductDetail(
     searchText: seed.searchText,
     supplierSku: supplierProduct?.supplierSku ?? `${seed.sku}-SEED`,
     leadTimeDays: supplierProduct?.leadTimeDays ?? 5,
-    relatedProductIds: [],
+    relatedProducts: [],
   };
 }

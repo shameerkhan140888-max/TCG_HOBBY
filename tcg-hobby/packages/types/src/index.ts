@@ -68,7 +68,7 @@ export type CatalogueProductDetail = CatalogueProduct & {
   searchText: string;
   supplierSku: string;
   leadTimeDays: number;
-  relatedProductIds: string[];
+  relatedProducts: CatalogueProduct[];
 };
 
 export type ProductSummary = {

@@ -1,11 +1,13 @@
 import { notFound } from 'next/navigation';
-import { Breadcrumbs, Button, Container, ProductCard, ProductDetailHero, Section } from '@tcg-hobby/ui';
-import { getCatalogueCategories, getCatalogueProductBySlug, getCatalogueProducts } from '@tcg-hobby/database';
+import { Breadcrumbs, Button, Container, EmptyState, ProductCard, ProductDetailHero, Section } from '@tcg-hobby/ui';
+import { getCatalogueCategories, getCatalogueProductBySlug } from '@tcg-hobby/database';
+
+export const dynamic = 'force-dynamic';
 
 type ParamsValue = { slug: string };
 
-export async function generateMetadata({ params }: { params: ParamsValue | Promise<ParamsValue> }) {
-  const { slug } = await Promise.resolve(params);
+export async function generateMetadata({ params }: { params: Promise<ParamsValue> }) {
+  const { slug } = await params;
   const product = await getCatalogueProductBySlug(slug);
 
   if (!product) {
@@ -20,8 +22,8 @@ export async function generateMetadata({ params }: { params: ParamsValue | Promi
   };
 }
 
-export default async function ProductPage({ params }: { params: ParamsValue | Promise<ParamsValue> }) {
-  const { slug } = await Promise.resolve(params);
+export default async function ProductPage({ params }: { params: Promise<ParamsValue> }) {
+  const { slug } = await params;
   const product = await getCatalogueProductBySlug(slug);
 
   if (!product) {
@@ -29,13 +31,6 @@ export default async function ProductPage({ params }: { params: ParamsValue | Pr
   }
 
   const categories = await getCatalogueCategories();
-  const related = await getCatalogueProducts({
-    search: '',
-    category: product.categorySlug,
-    sort: 'featured',
-    page: 1,
-    pageSize: 4,
-  });
 
   return (
     <main className="min-h-screen bg-surface-ink text-neutral-50">
@@ -86,14 +81,23 @@ export default async function ProductPage({ params }: { params: ParamsValue | Pr
               <a href={`/catalogue?category=${product.categorySlug}`}>Browse category</a>
             </Button>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {related.products
-              .filter((item) => item.slug !== product.slug)
-              .slice(0, 4)
-              .map((item) => (
+          {product.relatedProducts.length ? (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {product.relatedProducts.map((item) => (
                 <ProductCard key={item.id} product={item} href={`/catalogue/${item.slug}`} />
               ))}
-          </div>
+            </div>
+          ) : (
+            <EmptyState
+              title="No related products yet"
+              description="This product is seeded, but its companion catalogue items are not available right now."
+              action={
+                <Button asChild>
+                  <a href={`/catalogue?category=${product.categorySlug}`}>Browse category</a>
+                </Button>
+              }
+            />
+          )}
         </Section>
       </Container>
     </main>

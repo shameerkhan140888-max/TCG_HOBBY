@@ -1,4 +1,3 @@
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import type { ProductSummary } from '@tcg-hobby/types';
 
@@ -19,7 +18,6 @@ export default function App() {
         <Text style={styles.title}>Mobile companion</Text>
         <Text style={styles.copy}>{featured.name} is ready for catalogue, wishlist, and collection workflows.</Text>
       </View>
-      <StatusBar style="light" />
     </SafeAreaView>
   );
 }

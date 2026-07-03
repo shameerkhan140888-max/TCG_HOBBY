@@ -46,8 +46,29 @@ model User {
   role      UserRole @default(CUSTOMER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  addresses Address[]
   cart      Cart?
   orders    Order[]
+}
+
+model Address {
+  id           String   @id @default(cuid())
+  userId       String?
+  fullName     String
+  email        String
+  line1        String
+  line2        String?
+  city         String
+  region       String?
+  postalCode   String
+  country      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shippingOrders Order[] @relation("ShippingAddress")
+
+  @@index([userId, country])
+  @@index([postalCode, city])
 }
 
 model Category {
@@ -91,16 +112,33 @@ model Product {
   categoryId    String
   category      Category         @relation(fields: [categoryId], references: [id])
   inventory     InventoryItem?
+  images        ProductImage[]
   cartItems     CartItem[]
   orderItems    OrderItem[]
   supplierProducts SupplierProduct[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
-  @@index([categoryId])
-  @@index([featured, published])
+  @@index([categoryId, published])
+  @@index([published, featured])
   @@index([name])
   @@index([searchText])
+}
+
+model ProductImage {
+  id         String   @id @default(cuid())
+  productId  String
+  url        String
+  altText    String
+  imageType  String   @default("gallery")
+  sortOrder  Int      @default(0)
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, isPrimary])
+  @@index([productId, sortOrder])
 }
 
 model InventoryItem {
@@ -112,6 +150,9 @@ model InventoryItem {
   locationCode  String   @default("MAIN")
   updatedAt     DateTime @updatedAt
   product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([stockOnHand, reservedStock])
+  @@index([reorderPoint, locationCode])
 }
 
 model Cart {
@@ -159,10 +200,15 @@ model Order {
   shippingRegion     String?
   shippingPostalCode String
   shippingCountry    String
+  shippingAddressId  String?
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
   user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shippingAddress    Address?    @relation("ShippingAddress", fields: [shippingAddressId], references: [id], onDelete: SetNull)
   items              OrderItem[]
+
+  @@index([userId, status])
+  @@index([status, createdAt])
 }
 
 model OrderItem {

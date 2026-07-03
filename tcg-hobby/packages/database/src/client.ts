@@ -6,8 +6,14 @@ type PrismaGlobal = typeof globalThis & {
 
 const globalForPrisma = globalThis as PrismaGlobal;
 
+function createDatabaseUnavailableError() {
+  return new Error(
+    'Database client unavailable. Run `prisma generate` and ensure the production environment has a valid Prisma client before starting the app.',
+  );
+}
+
 function createFallbackClient() {
-  const error = new Error('@prisma/client did not initialize. Run `prisma generate` before using the database client.');
+  const error = createDatabaseUnavailableError();
 
   const modelProxy = new Proxy(
     {},
@@ -40,6 +46,10 @@ function createPrismaClient() {
       log: ['error', 'warn'],
     });
   } catch {
+    if (process.env.NODE_ENV === 'production') {
+      throw createDatabaseUnavailableError();
+    }
+
     return createFallbackClient();
   }
 }
