@@ -10,7 +10,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@tcg-hobby/auth": "*",
     "@tcg-hobby/ui": "*",
     "next": "^15.3.4",
     "react": "^19.0.0",

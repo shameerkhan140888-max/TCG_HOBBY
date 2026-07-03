@@ -1,13 +1,8 @@
 import type { Config } from 'tailwindcss';
+import preset from '../../packages/config/tailwind.preset';
 
 export default {
+  presets: [preset],
   content: ['./app/**/*.{ts,tsx}', '../../packages/ui/src/**/*.{ts,tsx}'],
-  theme: {
-    extend: {
-      colors: {
-        accent: '#ff7a1a',
-      },
-    },
-  },
   plugins: [],
 } satisfies Config;
