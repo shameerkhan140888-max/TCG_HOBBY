@@ -1,4 +1,4 @@
-import { Button, Container, UserMenu } from '@tcg-hobby/ui';
+import { BrandMark, Button, Container, UserMenu } from '@tcg-hobby/ui';
 import { getCurrentCustomerSession } from '../lib/auth';
 import { logoutCustomerAction } from '../lib/auth-actions';
 
@@ -17,7 +17,7 @@ export async function SiteHeader() {
       <Container className="flex min-h-16 flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center justify-between gap-4">
           <a href="/" className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-md border border-accent/50 bg-accent/15 text-sm font-black text-accent">TCG</div>
+            <BrandMark className="h-10 w-10 rounded-md border border-surface-line bg-black/60 p-1" />
             <span className="text-base font-bold tracking-wide">TCG Hobby</span>
           </a>
           <div className="flex items-center gap-2 lg:hidden">

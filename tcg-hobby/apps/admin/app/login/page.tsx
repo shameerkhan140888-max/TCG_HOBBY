@@ -1,4 +1,4 @@
-import { Button, Card, CardContent, Input, PageShell } from '@tcg-hobby/ui';
+import { BrandMark, Button, Card, CardContent, Input, PageShell } from '@tcg-hobby/ui';
 
 export default function LoginPage() {
   return (
@@ -6,7 +6,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-glow">
         <CardContent className="space-y-6 p-6">
           <div className="space-y-2 text-center">
-            <div className="mx-auto grid h-12 w-12 place-items-center rounded-md border border-accent/50 bg-accent/15 text-sm font-black text-accent">TCG</div>
+            <BrandMark className="mx-auto h-20 w-20 rounded-md border border-surface-line bg-black/60 p-2" />
             <h1 className="text-2xl font-bold">Admin sign in</h1>
             <p className="text-sm text-neutral-400">UI only placeholder for the future staff authentication flow.</p>
           </div>

@@ -1,4 +1,5 @@
 import type { FormHTMLAttributes, HTMLAttributes, ReactNode } from 'react';
+import { BrandMark } from './brand-mark';
 import { Button } from './button';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { cn } from './lib/cn';
@@ -185,7 +186,7 @@ export function AccountShell({ sidebarTitle, sidebarSubtitle, sidebar, className
     <div className={cn('grid min-h-screen bg-surface-ink text-neutral-50 lg:grid-cols-[280px_1fr]', className)} {...props}>
       <aside className="border-r border-surface-line bg-surface-base p-5">
         <div className="mb-8">
-          <div className="grid h-10 w-10 place-items-center rounded-md border border-accent/50 bg-accent/15 text-sm font-black text-accent">TCG</div>
+          <BrandMark className="h-12 w-12 rounded-md border border-surface-line bg-black/60 p-1.5" />
           <p className="mt-4 text-lg font-bold">{sidebarTitle}</p>
           {sidebarSubtitle ? <p className="text-sm text-neutral-500">{sidebarSubtitle}</p> : null}
         </div>

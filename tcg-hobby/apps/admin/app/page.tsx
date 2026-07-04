@@ -1,4 +1,4 @@
-import { Button, Card, CardContent, CardHeader, CardTitle, Container, SplitLayout } from '@tcg-hobby/ui';
+import { BrandMark, Button, Card, CardContent, CardHeader, CardTitle, Container, SplitLayout } from '@tcg-hobby/ui';
 
 const sidebarItems = ['Dashboard', 'Catalogue', 'Inventory', 'Suppliers', 'Orders', 'CMS', 'Tournaments'];
 const metrics = [
@@ -12,7 +12,7 @@ function Sidebar() {
   return (
     <aside className="hidden bg-surface-ink p-5 lg:block">
       <div className="mb-8 flex items-center gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-md border border-accent/50 bg-accent/15 text-sm font-black text-accent">TCG</div>
+        <BrandMark className="h-10 w-10 rounded-md border border-surface-line bg-black/60 p-1" />
         <div>
           <p className="font-bold">TCG Hobby</p>
           <p className="text-xs text-neutral-500">Admin</p>
