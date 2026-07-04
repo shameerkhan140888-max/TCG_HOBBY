@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { Breadcrumbs, Button, Container, EmptyState, ProductCard, ProductDetailHero, Section, WishlistButton } from '@tcg-hobby/ui';
 import { getCatalogueCategories, getCatalogueProductBySlug, getWishlistProductIds } from '@tcg-hobby/database';
 import { SiteHeader } from '../../../components/site-header';
+import { AddToCartButton, AddToCartWithQuantityForm } from '../../../components/cart-actions';
 import { getCurrentCustomerSession } from '../../../lib/auth';
 import { toggleWishlistAction } from '../../../lib/wishlist';
 
@@ -39,6 +40,7 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
 
   const categories = await getCatalogueCategories();
   const currentHref = `/catalogue/${slug}`;
+  const availableQuantity = Math.max(product.stockOnHand - product.reservedStock, 0);
 
   return (
     <>
@@ -70,14 +72,27 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
         <ProductDetailHero
           product={product}
           actionSlot={
-            <WishlistButton
-              productId={product.id}
-              wishlisted={wishlistIds.includes(product.id)}
-              authenticated={session?.user.role === 'CUSTOMER'}
-              action={toggleWishlistAction}
-              loginHref={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}
-              returnTo={currentHref}
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              {session?.user.role === 'CUSTOMER' ? (
+                product.inStock ? (
+                  <AddToCartWithQuantityForm productId={product.id} returnTo={currentHref} maxQuantity={availableQuantity} />
+                ) : (
+                  <Button disabled>Out of stock</Button>
+                )
+              ) : (
+                <Button asChild>
+                  <a href={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}>Add to cart</a>
+                </Button>
+              )}
+              <WishlistButton
+                productId={product.id}
+                wishlisted={wishlistIds.includes(product.id)}
+                authenticated={session?.user.role === 'CUSTOMER'}
+                action={toggleWishlistAction}
+                loginHref={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}
+                returnTo={currentHref}
+              />
+            </div>
           }
         />
 
@@ -111,14 +126,29 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
                   product={item}
                   href={`/catalogue/${item.slug}`}
                   actionSlot={
-                    <WishlistButton
-                      productId={item.id}
-                      wishlisted={wishlistIds.includes(item.id)}
-                      authenticated={session?.user.role === 'CUSTOMER'}
-                      action={toggleWishlistAction}
-                      loginHref={`/login?callbackUrl=${encodeURIComponent(`/catalogue/${item.slug}`)}`}
-                      returnTo={`/catalogue/${item.slug}`}
-                    />
+                    <div className="flex items-center gap-2">
+                      {session?.user.role === 'CUSTOMER' ? (
+                        item.inStock ? (
+                          <AddToCartButton productId={item.id} returnTo={`/catalogue/${item.slug}`} />
+                        ) : (
+                          <Button disabled size="sm">
+                            Out of stock
+                          </Button>
+                        )
+                      ) : (
+                        <Button asChild size="sm" variant="secondary">
+                          <a href={`/login?callbackUrl=${encodeURIComponent(`/catalogue/${item.slug}`)}`}>Add to cart</a>
+                        </Button>
+                      )}
+                      <WishlistButton
+                        productId={item.id}
+                        wishlisted={wishlistIds.includes(item.id)}
+                        authenticated={session?.user.role === 'CUSTOMER'}
+                        action={toggleWishlistAction}
+                        loginHref={`/login?callbackUrl=${encodeURIComponent(`/catalogue/${item.slug}`)}`}
+                        returnTo={`/catalogue/${item.slug}`}
+                      />
+                    </div>
                   }
                 />
               ))}

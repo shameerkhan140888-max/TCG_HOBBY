@@ -55,6 +55,32 @@ Seeded customer login:
 - Email: `sam.customer@tcghobby.test`
 - Password: `SamCollector123!`
 
+## Sprint 5 Checkout Flow
+
+```bash
+docker compose up -d
+npm run db:generate
+npm run db:seed
+npm run dev -w @tcg-hobby/storefront
+```
+
+Set these environment variables before starting the storefront:
+
+- `APP_URL=http://localhost:3000`
+- `STRIPE_SECRET_KEY=sk_test_...`
+
+Then open:
+
+- `http://localhost:3000/cart`
+- `http://localhost:3000/checkout`
+- `http://localhost:3000/account/orders`
+
+Stripe test mode notes:
+
+- Checkout uses a hosted Stripe payment page in test mode.
+- A successful payment is confirmed from the Stripe session before the order is finalized.
+- No webhook listener is required for this sprint.
+
 If you reset the database, rerun:
 
 ```bash

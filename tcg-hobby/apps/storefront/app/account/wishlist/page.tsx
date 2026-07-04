@@ -1,5 +1,6 @@
 import { Button, Container, EmptyState, ProductCard, Section, WishlistButton } from '@tcg-hobby/ui';
 import { getCustomerProfile } from '../../../lib/auth';
+import { AddToCartButton } from '../../../components/cart-actions';
 import { toggleWishlistAction } from '../../../lib/wishlist';
 
 export default async function AccountWishlistPage() {
@@ -24,14 +25,19 @@ export default async function AccountWishlistPage() {
                 product={item.product}
                 href={`/catalogue/${item.product.slug}`}
                 actionSlot={
-                  <WishlistButton
-                    productId={item.product.id}
-                    wishlisted
-                    authenticated
-                    action={toggleWishlistAction}
-                    loginHref="/login"
-                    returnTo={currentHref}
-                  />
+                  <div className="flex items-center gap-2">
+                    {item.product.inStock ? (
+                      <AddToCartButton productId={item.product.id} returnTo={currentHref} />
+                    ) : null}
+                    <WishlistButton
+                      productId={item.product.id}
+                      wishlisted
+                      authenticated
+                      action={toggleWishlistAction}
+                      loginHref="/login"
+                      returnTo={currentHref}
+                    />
+                  </div>
                 }
               />
             ))}

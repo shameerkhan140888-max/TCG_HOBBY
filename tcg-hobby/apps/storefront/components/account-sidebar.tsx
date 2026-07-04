@@ -7,6 +7,7 @@ import type { logoutCustomerAction } from '../lib/auth-actions';
 const items = [
   { href: '/account', label: 'Overview' },
   { href: '/account/profile', label: 'Profile' },
+  { href: '/account/orders', label: 'Orders' },
   { href: '/account/wishlist', label: 'Wishlist' },
 ];
 

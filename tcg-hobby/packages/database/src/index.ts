@@ -2,6 +2,28 @@ export { PrismaClient } from '@prisma/client';
 export type { Prisma } from '@prisma/client';
 export { prisma } from './client';
 export {
+  addProductToCart,
+  clearCart,
+  getCartItemQuantity,
+  getCartSnapshot,
+  getCustomerCart,
+  getCustomerCartDetails,
+  removeCartItem,
+  updateCartItemQuantity,
+} from './cart';
+export {
+  attachStripeSessionToOrder,
+  createPendingCheckoutOrder,
+  createStripeCheckoutSession,
+  finalizePaidCheckoutOrder,
+  getAvailableShippingMethods,
+  getCustomerOrderByNumber,
+  getCustomerOrders,
+  getOrderByStripeCheckoutSessionId,
+  releaseCheckoutOrderReservation,
+  retrieveStripeCheckoutSession,
+} from './orders';
+export {
   getCatalogueCategories,
   getCatalogueHomeData,
   getCatalogueProductBySlug,

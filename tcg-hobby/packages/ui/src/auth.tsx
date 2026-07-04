@@ -148,7 +148,7 @@ export function AccountNav({ items, activeHref, logoutAction }: AccountNavProps)
     <div className="flex h-full flex-col justify-between">
       <nav className="space-y-1">
         {items.map((item) => {
-          const active = item.href === activeHref;
+          const active = activeHref === item.href || activeHref.startsWith(`${item.href}/`);
           return (
             <a
               key={item.href}

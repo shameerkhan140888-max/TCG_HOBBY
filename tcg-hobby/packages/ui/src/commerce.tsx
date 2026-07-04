@@ -1,4 +1,14 @@
-import type { CatalogueProduct, CatalogueProductDetail, Money, PaginationMeta } from '@tcg-hobby/types';
+import type {
+  CartLineItem as CartLineItemType,
+  FulfilmentStatus,
+  CatalogueProduct,
+  CatalogueProductDetail,
+  Money,
+  OrderSummary as OrderSummaryType,
+  PaginationMeta,
+  PaymentStatus,
+  ShippingMethod,
+} from '@tcg-hobby/types';
 import type { HTMLAttributes, ReactNode } from 'react';
 import { Button, buttonVariants } from './button';
 import { Badge } from './badge';
@@ -194,11 +204,220 @@ export function ProductDetailHero({ product, actionSlot, className, ...props }: 
             </div>
             <div className="flex items-center gap-2">
               {actionSlot}
-              <Button disabled>Add to cart</Button>
+              {actionSlot ? null : <Button disabled>Add to cart</Button>}
             </div>
           </div>
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+export type QuantitySelectorProps = HTMLAttributes<HTMLDivElement> & {
+  name: string;
+  value: number;
+  min?: number;
+  max?: number;
+  disabled?: boolean;
+  label?: string;
+};
+
+export function QuantitySelector({
+  name,
+  value,
+  min = 1,
+  max,
+  disabled,
+  label = 'Quantity',
+  className,
+  ...props
+}: QuantitySelectorProps) {
+  return (
+    <div className={cn('space-y-2', className)} {...props}>
+      <label className="text-xs uppercase tracking-wide text-neutral-500" htmlFor={name}>
+        {label}
+      </label>
+      <input
+        id={name}
+        name={name}
+        type="number"
+        min={min}
+        max={max}
+        defaultValue={value}
+        disabled={disabled}
+        className="h-10 w-24 rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/30 disabled:cursor-not-allowed disabled:opacity-50"
+      />
+    </div>
+  );
+}
+
+export type CartLineItemProps = HTMLAttributes<HTMLDivElement> & {
+  item: CartLineItemType;
+  actionSlot?: ReactNode;
+};
+
+export function CartLineItem({ item, actionSlot, className, ...props }: CartLineItemProps) {
+  return (
+    <Card className={cn(className)} {...props}>
+      <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-semibold text-neutral-50">{item.productName}</h3>
+            <Badge variant={item.inStock ? 'success' : 'warning'}>{item.inStock ? 'In stock' : 'Limited'}</Badge>
+          </div>
+          <p className="text-sm text-neutral-400">{item.productSlug}</p>
+          <p className="text-sm text-neutral-400">
+            {item.quantity} x {formatMoney({ amountMinor: item.unitPriceMinor, currency: 'GBP' })}
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-xs uppercase tracking-wide text-neutral-500">Line total</p>
+            <p className="text-lg font-bold text-accent-soft">{formatMoney({ amountMinor: item.totalMinor, currency: 'GBP' })}</p>
+          </div>
+          {actionSlot}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export type OrderSummaryProps = HTMLAttributes<HTMLDivElement> & {
+  summary: Pick<OrderSummaryType, 'currency' | 'subtotalMinor' | 'shippingMinor' | 'taxMinor' | 'totalMinor'>;
+  actionSlot?: ReactNode;
+};
+
+export function OrderSummary({ summary, actionSlot, className, ...props }: OrderSummaryProps) {
+  const rows = [
+    { label: 'Subtotal', value: summary.subtotalMinor },
+    { label: 'Shipping', value: summary.shippingMinor },
+    { label: 'Tax', value: summary.taxMinor },
+  ];
+
+  return (
+    <Card className={cn(className)} {...props}>
+      <CardContent className="space-y-4">
+        <div className="space-y-3">
+          {rows.map((row) => (
+            <div key={row.label} className="flex items-center justify-between text-sm">
+              <span className="text-neutral-400">{row.label}</span>
+              <span className="font-medium text-neutral-50">{formatMoney({ amountMinor: row.value, currency: summary.currency })}</span>
+            </div>
+          ))}
+          <div className="flex items-center justify-between border-t border-surface-line pt-4">
+            <span className="text-sm font-semibold uppercase tracking-wide text-neutral-300">Total</span>
+            <span className="text-2xl font-black text-accent-soft">{formatMoney({ amountMinor: summary.totalMinor, currency: summary.currency })}</span>
+          </div>
+        </div>
+        {actionSlot}
+      </CardContent>
+    </Card>
+  );
+}
+
+export type CheckoutStepProps = HTMLAttributes<HTMLDivElement> & {
+  number: string;
+  title: string;
+  description?: string;
+};
+
+export function CheckoutStep({ number, title, description, className, ...props }: CheckoutStepProps) {
+  return (
+    <div className={cn('space-y-2', className)} {...props}>
+      <div className="flex items-center gap-3">
+        <span className="grid h-7 w-7 place-items-center rounded-full border border-accent/40 bg-accent/15 text-xs font-bold text-accent">{number}</span>
+        <h3 className="text-base font-semibold text-neutral-50">{title}</h3>
+      </div>
+      {description ? <p className="text-sm leading-6 text-neutral-400">{description}</p> : null}
+    </div>
+  );
+}
+
+export type ShippingMethodCardProps = HTMLAttributes<HTMLLabelElement> & {
+  method: ShippingMethod;
+  name: string;
+  checked?: boolean;
+  disabled?: boolean;
+};
+
+export function ShippingMethodCard({ method, name, checked, disabled, className, ...props }: ShippingMethodCardProps) {
+  return (
+    <label
+      className={cn(
+        'flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors',
+        checked ? 'border-accent bg-accent/10' : 'border-surface-line bg-surface-ink hover:border-accent/50',
+        disabled && 'cursor-not-allowed opacity-60',
+        className,
+      )}
+      {...props}
+    >
+      <input type="radio" name={name} value={method.code} defaultChecked={checked} disabled={disabled} className="mt-1" />
+      <div className="min-w-0">
+        <div className="flex items-center justify-between gap-3">
+          <h4 className="font-semibold text-neutral-50">{method.name}</h4>
+          <span className="text-sm font-semibold text-accent-soft">{formatMoney({ amountMinor: method.amountMinor, currency: method.currency })}</span>
+        </div>
+        <p className="mt-1 text-sm leading-6 text-neutral-400">{method.description}</p>
+        <p className="mt-2 text-xs uppercase tracking-wide text-neutral-500">{method.etaLabel}</p>
+      </div>
+    </label>
+  );
+}
+
+export type PaymentStatusBadgeProps = {
+  status: PaymentStatus;
+};
+
+export function PaymentStatusBadge({ status }: PaymentStatusBadgeProps) {
+  const labelMap: Record<PaymentStatus, string> = {
+    REQUIRES_PAYMENT: 'Requires payment',
+    PROCESSING: 'Processing',
+    SUCCEEDED: 'Paid',
+    FAILED: 'Failed',
+    CANCELED: 'Canceled',
+    REFUNDED: 'Refunded',
+  };
+
+  const variantMap: Record<PaymentStatus, 'accent' | 'success' | 'warning' | 'neutral'> = {
+    REQUIRES_PAYMENT: 'warning',
+    PROCESSING: 'neutral',
+    SUCCEEDED: 'success',
+    FAILED: 'warning',
+    CANCELED: 'neutral',
+    REFUNDED: 'accent',
+  };
+
+  return <Badge variant={variantMap[status]}>{labelMap[status]}</Badge>;
+}
+
+export type OrderStatusBadgeProps = {
+  status: FulfilmentStatus;
+};
+
+export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
+  const labelMap: Record<FulfilmentStatus, string> = {
+    PENDING: 'Pending',
+    PICKING: 'Picking',
+    PACKED: 'Packed',
+    SHIPPED: 'Shipped',
+    CANCELLED: 'Cancelled',
+  };
+
+  const variantMap: Record<FulfilmentStatus, 'accent' | 'success' | 'warning' | 'neutral'> = {
+    PENDING: 'warning',
+    PICKING: 'neutral',
+    PACKED: 'neutral',
+    SHIPPED: 'success',
+    CANCELLED: 'accent',
+  };
+
+  return <Badge variant={variantMap[status]}>{labelMap[status]}</Badge>;
+}
+
+export function SecureCheckoutNotice() {
+  return (
+    <div className="rounded-lg border border-accent/30 bg-accent/10 p-4 text-sm leading-6 text-neutral-200">
+      Secure checkout is processed through Stripe test mode with PCI-compliant payment handling.
+    </div>
   );
 }

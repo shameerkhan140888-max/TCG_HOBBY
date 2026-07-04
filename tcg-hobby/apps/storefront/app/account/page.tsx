@@ -1,9 +1,12 @@
 import { Button, Card, CardContent, Container, Section } from '@tcg-hobby/ui';
 import { getCustomerProfile } from '../../lib/auth';
+import { getCurrentCustomerOrders } from '../../lib/orders';
 
 export default async function AccountOverviewPage() {
-  const { user, wishlistItems } = await getCustomerProfile();
+  const [profile, orders] = await Promise.all([getCustomerProfile(), getCurrentCustomerOrders()]);
+  const { user, wishlistItems } = profile;
   const wishlistCount = wishlistItems?.items.length ?? 0;
+  const orderCount = orders.length;
 
   return (
     <Section className="py-8">
@@ -17,6 +20,7 @@ export default async function AccountOverviewPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
             { label: 'Saved wishlist items', value: String(wishlistCount) },
+            { label: 'Completed orders', value: String(orderCount) },
             { label: 'Profile name', value: user?.name ?? 'Not set' },
             { label: 'Account email', value: user?.email ?? 'Unknown' },
             { label: 'Account status', value: 'Active' },
@@ -56,9 +60,21 @@ export default async function AccountOverviewPage() {
               </Button>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-accent">Orders</p>
+                <h2 className="mt-2 text-xl font-bold">Purchase history</h2>
+                <p className="mt-2 text-sm leading-6 text-neutral-400">See completed checkouts, shipping methods, and payment states.</p>
+              </div>
+              <Button asChild variant="outline">
+                <a href="/account/orders">Open orders</a>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </Container>
     </Section>
   );
 }
-

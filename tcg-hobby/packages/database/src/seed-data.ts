@@ -90,6 +90,10 @@ type OrderSeed = {
   orderNumber: string;
   userId: string;
   status: 'PAID';
+  paymentStatus: 'REQUIRES_PAYMENT' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED' | 'CANCELED' | 'REFUNDED';
+  fulfilmentStatus: 'PENDING' | 'PICKING' | 'PACKED' | 'SHIPPED' | 'CANCELLED';
+  shippingMethodCode: 'UK_STANDARD' | 'UK_EXPRESS' | 'WORLDWIDE_STANDARD';
+  shippingMethodName: string;
   subtotalMinor: number;
   shippingMinor: number;
   taxMinor: number;
@@ -493,6 +497,10 @@ export const seedOrders: OrderSeed[] = [
     orderNumber: 'TCG-1001',
     userId: 'user-customer-sam',
     status: 'PAID',
+    paymentStatus: 'SUCCEEDED',
+    fulfilmentStatus: 'PENDING',
+    shippingMethodCode: 'UK_STANDARD',
+    shippingMethodName: 'UK Standard',
     subtotalMinor: 14197,
     shippingMinor: 499,
     taxMinor: 0,

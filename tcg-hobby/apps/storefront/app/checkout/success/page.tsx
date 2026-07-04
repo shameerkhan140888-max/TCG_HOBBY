@@ -1,0 +1,105 @@
+import { notFound } from 'next/navigation';
+import { Button, Container, EmptyState, OrderStatusBadge, OrderSummary, PaymentStatusBadge, Section } from '@tcg-hobby/ui';
+import { SiteHeader } from '../../../components/site-header';
+import { finalizeOrderFromStripeSession } from '../../../lib/orders';
+
+type SearchParamsValue = Record<string, string | string[] | undefined>;
+
+function asString(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] ?? '' : value ?? '';
+}
+
+export default async function CheckoutSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParamsValue>;
+}) {
+  const params = (await searchParams) ?? {};
+  const sessionId = asString(params.session_id);
+
+  if (!sessionId) {
+    notFound();
+  }
+
+  const order = await finalizeOrderFromStripeSession(sessionId);
+
+  return (
+    <>
+      <SiteHeader />
+      <main className="min-h-screen bg-surface-ink text-neutral-50">
+        <Section className="border-b border-surface-line bg-surface-base/80">
+          <Container className="py-8 sm:py-10">
+            <div className="space-y-3">
+              <p className="text-sm font-semibold uppercase tracking-wide text-accent">Order confirmation</p>
+              <h1 className="text-3xl font-black sm:text-4xl">{order ? `Order ${order.orderNumber} confirmed` : 'Confirming your payment'}</h1>
+              <p className="max-w-3xl text-sm leading-6 text-neutral-400">We verify the Stripe payment before showing your final order receipt.</p>
+            </div>
+          </Container>
+        </Section>
+
+        <Container className="py-8">
+          {order ? (
+            <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+              <div className="space-y-4">
+                <div className="rounded-lg border border-surface-line bg-surface-base p-5">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <PaymentStatusBadge status={order.paymentStatus} />
+                    <OrderStatusBadge status={order.fulfilmentStatus} />
+                    <span className="text-sm text-neutral-400">Stripe session {order.stripeCheckoutSessionId}</span>
+                  </div>
+                  <p className="mt-4 text-sm leading-6 text-neutral-400">Your order is secure and ready for fulfilment. A confirmation email should land shortly.</p>
+                </div>
+
+                <div className="space-y-3">
+                  {order.items.map((item) => (
+                    <div key={item.id} className="rounded-lg border border-surface-line bg-surface-base p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <h2 className="font-semibold text-neutral-50">{item.productName}</h2>
+                          <p className="text-sm text-neutral-400">{item.quantity} x {item.productSlug}</p>
+                        </div>
+                        <p className="font-semibold text-accent-soft">GBP {(item.totalMinor / 100).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <OrderSummary
+                  summary={{
+                    currency: order.currency as 'GBP',
+                    subtotalMinor: order.subtotalMinor,
+                    shippingMinor: order.shippingMinor,
+                    taxMinor: order.taxMinor,
+                    totalMinor: order.totalMinor,
+                  }}
+                  actionSlot={
+                    <div className="space-y-3">
+                      <Button asChild className="w-full">
+                        <a href={`/account/orders/${order.orderNumber}`}>View order details</a>
+                      </Button>
+                      <Button asChild className="w-full" variant="outline">
+                        <a href="/catalogue">Continue shopping</a>
+                      </Button>
+                    </div>
+                  }
+                />
+              </div>
+            </div>
+          ) : (
+            <EmptyState
+              title="We could not confirm the payment yet"
+              description="If you just completed Stripe checkout, refresh this page in a moment or return to your account orders."
+              action={
+                <Button asChild>
+                  <a href="/account/orders">View orders</a>
+                </Button>
+              }
+            />
+          )}
+        </Container>
+      </main>
+    </>
+  );
+}

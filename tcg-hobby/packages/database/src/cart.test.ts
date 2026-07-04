@@ -1,0 +1,132 @@
+import { describe, expect, it, vi } from 'vitest';
+import { addProductToCart, clearCart, getCustomerCartDetails, updateCartItemQuantity } from './cart';
+
+function createDbMock() {
+  return {
+    cart: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+    },
+    product: {
+      findUnique: vi.fn(),
+    },
+    cartItem: {
+      upsert: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+  } as any;
+}
+
+describe('cart repository', () => {
+  it('calculates cart totals from persisted cart items', async () => {
+    const db = createDbMock();
+    db.cart.findUnique.mockResolvedValue({
+      id: 'cart-1',
+      currency: 'GBP',
+      items: [
+        {
+          id: 'item-1',
+          quantity: 2,
+          unitPriceMinor: 1250,
+          product: {
+            id: 'prod-1',
+            slug: 'alpha',
+            name: 'Alpha',
+            priceMinor: 1250,
+            currency: 'GBP',
+            inventory: { stockOnHand: 5, reservedStock: 1 },
+          },
+        },
+        {
+          id: 'item-2',
+          quantity: 1,
+          unitPriceMinor: 499,
+          product: {
+            id: 'prod-2',
+            slug: 'beta',
+            name: 'Beta',
+            priceMinor: 499,
+            currency: 'GBP',
+            inventory: { stockOnHand: 5, reservedStock: 0 },
+          },
+        },
+      ],
+    });
+
+    const cart = await getCustomerCartDetails('user-1', db);
+
+    expect(cart.subtotalMinor).toBe(2999);
+    expect(cart.totalItems).toBe(3);
+    expect(cart.items[0]?.productName).toBe('Alpha');
+  });
+
+  it('prevents adding more units than are available in stock', async () => {
+    const db = createDbMock();
+    db.product.findUnique.mockResolvedValue({
+      id: 'prod-1',
+      slug: 'alpha',
+      name: 'Alpha',
+      priceMinor: 1250,
+      inventory: { stockOnHand: 2, reservedStock: 0 },
+    });
+    db.cart.findUnique.mockImplementation(async (args: any) => {
+      if (args?.select) {
+        return { items: [] };
+      }
+
+      return null;
+    });
+    db.cart.create.mockResolvedValue({ id: 'cart-1' });
+
+    await expect(addProductToCart('user-1', 'prod-1', 3, db)).rejects.toThrow('Only 2 in stock for this item.');
+  });
+
+  it('removes an item when the requested quantity drops to zero', async () => {
+    const db = createDbMock();
+    db.product.findUnique.mockResolvedValue({
+      id: 'prod-1',
+      slug: 'alpha',
+      name: 'Alpha',
+      priceMinor: 1250,
+      inventory: { stockOnHand: 5, reservedStock: 0 },
+    });
+    db.cart.findUnique.mockImplementation(async (args: any) => {
+      if (args?.select) {
+        return { items: [{ quantity: 1 }] };
+      }
+
+      return { id: 'cart-1', currency: 'GBP', items: [] };
+    });
+    db.cart.create.mockResolvedValue({ id: 'cart-1' });
+
+    await updateCartItemQuantity('user-1', 'prod-1', 0, db);
+
+    expect(db.cartItem.deleteMany).toHaveBeenCalledWith({
+      where: {
+        cartId: 'cart-1',
+        productId: 'prod-1',
+      },
+    });
+  });
+
+  it('clears all cart items for the user', async () => {
+    const db = createDbMock();
+    db.cart.findUnique.mockResolvedValue({ id: 'cart-1' });
+    db.cartItem.deleteMany.mockResolvedValue({ count: 2 });
+    db.cart.findUnique.mockImplementation(async (args: any) => {
+      if (args?.select) {
+        return { items: [] };
+      }
+
+      return { id: 'cart-1', currency: 'GBP', items: [] };
+    });
+
+    await clearCart('user-1', db);
+
+    expect(db.cartItem.deleteMany).toHaveBeenCalledWith({
+      where: {
+        cartId: 'cart-1',
+      },
+    });
+  });
+});

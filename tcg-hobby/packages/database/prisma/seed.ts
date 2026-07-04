@@ -131,7 +131,10 @@ async function main() {
   });
 
   await prisma.order.createMany({
-    data: seedOrders,
+    data: seedOrders.map((order) => ({
+      ...order,
+      shippingMethodAmountMinor: order.shippingMinor,
+    })),
   });
 
   await prisma.orderItem.createMany({

@@ -2,6 +2,7 @@ import { Button, Container, EmptyState, Input, Pagination, ProductCard, Wishlist
 import { getCatalogueProducts, getWishlistProductIds } from '@tcg-hobby/database';
 import type { CatalogueSort } from '@tcg-hobby/types';
 import { SiteHeader } from '../../components/site-header';
+import { AddToCartButton } from '../../components/cart-actions';
 import { getCurrentCustomerSession } from '../../lib/auth';
 import { toggleWishlistAction } from '../../lib/wishlist';
 
@@ -128,14 +129,23 @@ export default async function CataloguePage({
                   product={product}
                   href={`/catalogue/${product.slug}`}
                   actionSlot={
-                    <WishlistButton
-                      productId={product.id}
-                      wishlisted={wishlistIds.includes(product.id)}
-                      authenticated={session?.user.role === 'CUSTOMER'}
-                      action={toggleWishlistAction}
-                      loginHref={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}
-                      returnTo={currentHref}
-                    />
+                    <div className="flex items-center gap-2">
+                      {session?.user.role === 'CUSTOMER' ? (
+                        <AddToCartButton productId={product.id} returnTo={currentHref} />
+                      ) : (
+                        <Button asChild size="sm" variant="secondary">
+                          <a href={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}>Add to cart</a>
+                        </Button>
+                      )}
+                      <WishlistButton
+                        productId={product.id}
+                        wishlisted={wishlistIds.includes(product.id)}
+                        authenticated={session?.user.role === 'CUSTOMER'}
+                        action={toggleWishlistAction}
+                        loginHref={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}
+                        returnTo={currentHref}
+                      />
+                    </div>
                   }
                 />
               ))}

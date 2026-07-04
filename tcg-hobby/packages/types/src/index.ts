@@ -84,3 +84,69 @@ export type ApiHealth = {
   status: 'ok';
   service: 'tcg-hobby-api';
 };
+
+export type PaymentStatus = 'REQUIRES_PAYMENT' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED' | 'CANCELED' | 'REFUNDED';
+
+export type FulfilmentStatus = 'PENDING' | 'PICKING' | 'PACKED' | 'SHIPPED' | 'CANCELLED';
+
+export type ShippingMethodCode = 'UK_STANDARD' | 'UK_EXPRESS' | 'WORLDWIDE_STANDARD';
+
+export type ShippingMethod = {
+  code: ShippingMethodCode;
+  name: string;
+  description: string;
+  etaLabel: string;
+  currency: CurrencyCode;
+  amountMinor: number;
+  countryScope: 'GB' | 'WORLDWIDE';
+};
+
+export type CartLineItem = {
+  id: string;
+  productId: string;
+  productName: string;
+  productSlug: string;
+  quantity: number;
+  unitPriceMinor: number;
+  totalMinor: number;
+  inStock: boolean;
+};
+
+export type CartSummary = {
+  items: CartLineItem[];
+  subtotalMinor: number;
+  currency: CurrencyCode;
+  totalItems: number;
+};
+
+export type CheckoutAddress = {
+  fullName: string;
+  email: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  region: string | null;
+  postalCode: string;
+  country: string;
+};
+
+export type OrderLineItem = {
+  id: string;
+  productId: string;
+  productName: string;
+  productSlug: string;
+  quantity: number;
+  unitPriceMinor: number;
+  totalMinor: number;
+};
+
+export type OrderSummary = {
+  orderNumber: string;
+  status: PaymentStatus;
+  fulfilmentStatus: FulfilmentStatus;
+  currency: CurrencyCode;
+  subtotalMinor: number;
+  shippingMinor: number;
+  taxMinor: number;
+  totalMinor: number;
+};

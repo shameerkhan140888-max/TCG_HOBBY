@@ -2,6 +2,7 @@ import { Badge, Button, Card, CardContent, Container, PageShell, ProductCard, Pr
 import { getCatalogueHomeData } from '@tcg-hobby/database';
 import { getWishlistProductIds } from '@tcg-hobby/database';
 import { SiteHeader } from '../components/site-header';
+import { AddToCartButton } from '../components/cart-actions';
 import { getCurrentCustomerSession } from '../lib/auth';
 import { toggleWishlistAction } from '../lib/wishlist';
 
@@ -15,6 +16,7 @@ export default async function HomePage() {
   const wishlistIds = session?.user.role === 'CUSTOMER' ? await getWishlistProductIds(session.user.id) : [];
   const { categories, featuredProducts } = homeData;
   const heroProduct = featuredProducts[0];
+  const returnTo = '/';
 
   return (
     <PageShell>
@@ -127,14 +129,23 @@ export default async function HomePage() {
                   product={product}
                   href={`/catalogue/${product.slug}`}
                   actionSlot={
-                    <WishlistButton
-                      productId={product.id}
-                      wishlisted={wishlistIds.includes(product.id)}
-                      authenticated={session?.user.role === 'CUSTOMER'}
-                      action={toggleWishlistAction}
-                      loginHref={`/login?callbackUrl=${encodeURIComponent('/')}`}
-                      returnTo="/"
-                    />
+                    <div className="flex items-center gap-2">
+                      {session?.user.role === 'CUSTOMER' ? (
+                        <AddToCartButton productId={product.id} returnTo={returnTo} />
+                      ) : (
+                        <Button asChild size="sm" variant="secondary">
+                          <a href={`/login?callbackUrl=${encodeURIComponent(returnTo)}`}>Add to cart</a>
+                        </Button>
+                      )}
+                      <WishlistButton
+                        productId={product.id}
+                        wishlisted={wishlistIds.includes(product.id)}
+                        authenticated={session?.user.role === 'CUSTOMER'}
+                        action={toggleWishlistAction}
+                        loginHref={`/login?callbackUrl=${encodeURIComponent('/')}`}
+                        returnTo="/"
+                      />
+                    </div>
                   }
                 />
               ))}

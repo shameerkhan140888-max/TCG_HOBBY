@@ -19,3 +19,11 @@ All notable changes to TCG Hobby are documented here.
 - Built storefront login, registration, account overview, profile, and wishlist screens with protected customer routing.
 - Added wishlist persistence, toggle actions, product-card wishlist actions, and account wishlist management.
 - Documented the seeded customer credentials and local auth runbook.
+
+## Sprint 5
+
+- Added cart persistence, quantity validation, and stock-aware cart updates for signed-in customers.
+- Built storefront cart and checkout screens with shipping method selection and Stripe test-mode payment handoff.
+- Added order creation, payment finalization, order history, and order detail pages.
+- Introduced inventory reservation and stock decrement logic so checkout remains inventory-safe.
+- Documented checkout setup, Stripe local runbook, order lifecycle notes, and ADRs for the commerce flow.
