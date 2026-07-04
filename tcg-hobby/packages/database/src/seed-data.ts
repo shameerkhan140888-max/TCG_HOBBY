@@ -222,6 +222,45 @@ type WishlistItemSeed = {
   productSlug: string;
 };
 
+type CollectionSeed = {
+  id: string;
+  userId: string;
+};
+
+type CollectionItemSeed = {
+  id: string;
+  collectionId: string;
+  productSlug: string;
+  ownedQuantity: number;
+  printVariant: 'REGULAR' | 'REVERSE_HOLO' | 'HOLO' | 'PROMO' | 'FIRST_EDITION' | 'FOIL';
+  condition: 'MINT' | 'NEAR_MINT' | 'LIGHTLY_PLAYED' | 'MODERATELY_PLAYED' | 'HEAVILY_PLAYED' | 'DAMAGED' | 'SEALED';
+  foil: boolean;
+  language: string;
+  notes: string | null;
+  dateAcquired: string | null;
+  purchasePriceMinor: number | null;
+};
+
+type DeckSeed = {
+  id: string;
+  userId: string;
+  name: string;
+  slug: string;
+  game: string;
+  visibility: 'PRIVATE' | 'PUBLIC';
+  notes: string | null;
+  imageLabel: string;
+  maxCards: number;
+  maxCopiesPerCard: number;
+};
+
+type DeckCardSeed = {
+  id: string;
+  deckId: string;
+  productSlug: string;
+  quantity: number;
+};
+
 export const seedCategories: CategorySeed[] = [
   {
     id: 'cat-sealed',
@@ -986,6 +1025,76 @@ export const seedWishlistItems: WishlistItemSeed[] = [
     wishlistId: 'wishlist-sam',
     productSlug: 'matte-black-dragon-shield-sleeves',
   },
+];
+
+export const seedCollections: CollectionSeed[] = [
+  {
+    id: 'collection-sam',
+    userId: 'user-customer-sam',
+  },
+];
+
+export const seedCollectionItems: CollectionItemSeed[] = [
+  {
+    id: 'collection-item-dragon',
+    collectionId: 'collection-sam',
+    productSlug: 'dragon-lord-secret-rare',
+    ownedQuantity: 2,
+    printVariant: 'HOLO',
+    condition: 'NEAR_MINT',
+    foil: true,
+    language: 'EN',
+    notes: 'Top-loader stored with binder copy.',
+    dateAcquired: '2026-06-18T00:00:00.000Z',
+    purchasePriceMinor: 2999,
+  },
+  {
+    id: 'collection-item-bolt',
+    collectionId: 'collection-sam',
+    productSlug: 'lightning-bolt-playset',
+    ownedQuantity: 4,
+    printVariant: 'REGULAR',
+    condition: 'LIGHTLY_PLAYED',
+    foil: false,
+    language: 'EN',
+    notes: 'Competitive playset kept in deck box.',
+    dateAcquired: '2026-06-22T00:00:00.000Z',
+    purchasePriceMinor: 1999,
+  },
+  {
+    id: 'collection-item-oracle',
+    collectionId: 'collection-sam',
+    productSlug: 'mystic-oracle-binder-page',
+    ownedQuantity: 1,
+    printVariant: 'PROMO',
+    condition: 'NEAR_MINT',
+    foil: false,
+    language: 'JP',
+    notes: 'Promo insert from a trade night.',
+    dateAcquired: '2026-07-01T00:00:00.000Z',
+    purchasePriceMinor: null,
+  },
+];
+
+export const seedDecks: DeckSeed[] = [
+  {
+    id: 'deck-sam-burn',
+    userId: 'user-customer-sam',
+    name: 'Sam Burn',
+    slug: 'sam-burn',
+    game: 'Magic: The Gathering',
+    visibility: 'PRIVATE',
+    notes: 'A focused burn list for quick testing and local events.',
+    imageLabel: 'Deck stack',
+    maxCards: 60,
+    maxCopiesPerCard: 4,
+  },
+];
+
+export const seedDeckCards: DeckCardSeed[] = [
+  { id: 'deck-card-bolt-1', deckId: 'deck-sam-burn', productSlug: 'lightning-bolt-playset', quantity: 4 },
+  { id: 'deck-card-dragon-1', deckId: 'deck-sam-burn', productSlug: 'dragon-lord-secret-rare', quantity: 2 },
+  { id: 'deck-card-oracle-1', deckId: 'deck-sam-burn', productSlug: 'mystic-oracle-binder-page', quantity: 1 },
 ];
 
 export function isCatalogueProductVisible(product: ProductSeed): boolean {

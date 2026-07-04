@@ -7,6 +7,8 @@ const navItems = [
   { label: 'Buylist', href: '/buylist' },
   { label: 'Cart', href: '/cart' },
   { label: 'Wishlist', href: '/account/wishlist' },
+  { label: 'Collection', href: '/collection' },
+  { label: 'Decks', href: '/decks' },
   { label: 'Orders', href: '/account/orders' },
   { label: 'Account', href: '/account' },
   { label: 'Events', href: '/catalogue?category=events' },

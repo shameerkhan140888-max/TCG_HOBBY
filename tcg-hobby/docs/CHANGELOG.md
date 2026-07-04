@@ -42,3 +42,11 @@ All notable changes to TCG Hobby are documented here.
 - Added admin buylist review screens for workflow status, notes, payout adjustments, and payment tracking.
 - Expanded the shared UI package with pricing badges, money inputs, buylist status badges, and pricing cards.
 - Added pricing and buylist repository coverage plus local runbook and ADR documentation.
+
+## Sprint 8
+
+- Added the collection manager domain with owned quantities, print variants, foil and language tracking, and collection dashboard metrics.
+- Built the deck builder with deck creation, rename/edit controls, card counts, duplicate limits, and collection gap warnings.
+- Expanded the shared UI package with collection and deck cards, statistics, progress bars, and empty states for hobby workflows.
+- Seeded starter collection and deck data so the new hobby tools are visible immediately after running the local seed task.
+- Added repository coverage for collection math, deck rules, and deck composition calculations.

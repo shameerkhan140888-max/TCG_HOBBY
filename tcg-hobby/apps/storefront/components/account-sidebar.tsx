@@ -9,6 +9,8 @@ const items = [
   { href: '/account/profile', label: 'Profile' },
   { href: '/account/orders', label: 'Orders' },
   { href: '/account/wishlist', label: 'Wishlist' },
+  { href: '/collection', label: 'Collection' },
+  { href: '/decks', label: 'Decks' },
 ];
 
 export function AccountSidebar({ logoutAction }: { logoutAction: typeof logoutCustomerAction }) {

@@ -190,3 +190,91 @@ export type BuylistSummary = {
   itemCount: number;
   createdAt: string;
 };
+
+export type CollectionPrintVariant = 'REGULAR' | 'REVERSE_HOLO' | 'HOLO' | 'PROMO' | 'FIRST_EDITION' | 'FOIL';
+
+export type CollectionItem = {
+  id: string;
+  productId: string;
+  productName: string;
+  productSlug: string;
+  game: string;
+  categoryName: string;
+  setName: string | null;
+  ownedQuantity: number;
+  printVariant: CollectionPrintVariant;
+  condition: ProductCondition;
+  foil: boolean;
+  language: string;
+  notes: string | null;
+  dateAcquired: string | null;
+  purchasePriceMinor: number | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CollectionSummary = {
+  id: string;
+  itemCount: number;
+  cardsOwned: number;
+  setsRepresented: number;
+  productsRepresented: number;
+  favouriteGame: string;
+  recentAdditions: CollectionItem[];
+};
+
+export type CollectionDashboard = {
+  summary: CollectionSummary;
+  largestSets: Array<{ label: string; cardsOwned: number }>;
+  wishlistOverlap: CollectionItem[];
+  missingCards: Array<{ id: string; name: string; slug: string; game: string; categoryName: string }>;
+  recentlyViewed: Array<{ id: string; name: string; slug: string; game: string; categoryName: string }>;
+  deckCount: number;
+  collectionCount: number;
+};
+
+export type DeckVisibility = 'PRIVATE' | 'PUBLIC';
+
+export type DeckCard = {
+  id: string;
+  productId: string;
+  productName: string;
+  productSlug: string;
+  game: string;
+  categoryName: string;
+  quantity: number;
+  unitPriceMinor: number;
+  lineTotalMinor: number;
+};
+
+export type DeckSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  game: string;
+  visibility: DeckVisibility;
+  imageLabel: string;
+  cardCount: number;
+  uniqueCards: number;
+  maxCards: number;
+  maxCopiesPerCard: number;
+  updatedAt: string;
+};
+
+export type DeckStats = {
+  cardCount: number;
+  uniqueCards: number;
+  typeBreakdown: Array<{ label: string; count: number }>;
+  categoryBreakdown: Array<{ label: string; count: number }>;
+  curveBreakdown: Array<{ label: string; count: number }>;
+  averageCostMinor: number;
+  warnings: string[];
+  completionPercent: number;
+  missingCardsFromCollection: Array<{ productId: string; productName: string; missingQuantity: number }>;
+};
+
+export type DeckDetail = DeckSummary & {
+  notes: string | null;
+  cards: DeckCard[];
+  stats: DeckStats;
+};

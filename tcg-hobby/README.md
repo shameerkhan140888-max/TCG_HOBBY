@@ -134,10 +134,35 @@ Pricing notes:
 - Buylist estimates are seeded and rule-driven in development.
 - Live market feed integration is intentionally deferred.
 
+## Sprint 8 Collection and Deck Tools
+
+```bash
+docker compose up -d
+npm run db:generate
+npm run db:seed
+npm run dev
+```
+
+Then open:
+
+- `http://localhost:3000/collection`
+- `http://localhost:3000/collection/import`
+- `http://localhost:3000/customer/collection`
+- `http://localhost:3000/decks`
+- `http://localhost:3000/decks/new`
+
+Sprint 8 notes:
+
+- Collection records track owned quantities, print variants, condition, foil, language, notes, and acquisition details.
+- Decks support names, visibility, card counts, duplicate limits, and collection gap warnings.
+- Collection and deck screens are intentionally valuation-free; no market pricing is calculated for owned cards.
+- Seed data includes a starter customer collection and a starter deck so the new tools are visible immediately after seeding.
+
 ## Local Commands
 
 - `npm run db:generate` regenerates the Prisma client.
 - `npm run db:seed` loads the seeded catalogue, pricing, order, and buylist data.
+- `npm run db:seed` also loads the starter collection and deck data for Sprint 8.
 - `npm run dev` starts the full Turborepo workspace.
 
 ## Infrastructure

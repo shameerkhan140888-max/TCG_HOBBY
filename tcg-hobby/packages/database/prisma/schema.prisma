@@ -89,6 +89,20 @@ enum BuylistStatus {
   PAID
 }
 
+enum CollectionPrintVariant {
+  REGULAR
+  REVERSE_HOLO
+  HOLO
+  PROMO
+  FIRST_EDITION
+  FOIL
+}
+
+enum DeckVisibility {
+  PRIVATE
+  PUBLIC
+}
+
 model User {
   id            String     @id @default(cuid())
   email         String     @unique
@@ -106,6 +120,8 @@ model User {
   sessions      Session[]
   wishlist      Wishlist?
   buylists      Buylist[]
+  collection    Collection?
+  decks         Deck[]
 }
 
 model Address {
@@ -223,6 +239,8 @@ model Product {
   stockAdjustments StockAdjustment[]
   pricing      ProductPricing?
   buylistItems  BuylistItem[]
+  collectionItems CollectionItem[]
+  deckCards     DeckCard[]
   pricingRules  PricingRule[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
@@ -493,5 +511,78 @@ model BuylistItem {
   product           Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([buylistId, productId])
+  @@index([productId, createdAt])
+}
+
+model Collection {
+  id            String          @id @default(cuid())
+  userId        String          @unique
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items         CollectionItem[]
+
+  @@index([userId, createdAt])
+}
+
+model CollectionItem {
+  id               String                @id @default(cuid())
+  collectionId     String
+  productId        String
+  ownedQuantity    Int                   @default(1)
+  printVariant     CollectionPrintVariant @default(REGULAR)
+  condition        ProductCondition      @default(NEAR_MINT)
+  foil             Boolean               @default(false)
+  language         String                @default("EN")
+  notes            String?
+  dateAcquired     DateTime?
+  purchasePriceMinor Int?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  collection       Collection            @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  product          Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, productId, printVariant, condition, foil, language])
+  @@index([collectionId, updatedAt])
+  @@index([productId, createdAt])
+  @@index([collectionId, productId])
+}
+
+model Deck {
+  id                 String         @id @default(cuid())
+  userId             String
+  name               String
+  slug               String
+  game               String
+  ruleProfile        String         @default("CUSTOM")
+  visibility         DeckVisibility @default(PRIVATE)
+  notes              String?
+  imageLabel         String
+  maxCards           Int            @default(60)
+  maxCopiesPerCard   Int            @default(4)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards              DeckCard[]
+
+  @@unique([userId, slug])
+  @@index([userId, visibility])
+  @@index([game, visibility])
+  @@index([game, ruleProfile])
+  @@index([createdAt])
+}
+
+model DeckCard {
+  id            String   @id @default(cuid())
+  deckId        String
+  productId     String
+  quantity      Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([deckId, productId])
+  @@index([deckId, updatedAt])
   @@index([productId, createdAt])
 }

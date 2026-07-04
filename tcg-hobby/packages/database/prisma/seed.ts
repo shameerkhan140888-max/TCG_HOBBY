@@ -4,8 +4,12 @@ import {
   seedCategories,
   seedBuylistItems,
   seedBuylists,
+  seedCollectionItems,
+  seedCollections,
   seedCartItems,
   seedCarts,
+  seedDeckCards,
+  seedDecks,
   seedInventory,
   seedOrderItems,
   seedOrders,
@@ -26,6 +30,10 @@ async function main() {
   await prisma.wishlist.deleteMany();
   await prisma.buylistItem.deleteMany();
   await prisma.buylist.deleteMany();
+  await prisma.deckCard.deleteMany();
+  await prisma.deck.deleteMany();
+  await prisma.collectionItem.deleteMany();
+  await prisma.collection.deleteMany();
   await prisma.cartItem.deleteMany();
   await prisma.supplierProduct.deleteMany();
   await prisma.productImage.deleteMany();
@@ -278,6 +286,55 @@ async function main() {
         estimatedBuyMinor: item.estimatedBuyMinor,
         offeredBuyMinor: item.offeredBuyMinor,
         notes: item.notes,
+      };
+    }),
+  });
+
+  await prisma.collection.createMany({
+    data: seedCollections,
+  });
+
+  await prisma.collectionItem.createMany({
+    data: seedCollectionItems.map((item) => {
+      const product = seedProducts.find((entry) => entry.slug === item.productSlug);
+
+      if (!product) {
+        throw new Error(`Missing product for collection item ${item.id}`);
+      }
+
+      return {
+        id: item.id,
+        collectionId: item.collectionId,
+        productId: product.id,
+        ownedQuantity: item.ownedQuantity,
+        printVariant: item.printVariant,
+        condition: item.condition,
+        foil: item.foil,
+        language: item.language,
+        notes: item.notes,
+        dateAcquired: item.dateAcquired ? new Date(item.dateAcquired) : null,
+        purchasePriceMinor: item.purchasePriceMinor,
+      };
+    }),
+  });
+
+  await prisma.deck.createMany({
+    data: seedDecks,
+  });
+
+  await prisma.deckCard.createMany({
+    data: seedDeckCards.map((item) => {
+      const product = seedProducts.find((entry) => entry.slug === item.productSlug);
+
+      if (!product) {
+        throw new Error(`Missing product for deck card ${item.id}`);
+      }
+
+      return {
+        id: item.id,
+        deckId: item.deckId,
+        productId: product.id,
+        quantity: item.quantity,
       };
     }),
   });
