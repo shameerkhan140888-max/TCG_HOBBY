@@ -2,6 +2,7 @@ import type { PaginationMeta, PaymentStatus, FulfilmentStatus, ProductCondition 
 import { slugify } from '@tcg-hobby/utils';
 import { prisma } from './client';
 import { calculateMarginPercentage, calculateAvailableStock } from './admin-math';
+import { refreshProductPricing } from './pricing';
 
 type ProductCategoryRow = {
   id: string;
@@ -76,6 +77,21 @@ type ProductRow = {
   inventory: InventoryRow | null;
   images: ProductImageRow[];
   supplierProducts: SupplierProductRow[];
+  pricing: {
+    costMinor: number;
+    retailMinor: number;
+    buyMinor: number;
+    marginMinor: number;
+    markupPercent: number;
+    profitMinor: number;
+    minimumMarginPercent: number;
+    maximumDiscountPercent: number;
+    priceSource: string;
+    priceStatus: string;
+    manualOverride: boolean;
+    updatedAt: Date;
+    pricingRule: { id: string; name: string } | null;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -204,8 +220,17 @@ export type AdminProductListItem = {
   supplierId: string;
   priceMinor: number;
   costMinor: number;
+  buyMinor: number;
   marginMinor: number;
   marginPercent: number;
+  markupPercent: number;
+  profitMinor: number;
+  minimumMarginPercent: number;
+  maximumDiscountPercent: number;
+  priceSource: string;
+  priceStatus: string;
+  manualOverride: boolean;
+  priceUpdatedAt: Date | null;
   currency: string;
   featured: boolean;
   published: boolean;
@@ -424,6 +449,8 @@ function mapProductRow(product: ProductRow): AdminProductListItem {
 
   const availableStock = calculateAvailableStock(inventory.stockOnHand, inventory.reservedStock);
   const costMinor = supplierProduct?.costMinor ?? 0;
+  const pricing = product.pricing;
+  const buyMinor = pricing?.buyMinor ?? Math.max(0, product.priceMinor - Math.round(product.priceMinor * 0.3));
   const marginMinor = product.priceMinor - costMinor;
 
   return {
@@ -441,8 +468,17 @@ function mapProductRow(product: ProductRow): AdminProductListItem {
     supplierId: supplier.id,
     priceMinor: product.priceMinor,
     costMinor,
+    buyMinor,
     marginMinor,
     marginPercent: calculateMarginPercentage(costMinor, product.priceMinor),
+    markupPercent: costMinor > 0 ? Math.round((marginMinor / costMinor) * 100) : 0,
+    profitMinor: marginMinor,
+    minimumMarginPercent: pricing?.minimumMarginPercent ?? 30,
+    maximumDiscountPercent: pricing?.maximumDiscountPercent ?? 45,
+    priceSource: pricing?.priceSource ?? 'Fallback',
+    priceStatus: pricing?.priceStatus ?? (pricing?.manualOverride ? 'MANUAL_OVERRIDE' : 'FUTURE'),
+    manualOverride: pricing?.manualOverride ?? false,
+    priceUpdatedAt: pricing?.updatedAt ?? null,
     currency: product.currency,
     featured: product.featured,
     published: product.published,
@@ -557,6 +593,7 @@ export async function getAdminDashboardData(db = prisma): Promise<AdminDashboard
         inventory: true,
         images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
         supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
+        pricing: { include: { pricingRule: true } },
       },
     }),
     db.inventoryItem.findMany({
@@ -633,9 +670,10 @@ export async function getAdminProducts(filters: CatalogueFilters, db = prisma) {
       include: {
         category: true,
         inventory: true,
-      images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
-      supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
-    },
+        images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
+        supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
+        pricing: { include: { pricingRule: true } },
+      },
     }),
     db.category.findMany({
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
@@ -663,6 +701,7 @@ export async function getAdminProductById(id: string, db = prisma) {
       inventory: true,
       images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
       supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
+      pricing: { include: { pricingRule: true } },
     },
   })) as unknown as ProductRow | null;
 
@@ -737,6 +776,7 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma) {
     return product;
   });
 
+  await refreshProductPricing(created.id, db);
   return getAdminProductById(created.id, db);
 }
 
@@ -814,6 +854,7 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
     return updated;
   });
 
+  await refreshProductPricing(product.id, db);
   return getAdminProductById(product.id, db);
 }
 

@@ -69,6 +69,66 @@ type ProductSeed = {
   supplierSlug: string;
 };
 
+type PricingRuleSeed = {
+  id: string;
+  name: string;
+  ruleType: 'MANUAL' | 'COST_PLUS_PERCENT' | 'FIXED_MARGIN' | 'SUPPLIER_COST' | 'PROMOTIONAL' | 'FUTURE_MARKET_FEED';
+  ruleScope: 'GLOBAL' | 'PRODUCT' | 'CATEGORY' | 'SUPPLIER';
+  productSlug: string | null;
+  categorySlug: string | null;
+  supplierSlug: string | null;
+  currency: Money['currency'];
+  priority: number;
+  active: boolean;
+  config: Record<string, number | string | boolean>;
+};
+
+type ProductPricingSeed = {
+  id: string;
+  productSlug: string;
+  pricingRuleId: string | null;
+  costMinor: number;
+  retailMinor: number;
+  buyMinor: number;
+  marginMinor: number;
+  markupPercent: number;
+  profitMinor: number;
+  minimumMarginPercent: number;
+  maximumDiscountPercent: number;
+  priceSource: string;
+  priceStatus: 'ACTIVE' | 'MANUAL_OVERRIDE' | 'DISABLED' | 'FUTURE';
+  manualOverride: boolean;
+};
+
+type BuylistSeed = {
+  id: string;
+  buylistNumber: string;
+  userId: string;
+  status: 'DRAFT' | 'SUBMITTED' | 'RECEIVED' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'PAID';
+  currency: Money['currency'];
+  estimatedPayoutMinor: number;
+  offeredPayoutMinor: number;
+  customerNotes: string | null;
+  staffNotes: string | null;
+  paymentReference: string | null;
+  submittedAt: string | null;
+  receivedAt: string | null;
+  reviewedAt: string | null;
+  approvedAt: string | null;
+  rejectedAt: string | null;
+  paidAt: string | null;
+};
+
+type BuylistItemSeed = {
+  id: string;
+  buylistId: string;
+  productSlug: string;
+  quantity: number;
+  estimatedBuyMinor: number;
+  offeredBuyMinor: number;
+  notes: string | null;
+};
+
 type InventorySeed = {
   id: string;
   productSlug: string;
@@ -482,6 +542,306 @@ const seededProducts: ProductSeed[] = [
 ];
 
 export const seedProducts = seededProducts;
+
+export const seedPricingRules: PricingRuleSeed[] = [
+  {
+    id: 'rule-global-manual',
+    name: 'Global manual pricing',
+    ruleType: 'MANUAL',
+    ruleScope: 'GLOBAL',
+    productSlug: null,
+    categorySlug: null,
+    supplierSlug: null,
+    currency: 'GBP',
+    priority: 1,
+    active: true,
+    config: { minimumMarginPercent: 35, maximumDiscountPercent: 20 },
+  },
+  {
+    id: 'rule-sealed-supplier',
+    name: 'Sealed supplier cost-plus',
+    ruleType: 'COST_PLUS_PERCENT',
+    ruleScope: 'CATEGORY',
+    productSlug: null,
+    categorySlug: 'sealed-product',
+    supplierSlug: null,
+    currency: 'GBP',
+    priority: 90,
+    active: true,
+    config: { percentage: 18, minimumMarginPercent: 30, maximumDiscountPercent: 18 },
+  },
+  {
+    id: 'rule-singles-fixed-margin',
+    name: 'Singles fixed margin',
+    ruleType: 'FIXED_MARGIN',
+    ruleScope: 'CATEGORY',
+    productSlug: null,
+    categorySlug: 'singles',
+    supplierSlug: null,
+    currency: 'GBP',
+    priority: 80,
+    active: true,
+    config: { marginMinor: 750, minimumMarginPercent: 28, maximumDiscountPercent: 15 },
+  },
+  {
+    id: 'rule-accessories-promotional',
+    name: 'Accessories promotional',
+    ruleType: 'PROMOTIONAL',
+    ruleScope: 'CATEGORY',
+    productSlug: null,
+    categorySlug: 'accessories',
+    supplierSlug: null,
+    currency: 'GBP',
+    priority: 70,
+    active: true,
+    config: { buyMinor: 450, minimumMarginPercent: 25, maximumDiscountPercent: 30 },
+  },
+  {
+    id: 'rule-events-supplier',
+    name: 'Events supplier cost',
+    ruleType: 'SUPPLIER_COST',
+    ruleScope: 'CATEGORY',
+    productSlug: null,
+    categorySlug: 'events',
+    supplierSlug: null,
+    currency: 'GBP',
+    priority: 60,
+    active: true,
+    config: { multiplier: 0.5, minimumMarginPercent: 35, maximumDiscountPercent: 40 },
+  },
+];
+
+export const seedProductPricing: ProductPricingSeed[] = [
+  {
+    id: 'price-arcane',
+    productSlug: 'arcane-booster-box',
+    pricingRuleId: 'rule-sealed-supplier',
+    costMinor: 8400,
+    retailMinor: 11999,
+    buyMinor: 6999,
+    marginMinor: 3599,
+    markupPercent: 43,
+    profitMinor: 3599,
+    minimumMarginPercent: 30,
+    maximumDiscountPercent: 18,
+    priceSource: 'Sealed supplier cost-plus',
+    priceStatus: 'ACTIVE',
+    manualOverride: false,
+  },
+  {
+    id: 'price-stellar',
+    productSlug: 'stellar-crown-elite-trainer-box',
+    pricingRuleId: 'rule-sealed-supplier',
+    costMinor: 2900,
+    retailMinor: 4499,
+    buyMinor: 2550,
+    marginMinor: 1599,
+    markupPercent: 55,
+    profitMinor: 1599,
+    minimumMarginPercent: 30,
+    maximumDiscountPercent: 18,
+    priceSource: 'Sealed supplier cost-plus',
+    priceStatus: 'ACTIVE',
+    manualOverride: false,
+  },
+  {
+    id: 'price-midnight',
+    productSlug: 'midnight-rites-booster-display',
+    pricingRuleId: 'rule-sealed-supplier',
+    costMinor: 6200,
+    retailMinor: 8999,
+    buyMinor: 5200,
+    marginMinor: 2799,
+    markupPercent: 45,
+    profitMinor: 2799,
+    minimumMarginPercent: 30,
+    maximumDiscountPercent: 18,
+    priceSource: 'Sealed supplier cost-plus',
+    priceStatus: 'ACTIVE',
+    manualOverride: false,
+  },
+  {
+    id: 'price-dragon',
+    productSlug: 'dragon-lord-secret-rare',
+    pricingRuleId: 'rule-singles-fixed-margin',
+    costMinor: 2150,
+    retailMinor: 3499,
+    buyMinor: 1750,
+    marginMinor: 1349,
+    markupPercent: 63,
+    profitMinor: 1349,
+    minimumMarginPercent: 28,
+    maximumDiscountPercent: 15,
+    priceSource: 'Singles fixed margin',
+    priceStatus: 'ACTIVE',
+    manualOverride: false,
+  },
+  {
+    id: 'price-bolt',
+    productSlug: 'lightning-bolt-playset',
+    pricingRuleId: 'rule-singles-fixed-margin',
+    costMinor: 1450,
+    retailMinor: 2499,
+    buyMinor: 1200,
+    marginMinor: 1049,
+    markupPercent: 72,
+    profitMinor: 1049,
+    minimumMarginPercent: 28,
+    maximumDiscountPercent: 15,
+    priceSource: 'Singles fixed margin',
+    priceStatus: 'ACTIVE',
+    manualOverride: false,
+  },
+  {
+    id: 'price-oracle',
+    productSlug: 'mystic-oracle-binder-page',
+    pricingRuleId: 'rule-singles-fixed-margin',
+    costMinor: 900,
+    retailMinor: 1599,
+    buyMinor: 825,
+    marginMinor: 699,
+    markupPercent: 78,
+    profitMinor: 699,
+    minimumMarginPercent: 28,
+    maximumDiscountPercent: 15,
+    priceSource: 'Singles fixed margin',
+    priceStatus: 'ACTIVE',
+    manualOverride: false,
+  },
+  {
+    id: 'price-sleeves',
+    productSlug: 'matte-black-dragon-shield-sleeves',
+    pricingRuleId: 'rule-accessories-promotional',
+    costMinor: 360,
+    retailMinor: 1099,
+    buyMinor: 450,
+    marginMinor: 739,
+    markupPercent: 205,
+    profitMinor: 739,
+    minimumMarginPercent: 25,
+    maximumDiscountPercent: 30,
+    priceSource: 'Accessories promotional',
+    priceStatus: 'ACTIVE',
+    manualOverride: false,
+  },
+  {
+    id: 'price-case',
+    productSlug: 'one-touch-magnetic-case',
+    pricingRuleId: 'rule-accessories-promotional',
+    costMinor: 420,
+    retailMinor: 1299,
+    buyMinor: 500,
+    marginMinor: 879,
+    markupPercent: 209,
+    profitMinor: 879,
+    minimumMarginPercent: 25,
+    maximumDiscountPercent: 30,
+    priceSource: 'Accessories promotional',
+    priceStatus: 'ACTIVE',
+    manualOverride: false,
+  },
+  {
+    id: 'price-friday',
+    productSlug: 'friday-night-magic-entry',
+    pricingRuleId: 'rule-events-supplier',
+    costMinor: 300,
+    retailMinor: 700,
+    buyMinor: 250,
+    marginMinor: 400,
+    markupPercent: 133,
+    profitMinor: 400,
+    minimumMarginPercent: 35,
+    maximumDiscountPercent: 40,
+    priceSource: 'Events supplier cost',
+    priceStatus: 'ACTIVE',
+    manualOverride: false,
+  },
+  {
+    id: 'price-prerelease',
+    productSlug: 'pre-release-bundle',
+    pricingRuleId: 'rule-events-supplier',
+    costMinor: 1300,
+    retailMinor: 2500,
+    buyMinor: 900,
+    marginMinor: 1200,
+    markupPercent: 92,
+    profitMinor: 1200,
+    minimumMarginPercent: 35,
+    maximumDiscountPercent: 40,
+    priceSource: 'Events supplier cost',
+    priceStatus: 'ACTIVE',
+    manualOverride: false,
+  },
+];
+
+export const seedBuylists: BuylistSeed[] = [
+  {
+    id: 'buylist-sam-draft',
+    buylistNumber: 'BL-20260704-0001',
+    userId: 'user-customer-sam',
+    status: 'DRAFT',
+    currency: 'GBP',
+    estimatedPayoutMinor: 8749,
+    offeredPayoutMinor: 0,
+    customerNotes: 'Looking for a quick trade-in estimate.',
+    staffNotes: null,
+    paymentReference: null,
+    submittedAt: null,
+    receivedAt: null,
+    reviewedAt: null,
+    approvedAt: null,
+    rejectedAt: null,
+    paidAt: null,
+  },
+  {
+    id: 'buylist-sam-submitted',
+    buylistNumber: 'BL-20260704-0002',
+    userId: 'user-customer-sam',
+    status: 'SUBMITTED',
+    currency: 'GBP',
+    estimatedPayoutMinor: 12750,
+    offeredPayoutMinor: 12000,
+    customerNotes: 'Would like the payout by bank transfer if approved.',
+    staffNotes: 'Pending intake verification.',
+    paymentReference: null,
+    submittedAt: '2026-07-03T10:30:00.000Z',
+    receivedAt: null,
+    reviewedAt: null,
+    approvedAt: null,
+    rejectedAt: null,
+    paidAt: null,
+  },
+];
+
+export const seedBuylistItems: BuylistItemSeed[] = [
+  {
+    id: 'buyitem-arcane',
+    buylistId: 'buylist-sam-draft',
+    productSlug: 'arcane-booster-box',
+    quantity: 1,
+    estimatedBuyMinor: 6999,
+    offeredBuyMinor: 0,
+    notes: 'Box is in excellent condition.',
+  },
+  {
+    id: 'buyitem-bolt',
+    buylistId: 'buylist-sam-draft',
+    productSlug: 'lightning-bolt-playset',
+    quantity: 1,
+    estimatedBuyMinor: 1750,
+    offeredBuyMinor: 0,
+    notes: 'Near mint playset.',
+  },
+  {
+    id: 'buyitem-dragon',
+    buylistId: 'buylist-sam-submitted',
+    productSlug: 'dragon-lord-secret-rare',
+    quantity: 2,
+    estimatedBuyMinor: 6375,
+    offeredBuyMinor: 6000,
+    notes: null,
+  },
+];
 
 export const seedInventory: InventorySeed[] = [
   { id: 'inv-arcane', productSlug: 'arcane-booster-box', stockOnHand: 14, reservedStock: 2, reorderPoint: 4, locationCode: 'MAIN' },

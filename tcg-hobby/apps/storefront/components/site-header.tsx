@@ -4,6 +4,7 @@ import { logoutCustomerAction } from '../lib/auth-actions';
 
 const navItems = [
   { label: 'Catalogue', href: '/catalogue' },
+  { label: 'Buylist', href: '/buylist' },
   { label: 'Cart', href: '/cart' },
   { label: 'Wishlist', href: '/account/wishlist' },
   { label: 'Orders', href: '/account/orders' },

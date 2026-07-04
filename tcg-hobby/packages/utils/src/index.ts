@@ -14,3 +14,31 @@ export function slugify(input: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
+
+export function clampMinorAmount(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.trunc(value));
+}
+
+export function sumMinorAmounts(values: number[]) {
+  return values.reduce((total, value) => total + clampMinorAmount(value), 0);
+}
+
+export function calculatePercentage(numeratorMinor: number, denominatorMinor: number) {
+  if (denominatorMinor <= 0) {
+    return 0;
+  }
+
+  return Math.round((numeratorMinor / denominatorMinor) * 100);
+}
+
+export function roundToMinor(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.round(value);
+}

@@ -34,3 +34,11 @@ All notable changes to TCG Hobby are documented here.
 - Added reusable admin UI primitives for metric cards, tables, search, page headers, form sections, and empty states.
 - Added stock adjustment history, margin calculations, slug generation, and admin repository coverage.
 - Documented the admin operations architecture, inventory philosophy, supplier relationships, and future media strategy.
+
+## Sprint 7
+
+- Added a reusable pricing engine with integer-only calculations, manual overrides, and rule-based snapshots.
+- Built the customer buylist flow with search, draft management, submission, and estimated payout summaries.
+- Added admin buylist review screens for workflow status, notes, payout adjustments, and payment tracking.
+- Expanded the shared UI package with pricing badges, money inputs, buylist status badges, and pricing cards.
+- Added pricing and buylist repository coverage plus local runbook and ADR documentation.

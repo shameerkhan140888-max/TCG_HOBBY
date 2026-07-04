@@ -56,6 +56,39 @@ enum FulfilmentStatus {
   CANCELLED
 }
 
+enum PricingRuleType {
+  MANUAL
+  COST_PLUS_PERCENT
+  FIXED_MARGIN
+  SUPPLIER_COST
+  PROMOTIONAL
+  FUTURE_MARKET_FEED
+}
+
+enum PricingRuleScope {
+  GLOBAL
+  PRODUCT
+  CATEGORY
+  SUPPLIER
+}
+
+enum PriceStatus {
+  ACTIVE
+  MANUAL_OVERRIDE
+  DISABLED
+  FUTURE
+}
+
+enum BuylistStatus {
+  DRAFT
+  SUBMITTED
+  RECEIVED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  PAID
+}
+
 model User {
   id            String     @id @default(cuid())
   email         String     @unique
@@ -72,6 +105,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   wishlist      Wishlist?
+  buylists      Buylist[]
 }
 
 model Address {
@@ -135,6 +169,7 @@ model Category {
   sortOrder   Int       @default(0)
   imageLabel  String
   products    Product[]
+  pricingRules PricingRule[]
 }
 
 model Supplier {
@@ -157,6 +192,7 @@ model Supplier {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   supplierProducts SupplierProduct[]
+  pricingRules    PricingRule[]
 }
 
 model Product {
@@ -185,6 +221,9 @@ model Product {
   orderItems    OrderItem[]
   supplierProducts SupplierProduct[]
   stockAdjustments StockAdjustment[]
+  pricing      ProductPricing?
+  buylistItems  BuylistItem[]
+  pricingRules  PricingRule[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
@@ -360,4 +399,99 @@ model SupplierProduct {
   product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([supplierId, supplierSku])
+}
+
+model PricingRule {
+  id         String            @id @default(cuid())
+  name       String
+  ruleType   PricingRuleType
+  ruleScope  PricingRuleScope  @default(GLOBAL)
+  productId  String?
+  categoryId String?
+  supplierId String?
+  currency   String            @default("GBP")
+  priority   Int               @default(0)
+  active     Boolean           @default(true)
+  config     Json
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  product    Product?          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category?         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  supplier   Supplier?         @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  pricing    ProductPricing[]
+
+  @@index([active, priority])
+  @@index([ruleScope, active])
+  @@index([productId, active])
+  @@index([categoryId, active])
+  @@index([supplierId, active])
+}
+
+model ProductPricing {
+  id                     String       @id @default(cuid())
+  productId              String       @unique
+  pricingRuleId          String?
+  costMinor              Int
+  retailMinor            Int
+  buyMinor               Int
+  marginMinor            Int
+  markupPercent          Int
+  profitMinor            Int
+  minimumMarginPercent   Int          @default(0)
+  maximumDiscountPercent Int          @default(0)
+  priceSource            String
+  priceStatus            PriceStatus  @default(ACTIVE)
+  manualOverride         Boolean      @default(false)
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  product                Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  pricingRule            PricingRule? @relation(fields: [pricingRuleId], references: [id], onDelete: SetNull)
+
+  @@index([buyMinor])
+  @@index([priceSource, manualOverride])
+  @@index([updatedAt])
+}
+
+model Buylist {
+  id                   String         @id @default(cuid())
+  buylistNumber        String         @unique
+  userId               String
+  status               BuylistStatus  @default(DRAFT)
+  currency             String         @default("GBP")
+  estimatedPayoutMinor Int            @default(0)
+  offeredPayoutMinor   Int            @default(0)
+  customerNotes        String?
+  staffNotes           String?
+  paymentReference     String?
+  submittedAt          DateTime?
+  receivedAt           DateTime?
+  reviewedAt           DateTime?
+  approvedAt           DateTime?
+  rejectedAt           DateTime?
+  paidAt               DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  user                 User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items                BuylistItem[]
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+  @@index([createdAt])
+}
+
+model BuylistItem {
+  id                String   @id @default(cuid())
+  buylistId         String
+  productId         String
+  quantity          Int
+  estimatedBuyMinor Int
+  offeredBuyMinor   Int      @default(0)
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  buylist           Buylist  @relation(fields: [buylistId], references: [id], onDelete: Cascade)
+  product           Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([buylistId, productId])
+  @@index([productId, createdAt])
 }

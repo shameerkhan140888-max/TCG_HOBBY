@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Button, Card, CardContent, Container, Section } from '@tcg-hobby/ui';
 import { PageHeader, StatusBadge } from '@tcg-hobby/ui';
+import { EmptyPricingState, PricingCard } from '@tcg-hobby/ui';
 import { getAdminProductById, getAdminProducts } from '@tcg-hobby/database';
 import { emptyProductFormValues } from '../../../../lib/admin-form-state';
 import { archiveProductAction, toggleProductPublicationAction } from '../../../../lib/admin-actions.server';
@@ -50,6 +51,20 @@ export default async function AdminProductDetailPage({ params }: { params: Promi
   }
 
   const state = productState(product);
+  const pricingSnapshot = {
+    costMinor: product.costMinor,
+    retailMinor: product.priceMinor,
+    buyMinor: product.buyMinor,
+    marginMinor: product.marginMinor,
+    markupPercent: product.markupPercent,
+    profitMinor: product.profitMinor,
+    minimumMarginPercent: product.minimumMarginPercent,
+    maximumDiscountPercent: product.maximumDiscountPercent,
+    priceSource: product.priceSource,
+    priceStatus: product.priceStatus as 'ACTIVE' | 'MANUAL_OVERRIDE' | 'DISABLED' | 'FUTURE',
+    manualOverride: product.manualOverride,
+    updatedAt: product.priceUpdatedAt?.toISOString() ?? new Date().toISOString(),
+  };
 
   return (
     <Section className="py-8">
@@ -108,6 +123,19 @@ export default async function AdminProductDetailPage({ params }: { params: Promi
             </CardContent>
           </Card>
         </div>
+
+        {product.priceUpdatedAt ? (
+          <PricingCard
+            snapshot={pricingSnapshot}
+            title="Pricing snapshot"
+            description="Current cost, retail, buy, and guard rails for this product."
+          />
+        ) : (
+          <EmptyPricingState
+            title="Pricing snapshot unavailable"
+            description="Refresh the product or seed pricing data before staff can review buy and margin details."
+          />
+        )}
 
         <ProductForm
           state={state}

@@ -150,3 +150,43 @@ export type OrderSummary = {
   taxMinor: number;
   totalMinor: number;
 };
+
+export type PricingRuleType =
+  | 'MANUAL'
+  | 'COST_PLUS_PERCENT'
+  | 'FIXED_MARGIN'
+  | 'SUPPLIER_COST'
+  | 'PROMOTIONAL'
+  | 'FUTURE_MARKET_FEED';
+
+export type PricingRuleScope = 'GLOBAL' | 'PRODUCT' | 'CATEGORY' | 'SUPPLIER';
+
+export type PriceStatus = 'ACTIVE' | 'MANUAL_OVERRIDE' | 'DISABLED' | 'FUTURE';
+
+export type BuylistStatus = 'DRAFT' | 'SUBMITTED' | 'RECEIVED' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'PAID';
+
+export type PricingSnapshot = {
+  costMinor: number;
+  retailMinor: number;
+  buyMinor: number;
+  marginMinor: number;
+  markupPercent: number;
+  profitMinor: number;
+  minimumMarginPercent: number;
+  maximumDiscountPercent: number;
+  priceSource: string;
+  priceStatus: PriceStatus;
+  manualOverride: boolean;
+  updatedAt: string;
+};
+
+export type BuylistSummary = {
+  id: string;
+  buylistNumber: string;
+  status: BuylistStatus;
+  currency: CurrencyCode;
+  estimatedPayoutMinor: number;
+  offeredPayoutMinor: number;
+  itemCount: number;
+  createdAt: string;
+};

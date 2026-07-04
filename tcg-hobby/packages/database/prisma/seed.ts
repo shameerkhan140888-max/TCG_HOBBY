@@ -2,11 +2,15 @@ import { prisma } from '../src/client';
 import {
   seedAddresses,
   seedCategories,
+  seedBuylistItems,
+  seedBuylists,
   seedCartItems,
   seedCarts,
   seedInventory,
   seedOrderItems,
   seedOrders,
+  seedPricingRules,
+  seedProductPricing,
   seedProductImages,
   seedProducts,
   seedWishlists,
@@ -20,9 +24,13 @@ async function main() {
   await prisma.orderItem.deleteMany();
   await prisma.wishlistItem.deleteMany();
   await prisma.wishlist.deleteMany();
+  await prisma.buylistItem.deleteMany();
+  await prisma.buylist.deleteMany();
   await prisma.cartItem.deleteMany();
   await prisma.supplierProduct.deleteMany();
   await prisma.productImage.deleteMany();
+  await prisma.productPricing.deleteMany();
+  await prisma.pricingRule.deleteMany();
   await prisma.order.deleteMany();
   await prisma.cart.deleteMany();
   await prisma.address.deleteMany();
@@ -106,6 +114,60 @@ async function main() {
     }),
   });
 
+  await prisma.pricingRule.createMany({
+    data: seedPricingRules.map((rule) => {
+      const categoryId = rule.categorySlug
+        ? seedCategories.find((item) => item.slug === rule.categorySlug)?.id ?? null
+        : null;
+      const productId = rule.productSlug
+        ? seedProducts.find((item) => item.slug === rule.productSlug)?.id ?? null
+        : null;
+      const supplierId = rule.supplierSlug
+        ? seedSuppliers.find((item) => item.slug === rule.supplierSlug)?.id ?? null
+        : null;
+
+      return {
+        id: rule.id,
+        name: rule.name,
+        ruleType: rule.ruleType,
+        ruleScope: rule.ruleScope,
+        productId,
+        categoryId,
+        supplierId,
+        currency: rule.currency,
+        priority: rule.priority,
+        active: rule.active,
+        config: rule.config,
+      };
+    }),
+  });
+
+  await prisma.productPricing.createMany({
+    data: seedProductPricing.map((pricing) => {
+      const product = seedProducts.find((entry) => entry.slug === pricing.productSlug);
+      if (!product) {
+        throw new Error(`Missing product for pricing ${pricing.id}`);
+      }
+
+      return {
+        id: pricing.id,
+        productId: product.id,
+        pricingRuleId: pricing.pricingRuleId,
+        costMinor: pricing.costMinor,
+        retailMinor: pricing.retailMinor,
+        buyMinor: pricing.buyMinor,
+        marginMinor: pricing.marginMinor,
+        markupPercent: pricing.markupPercent,
+        profitMinor: pricing.profitMinor,
+        minimumMarginPercent: pricing.minimumMarginPercent,
+        maximumDiscountPercent: pricing.maximumDiscountPercent,
+        priceSource: pricing.priceSource,
+        priceStatus: pricing.priceStatus,
+        manualOverride: pricing.manualOverride,
+      };
+    }),
+  });
+
   await prisma.cart.createMany({
     data: seedCarts,
   });
@@ -175,6 +237,47 @@ async function main() {
         costMinor: item.costMinor,
         currency: item.currency,
         leadTimeDays: item.leadTimeDays,
+      };
+    }),
+  });
+
+  await prisma.buylist.createMany({
+    data: seedBuylists.map((buylist) => ({
+      id: buylist.id,
+      buylistNumber: buylist.buylistNumber,
+      userId: buylist.userId,
+      status: buylist.status,
+      currency: buylist.currency,
+      estimatedPayoutMinor: buylist.estimatedPayoutMinor,
+      offeredPayoutMinor: buylist.offeredPayoutMinor,
+      customerNotes: buylist.customerNotes,
+      staffNotes: buylist.staffNotes,
+      paymentReference: buylist.paymentReference,
+      submittedAt: buylist.submittedAt ? new Date(buylist.submittedAt) : null,
+      receivedAt: buylist.receivedAt ? new Date(buylist.receivedAt) : null,
+      reviewedAt: buylist.reviewedAt ? new Date(buylist.reviewedAt) : null,
+      approvedAt: buylist.approvedAt ? new Date(buylist.approvedAt) : null,
+      rejectedAt: buylist.rejectedAt ? new Date(buylist.rejectedAt) : null,
+      paidAt: buylist.paidAt ? new Date(buylist.paidAt) : null,
+    })),
+  });
+
+  await prisma.buylistItem.createMany({
+    data: seedBuylistItems.map((item) => {
+      const product = seedProducts.find((entry) => entry.slug === item.productSlug);
+
+      if (!product) {
+        throw new Error(`Missing product for buylist item ${item.id}`);
+      }
+
+      return {
+        id: item.id,
+        buylistId: item.buylistId,
+        productId: product.id,
+        quantity: item.quantity,
+        estimatedBuyMinor: item.estimatedBuyMinor,
+        offeredBuyMinor: item.offeredBuyMinor,
+        notes: item.notes,
       };
     }),
   });

@@ -1,5 +1,6 @@
 import { Button, Container, Section } from '@tcg-hobby/ui';
 import { AdminTable, EmptyTableState, PageHeader, SearchToolbar, StatusBadge } from '@tcg-hobby/ui';
+import { PriceBadge } from '@tcg-hobby/ui';
 import { getAdminProducts } from '@tcg-hobby/database';
 
 export const dynamic = 'force-dynamic';
@@ -90,7 +91,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
         </SearchToolbar>
 
         {data.products.length ? (
-          <AdminTable columns={['Product', 'Category', 'Supplier', 'Price', 'Stock', 'Status', 'Actions']}>
+          <AdminTable columns={['Product', 'Category', 'Supplier', 'Retail', 'Buy', 'Margin', 'Source', 'Stock', 'Status', 'Actions']}>
             <tbody className="divide-y divide-surface-line bg-surface-base">
               {data.products.map((product) => (
                 <tr key={product.id} className="align-top">
@@ -102,6 +103,24 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
                   <td className="px-4 py-4 text-neutral-300">{product.categoryName}</td>
                   <td className="px-4 py-4 text-neutral-300">{product.supplierName}</td>
                   <td className="px-4 py-4 text-neutral-300">{formatMoney(product.priceMinor)}</td>
+                  <td className="px-4 py-4 text-neutral-300">
+                    <PriceBadge label="Buy" amountMinor={product.buyMinor} tone="accent" />
+                  </td>
+                  <td className="px-4 py-4 text-neutral-300">
+                    <div>{formatMoney(product.marginMinor)}</div>
+                    <div className="text-xs text-neutral-500">{product.marginPercent}% margin</div>
+                  </td>
+                  <td className="px-4 py-4 text-neutral-300">
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-neutral-50">{product.priceSource}</div>
+                      <div className="flex flex-wrap gap-2">
+                        {product.manualOverride ? <StatusBadge tone="accent">Manual override</StatusBadge> : null}
+                        <StatusBadge tone={product.priceStatus === 'ACTIVE' ? 'success' : product.priceStatus === 'MANUAL_OVERRIDE' ? 'accent' : 'warning'}>
+                          {product.priceStatus}
+                        </StatusBadge>
+                      </div>
+                    </div>
+                  </td>
                   <td className="px-4 py-4 text-neutral-300">{product.availableStock} available</td>
                   <td className="px-4 py-4">
                     <div className="flex flex-wrap gap-2">

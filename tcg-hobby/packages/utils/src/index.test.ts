@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMoney, slugify } from './index';
+import { calculatePercentage, clampMinorAmount, formatMoney, roundToMinor, slugify, sumMinorAmounts } from './index';
 
 describe('utils', () => {
   it('formats money in minor units', () => {
@@ -8,5 +8,12 @@ describe('utils', () => {
 
   it('creates stable slugs', () => {
     expect(slugify('Premium Booster Box!')).toBe('premium-booster-box');
+  });
+
+  it('handles integer money helpers safely', () => {
+    expect(clampMinorAmount(1299.8)).toBe(1299);
+    expect(sumMinorAmounts([100, -2, 250.9])).toBe(350);
+    expect(calculatePercentage(250, 1000)).toBe(25);
+    expect(roundToMinor(12.4)).toBe(12);
   });
 });

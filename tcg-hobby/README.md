@@ -112,6 +112,34 @@ npm run db:generate
 npm run db:seed
 ```
 
+## Sprint 7 Pricing and Buylist Flow
+
+```bash
+docker compose up -d
+npm run db:generate
+npm run db:seed
+npm run dev
+```
+
+Then open:
+
+- `http://localhost:3000/buylist`
+- `http://localhost:3000/buylist/search`
+- `http://localhost:3000/buylist/cart`
+- `http://localhost:3001/admin/buylist`
+
+Pricing notes:
+
+- Pricing calculations use integer minor units only.
+- Buylist estimates are seeded and rule-driven in development.
+- Live market feed integration is intentionally deferred.
+
+## Local Commands
+
+- `npm run db:generate` regenerates the Prisma client.
+- `npm run db:seed` loads the seeded catalogue, pricing, order, and buylist data.
+- `npm run dev` starts the full Turborepo workspace.
+
 ## Infrastructure
 
 - PostgreSQL is defined in `docker-compose.yml`.
