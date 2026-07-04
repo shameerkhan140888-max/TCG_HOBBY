@@ -50,3 +50,11 @@ All notable changes to TCG Hobby are documented here.
 - Expanded the shared UI package with collection and deck cards, statistics, progress bars, and empty states for hobby workflows.
 - Seeded starter collection and deck data so the new hobby tools are visible immediately after running the local seed task.
 - Added repository coverage for collection math, deck rules, and deck composition calculations.
+
+## Sprint 9
+
+- Added the pre-order and upcoming releases experience with coming soon hub pages, release calendar filters, homepage merchandising, and admin release management.
+- Extended the commerce schema so products can carry pre-order state, release timing, allocation controls, and notification subscriptions.
+- Added notification foundation so customers can register interest in future releases without sending email yet.
+- Expanded the shared UI package with countdown, release card, preorder badge, notify button, announcement banner, and allocation components.
+- Added release repository coverage for countdown calculations, allocation warnings, release filters, notification persistence, and pre-order availability behavior.

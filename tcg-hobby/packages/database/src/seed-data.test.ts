@@ -22,4 +22,8 @@ describe('database seed data', () => {
   it('marks seeded published products as visible', () => {
     expect(isCatalogueProductVisible(seedProducts[0]!)).toBe(true);
   });
+
+  it('includes preorder release metadata in the seed set', () => {
+    expect(seedProducts.some((product) => product.releaseStatus === 'PREORDER')).toBe(true);
+  });
 });

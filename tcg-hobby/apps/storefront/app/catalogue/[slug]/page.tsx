@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
-import { Breadcrumbs, Button, Container, EmptyState, ProductCard, ProductDetailHero, Section, WishlistButton } from '@tcg-hobby/ui';
-import { getCatalogueCategories, getCatalogueProductBySlug, getWishlistProductIds } from '@tcg-hobby/database';
+import { Breadcrumbs, Button, Container, EmptyState, ProductCard, ProductDetailHero, Section, WishlistButton, NotifyButton } from '@tcg-hobby/ui';
+import { getCatalogueCategories, getCatalogueProductBySlug, getCustomerNotificationSubscriptions, getWishlistProductIds } from '@tcg-hobby/database';
 import { SiteHeader } from '../../../components/site-header';
 import { AddToCartButton, AddToCartWithQuantityForm } from '../../../components/cart-actions';
 import { getCurrentCustomerSession } from '../../../lib/auth';
 import { toggleWishlistAction } from '../../../lib/wishlist';
+import { toggleNotificationAction } from '../../../lib/release-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +34,8 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
     getCurrentCustomerSession(),
   ]);
   const wishlistIds = session?.user.role === 'CUSTOMER' ? await getWishlistProductIds(session.user.id) : [];
+  const notificationIds =
+    session?.user.role === 'CUSTOMER' ? (await getCustomerNotificationSubscriptions(session.user.id)).map((item) => item.productId) : [];
 
   if (!product) {
     notFound();
@@ -74,14 +77,22 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
           actionSlot={
             <div className="flex flex-wrap items-center gap-2">
               {session?.user.role === 'CUSTOMER' ? (
-                product.inStock ? (
+                product.releaseStatus && product.releaseStatus !== 'RELEASED' ? (
+                  <NotifyButton
+                    productId={product.id}
+                    subscribed={notificationIds.includes(product.id)}
+                    preference={product.releaseStatus === 'PREORDER' ? 'PREORDER' : 'RELEASE'}
+                    action={toggleNotificationAction}
+                    returnTo={currentHref}
+                  />
+                ) : product.inStock ? (
                   <AddToCartWithQuantityForm productId={product.id} returnTo={currentHref} maxQuantity={availableQuantity} />
                 ) : (
                   <Button disabled>Out of stock</Button>
                 )
               ) : (
                 <Button asChild>
-                  <a href={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}>Add to cart</a>
+                  <a href={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}>{product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'Notify me' : 'Add to cart'}</a>
                 </Button>
               )}
               <WishlistButton
@@ -128,7 +139,15 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
                   actionSlot={
                     <div className="flex items-center gap-2">
                       {session?.user.role === 'CUSTOMER' ? (
-                        item.inStock ? (
+                        item.releaseStatus && item.releaseStatus !== 'RELEASED' ? (
+                          <NotifyButton
+                            productId={item.id}
+                            subscribed={notificationIds.includes(item.id)}
+                            preference={item.releaseStatus === 'PREORDER' ? 'PREORDER' : 'RELEASE'}
+                            action={toggleNotificationAction}
+                            returnTo={`/catalogue/${item.slug}`}
+                          />
+                        ) : item.inStock ? (
                           <AddToCartButton productId={item.id} returnTo={`/catalogue/${item.slug}`} />
                         ) : (
                           <Button disabled size="sm">
@@ -137,7 +156,7 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
                         )
                       ) : (
                         <Button asChild size="sm" variant="secondary">
-                          <a href={`/login?callbackUrl=${encodeURIComponent(`/catalogue/${item.slug}`)}`}>Add to cart</a>
+                          <a href={`/login?callbackUrl=${encodeURIComponent(`/catalogue/${item.slug}`)}`}>{item.releaseStatus && item.releaseStatus !== 'RELEASED' ? 'Notify me' : 'Add to cart'}</a>
                         </Button>
                       )}
                       <WishlistButton

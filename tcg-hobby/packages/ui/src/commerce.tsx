@@ -43,6 +43,15 @@ export type ProductCardProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 export function ProductCard({ product, href, actionSlot, className, ...props }: ProductCardProps) {
+  const releaseBadge =
+    product.releaseStatus && product.releaseStatus !== 'RELEASED'
+      ? product.releaseStatus === 'PREORDER'
+        ? product.preorderBadgeLabel ?? 'Pre-order'
+        : product.comingSoonBadgeLabel ?? 'Coming soon'
+      : product.featured
+        ? 'Featured'
+        : product.badge;
+
   return (
     <Card className={cn('group h-full overflow-hidden transition-colors hover:border-accent/60', className)} {...props}>
       <CardContent className="flex h-full flex-col gap-4">
@@ -50,8 +59,12 @@ export function ProductCard({ product, href, actionSlot, className, ...props }: 
           <div className="aspect-[5/4] rounded-md border border-surface-line bg-gradient-to-br from-surface-panel via-surface-ink to-accent/20 p-4 transition-transform group-hover:scale-[1.01]">
             <div className="flex h-full flex-col justify-between">
               <div className="flex items-center justify-between gap-3">
-                <Badge variant={product.featured ? 'accent' : 'neutral'}>{product.featured ? 'Featured' : product.badge}</Badge>
-                <Badge variant={product.inStock ? 'success' : 'warning'}>{product.inStock ? 'In stock' : 'Low stock'}</Badge>
+                <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'warning' : product.featured ? 'accent' : 'neutral'}>
+                  {releaseBadge}
+                </Badge>
+                <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'accent' : product.inStock ? 'success' : 'warning'}>
+                  {product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'Release soon' : product.inStock ? 'In stock' : 'Low stock'}
+                </Badge>
               </div>
               <div className="self-start rounded-md border border-white/10 bg-black/30 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300">
                 {product.imageLabel}
@@ -62,6 +75,7 @@ export function ProductCard({ product, href, actionSlot, className, ...props }: 
             <p className="text-sm text-neutral-400">{product.game}</p>
             <h3 className="min-h-14 text-lg font-bold leading-7 text-neutral-50">{product.name}</h3>
             <p className="line-clamp-3 text-sm leading-6 text-neutral-400">{product.description}</p>
+            {product.availabilityMessage ? <p className="text-xs leading-5 text-neutral-500">{product.availabilityMessage}</p> : null}
           </div>
         </a>
         <div className="mt-auto flex items-end justify-between gap-3">
@@ -157,19 +171,31 @@ export type ProductDetailHeroProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 export function ProductDetailHero({ product, actionSlot, className, ...props }: ProductDetailHeroProps) {
+  const releaseBadge =
+    product.releaseStatus && product.releaseStatus !== 'RELEASED'
+      ? product.releaseStatus === 'PREORDER'
+        ? product.preorderBadgeLabel ?? 'Pre-order'
+        : product.comingSoonBadgeLabel ?? 'Coming soon'
+      : product.featured
+        ? 'Featured'
+        : product.badge;
+
   return (
     <Card className={cn('overflow-hidden', className)} {...props}>
       <CardContent className="grid gap-6 p-0 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="min-h-[420px] bg-[linear-gradient(135deg,#2a1710,#111113_55%,#29251d)] p-6">
           <div className="flex h-full flex-col justify-between rounded-lg border border-white/10 bg-black/15 p-6">
             <div className="flex items-center justify-between gap-4">
-              <Badge variant="accent">{product.featured ? 'Featured' : product.badge}</Badge>
-              <Badge variant={product.inStock ? 'success' : 'warning'}>{product.inStock ? 'In stock' : 'Limited'}</Badge>
+              <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'warning' : 'accent'}>{releaseBadge}</Badge>
+              <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'accent' : product.inStock ? 'success' : 'warning'}>
+                {product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'Release soon' : product.inStock ? 'In stock' : 'Limited'}
+              </Badge>
             </div>
             <div className="space-y-3">
               <p className="text-sm uppercase tracking-[0.2em] text-neutral-400">{product.imageLabel}</p>
               <h2 className="max-w-xl text-3xl font-black leading-tight text-neutral-50 sm:text-4xl">{product.name}</h2>
               <p className="max-w-2xl text-sm leading-6 text-neutral-300">{product.description}</p>
+              {product.availabilityMessage ? <p className="max-w-2xl text-sm leading-6 text-neutral-400">{product.availabilityMessage}</p> : null}
             </div>
           </div>
         </div>
@@ -196,6 +222,12 @@ export function ProductDetailHero({ product, actionSlot, className, ...props }: 
               <p className="text-xs uppercase tracking-wide text-neutral-500">Available stock</p>
               <p className="mt-1 font-semibold text-neutral-50">{product.stockOnHand - product.reservedStock}</p>
             </div>
+            {product.releaseDate ? (
+              <div className="rounded-lg border border-surface-line bg-surface-ink p-4 sm:col-span-2">
+                <p className="text-xs uppercase tracking-wide text-neutral-500">Release date</p>
+                <p className="mt-1 font-semibold text-neutral-50">{new Date(product.releaseDate).toLocaleDateString('en-GB')}</p>
+              </div>
+            ) : null}
           </div>
           <div className="flex items-center justify-between gap-4 rounded-lg border border-surface-line bg-surface-ink p-4">
             <div>

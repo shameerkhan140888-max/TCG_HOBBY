@@ -158,11 +158,35 @@ Sprint 8 notes:
 - Collection and deck screens are intentionally valuation-free; no market pricing is calculated for owned cards.
 - Seed data includes a starter customer collection and a starter deck so the new tools are visible immediately after seeding.
 
+## Sprint 9 Pre-order and Release Hub
+
+```bash
+docker compose up -d
+npm run db:generate
+npm run db:seed
+npm run dev
+```
+
+Then open:
+
+- `http://localhost:3000/coming-soon`
+- `http://localhost:3000/releases`
+- `http://localhost:3000/account/notifications`
+- `http://localhost:3001/admin/releases`
+
+Sprint 9 notes:
+
+- Release records now power a premium coming soon hub, release calendar, homepage merchandising, and admin release management.
+- Product records can carry pre-order status, release dates, allocation controls, and user-facing availability messaging.
+- Customers can register interest without email sending yet; notification data is stored for later orchestration.
+- The shared UI package now includes countdown, release, preorder, allocation, and announcement components for reuse across storefront and admin surfaces.
+
 ## Local Commands
 
 - `npm run db:generate` regenerates the Prisma client.
 - `npm run db:seed` loads the seeded catalogue, pricing, order, and buylist data.
 - `npm run db:seed` also loads the starter collection and deck data for Sprint 8.
+- `npm run db:seed` also loads seeded release, pre-order, and notification data for Sprint 9.
 - `npm run dev` starts the full Turborepo workspace.
 
 ## Infrastructure

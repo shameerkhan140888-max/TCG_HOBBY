@@ -55,6 +55,17 @@ type CatalogueProductRow = {
     supplierSku: string;
     leadTimeDays: number;
   }>;
+  releaseStatus: 'RELEASED' | 'PREORDER' | 'COMING_SOON' | 'ARCHIVED';
+  releaseDate: Date | null;
+  expectedDispatchAt: Date | null;
+  expectedArrivalAt: Date | null;
+  allocationLimit: number | null;
+  customerPurchaseLimit: number | null;
+  supplierAllocation: number | null;
+  lowAllocationThreshold: number | null;
+  availabilityMessage: string | null;
+  preorderBadgeLabel: string | null;
+  comingSoonBadgeLabel: string | null;
 };
 
 type CatalogueCategoryRow = ProductCategoryRow & {
@@ -113,8 +124,19 @@ function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct 
     stockOnHand: inventory.stockOnHand,
     reservedStock: inventory.reservedStock,
     supplierName: supplier.name,
-    badge: product.featured ? 'Featured' : product.category.name,
+    badge: product.featured ? 'Featured' : product.releaseStatus !== 'RELEASED' ? product.releaseStatus.replace('_', ' ') : product.category.name,
     imageLabel: product.imageLabel,
+    releaseStatus: product.releaseStatus,
+    releaseDate: product.releaseDate?.toISOString() ?? null,
+    expectedDispatchAt: product.expectedDispatchAt?.toISOString() ?? null,
+    expectedArrivalAt: product.expectedArrivalAt?.toISOString() ?? null,
+    allocationLimit: product.allocationLimit,
+    customerPurchaseLimit: product.customerPurchaseLimit,
+    supplierAllocation: product.supplierAllocation,
+    lowAllocationThreshold: product.lowAllocationThreshold,
+    availabilityMessage: product.availabilityMessage,
+    preorderBadgeLabel: product.preorderBadgeLabel,
+    comingSoonBadgeLabel: product.comingSoonBadgeLabel,
   };
 }
 

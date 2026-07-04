@@ -1,10 +1,11 @@
 import { Badge, Button, Card, CardContent, Container, PageShell, ProductCard, Price, Section, WishlistButton } from '@tcg-hobby/ui';
-import { getCatalogueHomeData } from '@tcg-hobby/database';
-import { getWishlistProductIds } from '@tcg-hobby/database';
+import { AnnouncementBanner, NotifyButton, ReleaseCard, ReleaseHero } from '@tcg-hobby/ui';
+import { getCatalogueHomeData, getComingSoonHubData, getCustomerNotificationSubscriptions, getWishlistProductIds } from '@tcg-hobby/database';
 import { SiteHeader } from '../components/site-header';
 import { AddToCartButton } from '../components/cart-actions';
 import { getCurrentCustomerSession } from '../lib/auth';
 import { toggleWishlistAction } from '../lib/wishlist';
+import { toggleNotificationAction } from '../lib/release-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,8 +15,11 @@ export default async function HomePage() {
     getCurrentCustomerSession(),
   ]);
   const wishlistIds = session?.user.role === 'CUSTOMER' ? await getWishlistProductIds(session.user.id) : [];
+  const releaseHub = await getComingSoonHubData();
+  const notificationIds =
+    session?.user.role === 'CUSTOMER' ? (await getCustomerNotificationSubscriptions(session.user.id)).map((item) => item.productId) : [];
   const { categories, featuredProducts } = homeData;
-  const heroProduct = featuredProducts[0];
+  const heroProduct = featuredProducts.find((product) => !product.releaseStatus || product.releaseStatus === 'RELEASED') ?? featuredProducts[0];
   const returnTo = '/';
 
   return (
@@ -111,6 +115,85 @@ export default async function HomePage() {
           </Container>
         </Section>
 
+        <Section className="border-b border-surface-line bg-surface-base">
+          <Container className="space-y-8">
+            <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-accent">Upcoming releases</p>
+                <h2 className="mt-2 text-3xl font-bold">The next launch wave</h2>
+              </div>
+              <Button asChild variant="outline">
+                <a href="/coming-soon">Visit coming soon</a>
+              </Button>
+            </div>
+
+            {releaseHub.featuredRelease ? (
+              <ReleaseHero
+                release={releaseHub.featuredRelease}
+                actionSlot={
+                  <>
+                    {session?.user.role === 'CUSTOMER' ? (
+                      <NotifyButton
+                        productId={releaseHub.featuredRelease.products[0]?.productId ?? ''}
+                        subscribed={notificationIds.includes(releaseHub.featuredRelease.products[0]?.productId ?? '')}
+                        preference="ALL"
+                        action={toggleNotificationAction}
+                        returnTo="/"
+                      />
+                    ) : (
+                      <Button asChild variant="secondary">
+                        <a href="/login?callbackUrl=%2F">Notify me</a>
+                      </Button>
+                    )}
+                    <Button asChild variant="outline">
+                      <a href="/releases">Open calendar</a>
+                    </Button>
+                  </>
+                }
+              />
+            ) : null}
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {releaseHub.trendingUpcoming.slice(0, 3).map((product) => (
+                <ReleaseCard
+                  key={product.id}
+                  release={product}
+                  actionSlot={
+                    <div className="flex items-center gap-2">
+                      {session?.user.role === 'CUSTOMER' ? (
+                        <NotifyButton
+                          productId={product.productId}
+                          subscribed={notificationIds.includes(product.productId)}
+                          preference="PREORDER"
+                          action={toggleNotificationAction}
+                          returnTo="/"
+                        />
+                      ) : (
+                        <Button asChild size="sm" variant="secondary">
+                          <a href="/login?callbackUrl=%2F">Notify me</a>
+                        </Button>
+                      )}
+                      <Button asChild size="sm" variant="outline">
+                        <a href={`/catalogue/${product.productSlug}`}>Open product</a>
+                      </Button>
+                    </div>
+                  }
+                />
+              ))}
+            </div>
+
+            <AnnouncementBanner
+              title="Release momentum"
+              message="Weekly visits now have a reason to start with the next preorder wave, a live calendar, and release notifications that stay inside the customer account."
+              action={
+                <Button asChild>
+                  <a href="/coming-soon">See what is next</a>
+                </Button>
+              }
+            />
+          </Container>
+        </Section>
+
         <Section className="border-t border-surface-line bg-surface-base" id="featured-products">
           <Container>
             <div className="mb-8 flex items-end justify-between gap-4">
@@ -131,10 +214,20 @@ export default async function HomePage() {
                   actionSlot={
                     <div className="flex items-center gap-2">
                       {session?.user.role === 'CUSTOMER' ? (
-                        <AddToCartButton productId={product.id} returnTo={returnTo} />
+                        product.releaseStatus && product.releaseStatus !== 'RELEASED' ? (
+                          <NotifyButton
+                            productId={product.id}
+                            subscribed={notificationIds.includes(product.id)}
+                            preference={product.releaseStatus === 'PREORDER' ? 'PREORDER' : 'RELEASE'}
+                            action={toggleNotificationAction}
+                            returnTo={returnTo}
+                          />
+                        ) : (
+                          <AddToCartButton productId={product.id} returnTo={returnTo} />
+                        )
                       ) : (
                         <Button asChild size="sm" variant="secondary">
-                          <a href={`/login?callbackUrl=${encodeURIComponent(returnTo)}`}>Add to cart</a>
+                          <a href={`/login?callbackUrl=${encodeURIComponent(returnTo)}`}>{product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'Notify me' : 'Add to cart'}</a>
                         </Button>
                       )}
                       <WishlistButton

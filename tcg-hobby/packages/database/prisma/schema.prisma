@@ -89,6 +89,19 @@ enum BuylistStatus {
   PAID
 }
 
+enum ProductReleaseStatus {
+  RELEASED
+  PREORDER
+  COMING_SOON
+  ARCHIVED
+}
+
+enum NotificationPreference {
+  ALL
+  PREORDER
+  RELEASE
+}
+
 enum CollectionPrintVariant {
   REGULAR
   REVERSE_HOLO
@@ -122,6 +135,7 @@ model User {
   buylists      Buylist[]
   collection    Collection?
   decks         Deck[]
+  notificationSubscriptions NotificationSubscription[]
 }
 
 model Address {
@@ -186,6 +200,7 @@ model Category {
   imageLabel  String
   products    Product[]
   pricingRules PricingRule[]
+  releases    Release[]
 }
 
 model Supplier {
@@ -228,6 +243,17 @@ model Product {
   archivedAt    DateTime?
   searchText    String
   imageLabel    String
+  releaseStatus ProductReleaseStatus @default(RELEASED)
+  releaseDate   DateTime?
+  expectedDispatchAt DateTime?
+  expectedArrivalAt DateTime?
+  allocationLimit Int?
+  customerPurchaseLimit Int?
+  supplierAllocation Int?
+  lowAllocationThreshold Int?
+  availabilityMessage String?
+  preorderBadgeLabel String?
+  comingSoonBadgeLabel String?
   categoryId    String
   category      Category         @relation(fields: [categoryId], references: [id])
   inventory     InventoryItem?
@@ -242,6 +268,8 @@ model Product {
   collectionItems CollectionItem[]
   deckCards     DeckCard[]
   pricingRules  PricingRule[]
+  releaseProducts ReleaseProduct[]
+  notificationSubscriptions NotificationSubscription[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
@@ -249,6 +277,8 @@ model Product {
   @@index([categoryId, published])
   @@index([archivedAt, published])
   @@index([published, featured])
+  @@index([releaseStatus, releaseDate])
+  @@index([published, releaseStatus])
   @@index([name])
   @@index([searchText])
 }
@@ -267,6 +297,74 @@ model ProductImage {
 
   @@index([productId, isPrimary])
   @@index([productId, sortOrder])
+}
+
+model Release {
+  id               String          @id @default(cuid())
+  name             String
+  slug             String          @unique
+  brand            String
+  game             String
+  categoryId       String
+  releaseDate      DateTime
+  expectedDispatchAt DateTime?
+  expectedArrivalAt DateTime?
+  announcementText String?
+  releaseNotes     String?
+  visible          Boolean         @default(true)
+  featuredOnHomepage Boolean        @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  category         Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products         ReleaseProduct[]
+
+  @@index([releaseDate, visible])
+  @@index([featuredOnHomepage, visible])
+  @@index([categoryId, releaseDate])
+  @@index([brand, releaseDate])
+}
+
+model ReleaseProduct {
+  id                  String               @id @default(cuid())
+  releaseId           String
+  productId           String
+  status              ProductReleaseStatus @default(COMING_SOON)
+  releaseDate         DateTime?
+  expectedDispatchAt  DateTime?
+  expectedArrivalAt   DateTime?
+  allocationLimit     Int?
+  customerPurchaseLimit Int?
+  supplierAllocation  Int?
+  allocatedQuantity   Int                  @default(0)
+  lowAllocationThreshold Int?
+  availabilityMessage  String?
+  preorderBadgeLabel   String?
+  comingSoonBadgeLabel String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  release             Release              @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  product             Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([releaseId, productId])
+  @@index([productId, status])
+  @@index([releaseId, status])
+  @@index([releaseDate, status])
+  @@index([releaseId, productId])
+}
+
+model NotificationSubscription {
+  id            String                @id @default(cuid())
+  userId        String
+  productId     String
+  preference    NotificationPreference @default(ALL)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product       Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId, createdAt])
+  @@index([userId, preference])
 }
 
 model Wishlist {

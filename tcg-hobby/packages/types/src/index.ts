@@ -58,6 +58,17 @@ export type CatalogueProduct = {
   supplierName: string;
   badge: string;
   imageLabel: string;
+  releaseStatus?: ProductReleaseStatus;
+  releaseDate?: string | null;
+  expectedDispatchAt?: string | null;
+  expectedArrivalAt?: string | null;
+  allocationLimit?: number | null;
+  customerPurchaseLimit?: number | null;
+  supplierAllocation?: number | null;
+  lowAllocationThreshold?: number | null;
+  availabilityMessage?: string | null;
+  preorderBadgeLabel?: string | null;
+  comingSoonBadgeLabel?: string | null;
 };
 
 export type CatalogueProductDetail = CatalogueProduct & {
@@ -79,6 +90,8 @@ export type ProductSummary = {
   price: Money;
   inStock: boolean;
 };
+
+export type ProductReleaseStatus = 'RELEASED' | 'PREORDER' | 'COMING_SOON' | 'ARCHIVED';
 
 export type ApiHealth = {
   status: 'ok';
@@ -162,6 +175,8 @@ export type PricingRuleType =
 export type PricingRuleScope = 'GLOBAL' | 'PRODUCT' | 'CATEGORY' | 'SUPPLIER';
 
 export type PriceStatus = 'ACTIVE' | 'MANUAL_OVERRIDE' | 'DISABLED' | 'FUTURE';
+
+export type NotificationPreference = 'ALL' | 'PREORDER' | 'RELEASE';
 
 export type BuylistStatus = 'DRAFT' | 'SUBMITTED' | 'RECEIVED' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'PAID';
 
@@ -277,4 +292,79 @@ export type DeckDetail = DeckSummary & {
   notes: string | null;
   cards: DeckCard[];
   stats: DeckStats;
+};
+
+export type ReleaseProduct = {
+  id: string;
+  productId: string;
+  productName: string;
+  productSlug: string;
+  categoryName: string;
+  game: string;
+  releaseStatus: ProductReleaseStatus;
+  releaseDate: string | null;
+  expectedDispatchAt: string | null;
+  expectedArrivalAt: string | null;
+  allocationLimit: number | null;
+  customerPurchaseLimit: number | null;
+  supplierAllocation: number | null;
+  lowAllocationThreshold: number | null;
+  allocatedQuantity: number;
+  availabilityMessage: string | null;
+  preorderBadgeLabel: string | null;
+  comingSoonBadgeLabel: string | null;
+  supplierName: string;
+  imageLabel: string;
+};
+
+export type ReleaseSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  brand: string;
+  game: string;
+  categorySlug: string;
+  categoryName: string;
+  releaseDate: string;
+  expectedDispatchAt: string | null;
+  expectedArrivalAt: string | null;
+  announcementText: string | null;
+  releaseNotes: string | null;
+  visible: boolean;
+  featuredOnHomepage: boolean;
+  supplierName: string;
+  productCount: number;
+  preorderProductCount: number;
+  comingSoonProductCount: number;
+  lowAllocationCount: number;
+  products: ReleaseProduct[];
+};
+
+export type ReleaseCalendarEntry = {
+  id: string;
+  name: string;
+  slug: string;
+  brand: string;
+  game: string;
+  categorySlug: string;
+  categoryName: string;
+  releaseDate: string;
+  expectedDispatchAt: string | null;
+  expectedArrivalAt: string | null;
+  announcementText: string | null;
+  featuredOnHomepage: boolean;
+  visible: boolean;
+  productCount: number;
+  releaseStatusCounts: Record<ProductReleaseStatus, number>;
+  products: ReleaseProduct[];
+};
+
+export type NotificationSubscription = {
+  id: string;
+  productId: string;
+  productName: string;
+  productSlug: string;
+  preference: NotificationPreference;
+  createdAt: string;
+  updatedAt: string;
 };

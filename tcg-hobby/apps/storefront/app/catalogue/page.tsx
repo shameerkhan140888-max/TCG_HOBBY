@@ -1,10 +1,11 @@
-import { Button, Container, EmptyState, Input, Pagination, ProductCard, WishlistButton } from '@tcg-hobby/ui';
-import { getCatalogueProducts, getWishlistProductIds } from '@tcg-hobby/database';
+import { Button, Container, EmptyState, Input, Pagination, ProductCard, WishlistButton, NotifyButton } from '@tcg-hobby/ui';
+import { getCatalogueProducts, getCustomerNotificationSubscriptions, getWishlistProductIds } from '@tcg-hobby/database';
 import type { CatalogueSort } from '@tcg-hobby/types';
 import { SiteHeader } from '../../components/site-header';
 import { AddToCartButton } from '../../components/cart-actions';
 import { getCurrentCustomerSession } from '../../lib/auth';
 import { toggleWishlistAction } from '../../lib/wishlist';
+import { toggleNotificationAction } from '../../lib/release-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +64,8 @@ export default async function CataloguePage({
     getCurrentCustomerSession(),
   ]);
   const wishlistIds = session?.user.role === 'CUSTOMER' ? await getWishlistProductIds(session.user.id) : [];
+  const notificationIds =
+    session?.user.role === 'CUSTOMER' ? (await getCustomerNotificationSubscriptions(session.user.id)).map((item) => item.productId) : [];
 
   return (
     <>
@@ -131,10 +134,20 @@ export default async function CataloguePage({
                   actionSlot={
                     <div className="flex items-center gap-2">
                       {session?.user.role === 'CUSTOMER' ? (
-                        <AddToCartButton productId={product.id} returnTo={currentHref} />
+                        product.releaseStatus && product.releaseStatus !== 'RELEASED' ? (
+                          <NotifyButton
+                            productId={product.id}
+                            subscribed={notificationIds.includes(product.id)}
+                            preference={product.releaseStatus === 'PREORDER' ? 'PREORDER' : 'RELEASE'}
+                            action={toggleNotificationAction}
+                            returnTo={currentHref}
+                          />
+                        ) : (
+                          <AddToCartButton productId={product.id} returnTo={currentHref} />
+                        )
                       ) : (
                         <Button asChild size="sm" variant="secondary">
-                          <a href={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}>Add to cart</a>
+                          <a href={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}>{product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'Notify me' : 'Add to cart'}</a>
                         </Button>
                       )}
                       <WishlistButton

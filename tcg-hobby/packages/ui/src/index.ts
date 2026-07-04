@@ -116,5 +116,24 @@ export type {
   PricingCardProps,
   RuleBadgeProps,
 } from './pricing';
+export {
+  AllocationIndicator,
+  AnnouncementBanner,
+  NotifyButton,
+  PreorderBadge,
+  ReleaseCard,
+  ReleaseHero,
+  ReleaseTimeline,
+} from './release';
+export type {
+  AllocationIndicatorProps,
+  AnnouncementBannerProps,
+  NotifyButtonProps,
+  ReleaseCardProps,
+  ReleaseHeroProps,
+  ReleaseTimelineProps,
+} from './release';
+export { CountdownTimer } from './release-countdown';
+export type { CountdownTimerProps } from './release-countdown';
 export { Container, PageShell, Section, SplitLayout, Stack } from './layout';
 export { cn } from './lib/cn';

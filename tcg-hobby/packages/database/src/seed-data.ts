@@ -1,5 +1,12 @@
 import { hashPassword } from '@tcg-hobby/auth';
-import type { CatalogueCategory, CatalogueProduct, CatalogueProductDetail, Money } from '@tcg-hobby/types';
+import type {
+  CatalogueCategory,
+  CatalogueProduct,
+  CatalogueProductDetail,
+  Money,
+  NotificationPreference,
+  ProductReleaseStatus,
+} from '@tcg-hobby/types';
 
 type CategorySeed = {
   id: string;
@@ -67,6 +74,58 @@ type ProductSeed = {
   imageLabel: string;
   categorySlug: string;
   supplierSlug: string;
+  releaseStatus?: ProductReleaseStatus;
+  releaseDate?: string | null;
+  expectedDispatchAt?: string | null;
+  expectedArrivalAt?: string | null;
+  allocationLimit?: number | null;
+  customerPurchaseLimit?: number | null;
+  supplierAllocation?: number | null;
+  lowAllocationThreshold?: number | null;
+  availabilityMessage?: string | null;
+  preorderBadgeLabel?: string | null;
+  comingSoonBadgeLabel?: string | null;
+};
+
+type ReleaseSeed = {
+  id: string;
+  name: string;
+  slug: string;
+  brand: string;
+  game: string;
+  categorySlug: string;
+  releaseDate: string;
+  expectedDispatchAt: string | null;
+  expectedArrivalAt: string | null;
+  announcementText: string | null;
+  releaseNotes: string | null;
+  visible: boolean;
+  featuredOnHomepage: boolean;
+};
+
+type ReleaseProductSeed = {
+  id: string;
+  releaseSlug: string;
+  productSlug: string;
+  releaseStatus: ProductReleaseStatus;
+  releaseDate: string | null;
+  expectedDispatchAt: string | null;
+  expectedArrivalAt: string | null;
+  allocationLimit: number | null;
+  customerPurchaseLimit: number | null;
+  supplierAllocation: number | null;
+  lowAllocationThreshold: number | null;
+  allocatedQuantity: number;
+  availabilityMessage: string | null;
+  preorderBadgeLabel: string | null;
+  comingSoonBadgeLabel: string | null;
+};
+
+type NotificationSubscriptionSeed = {
+  id: string;
+  userId: string;
+  productSlug: string;
+  preference: NotificationPreference;
 };
 
 type PricingRuleSeed = {
@@ -578,9 +637,282 @@ const seededProducts: ProductSeed[] = [
     categorySlug: 'events',
     supplierSlug: 'gamegrid-wholesale',
   },
+  {
+    id: 'prod-ancient-legends-booster-box',
+    sku: 'SEALED-UPC-011',
+    slug: 'ancient-legends-booster-box',
+    name: 'Ancient Legends Booster Box',
+    game: 'Pokemon',
+    setName: 'Ancient Legends',
+    description: 'A headline preorder booster box with a tightly managed allocation.',
+    longDescription:
+      'Ancient Legends Booster Box is designed as a showcase preorder with a countdown-led launch window and a premium release hero treatment.',
+    condition: 'SEALED',
+    priceMinor: 12999,
+    currency: 'GBP',
+    featured: true,
+    published: true,
+    searchText: 'ancient legends booster box pokemon preorder sealed upcoming release',
+    imageLabel: 'Preorder box',
+    categorySlug: 'sealed-product',
+    supplierSlug: 'card-citadel',
+    releaseStatus: 'PREORDER',
+    releaseDate: '2026-07-26T09:00:00.000Z',
+    expectedDispatchAt: '2026-07-26T15:00:00.000Z',
+    expectedArrivalAt: '2026-07-29T09:00:00.000Z',
+    allocationLimit: 96,
+    customerPurchaseLimit: 2,
+    supplierAllocation: 120,
+    lowAllocationThreshold: 18,
+    availabilityMessage: 'Preorders are open with a limited allocation.',
+    preorderBadgeLabel: 'Pre-order open',
+    comingSoonBadgeLabel: 'Coming soon',
+  },
+  {
+    id: 'prod-cyber-destiny-trainer-box',
+    sku: 'SEALED-UPC-012',
+    slug: 'cyber-destiny-trainer-box',
+    name: 'Cyber Destiny Trainer Box',
+    game: 'Pokemon',
+    setName: 'Cyber Destiny',
+    description: 'A polished coming-soon trainer box with gift-friendly positioning.',
+    longDescription:
+      'Cyber Destiny Trainer Box is a coming-soon release built to anchor the homepage merchandising rail and the release calendar launch pages.',
+    condition: 'SEALED',
+    priceMinor: 4999,
+    currency: 'GBP',
+    featured: false,
+    published: true,
+    searchText: 'cyber destiny trainer box pokemon coming soon sealed preorder',
+    imageLabel: 'Launch box',
+    categorySlug: 'sealed-product',
+    supplierSlug: 'card-citadel',
+    releaseStatus: 'COMING_SOON',
+    releaseDate: '2026-08-09T09:00:00.000Z',
+    expectedDispatchAt: '2026-08-10T09:00:00.000Z',
+    expectedArrivalAt: '2026-08-12T09:00:00.000Z',
+    allocationLimit: 144,
+    customerPurchaseLimit: 4,
+    supplierAllocation: 180,
+    lowAllocationThreshold: 20,
+    availabilityMessage: 'Release announced. Notify me when preorders open.',
+    preorderBadgeLabel: 'Pre-order soon',
+    comingSoonBadgeLabel: 'Coming soon',
+  },
+  {
+    id: 'prod-astral-shield-sleeves',
+    sku: 'ACC-UPC-013',
+    slug: 'astral-shield-sleeves',
+    name: 'Astral Shield Sleeves',
+    game: 'Accessories',
+    setName: null,
+    description: 'Premium sleeves tied to the release wave for display and bundle merchandising.',
+    longDescription:
+      'Astral Shield Sleeves expand the accessories line for upcoming launch weekends and help drive repeat visits through weekly release updates.',
+    condition: 'SEALED',
+    priceMinor: 1199,
+    currency: 'GBP',
+    featured: false,
+    published: true,
+    searchText: 'astral shield sleeves accessories preorder coming soon premium',
+    imageLabel: 'Accessory pack',
+    categorySlug: 'accessories',
+    supplierSlug: 'gamegrid-wholesale',
+    releaseStatus: 'PREORDER',
+    releaseDate: '2026-07-31T09:00:00.000Z',
+    expectedDispatchAt: '2026-07-31T13:00:00.000Z',
+    expectedArrivalAt: '2026-08-02T09:00:00.000Z',
+    allocationLimit: 220,
+    customerPurchaseLimit: 6,
+    supplierAllocation: 260,
+    lowAllocationThreshold: 30,
+    availabilityMessage: 'Accessory preorder allocations are filling quickly.',
+    preorderBadgeLabel: 'Pre-order open',
+    comingSoonBadgeLabel: 'Coming soon',
+  },
+  {
+    id: 'prod-starlight-league-pass',
+    sku: 'EVT-UPC-014',
+    slug: 'starlight-league-pass',
+    name: 'Starlight League Pass',
+    game: 'One Piece Card Game',
+    setName: null,
+    description: 'Upcoming event product for league nights and prerelease weekends.',
+    longDescription:
+      'Starlight League Pass is a release-calendar friendly event item that keeps the venue-side commerce layer visible even before launch.',
+    condition: 'SEALED',
+    priceMinor: 1500,
+    currency: 'GBP',
+    featured: false,
+    published: true,
+    searchText: 'starlight league pass event upcoming release one piece',
+    imageLabel: 'Event pass',
+    categorySlug: 'events',
+    supplierSlug: 'gamegrid-wholesale',
+    releaseStatus: 'COMING_SOON',
+    releaseDate: '2026-08-18T09:00:00.000Z',
+    expectedDispatchAt: '2026-08-18T11:00:00.000Z',
+    expectedArrivalAt: '2026-08-20T09:00:00.000Z',
+    allocationLimit: 300,
+    customerPurchaseLimit: 10,
+    supplierAllocation: 350,
+    lowAllocationThreshold: 50,
+    availabilityMessage: 'Event tickets and bundled launch products are on the way.',
+    preorderBadgeLabel: 'Release soon',
+    comingSoonBadgeLabel: 'Coming soon',
+  },
 ];
 
 export const seedProducts = seededProducts;
+
+export const seedReleases: ReleaseSeed[] = [
+  {
+    id: 'release-ancient-legends',
+    name: 'Ancient Legends',
+    slug: 'ancient-legends',
+    brand: 'Pokemon',
+    game: 'Pokemon',
+    categorySlug: 'sealed-product',
+    releaseDate: '2026-07-26T09:00:00.000Z',
+    expectedDispatchAt: '2026-07-26T15:00:00.000Z',
+    expectedArrivalAt: '2026-07-29T09:00:00.000Z',
+    announcementText: 'A flagship preorder wave with a tightly controlled launch allocation.',
+    releaseNotes: 'Premium sealed product with a homepage hero slot and countdown focus.',
+    visible: true,
+    featuredOnHomepage: true,
+  },
+  {
+    id: 'release-cyber-destiny',
+    name: 'Cyber Destiny',
+    slug: 'cyber-destiny',
+    brand: 'Pokemon',
+    game: 'Pokemon',
+    categorySlug: 'sealed-product',
+    releaseDate: '2026-08-09T09:00:00.000Z',
+    expectedDispatchAt: '2026-08-10T09:00:00.000Z',
+    expectedArrivalAt: '2026-08-12T09:00:00.000Z',
+    announcementText: 'Announced and ready for the coming soon hub.',
+    releaseNotes: 'Launch wave for the release calendar and preorder merchandising.',
+    visible: true,
+    featuredOnHomepage: false,
+  },
+  {
+    id: 'release-astral-shield',
+    name: 'Astral Shield Accessories Drop',
+    slug: 'astral-shield-accessories-drop',
+    brand: 'TCG Hobby',
+    game: 'Accessories',
+    categorySlug: 'accessories',
+    releaseDate: '2026-07-31T09:00:00.000Z',
+    expectedDispatchAt: '2026-07-31T13:00:00.000Z',
+    expectedArrivalAt: '2026-08-02T09:00:00.000Z',
+    announcementText: 'Accessories release for launch-week bundles and upsells.',
+    releaseNotes: 'Built for repeat visits and store merchandising.',
+    visible: true,
+    featuredOnHomepage: false,
+  },
+  {
+    id: 'release-starlight-league',
+    name: 'Starlight League Pass',
+    slug: 'starlight-league-pass',
+    brand: 'One Piece Card Game',
+    game: 'One Piece Card Game',
+    categorySlug: 'events',
+    releaseDate: '2026-08-18T09:00:00.000Z',
+    expectedDispatchAt: '2026-08-18T11:00:00.000Z',
+    expectedArrivalAt: '2026-08-20T09:00:00.000Z',
+    announcementText: 'Event commerce surface for weekly engagement.',
+    releaseNotes: 'Keeps upcoming events visible before launch day.',
+    visible: true,
+    featuredOnHomepage: false,
+  },
+];
+
+export const seedReleaseProducts: ReleaseProductSeed[] = [
+  {
+    id: 'relprod-ancient-box',
+    releaseSlug: 'ancient-legends',
+    productSlug: 'ancient-legends-booster-box',
+    releaseStatus: 'PREORDER',
+    releaseDate: '2026-07-26T09:00:00.000Z',
+    expectedDispatchAt: '2026-07-26T15:00:00.000Z',
+    expectedArrivalAt: '2026-07-29T09:00:00.000Z',
+    allocationLimit: 96,
+    customerPurchaseLimit: 2,
+    supplierAllocation: 120,
+    lowAllocationThreshold: 18,
+    allocatedQuantity: 42,
+    availabilityMessage: 'Preorders are open with a limited allocation.',
+    preorderBadgeLabel: 'Pre-order open',
+    comingSoonBadgeLabel: 'Coming soon',
+  },
+  {
+    id: 'relprod-cyber-box',
+    releaseSlug: 'cyber-destiny',
+    productSlug: 'cyber-destiny-trainer-box',
+    releaseStatus: 'COMING_SOON',
+    releaseDate: '2026-08-09T09:00:00.000Z',
+    expectedDispatchAt: '2026-08-10T09:00:00.000Z',
+    expectedArrivalAt: '2026-08-12T09:00:00.000Z',
+    allocationLimit: 144,
+    customerPurchaseLimit: 4,
+    supplierAllocation: 180,
+    lowAllocationThreshold: 20,
+    allocatedQuantity: 8,
+    availabilityMessage: 'Release announced. Notify me when preorders open.',
+    preorderBadgeLabel: 'Pre-order soon',
+    comingSoonBadgeLabel: 'Coming soon',
+  },
+  {
+    id: 'relprod-astral-sleeves',
+    releaseSlug: 'astral-shield-accessories-drop',
+    productSlug: 'astral-shield-sleeves',
+    releaseStatus: 'PREORDER',
+    releaseDate: '2026-07-31T09:00:00.000Z',
+    expectedDispatchAt: '2026-07-31T13:00:00.000Z',
+    expectedArrivalAt: '2026-08-02T09:00:00.000Z',
+    allocationLimit: 220,
+    customerPurchaseLimit: 6,
+    supplierAllocation: 260,
+    lowAllocationThreshold: 30,
+    allocatedQuantity: 110,
+    availabilityMessage: 'Accessory preorder allocations are filling quickly.',
+    preorderBadgeLabel: 'Pre-order open',
+    comingSoonBadgeLabel: 'Coming soon',
+  },
+  {
+    id: 'relprod-starlight-pass',
+    releaseSlug: 'starlight-league-pass',
+    productSlug: 'starlight-league-pass',
+    releaseStatus: 'COMING_SOON',
+    releaseDate: '2026-08-18T09:00:00.000Z',
+    expectedDispatchAt: '2026-08-18T11:00:00.000Z',
+    expectedArrivalAt: '2026-08-20T09:00:00.000Z',
+    allocationLimit: 300,
+    customerPurchaseLimit: 10,
+    supplierAllocation: 350,
+    lowAllocationThreshold: 50,
+    allocatedQuantity: 62,
+    availabilityMessage: 'Event tickets and bundled launch products are on the way.',
+    preorderBadgeLabel: 'Release soon',
+    comingSoonBadgeLabel: 'Coming soon',
+  },
+];
+
+export const seedNotificationSubscriptions: NotificationSubscriptionSeed[] = [
+  {
+    id: 'notify-sam-ancient',
+    userId: 'user-customer-sam',
+    productSlug: 'ancient-legends-booster-box',
+    preference: 'ALL',
+  },
+  {
+    id: 'notify-sam-cyber',
+    userId: 'user-customer-sam',
+    productSlug: 'cyber-destiny-trainer-box',
+    preference: 'PREORDER',
+  },
+];
 
 export const seedPricingRules: PricingRuleSeed[] = [
   {
@@ -811,6 +1143,70 @@ export const seedProductPricing: ProductPricingSeed[] = [
     priceStatus: 'ACTIVE',
     manualOverride: false,
   },
+  {
+    id: 'price-ancient',
+    productSlug: 'ancient-legends-booster-box',
+    pricingRuleId: 'rule-sealed-supplier',
+    costMinor: 9000,
+    retailMinor: 12999,
+    buyMinor: 7600,
+    marginMinor: 3999,
+    markupPercent: 44,
+    profitMinor: 3999,
+    minimumMarginPercent: 30,
+    maximumDiscountPercent: 18,
+    priceSource: 'Sealed supplier cost-plus',
+    priceStatus: 'FUTURE',
+    manualOverride: false,
+  },
+  {
+    id: 'price-cyber',
+    productSlug: 'cyber-destiny-trainer-box',
+    pricingRuleId: 'rule-sealed-supplier',
+    costMinor: 3400,
+    retailMinor: 4999,
+    buyMinor: 2850,
+    marginMinor: 1599,
+    markupPercent: 47,
+    profitMinor: 1599,
+    minimumMarginPercent: 30,
+    maximumDiscountPercent: 18,
+    priceSource: 'Sealed supplier cost-plus',
+    priceStatus: 'FUTURE',
+    manualOverride: false,
+  },
+  {
+    id: 'price-astral',
+    productSlug: 'astral-shield-sleeves',
+    pricingRuleId: 'rule-accessories-promotional',
+    costMinor: 430,
+    retailMinor: 1199,
+    buyMinor: 500,
+    marginMinor: 769,
+    markupPercent: 179,
+    profitMinor: 769,
+    minimumMarginPercent: 25,
+    maximumDiscountPercent: 30,
+    priceSource: 'Accessories promotional',
+    priceStatus: 'FUTURE',
+    manualOverride: false,
+  },
+  {
+    id: 'price-starlight',
+    productSlug: 'starlight-league-pass',
+    pricingRuleId: 'rule-events-supplier',
+    costMinor: 350,
+    retailMinor: 1500,
+    buyMinor: 300,
+    marginMinor: 1150,
+    markupPercent: 329,
+    profitMinor: 1150,
+    minimumMarginPercent: 35,
+    maximumDiscountPercent: 40,
+    priceSource: 'Events supplier cost',
+    priceStatus: 'FUTURE',
+    manualOverride: false,
+  },
 ];
 
 export const seedBuylists: BuylistSeed[] = [
@@ -893,6 +1289,10 @@ export const seedInventory: InventorySeed[] = [
   { id: 'inv-case', productSlug: 'one-touch-magnetic-case', stockOnHand: 31, reservedStock: 3, reorderPoint: 10, locationCode: 'ACCESSORIES' },
   { id: 'inv-friday', productSlug: 'friday-night-magic-entry', stockOnHand: 120, reservedStock: 0, reorderPoint: 15, locationCode: 'EVENTS' },
   { id: 'inv-pre-release', productSlug: 'pre-release-bundle', stockOnHand: 40, reservedStock: 0, reorderPoint: 10, locationCode: 'EVENTS' },
+  { id: 'inv-ancient', productSlug: 'ancient-legends-booster-box', stockOnHand: 0, reservedStock: 0, reorderPoint: 0, locationCode: 'PREORDER' },
+  { id: 'inv-cyber', productSlug: 'cyber-destiny-trainer-box', stockOnHand: 0, reservedStock: 0, reorderPoint: 0, locationCode: 'PREORDER' },
+  { id: 'inv-astral', productSlug: 'astral-shield-sleeves', stockOnHand: 0, reservedStock: 0, reorderPoint: 0, locationCode: 'PREORDER' },
+  { id: 'inv-starlight', productSlug: 'starlight-league-pass', stockOnHand: 0, reservedStock: 0, reorderPoint: 0, locationCode: 'PREORDER' },
 ];
 
 export const seedCarts: CartSeed[] = [
@@ -981,6 +1381,10 @@ export const seedSupplierProducts: SupplierProductSeed[] = [
   { id: 'sp-case', supplierSlug: 'gamegrid-wholesale', productSlug: 'one-touch-magnetic-case', supplierSku: 'GG-ACC-008', costMinor: 790, currency: 'GBP', leadTimeDays: 5 },
   { id: 'sp-friday', supplierSlug: 'card-citadel', productSlug: 'friday-night-magic-entry', supplierSku: 'CC-EVT-009', costMinor: 250, currency: 'GBP', leadTimeDays: 2 },
   { id: 'sp-prerelease', supplierSlug: 'gamegrid-wholesale', productSlug: 'pre-release-bundle', supplierSku: 'GG-EVT-010', costMinor: 1200, currency: 'GBP', leadTimeDays: 2 },
+  { id: 'sp-ancient', supplierSlug: 'card-citadel', productSlug: 'ancient-legends-booster-box', supplierSku: 'CC-UPC-011', costMinor: 9000, currency: 'GBP', leadTimeDays: 5 },
+  { id: 'sp-cyber', supplierSlug: 'card-citadel', productSlug: 'cyber-destiny-trainer-box', supplierSku: 'CC-UPC-012', costMinor: 3400, currency: 'GBP', leadTimeDays: 5 },
+  { id: 'sp-astral', supplierSlug: 'gamegrid-wholesale', productSlug: 'astral-shield-sleeves', supplierSku: 'GG-ACC-013', costMinor: 430, currency: 'GBP', leadTimeDays: 4 },
+  { id: 'sp-starlight', supplierSlug: 'gamegrid-wholesale', productSlug: 'starlight-league-pass', supplierSku: 'GG-EVT-014', costMinor: 350, currency: 'GBP', leadTimeDays: 2 },
 ];
 
 export const seedProductImages: ProductImageSeed[] = seedProducts.flatMap((product) => {
@@ -1133,6 +1537,17 @@ export function toCatalogueProduct(seed: ProductSeed, inventory: InventorySeed, 
     supplierName: supplier.name,
     badge: seed.featured ? 'Featured' : category.name,
     imageLabel: seed.imageLabel,
+    releaseStatus: seed.releaseStatus ?? 'RELEASED',
+    releaseDate: seed.releaseDate ?? null,
+    expectedDispatchAt: seed.expectedDispatchAt ?? null,
+    expectedArrivalAt: seed.expectedArrivalAt ?? null,
+    allocationLimit: seed.allocationLimit ?? null,
+    customerPurchaseLimit: seed.customerPurchaseLimit ?? null,
+    supplierAllocation: seed.supplierAllocation ?? null,
+    lowAllocationThreshold: seed.lowAllocationThreshold ?? null,
+    availabilityMessage: seed.availabilityMessage ?? null,
+    preorderBadgeLabel: seed.preorderBadgeLabel ?? null,
+    comingSoonBadgeLabel: seed.comingSoonBadgeLabel ?? null,
   };
 }
 

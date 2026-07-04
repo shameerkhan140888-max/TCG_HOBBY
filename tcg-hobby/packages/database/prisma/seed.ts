@@ -10,6 +10,9 @@ import {
   seedCarts,
   seedDeckCards,
   seedDecks,
+  seedNotificationSubscriptions,
+  seedReleaseProducts,
+  seedReleases,
   seedInventory,
   seedOrderItems,
   seedOrders,
@@ -26,6 +29,9 @@ import {
 
 async function main() {
   await prisma.orderItem.deleteMany();
+  await prisma.notificationSubscription.deleteMany();
+  await prisma.releaseProduct.deleteMany();
+  await prisma.release.deleteMany();
   await prisma.wishlistItem.deleteMany();
   await prisma.wishlist.deleteMany();
   await prisma.buylistItem.deleteMany();
@@ -78,6 +84,17 @@ async function main() {
         published: product.published,
         searchText: product.searchText,
         imageLabel: product.imageLabel,
+        releaseStatus: product.releaseStatus ?? 'RELEASED',
+        releaseDate: product.releaseDate ? new Date(product.releaseDate) : null,
+        expectedDispatchAt: product.expectedDispatchAt ? new Date(product.expectedDispatchAt) : null,
+        expectedArrivalAt: product.expectedArrivalAt ? new Date(product.expectedArrivalAt) : null,
+        allocationLimit: product.allocationLimit ?? null,
+        customerPurchaseLimit: product.customerPurchaseLimit ?? null,
+        supplierAllocation: product.supplierAllocation ?? null,
+        lowAllocationThreshold: product.lowAllocationThreshold ?? null,
+        availabilityMessage: product.availabilityMessage ?? null,
+        preorderBadgeLabel: product.preorderBadgeLabel ?? null,
+        comingSoonBadgeLabel: product.comingSoonBadgeLabel ?? null,
         categoryId: category.id,
       };
     }),
@@ -352,6 +369,78 @@ async function main() {
         id: item.id,
         wishlistId: wishlist.id,
         productId: product.id,
+      };
+    }),
+  });
+
+  await prisma.release.createMany({
+    data: seedReleases.map((release) => {
+      const category = seedCategories.find((entry) => entry.slug === release.categorySlug);
+
+      if (!category) {
+        throw new Error(`Missing category for release ${release.slug}`);
+      }
+
+      return {
+        id: release.id,
+        name: release.name,
+        slug: release.slug,
+        brand: release.brand,
+        game: release.game,
+        categoryId: category.id,
+        releaseDate: new Date(release.releaseDate),
+        expectedDispatchAt: release.expectedDispatchAt ? new Date(release.expectedDispatchAt) : null,
+        expectedArrivalAt: release.expectedArrivalAt ? new Date(release.expectedArrivalAt) : null,
+        announcementText: release.announcementText,
+        releaseNotes: release.releaseNotes,
+        visible: release.visible,
+        featuredOnHomepage: release.featuredOnHomepage,
+      };
+    }),
+  });
+
+  await prisma.releaseProduct.createMany({
+    data: seedReleaseProducts.map((item) => {
+      const release = seedReleases.find((entry) => entry.slug === item.releaseSlug);
+      const product = seedProducts.find((entry) => entry.slug === item.productSlug);
+
+      if (!release || !product) {
+        throw new Error(`Missing seed relation for release product ${item.id}`);
+      }
+
+      return {
+        id: item.id,
+        releaseId: release.id,
+        productId: product.id,
+        status: item.releaseStatus,
+        releaseDate: item.releaseDate ? new Date(item.releaseDate) : null,
+        expectedDispatchAt: item.expectedDispatchAt ? new Date(item.expectedDispatchAt) : null,
+        expectedArrivalAt: item.expectedArrivalAt ? new Date(item.expectedArrivalAt) : null,
+        allocationLimit: item.allocationLimit,
+        customerPurchaseLimit: item.customerPurchaseLimit,
+        supplierAllocation: item.supplierAllocation,
+        allocatedQuantity: item.allocatedQuantity,
+        lowAllocationThreshold: item.lowAllocationThreshold,
+        availabilityMessage: item.availabilityMessage,
+        preorderBadgeLabel: item.preorderBadgeLabel,
+        comingSoonBadgeLabel: item.comingSoonBadgeLabel,
+      };
+    }),
+  });
+
+  await prisma.notificationSubscription.createMany({
+    data: seedNotificationSubscriptions.map((subscription) => {
+      const product = seedProducts.find((entry) => entry.slug === subscription.productSlug);
+
+      if (!product) {
+        throw new Error(`Missing product for notification subscription ${subscription.id}`);
+      }
+
+      return {
+        id: subscription.id,
+        userId: subscription.userId,
+        productId: product.id,
+        preference: subscription.preference,
       };
     }),
   });
