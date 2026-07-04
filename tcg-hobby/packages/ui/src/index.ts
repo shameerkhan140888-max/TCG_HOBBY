@@ -26,6 +26,28 @@ export { Breadcrumbs } from './breadcrumbs';
 export type { BreadcrumbItem, BreadcrumbsProps } from './breadcrumbs';
 export { Card, CardContent, CardHeader, CardTitle } from './card';
 export {
+  AdminTable,
+  ConfirmDialog,
+  DataCard,
+  EmptyTableState,
+  FormSection,
+  MetricCard,
+  PageHeader,
+  SearchToolbar,
+  StatusBadge,
+} from './admin';
+export type {
+  AdminTableProps,
+  ConfirmDialogProps,
+  DataCardProps,
+  EmptyTableStateProps,
+  FormSectionProps,
+  MetricCardProps,
+  PageHeaderProps,
+  SearchToolbarProps,
+  StatusBadgeProps,
+} from './admin';
+export {
   CartLineItem,
   CheckoutStep,
   EmptyState,

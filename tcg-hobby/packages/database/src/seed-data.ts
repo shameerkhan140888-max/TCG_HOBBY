@@ -14,8 +14,18 @@ type SupplierSeed = {
   id: string;
   name: string;
   slug: string;
+  contactName: string | null;
   email: string;
+  phone: string | null;
   website: string;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  region: string | null;
+  postalCode: string | null;
+  country: string;
+  preferred: boolean;
+  internalNotes: string | null;
 };
 
 type UserSeed = {
@@ -192,15 +202,35 @@ export const seedSuppliers: SupplierSeed[] = [
     id: 'sup-card-citadel',
     name: 'Card Citadel',
     slug: 'card-citadel',
+    contactName: 'Mia Carter',
     email: 'hello@cardcitadel.example',
+    phone: '+44 20 5550 8100',
     website: 'https://cardcitadel.example',
+    addressLine1: '12 Spire Road',
+    addressLine2: null,
+    city: 'Leeds',
+    region: 'West Yorkshire',
+    postalCode: 'LS1 2AB',
+    country: 'GB',
+    preferred: true,
+    internalNotes: 'Primary sealed product distributor.',
   },
   {
     id: 'sup-gamegrid',
     name: 'GameGrid Wholesale',
     slug: 'gamegrid-wholesale',
+    contactName: 'Jonas Reed',
     email: 'sales@gamegrid.example',
+    phone: '+44 20 5550 8200',
     website: 'https://gamegrid.example',
+    addressLine1: '44 Warehouse Lane',
+    addressLine2: 'Unit 8',
+    city: 'Manchester',
+    region: null,
+    postalCode: 'M1 1AA',
+    country: 'GB',
+    preferred: false,
+    internalNotes: 'Accessories and event support partner.',
   },
 ];
 

@@ -141,8 +141,18 @@ model Supplier {
   id              String            @id @default(cuid())
   name            String
   slug            String            @unique
+  contactName     String?
   email           String?
+  phone           String?
   website         String?
+  addressLine1    String?
+  addressLine2    String?
+  city            String?
+  region          String?
+  postalCode      String?
+  country         String            @default("GB")
+  preferred       Boolean           @default(false)
+  internalNotes   String?
   active          Boolean           @default(true)
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
@@ -163,6 +173,7 @@ model Product {
   currency      String           @default("GBP")
   featured      Boolean          @default(false)
   published     Boolean          @default(true)
+  archivedAt    DateTime?
   searchText    String
   imageLabel    String
   categoryId    String
@@ -173,11 +184,13 @@ model Product {
   cartItems     CartItem[]
   orderItems    OrderItem[]
   supplierProducts SupplierProduct[]
+  stockAdjustments StockAdjustment[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
   @@index([slug, published])
   @@index([categoryId, published])
+  @@index([archivedAt, published])
   @@index([published, featured])
   @@index([name])
   @@index([searchText])
@@ -317,6 +330,21 @@ model OrderItem {
   totalMinor     Int
   order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model StockAdjustment {
+  id            String   @id @default(cuid())
+  productId     String
+  delta        Int
+  beforeStock  Int
+  afterStock   Int
+  reason       String
+  performedBy  String?
+  createdAt    DateTime @default(now())
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, createdAt])
+  @@index([createdAt])
 }
 
 model SupplierProduct {

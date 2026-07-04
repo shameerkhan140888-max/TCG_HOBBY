@@ -25,6 +25,7 @@ npm run db:generate
 npm run typecheck
 npm run test
 npm run build
+npm run lint
 ```
 
 ## Sprint 3 Local Commerce Flow
@@ -80,6 +81,29 @@ Stripe test mode notes:
 - Checkout uses a hosted Stripe payment page in test mode.
 - A successful payment is confirmed from the Stripe session before the order is finalized.
 - No webhook listener is required for this sprint.
+
+## Sprint 6 Admin Operations
+
+```bash
+docker compose up -d
+npm run db:generate
+npm run db:seed
+npm run dev -w @tcg-hobby/admin
+```
+
+Then open:
+
+- `http://localhost:3001/admin`
+- `http://localhost:3001/admin/products`
+- `http://localhost:3001/admin/inventory`
+- `http://localhost:3001/admin/suppliers`
+- `http://localhost:3001/admin/orders`
+
+Admin notes:
+
+- Product, supplier, inventory, and order logic is served from shared repository helpers.
+- Inventory adjustments require a reason and are recorded in stock history.
+- Product and supplier forms use server actions, while shared UI primitives keep the admin surface consistent.
 
 If you reset the database, rerun:
 
