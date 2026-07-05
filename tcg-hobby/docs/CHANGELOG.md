@@ -58,3 +58,11 @@ All notable changes to TCG Hobby are documented here.
 - Added notification foundation so customers can register interest in future releases without sending email yet.
 - Expanded the shared UI package with countdown, release card, preorder badge, notify button, announcement banner, and allocation components.
 - Added release repository coverage for countdown calculations, allocation warnings, release filters, notification persistence, and pre-order availability behavior.
+
+## Sprint 10
+
+- Added collection insights, approximate market values, watchlists, and notification centre foundations for returning collectors.
+- Introduced guest checkout while keeping logged-in order history linked to customer accounts.
+- Expanded the commerce domain and storefront checkout flow to support guest baskets without moving checkout behind authentication.
+- Deferred the storefront header basket summary to Sprint 11 UI polish.
+- Documented the members-only watchlist behavior, guest checkout behavior, and basket UI updates.

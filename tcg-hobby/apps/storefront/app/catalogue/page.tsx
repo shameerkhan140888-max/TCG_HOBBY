@@ -100,17 +100,6 @@ export default async function CataloguePage({
           <input type="hidden" name="category" value={category} />
         </form>
 
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Button asChild size="sm" variant={category ? 'outline' : 'primary'}>
-            <a href={createHref({ search, category: '', sort, page: 1 })}>All</a>
-          </Button>
-          {data.categories.map((item) => (
-            <Button key={item.slug} asChild size="sm" variant={category === item.slug ? 'primary' : 'outline'}>
-              <a href={createHref({ search, category: item.slug, sort, page: 1 })}>{item.name}</a>
-            </Button>
-          ))}
-        </div>
-
         <div className="mt-8 flex items-center justify-between gap-4">
           <div>
             <p className="text-sm text-neutral-400">
@@ -133,8 +122,8 @@ export default async function CataloguePage({
                   href={`/catalogue/${product.slug}`}
                   actionSlot={
                     <div className="flex items-center gap-2">
-                      {session?.user.role === 'CUSTOMER' ? (
-                        product.releaseStatus && product.releaseStatus !== 'RELEASED' ? (
+                      {product.releaseStatus && product.releaseStatus !== 'RELEASED' ? (
+                        session?.user.role === 'CUSTOMER' ? (
                           <NotifyButton
                             productId={product.id}
                             subscribed={notificationIds.includes(product.id)}
@@ -143,12 +132,12 @@ export default async function CataloguePage({
                             returnTo={currentHref}
                           />
                         ) : (
-                          <AddToCartButton productId={product.id} returnTo={currentHref} />
+                          <Button asChild size="sm" variant="secondary">
+                            <a href={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}>Notify me</a>
+                          </Button>
                         )
                       ) : (
-                        <Button asChild size="sm" variant="secondary">
-                          <a href={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}>{product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'Notify me' : 'Add to cart'}</a>
-                        </Button>
+                        <AddToCartButton productId={product.id} returnTo={currentHref} />
                       )}
                       <WishlistButton
                         productId={product.id}

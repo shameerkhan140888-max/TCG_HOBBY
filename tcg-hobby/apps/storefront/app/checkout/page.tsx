@@ -17,7 +17,9 @@ export default async function CheckoutPage() {
             <div className="space-y-3">
               <p className="text-sm font-semibold uppercase tracking-wide text-accent">Checkout</p>
               <h1 className="text-3xl font-black sm:text-4xl">Securely complete your order</h1>
-              <p className="max-w-3xl text-sm leading-6 text-neutral-400">Review delivery details, choose a shipping method, and pay through Stripe test mode.</p>
+              <p className="max-w-3xl text-sm leading-6 text-neutral-400">
+                Review delivery details, choose a shipping method, and pay through Stripe test mode. Guests can check out without creating an account.
+              </p>
             </div>
           </Container>
         </Section>

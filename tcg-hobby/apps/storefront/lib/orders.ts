@@ -8,6 +8,7 @@ import {
   retrieveStripeCheckoutSession,
 } from '@tcg-hobby/database';
 import { requireCustomerSession } from './auth';
+import { clearGuestCart } from './cart';
 
 export async function getCurrentCustomerOrders() {
   const session = await requireCustomerSession('/login?callbackUrl=%2Faccount%2Forders');
@@ -20,7 +21,6 @@ export async function getCurrentCustomerOrder(orderNumber: string) {
 }
 
 export async function finalizeOrderFromStripeSession(sessionId: string) {
-  const session = await requireCustomerSession('/login?callbackUrl=%2Fcheckout%2Fsuccess');
   const stripeSession = await retrieveStripeCheckoutSession(sessionId);
 
   if (stripeSession.payment_status !== 'paid') {
@@ -32,15 +32,15 @@ export async function finalizeOrderFromStripeSession(sessionId: string) {
     return null;
   }
 
-  if (orderRecord.userId !== session.user.id) {
-    return null;
-  }
-
   const order = await finalizePaidCheckoutOrder({
     orderId: orderRecord.id,
     paymentIntentId: stripeSession.payment_intent,
     stripeCheckoutSessionId: stripeSession.id,
   });
+
+  if (!order.userId) {
+    await clearGuestCart();
+  }
 
   return order;
 }

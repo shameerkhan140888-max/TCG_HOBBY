@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from './lib/cn';
 
 type CountdownParts = {
@@ -28,8 +28,7 @@ export type CountdownTimerProps = {
 };
 
 export function CountdownTimer({ targetDate, className, compact = false }: CountdownTimerProps) {
-  const initial = useMemo(() => calculateCountdownParts(targetDate), [targetDate]);
-  const [parts, setParts] = useState(initial);
+  const [parts, setParts] = useState<CountdownParts | null>(null);
 
   useEffect(() => {
     setParts(calculateCountdownParts(targetDate));
@@ -41,17 +40,19 @@ export function CountdownTimer({ targetDate, className, compact = false }: Count
   }, [targetDate]);
 
   const cells = [
-    { label: 'Days', value: parts.days },
-    { label: 'Hrs', value: parts.hours },
-    { label: 'Min', value: parts.minutes },
-    { label: 'Sec', value: parts.seconds },
+    { label: 'Days', value: parts?.days ?? 0 },
+    { label: 'Hrs', value: parts?.hours ?? 0 },
+    { label: 'Min', value: parts?.minutes ?? 0 },
+    { label: 'Sec', value: parts?.seconds ?? 0 },
   ];
 
   return (
     <div className={cn('grid grid-cols-4 gap-2', className)}>
       {cells.map((cell) => (
         <div key={cell.label} className="rounded-md border border-surface-line bg-surface-ink px-3 py-2 text-center">
-          <div className={cn('font-black text-neutral-50', compact ? 'text-lg' : 'text-2xl')}>{String(cell.value).padStart(2, '0')}</div>
+          <div className={cn('font-black text-neutral-50', compact ? 'text-lg' : 'text-2xl')} suppressHydrationWarning>
+            {String(cell.value).padStart(2, '0')}
+          </div>
           <div className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">{cell.label}</div>
         </div>
       ))}

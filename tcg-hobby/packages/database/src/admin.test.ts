@@ -1,6 +1,17 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { calculateAvailableStock, calculateMarginPercentage } from './admin-math';
-import { adjustProductStock, generateProductSlug, getAdminProducts, getAdminSuppliers } from './admin';
+import { adjustProductStock, generateProductSlug, getAdminDashboardData, getAdminProducts, getAdminSuppliers } from './admin';
+
+const originalNodeEnv = process.env.NODE_ENV;
+
+afterEach(() => {
+  if (typeof originalNodeEnv === 'undefined') {
+    delete process.env.NODE_ENV;
+    return;
+  }
+
+  process.env.NODE_ENV = originalNodeEnv;
+});
 
 function createDbMock() {
   return {
@@ -11,6 +22,14 @@ function createDbMock() {
       findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+    },
+    order: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    user: {
+      count: vi.fn(),
     },
     category: {
       findMany: vi.fn(),
@@ -226,5 +245,42 @@ describe('admin repositories', () => {
         }),
       }),
     );
+  });
+
+  it('falls back to seeded dashboard data in development when the database is unavailable', async () => {
+    process.env.NODE_ENV = 'development';
+
+    const db = createDbMock();
+    db.product.count.mockRejectedValue(new Error('database unavailable'));
+    db.order.count.mockResolvedValue(0);
+    db.user.count.mockResolvedValue(0);
+    db.supplier.count.mockResolvedValue(0);
+    db.category.count.mockResolvedValue(0);
+    db.order.findMany.mockResolvedValue([]);
+    db.product.findMany.mockResolvedValue([]);
+    db.inventoryItem.findMany.mockResolvedValue([]);
+
+    const data = await getAdminDashboardData(db);
+
+    expect(data.metrics.length).toBe(8);
+    expect(data.recentOrders.length).toBeGreaterThan(0);
+    expect(data.recentlyAddedProducts.length).toBeGreaterThan(0);
+    expect(db.product.count).toHaveBeenCalled();
+  });
+
+  it('throws a clear error in production when the dashboard database is unavailable', async () => {
+    process.env.NODE_ENV = 'production';
+
+    const db = createDbMock();
+    db.product.count.mockRejectedValue(new Error('database unavailable'));
+    db.order.count.mockResolvedValue(0);
+    db.user.count.mockResolvedValue(0);
+    db.supplier.count.mockResolvedValue(0);
+    db.category.count.mockResolvedValue(0);
+    db.order.findMany.mockResolvedValue([]);
+    db.product.findMany.mockResolvedValue([]);
+    db.inventoryItem.findMany.mockResolvedValue([]);
+
+    await expect(getAdminDashboardData(db)).rejects.toThrow('Admin dashboard data is unavailable in production');
   });
 });

@@ -178,6 +178,118 @@ export type PriceStatus = 'ACTIVE' | 'MANUAL_OVERRIDE' | 'DISABLED' | 'FUTURE';
 
 export type NotificationPreference = 'ALL' | 'PREORDER' | 'RELEASE';
 
+export type NotificationType = 'PRICE_MOVEMENT' | 'UPCOMING_RELEASE' | 'WISHLIST_AVAILABILITY' | 'COLLECTION_UPDATES' | 'BUYLIST_UPDATES';
+
+export type NotificationChannel = 'EMAIL' | 'PUSH' | 'IN_APP';
+
+export type MarketTrend = 'UP' | 'DOWN' | 'FLAT' | 'VOLATILE';
+
+export type PriceHistoryPoint = {
+  label: string;
+  valueMinor: number;
+  recordedAt: string;
+  source: string;
+};
+
+export type MarketSnapshot = {
+  id: string;
+  productId: string;
+  productName: string;
+  productSlug: string;
+  currentEstimateMinor: number;
+  yesterdayMinor: number;
+  sevenDayMinor: number;
+  thirtyDayMinor: number;
+  trend: MarketTrend;
+  confidenceScore: number;
+  lastUpdatedAt: string;
+  source: string;
+  currency: CurrencyCode;
+  history: PriceHistoryPoint[];
+};
+
+export type WatchlistSubjectType = 'PRODUCT' | 'RELEASE' | 'COLLECTION_ITEM';
+
+export type WatchlistItem = {
+  id: string;
+  subjectType: WatchlistSubjectType;
+  subjectKey: string;
+  subjectLabel: string;
+  productId: string | null;
+  releaseId: string | null;
+  collectionItemId: string | null;
+  currentEstimateMinor: number;
+  yesterdayMinor: number;
+  sevenDayMinor: number;
+  thirtyDayMinor: number;
+  trend: MarketTrend;
+  notificationType: NotificationType;
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+  inAppEnabled: boolean;
+  note: string | null;
+  lastUpdatedAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type NotificationCenterPreference = {
+  id: string;
+  notificationType: NotificationType;
+  subjectType: WatchlistSubjectType | null;
+  subjectLabel: string | null;
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+  inAppEnabled: boolean;
+  lastTriggeredAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CollectionInsightSnapshot = {
+  id: string;
+  userId: string;
+  collectionId: string;
+  estimatedValueMinor: number;
+  previousValueMinor: number;
+  sevenDayValueMinor: number;
+  thirtyDayValueMinor: number;
+  collectionHealthScore: number;
+  cardsOwned: number;
+  setsOwned: number;
+  favouriteGame: string;
+  wishlistOverlapCount: number;
+  deckCompletionPercent: number;
+  recentGrowthMinor: number;
+  heatMap: Record<string, number>;
+  recentActivity: Array<{ label: string; value: string }>;
+  lastUpdatedAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CollectionInsightCard = {
+  id: string;
+  name: string;
+  slug: string;
+  game: string;
+  categoryName: string;
+  estimateMinor: number;
+  trend: MarketTrend;
+  lastUpdatedAt: string;
+};
+
+export type CollectionInsights = CollectionInsightSnapshot & {
+  mostValuableCards: CollectionInsightCard[];
+  biggestGainers: CollectionInsightCard[];
+  biggestDecliners: CollectionInsightCard[];
+  recentMarketActivity: CollectionInsightCard[];
+  wishlistOverlap: Array<{ id: string; productName: string; productSlug: string; estimateMinor: number; trend: MarketTrend }>;
+  deckCompletionPercent: number;
+  collectionHeatMap: Array<{ label: string; count: number }>;
+  valueTrendPercent: number;
+};
+
 export type BuylistStatus = 'DRAFT' | 'SUBMITTED' | 'RECEIVED' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'PAID';
 
 export type PricingSnapshot = {

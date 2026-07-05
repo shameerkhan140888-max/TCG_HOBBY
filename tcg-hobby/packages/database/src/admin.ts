@@ -3,6 +3,16 @@ import { slugify } from '@tcg-hobby/utils';
 import { prisma } from './client';
 import { calculateMarginPercentage, calculateAvailableStock } from './admin-math';
 import { refreshProductPricing } from './pricing';
+import {
+  seedCategories,
+  seedInventory,
+  seedOrderItems,
+  seedOrders,
+  seedProductPricing,
+  seedProducts,
+  seedSuppliers,
+  seedUsers,
+} from './seed-data';
 
 type ProductCategoryRow = {
   id: string;
@@ -569,62 +579,229 @@ export function generateProductSlug(name: string, sku?: string) {
   return slugify(sku || name) || 'product';
 }
 
-export async function getAdminDashboardData(db = prisma): Promise<AdminDashboardData> {
-  const [totalProducts, activeProducts, pendingOrders, totalCustomers, suppliers, categories, recentOrders, allProducts, inventoryRows] = await Promise.all([
-    db.product.count(),
-    db.product.count({ where: { published: true, archivedAt: null } }),
-    db.order.count({ where: { paymentStatus: 'REQUIRES_PAYMENT' } }),
-    db.user.count({ where: { role: 'CUSTOMER' } }),
-    db.supplier.count(),
-    db.category.count(),
-    db.order.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      include: {
-        items: { select: { quantity: true } },
-        user: { select: { name: true, email: true } },
-      },
-    }),
-    db.product.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-      include: {
-        category: true,
-        inventory: true,
-        images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
-        supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
-        pricing: { include: { pricingRule: true } },
-      },
-    }),
-    db.inventoryItem.findMany({
-      select: { stockOnHand: true, reservedStock: true, reorderPoint: true },
-    }),
-  ]);
+function isProduction() {
+  return process.env.NODE_ENV === 'production';
+}
 
-  const mappedProducts = allProducts.map((product) => mapProductRow(product as unknown as ProductRow));
-  const inventoryPreview = await getAdminInventoryRows(db);
-  const mappedRecentOrders = (recentOrders as unknown as OrderListRow[]).map(mapOrderRow);
-  const lowStockCount = inventoryPreview.filter((product) => product.availableStock > 0 && product.availableStock <= product.reorderPoint).length;
-  const lowStockProducts = inventoryPreview.filter((product) => product.availableStock > 0 && product.availableStock <= product.reorderPoint).slice(0, 5);
-  const outOfStockProducts = inventoryRows.filter((item) => calculateAvailableStock(item.stockOnHand, item.reservedStock) <= 0).length;
+function getSeedCategoryBySlug(slug: string) {
+  return seedCategories.find((category) => category.slug === slug) ?? seedCategories[0]!;
+}
 
-  const metrics: AdminMetric[] = [
-    { label: 'Total Products', value: String(totalProducts), detail: 'All catalogue records' },
-    { label: 'Active Products', value: String(activeProducts), detail: 'Published and visible' },
-    { label: 'Low Stock', value: String(lowStockCount), detail: 'Below reorder point' },
-    { label: 'Out of Stock', value: String(outOfStockProducts), detail: 'Needs replenishment' },
-    { label: 'Pending Orders', value: String(pendingOrders), detail: 'Waiting for payment or fulfilment' },
-    { label: 'Total Customers', value: String(totalCustomers), detail: 'Registered customer accounts' },
-    { label: 'Suppliers', value: String(suppliers), detail: 'Active and inactive suppliers' },
-    { label: 'Categories', value: String(categories), detail: 'Catalogue taxonomy' },
-  ];
+function getSeedSupplierBySlug(slug: string) {
+  return seedSuppliers.find((supplier) => supplier.slug === slug) ?? seedSuppliers[0]!;
+}
+
+function getSeedInventoryBySlug(slug: string) {
+  return seedInventory.find((inventory) => inventory.productSlug === slug) ?? {
+    productSlug: slug,
+    stockOnHand: 0,
+    reservedStock: 0,
+    reorderPoint: 0,
+    locationCode: 'MAIN',
+  };
+}
+
+function getSeedPricingBySlug(slug: string) {
+  return seedProductPricing.find((pricing) => pricing.productSlug === slug) ?? {
+    id: `seed-price-${slug}`,
+    productSlug: slug,
+    pricingRuleId: null,
+    costMinor: 0,
+    retailMinor: 0,
+    buyMinor: 0,
+    marginMinor: 0,
+    markupPercent: 0,
+    profitMinor: 0,
+    minimumMarginPercent: 0,
+    maximumDiscountPercent: 0,
+    priceSource: 'Seed data',
+    priceStatus: 'ACTIVE' as const,
+    manualOverride: false,
+  };
+}
+
+function buildSeedProductListItem(product: (typeof seedProducts)[number], index: number): AdminProductListItem {
+  const category = getSeedCategoryBySlug(product.categorySlug);
+  const supplier = getSeedSupplierBySlug(product.supplierSlug);
+  const inventory = getSeedInventoryBySlug(product.slug);
+  const pricing = getSeedPricingBySlug(product.slug);
+  const availableStock = calculateAvailableStock(inventory.stockOnHand, inventory.reservedStock);
 
   return {
-    metrics,
-    recentOrders: mappedRecentOrders,
-    lowStockProducts,
-    recentlyAddedProducts: mappedProducts.slice(0, 5),
+    id: product.id,
+    categoryId: category.id,
+    sku: product.sku,
+    slug: product.slug,
+    name: product.name,
+    game: product.game,
+    setName: product.setName,
+    categoryName: category.name,
+    categorySlug: category.slug,
+    supplierName: supplier.name,
+    supplierSlug: supplier.slug,
+    supplierId: supplier.id,
+    priceMinor: product.priceMinor,
+    costMinor: pricing.costMinor,
+    buyMinor: pricing.buyMinor,
+    marginMinor: pricing.marginMinor,
+    marginPercent: calculateMarginPercentage(pricing.costMinor, product.priceMinor),
+    markupPercent: pricing.markupPercent,
+    profitMinor: pricing.profitMinor,
+    minimumMarginPercent: pricing.minimumMarginPercent,
+    maximumDiscountPercent: pricing.maximumDiscountPercent,
+    priceSource: pricing.priceSource,
+    priceStatus: pricing.priceStatus,
+    manualOverride: pricing.manualOverride,
+    priceUpdatedAt: new Date(Date.UTC(2026, 6, 5 - index, 12, 0, 0)),
+    currency: product.currency,
+    featured: product.featured,
+    published: product.published,
+    archivedAt: null,
+    stockOnHand: inventory.stockOnHand,
+    reservedStock: inventory.reservedStock,
+    availableStock,
+    reorderPoint: inventory.reorderPoint,
+    locationCode: inventory.locationCode,
+    imageCount: 2,
+    primaryImageUrl: `https://images.tcghobby.test/products/${product.slug}/primary.jpg`,
+    createdAt: new Date(Date.UTC(2026, 6, 5 - index, 12, 0, 0)),
   };
+}
+
+function buildSeedInventoryRow(product: (typeof seedProducts)[number]): AdminInventoryRow {
+  const category = getSeedCategoryBySlug(product.categorySlug);
+  const supplier = getSeedSupplierBySlug(product.supplierSlug);
+  const inventory = getSeedInventoryBySlug(product.slug);
+  const pricing = getSeedPricingBySlug(product.slug);
+  const availableStock = calculateAvailableStock(inventory.stockOnHand, inventory.reservedStock);
+
+  return {
+    productId: product.id,
+    sku: product.sku,
+    name: product.name,
+    categoryName: category.name,
+    supplierName: supplier.name,
+    currentStock: inventory.stockOnHand,
+    reservedStock: inventory.reservedStock,
+    availableStock,
+    reorderPoint: inventory.reorderPoint,
+    costMinor: pricing.costMinor,
+    retailMinor: pricing.retailMinor,
+    marginMinor: pricing.marginMinor,
+    marginPercent: calculateMarginPercentage(pricing.costMinor, pricing.retailMinor),
+    lowStock: availableStock <= inventory.reorderPoint,
+    locationCode: inventory.locationCode,
+  };
+}
+
+function buildSeedOrderListItem(order: (typeof seedOrders)[number], index: number): AdminOrderListItem {
+  const customer = seedUsers.find((user) => user.id === order.userId);
+  const itemCount = seedOrderItems.filter((item) => item.orderId === order.id).reduce((count, item) => count + item.quantity, 0);
+
+  return {
+    orderNumber: order.orderNumber,
+    customerName: customer?.name ?? order.shippingFullName,
+    customerEmail: customer?.email ?? order.shippingEmail,
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    totalMinor: order.totalMinor,
+    currency: order.currency,
+    createdAt: new Date(Date.UTC(2026, 6, 4 - index, 10, 30, 0)),
+    itemCount,
+  };
+}
+
+function buildSeedDashboardData(): AdminDashboardData {
+  const inventoryRows = seedProducts.map(buildSeedInventoryRow);
+  const recentOrders = seedOrders.map((order, index) => buildSeedOrderListItem(order, index));
+  const recentlyAddedProducts = seedProducts.slice(0, 5).map((product, index) => buildSeedProductListItem(product, index));
+  const lowStockProducts = inventoryRows.filter((product) => product.availableStock > 0 && product.availableStock <= product.reorderPoint).slice(0, 5);
+  const outOfStockProducts = inventoryRows.filter((product) => product.availableStock <= 0).length;
+  const activeProducts = seedProducts.filter((product) => product.published).length;
+  const totalCustomers = seedUsers.filter((user) => user.role === 'CUSTOMER').length;
+
+  return {
+    metrics: [
+      { label: 'Total Products', value: String(seedProducts.length), detail: 'All catalogue records' },
+      { label: 'Active Products', value: String(activeProducts), detail: 'Published and visible' },
+      { label: 'Low Stock', value: String(lowStockProducts.length), detail: 'Below reorder point' },
+      { label: 'Out of Stock', value: String(outOfStockProducts), detail: 'Needs replenishment' },
+      { label: 'Pending Orders', value: String(seedOrders.filter((order) => order.paymentStatus === 'REQUIRES_PAYMENT').length), detail: 'Waiting for payment or fulfilment' },
+      { label: 'Total Customers', value: String(totalCustomers), detail: 'Registered customer accounts' },
+      { label: 'Suppliers', value: String(seedSuppliers.length), detail: 'Active and inactive suppliers' },
+      { label: 'Categories', value: String(seedCategories.length), detail: 'Catalogue taxonomy' },
+    ],
+    recentOrders,
+    lowStockProducts,
+    recentlyAddedProducts,
+  };
+}
+
+export async function getAdminDashboardData(db = prisma): Promise<AdminDashboardData> {
+  try {
+    const [totalProducts, activeProducts, pendingOrders, totalCustomers, suppliers, categories, recentOrders, allProducts, inventoryRows] = await Promise.all([
+      db.product.count(),
+      db.product.count({ where: { published: true, archivedAt: null } }),
+      db.order.count({ where: { paymentStatus: 'REQUIRES_PAYMENT' } }),
+      db.user.count({ where: { role: 'CUSTOMER' } }),
+      db.supplier.count(),
+      db.category.count(),
+      db.order.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          items: { select: { quantity: true } },
+          user: { select: { name: true, email: true } },
+        },
+      }),
+      db.product.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+        include: {
+          category: true,
+          inventory: true,
+          images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
+          supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
+          pricing: { include: { pricingRule: true } },
+        },
+      }),
+      db.inventoryItem.findMany({
+        select: { stockOnHand: true, reservedStock: true, reorderPoint: true },
+      }),
+    ]);
+
+    const mappedProducts = allProducts.map((product) => mapProductRow(product as unknown as ProductRow));
+    const inventoryPreview = await getAdminInventoryRows(db);
+    const mappedRecentOrders = (recentOrders as unknown as OrderListRow[]).map(mapOrderRow);
+    const lowStockCount = inventoryPreview.filter((product) => product.availableStock > 0 && product.availableStock <= product.reorderPoint).length;
+    const lowStockProducts = inventoryPreview.filter((product) => product.availableStock > 0 && product.availableStock <= product.reorderPoint).slice(0, 5);
+    const outOfStockProducts = inventoryRows.filter((item) => calculateAvailableStock(item.stockOnHand, item.reservedStock) <= 0).length;
+
+    const metrics: AdminMetric[] = [
+      { label: 'Total Products', value: String(totalProducts), detail: 'All catalogue records' },
+      { label: 'Active Products', value: String(activeProducts), detail: 'Published and visible' },
+      { label: 'Low Stock', value: String(lowStockCount), detail: 'Below reorder point' },
+      { label: 'Out of Stock', value: String(outOfStockProducts), detail: 'Needs replenishment' },
+      { label: 'Pending Orders', value: String(pendingOrders), detail: 'Waiting for payment or fulfilment' },
+      { label: 'Total Customers', value: String(totalCustomers), detail: 'Registered customer accounts' },
+      { label: 'Suppliers', value: String(suppliers), detail: 'Active and inactive suppliers' },
+      { label: 'Categories', value: String(categories), detail: 'Catalogue taxonomy' },
+    ];
+
+    return {
+      metrics,
+      recentOrders: mappedRecentOrders,
+      lowStockProducts,
+      recentlyAddedProducts: mappedProducts.slice(0, 5),
+    };
+  } catch (error) {
+    if (isProduction()) {
+      const reason = error instanceof Error ? error.message : 'Unknown database error';
+      throw new Error(`Admin dashboard data is unavailable in production: ${reason}`);
+    }
+
+    return buildSeedDashboardData();
+  }
 }
 
 export async function getAdminProducts(filters: CatalogueFilters, db = prisma) {

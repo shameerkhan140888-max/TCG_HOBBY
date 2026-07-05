@@ -2,7 +2,7 @@
   "name": "@tcg-hobby/mobile",
   "version": "0.1.0",
   "private": true,
-  "main": "expo/AppEntry.js",
+  "main": "index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json --noEmit",
     "dev": "expo start --offline",

@@ -16,7 +16,7 @@ import {
   getShippingMethodsForCountry,
   validateQuantityAgainstAvailability,
 } from './commerce';
-import { getCartSnapshot } from './cart';
+import type { CartSnapshot } from './cart';
 
 type CheckoutAddressInput = CheckoutAddress;
 
@@ -33,7 +33,7 @@ type OrderItemRecord = {
 type OrderRecord = {
   id: string;
   orderNumber: string;
-  userId: string;
+  userId: string | null;
   status: string;
   paymentStatus: PaymentStatus;
   fulfilmentStatus: FulfilmentStatus;
@@ -81,6 +81,8 @@ type CreateCheckoutOrderInput = {
   shippingAddress: CheckoutAddressInput;
   shippingMethodCode: ShippingMethodCode;
 };
+
+type CheckoutCart = Pick<CartSnapshot, 'cartId' | 'currency' | 'items'>;
 
 type FinalizeCheckoutOrderInput = {
   orderId: string;
@@ -253,12 +255,11 @@ async function reserveInventoryForOrder(tx: any, orderId: string, items: Array<{
 }
 
 export async function createPendingCheckoutOrder(
-  userId: string,
+  userId: string | null,
+  cart: CheckoutCart,
   input: CreateCheckoutOrderInput,
   db = prisma,
 ) {
-  const cart = await getCartSnapshot(userId, db);
-
   if (!cart || cart.items.length === 0) {
     throw new Error('Your cart is empty.');
   }

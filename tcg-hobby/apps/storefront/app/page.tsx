@@ -1,6 +1,6 @@
 import { Badge, Button, Card, CardContent, Container, PageShell, ProductCard, Price, Section, WishlistButton } from '@tcg-hobby/ui';
-import { AnnouncementBanner, NotifyButton, ReleaseCard, ReleaseHero } from '@tcg-hobby/ui';
-import { getCatalogueHomeData, getComingSoonHubData, getCustomerNotificationSubscriptions, getWishlistProductIds } from '@tcg-hobby/database';
+import { AnnouncementBanner, CollectionHealth, InsightCard, MarketValue, NotifyButton, PortfolioCard, ReleaseCard, ReleaseHero, StatTile, TrendBadge } from '@tcg-hobby/ui';
+import { getCatalogueHomeData, getComingSoonHubData, getCollectionInsights, getCustomerNotificationSubscriptions, getWatchlist, getWishlistProductIds } from '@tcg-hobby/database';
 import { SiteHeader } from '../components/site-header';
 import { AddToCartButton } from '../components/cart-actions';
 import { getCurrentCustomerSession } from '../lib/auth';
@@ -14,13 +14,22 @@ export default async function HomePage() {
     getCatalogueHomeData(),
     getCurrentCustomerSession(),
   ]);
+  const collectorDataPromise =
+    session?.user.role === 'CUSTOMER'
+      ? Promise.all([
+          getCollectionInsights(session.user.id),
+          getWatchlist(session.user.id),
+        ])
+      : Promise.resolve([null, []] as const);
   const wishlistIds = session?.user.role === 'CUSTOMER' ? await getWishlistProductIds(session.user.id) : [];
   const releaseHub = await getComingSoonHubData();
   const notificationIds =
     session?.user.role === 'CUSTOMER' ? (await getCustomerNotificationSubscriptions(session.user.id)).map((item) => item.productId) : [];
-  const { categories, featuredProducts } = homeData;
+  const [collectorInsights, watchlistItems] = await collectorDataPromise;
+  const { featuredProducts } = homeData;
   const heroProduct = featuredProducts.find((product) => !product.releaseStatus || product.releaseStatus === 'RELEASED') ?? featuredProducts[0];
   const returnTo = '/';
+  const watchedValue = watchlistItems.reduce((sum, item) => sum + item.currentEstimateMinor, 0);
 
   return (
     <PageShell>
@@ -82,36 +91,6 @@ export default async function HomePage() {
                 </CardContent>
               </Card>
             ) : null}
-          </Container>
-        </Section>
-
-        <Section id="catalogue">
-          <Container>
-            <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-accent">Featured categories</p>
-                <h2 className="mt-2 text-3xl font-bold">Shop by hobby workflow</h2>
-              </div>
-              <Button variant="ghost" asChild>
-                <a href="/catalogue">View all categories</a>
-              </Button>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {categories.map((category) => (
-                <a key={category.id} href={`/catalogue?category=${category.slug}`} className="group block">
-                  <Card className="h-full transition-colors hover:border-accent/60">
-                    <CardContent className="space-y-4">
-                      <Badge variant="outline">{category.productCount} products</Badge>
-                      <div>
-                        <h3 className="text-xl font-bold">{category.name}</h3>
-                        <p className="mt-3 text-sm leading-6 text-neutral-400">{category.description}</p>
-                      </div>
-                      <p className="text-sm text-accent-soft transition-colors group-hover:text-accent">Browse category</p>
-                    </CardContent>
-                  </Card>
-                </a>
-              ))}
-            </div>
           </Container>
         </Section>
 
@@ -194,6 +173,95 @@ export default async function HomePage() {
           </Container>
         </Section>
 
+        {session?.user.role === 'CUSTOMER' && collectorInsights ? (
+          <Section className="border-t border-surface-line bg-surface-ink">
+            <Container className="space-y-8">
+              <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-accent">Collector dashboard</p>
+                  <h2 className="mt-2 text-3xl font-bold">Your collection, watchlist, and deckwork in one glance.</h2>
+                </div>
+                <div className="flex gap-3">
+                  <Button asChild variant="outline">
+                    <a href="/collection/insights">Open insights</a>
+                  </Button>
+                  <Button asChild>
+                    <a href="/watchlist">Open watchlist</a>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <StatTile label="Estimated collection value" value={new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(collectorInsights.estimatedValueMinor / 100)} helper="Approximate market values" />
+                <StatTile label="Collection health" value={`${collectorInsights.collectionHealthScore}/100`} helper="Collector confidence indicator" />
+                <StatTile label="Watchlist value" value={new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(watchedValue / 100)} helper={`${watchlistItems.length} tracked items`} />
+                <StatTile label="Deck completion" value={`${collectorInsights.deckCompletionPercent}%`} helper="Across active decks" />
+              </div>
+
+              <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+                <PortfolioCard
+                  title="Collection portfolio"
+                  currentEstimateMinor={collectorInsights.estimatedValueMinor}
+                  previousEstimateMinor={collectorInsights.previousValueMinor}
+                  trend={collectorInsights.valueTrendPercent >= 0 ? 'UP' : 'DOWN'}
+                  confidenceScore={collectorInsights.collectionHealthScore}
+                  actionSlot={
+                    <div className="space-y-4">
+                      <MarketValue
+                        currentEstimateMinor={collectorInsights.estimatedValueMinor}
+                        yesterdayMinor={collectorInsights.previousValueMinor}
+                        trend={collectorInsights.valueTrendPercent >= 0 ? 'UP' : 'DOWN'}
+                        confidenceScore={collectorInsights.collectionHealthScore}
+                      />
+                    </div>
+                  }
+                />
+                <CollectionHealth score={collectorInsights.collectionHealthScore} />
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <InsightCard
+                  title="Recently tracked cards"
+                  description="The items you are watching most closely."
+                  actionSlot={
+                    <div className="space-y-3">
+                      {watchlistItems.slice(0, 4).map((item) => (
+                        <div key={item.id} className="rounded-lg border border-surface-line bg-surface-base p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-neutral-50">{item.subjectLabel}</p>
+                              <p className="text-sm text-neutral-400">{item.subjectType.replaceAll('_', ' ')}</p>
+                            </div>
+                            <TrendBadge trend={item.trend} />
+                          </div>
+                          <div className="mt-2 text-sm text-neutral-400">
+                            <span className="text-neutral-50">{new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(item.currentEstimateMinor / 100)}</span>
+                            {' '}approximate value
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  }
+                />
+                <AnnouncementBanner
+                  title="Continue your hobby flow"
+                  message="Pick up where you left off with collection imports, deck edits, or a deeper look at your approximate values."
+                  action={
+                    <div className="flex flex-wrap gap-3">
+                      <Button asChild variant="outline">
+                        <a href="/collection">Continue collection</a>
+                      </Button>
+                      <Button asChild>
+                        <a href="/decks">Resume deck building</a>
+                      </Button>
+                    </div>
+                  }
+                />
+              </div>
+            </Container>
+          </Section>
+        ) : null}
+
         <Section className="border-t border-surface-line bg-surface-base" id="featured-products">
           <Container>
             <div className="mb-8 flex items-end justify-between gap-4">
@@ -213,8 +281,8 @@ export default async function HomePage() {
                   href={`/catalogue/${product.slug}`}
                   actionSlot={
                     <div className="flex items-center gap-2">
-                      {session?.user.role === 'CUSTOMER' ? (
-                        product.releaseStatus && product.releaseStatus !== 'RELEASED' ? (
+                      {product.releaseStatus && product.releaseStatus !== 'RELEASED' ? (
+                        session?.user.role === 'CUSTOMER' ? (
                           <NotifyButton
                             productId={product.id}
                             subscribed={notificationIds.includes(product.id)}
@@ -223,12 +291,12 @@ export default async function HomePage() {
                             returnTo={returnTo}
                           />
                         ) : (
-                          <AddToCartButton productId={product.id} returnTo={returnTo} />
+                          <Button asChild size="sm" variant="secondary">
+                            <a href={`/login?callbackUrl=${encodeURIComponent(returnTo)}`}>Notify me</a>
+                          </Button>
                         )
                       ) : (
-                        <Button asChild size="sm" variant="secondary">
-                          <a href={`/login?callbackUrl=${encodeURIComponent(returnTo)}`}>{product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'Notify me' : 'Add to cart'}</a>
-                        </Button>
+                        <AddToCartButton productId={product.id} returnTo={returnTo} />
                       )}
                       <WishlistButton
                         productId={product.id}

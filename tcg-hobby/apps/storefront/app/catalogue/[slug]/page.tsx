@@ -72,12 +72,12 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
       </Section>
 
       <Container className="py-8">
-        <ProductDetailHero
+          <ProductDetailHero
           product={product}
           actionSlot={
             <div className="flex flex-wrap items-center gap-2">
-              {session?.user.role === 'CUSTOMER' ? (
-                product.releaseStatus && product.releaseStatus !== 'RELEASED' ? (
+              {product.releaseStatus && product.releaseStatus !== 'RELEASED' ? (
+                session?.user.role === 'CUSTOMER' ? (
                   <NotifyButton
                     productId={product.id}
                     subscribed={notificationIds.includes(product.id)}
@@ -85,15 +85,15 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
                     action={toggleNotificationAction}
                     returnTo={currentHref}
                   />
-                ) : product.inStock ? (
-                  <AddToCartWithQuantityForm productId={product.id} returnTo={currentHref} maxQuantity={availableQuantity} />
                 ) : (
-                  <Button disabled>Out of stock</Button>
+                  <Button asChild>
+                    <a href={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}>Notify me</a>
+                  </Button>
                 )
+              ) : product.inStock ? (
+                <AddToCartWithQuantityForm productId={product.id} returnTo={currentHref} maxQuantity={availableQuantity} />
               ) : (
-                <Button asChild>
-                  <a href={`/login?callbackUrl=${encodeURIComponent(currentHref)}`}>{product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'Notify me' : 'Add to cart'}</a>
-                </Button>
+                <Button disabled>Out of stock</Button>
               )}
               <WishlistButton
                 productId={product.id}
@@ -138,8 +138,8 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
                   href={`/catalogue/${item.slug}`}
                   actionSlot={
                     <div className="flex items-center gap-2">
-                      {session?.user.role === 'CUSTOMER' ? (
-                        item.releaseStatus && item.releaseStatus !== 'RELEASED' ? (
+                      {item.releaseStatus && item.releaseStatus !== 'RELEASED' ? (
+                        session?.user.role === 'CUSTOMER' ? (
                           <NotifyButton
                             productId={item.id}
                             subscribed={notificationIds.includes(item.id)}
@@ -147,16 +147,16 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
                             action={toggleNotificationAction}
                             returnTo={`/catalogue/${item.slug}`}
                           />
-                        ) : item.inStock ? (
-                          <AddToCartButton productId={item.id} returnTo={`/catalogue/${item.slug}`} />
                         ) : (
-                          <Button disabled size="sm">
-                            Out of stock
+                          <Button asChild size="sm" variant="secondary">
+                            <a href={`/login?callbackUrl=${encodeURIComponent(`/catalogue/${item.slug}`)}`}>Notify me</a>
                           </Button>
                         )
+                      ) : item.inStock ? (
+                        <AddToCartButton productId={item.id} returnTo={`/catalogue/${item.slug}`} />
                       ) : (
-                        <Button asChild size="sm" variant="secondary">
-                          <a href={`/login?callbackUrl=${encodeURIComponent(`/catalogue/${item.slug}`)}`}>{item.releaseStatus && item.releaseStatus !== 'RELEASED' ? 'Notify me' : 'Add to cart'}</a>
+                        <Button disabled size="sm">
+                          Out of stock
                         </Button>
                       )}
                       <WishlistButton

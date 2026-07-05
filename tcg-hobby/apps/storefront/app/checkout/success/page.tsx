@@ -22,6 +22,7 @@ export default async function CheckoutSuccessPage({
   }
 
   const order = await finalizeOrderFromStripeSession(sessionId);
+  const linkedToAccount = Boolean(order?.userId);
 
   return (
     <>
@@ -47,7 +48,10 @@ export default async function CheckoutSuccessPage({
                     <OrderStatusBadge status={order.fulfilmentStatus} />
                     <span className="text-sm text-neutral-400">Stripe session {order.stripeCheckoutSessionId}</span>
                   </div>
-                  <p className="mt-4 text-sm leading-6 text-neutral-400">Your order is secure and ready for fulfilment. A confirmation email should land shortly.</p>
+                  <p className="mt-4 text-sm leading-6 text-neutral-400">
+                    Your order is secure and ready for fulfilment. A confirmation email should land shortly.
+                    {!linkedToAccount ? ' Guest orders are stored against the email address you entered at checkout.' : ''}
+                  </p>
                 </div>
 
                 <div className="space-y-3">
@@ -76,9 +80,11 @@ export default async function CheckoutSuccessPage({
                   }}
                   actionSlot={
                     <div className="space-y-3">
-                      <Button asChild className="w-full">
-                        <a href={`/account/orders/${order.orderNumber}`}>View order details</a>
-                      </Button>
+                      {linkedToAccount ? (
+                        <Button asChild className="w-full">
+                          <a href={`/account/orders/${order.orderNumber}`}>View order details</a>
+                        </Button>
+                      ) : null}
                       <Button asChild className="w-full" variant="outline">
                         <a href="/catalogue">Continue shopping</a>
                       </Button>
@@ -88,15 +94,15 @@ export default async function CheckoutSuccessPage({
               </div>
             </div>
           ) : (
-            <EmptyState
-              title="We could not confirm the payment yet"
-              description="If you just completed Stripe checkout, refresh this page in a moment or return to your account orders."
-              action={
-                <Button asChild>
-                  <a href="/account/orders">View orders</a>
-                </Button>
-              }
-            />
+          <EmptyState
+            title="We could not confirm the payment yet"
+            description="If you just completed Stripe checkout, refresh this page in a moment or browse the catalogue while the confirmation settles."
+            action={
+              <Button asChild>
+                <a href="/catalogue">Browse catalogue</a>
+              </Button>
+            }
+          />
           )}
         </Container>
       </main>

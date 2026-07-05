@@ -2,12 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { createPendingCheckoutOrder, finalizePaidCheckoutOrder } from './orders';
 
 function createDbMock() {
-  return {
+  const db = {
     address: {
       create: vi.fn(),
-    },
-    cart: {
-      findUnique: vi.fn(),
     },
     cartItem: {
       deleteMany: vi.fn(),
@@ -24,36 +21,33 @@ function createDbMock() {
     orderItem: {
       createMany: vi.fn(),
     },
-    $transaction: vi.fn(async (callback: (tx: any) => Promise<unknown>) => callback(mockDb)),
   } as any;
+
+  db.$transaction = vi.fn(async (callback: (tx: any) => Promise<unknown>) => callback(db));
+
+  return db;
 }
 
-const mockDb = createDbMock();
+const cart = {
+  cartId: 'cart-1',
+  currency: 'GBP' as const,
+  items: [
+    {
+      id: 'cart-item-1',
+      quantity: 2,
+      unitPriceMinor: 1250,
+      productId: 'prod-1',
+      productName: 'Alpha Card',
+      productSlug: 'alpha-card',
+      totalMinor: 2500,
+      inStock: true,
+    },
+  ],
+};
 
 describe('order repository', () => {
   it('creates a pending order and reserves inventory', async () => {
-    mockDb.cart.findUnique.mockResolvedValue({
-      id: 'cart-1',
-      currency: 'GBP',
-      items: [
-        {
-          id: 'cart-item-1',
-          quantity: 2,
-          unitPriceMinor: 1250,
-          product: {
-            id: 'prod-1',
-            slug: 'alpha-card',
-            name: 'Alpha Card',
-            priceMinor: 1250,
-            currency: 'GBP',
-            inventory: {
-              stockOnHand: 10,
-              reservedStock: 1,
-            },
-          },
-        },
-      ],
-    });
+    const mockDb = createDbMock();
     mockDb.address.create.mockResolvedValue({ id: 'addr-1' });
     mockDb.order.create.mockResolvedValue({
       id: 'order-1',
@@ -71,6 +65,7 @@ describe('order repository', () => {
 
     const result = await createPendingCheckoutOrder(
       'user-1',
+      cart,
       {
         shippingAddress: {
           fullName: 'Sam Collector',
@@ -102,10 +97,60 @@ describe('order repository', () => {
     expect(mockDb.orderItem.createMany).toHaveBeenCalled();
   });
 
+  it('creates a guest order without linking a user account', async () => {
+    const mockDb = createDbMock();
+    mockDb.address.create.mockResolvedValue({ id: 'addr-guest-1' });
+    mockDb.order.create.mockResolvedValue({
+      id: 'order-guest-1',
+      orderNumber: 'TCG-20260704-GUEST01',
+      userId: null,
+    });
+    mockDb.inventoryItem.findUnique.mockResolvedValue({
+      id: 'inv-1',
+      stockOnHand: 10,
+      reservedStock: 0,
+    });
+    mockDb.inventoryItem.updateMany.mockResolvedValue({ count: 1 });
+    mockDb.orderItem.createMany.mockResolvedValue({ count: 1 });
+
+    const result = await createPendingCheckoutOrder(
+      null,
+      {
+        cartId: null,
+        currency: 'GBP',
+        items: cart.items,
+      },
+      {
+        shippingAddress: {
+          fullName: 'Guest Collector',
+          email: 'guest@example.com',
+          line1: '1 Guest Street',
+          line2: '',
+          city: 'Leeds',
+          region: '',
+          postalCode: 'LS1 2AB',
+          country: 'GB',
+        },
+        shippingMethodCode: 'UK_STANDARD',
+      },
+      mockDb,
+    );
+
+    expect(result.order.userId).toBeNull();
+    expect(mockDb.address.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: null,
+        }),
+      }),
+    );
+  });
+
   it('finalizes a paid order by reducing reserved stock', async () => {
     const finalizationDb = createDbMock();
     finalizationDb.order.findUnique.mockResolvedValue({
       id: 'order-1',
+      userId: 'user-1',
       paymentStatus: 'REQUIRES_PAYMENT',
       items: [
         {
@@ -133,6 +178,7 @@ describe('order repository', () => {
     finalizationDb.inventoryItem.updateMany.mockResolvedValue({ count: 1 });
     finalizationDb.order.update.mockResolvedValue({
       id: 'order-1',
+      userId: 'user-1',
       paymentStatus: 'SUCCEEDED',
       fulfilmentStatus: 'PENDING',
       items: [],

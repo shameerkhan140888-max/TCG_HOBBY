@@ -10,6 +10,9 @@ import {
   seedCarts,
   seedDeckCards,
   seedDecks,
+  seedCollectionInsightSnapshots,
+  seedMarketSnapshots,
+  seedNotificationCenterPreferences,
   seedNotificationSubscriptions,
   seedReleaseProducts,
   seedReleases,
@@ -20,6 +23,7 @@ import {
   seedProductPricing,
   seedProductImages,
   seedProducts,
+  seedWatchlistItems,
   seedWishlists,
   seedWishlistItems,
   seedSupplierProducts,
@@ -29,7 +33,12 @@ import {
 
 async function main() {
   await prisma.orderItem.deleteMany();
+  await prisma.marketPriceHistory.deleteMany();
+  await prisma.watchlistItem.deleteMany();
+  await prisma.notificationCenterPreference.deleteMany();
   await prisma.notificationSubscription.deleteMany();
+  await prisma.collectionInsightSnapshot.deleteMany();
+  await prisma.marketSnapshot.deleteMany();
   await prisma.releaseProduct.deleteMany();
   await prisma.release.deleteMany();
   await prisma.wishlistItem.deleteMany();
@@ -136,6 +145,50 @@ async function main() {
         sortOrder: image.sortOrder,
         isPrimary: image.isPrimary,
       };
+    }),
+  });
+
+  await prisma.marketSnapshot.createMany({
+    data: seedMarketSnapshots.map((snapshot) => {
+      const product = seedProducts.find((entry) => entry.slug === snapshot.productSlug);
+
+      if (!product) {
+        throw new Error(`Missing product for market snapshot ${snapshot.id}`);
+      }
+
+      return {
+        id: snapshot.id,
+        productId: product.id,
+        currentEstimateMinor: snapshot.currentEstimateMinor,
+        yesterdayMinor: snapshot.yesterdayMinor,
+        sevenDayMinor: snapshot.sevenDayMinor,
+        thirtyDayMinor: snapshot.thirtyDayMinor,
+        trend: snapshot.trend,
+        confidenceScore: snapshot.confidenceScore,
+        lastUpdatedAt: new Date(snapshot.lastUpdatedAt),
+        source: snapshot.source,
+        currency: 'GBP',
+      };
+    }),
+  });
+
+  const marketSnapshots = await prisma.marketSnapshot.findMany();
+
+  await prisma.marketPriceHistory.createMany({
+    data: seedMarketSnapshots.flatMap((snapshot) => {
+      const marketSnapshot = marketSnapshots.find((entry) => entry.productId === seedProducts.find((product) => product.slug === snapshot.productSlug)?.id);
+
+      if (!marketSnapshot) {
+        throw new Error(`Missing market snapshot row for ${snapshot.id}`);
+      }
+
+      return snapshot.history.map((history) => ({
+        id: `${snapshot.id}-${history.label.toLowerCase()}`,
+        snapshotId: marketSnapshot.id,
+        label: history.label,
+        valueMinor: history.valueMinor,
+        recordedAt: new Date(history.recordedAt),
+      }));
     }),
   });
 
@@ -354,6 +407,66 @@ async function main() {
         quantity: item.quantity,
       };
     }),
+  });
+
+  await prisma.watchlistItem.createMany({
+    data: seedWatchlistItems.map((item) => {
+      const product = item.productSlug ? seedProducts.find((entry) => entry.slug === item.productSlug) : null;
+      const release = item.releaseSlug ? seedReleases.find((entry) => entry.slug === item.releaseSlug) : null;
+      const collectionItem = item.collectionItemId ? seedCollectionItems.find((entry) => entry.id === item.collectionItemId) : null;
+      const marketSnapshot = product ? marketSnapshots.find((entry) => entry.productId === product.id) : null;
+
+      return {
+        id: item.id,
+        userId: item.userId,
+        subjectType: item.subjectType,
+        subjectKey: item.subjectKey,
+        productId: product?.id ?? null,
+        releaseId: release?.id ?? null,
+        collectionItemId: collectionItem?.id ?? null,
+        marketSnapshotId: marketSnapshot?.id ?? null,
+        notificationType: item.notificationType,
+        emailEnabled: item.emailEnabled,
+        pushEnabled: item.pushEnabled,
+        inAppEnabled: item.inAppEnabled,
+        note: item.note,
+      };
+    }),
+  });
+
+  await prisma.notificationCenterPreference.createMany({
+    data: seedNotificationCenterPreferences.map((preference) => ({
+      id: preference.id,
+      userId: preference.userId,
+      notificationType: preference.notificationType,
+      subjectType: preference.subjectType,
+      subjectLabel: preference.subjectLabel,
+      emailEnabled: preference.emailEnabled,
+      pushEnabled: preference.pushEnabled,
+      inAppEnabled: preference.inAppEnabled,
+    })),
+  });
+
+  await prisma.collectionInsightSnapshot.createMany({
+    data: seedCollectionInsightSnapshots.map((snapshot) => ({
+      id: snapshot.id,
+      userId: snapshot.userId,
+      collectionId: snapshot.collectionId,
+      estimatedValueMinor: snapshot.estimatedValueMinor,
+      previousValueMinor: snapshot.previousValueMinor,
+      sevenDayValueMinor: snapshot.sevenDayValueMinor,
+      thirtyDayValueMinor: snapshot.thirtyDayValueMinor,
+      collectionHealthScore: snapshot.collectionHealthScore,
+      cardsOwned: snapshot.cardsOwned,
+      setsOwned: snapshot.setsOwned,
+      favouriteGame: snapshot.favouriteGame,
+      wishlistOverlapCount: snapshot.wishlistOverlapCount,
+      deckCompletionPercent: snapshot.deckCompletionPercent,
+      recentGrowthMinor: snapshot.recentGrowthMinor,
+      heatMap: snapshot.heatMap,
+      recentActivity: snapshot.recentActivity,
+      lastUpdatedAt: new Date(snapshot.lastUpdatedAt),
+    })),
   });
 
   await prisma.wishlistItem.createMany({

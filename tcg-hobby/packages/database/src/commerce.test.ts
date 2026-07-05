@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   calculateCartSubtotal,
+  calculateCartSummary,
   calculateOrderTotal,
   generateOrderNumber,
   getShippingMethodByCode,
@@ -10,12 +11,16 @@ import {
 
 describe('commerce helpers', () => {
   it('calculates cart totals from line items', () => {
-    expect(
-      calculateCartSubtotal([
-        { quantity: 2, unitPriceMinor: 1250 },
-        { quantity: 1, unitPriceMinor: 499 },
-      ]),
-    ).toBe(2999);
+    const summary = calculateCartSummary([
+      { id: 'item-1', productId: 'prod-1', productName: 'Alpha', productSlug: 'alpha', quantity: 2, unitPriceMinor: 1250, totalMinor: 2500, inStock: true },
+      { id: 'item-2', productId: 'prod-2', productName: 'Beta', productSlug: 'beta', quantity: 1, unitPriceMinor: 499, totalMinor: 499, inStock: true },
+    ]);
+
+    expect(calculateCartSubtotal([
+      { quantity: 2, unitPriceMinor: 1250 },
+      { quantity: 1, unitPriceMinor: 499 },
+    ])).toBe(2999);
+    expect(summary.totalItems).toBe(3);
   });
 
   it('calculates order totals in minor units', () => {

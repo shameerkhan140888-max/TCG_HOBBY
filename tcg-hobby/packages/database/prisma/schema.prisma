@@ -102,6 +102,27 @@ enum NotificationPreference {
   RELEASE
 }
 
+enum NotificationType {
+  PRICE_MOVEMENT
+  UPCOMING_RELEASE
+  WISHLIST_AVAILABILITY
+  COLLECTION_UPDATES
+  BUYLIST_UPDATES
+}
+
+enum WatchlistSubjectType {
+  PRODUCT
+  RELEASE
+  COLLECTION_ITEM
+}
+
+enum MarketTrend {
+  UP
+  DOWN
+  FLAT
+  VOLATILE
+}
+
 enum CollectionPrintVariant {
   REGULAR
   REVERSE_HOLO
@@ -136,6 +157,9 @@ model User {
   collection    Collection?
   decks         Deck[]
   notificationSubscriptions NotificationSubscription[]
+  watchlist     WatchlistItem[]
+  notificationPreferences NotificationCenterPreference[]
+  collectionInsightSnapshot CollectionInsightSnapshot?
 }
 
 model Address {
@@ -270,6 +294,8 @@ model Product {
   pricingRules  PricingRule[]
   releaseProducts ReleaseProduct[]
   notificationSubscriptions NotificationSubscription[]
+  marketSnapshots MarketSnapshot[]
+  watchlistItems WatchlistItem[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
@@ -317,6 +343,7 @@ model Release {
   updatedAt        DateTime        @updatedAt
   category         Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   products         ReleaseProduct[]
+  watchlistItems   WatchlistItem[]
 
   @@index([releaseDate, visible])
   @@index([featuredOnHomepage, visible])
@@ -365,6 +392,91 @@ model NotificationSubscription {
   @@unique([userId, productId])
   @@index([productId, createdAt])
   @@index([userId, preference])
+}
+
+model NotificationCenterPreference {
+  id              String              @id @default(cuid())
+  userId          String
+  notificationType NotificationType
+  subjectType     WatchlistSubjectType?
+  subjectLabel    String?
+  emailEnabled    Boolean             @default(true)
+  pushEnabled     Boolean             @default(false)
+  inAppEnabled    Boolean             @default(true)
+  lastTriggeredAt DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, notificationType, subjectType, subjectLabel])
+  @@index([userId, notificationType])
+  @@index([notificationType, emailEnabled])
+}
+
+model MarketSnapshot {
+  id                  String          @id @default(cuid())
+  productId           String          @unique
+  currentEstimateMinor Int
+  yesterdayMinor      Int
+  sevenDayMinor       Int
+  thirtyDayMinor      Int
+  trend               MarketTrend
+  confidenceScore     Int
+  lastUpdatedAt       DateTime
+  source              String
+  currency            String          @default("GBP")
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  product             Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  history             MarketPriceHistory[]
+  watchlistItems      WatchlistItem[]
+
+  @@index([trend, lastUpdatedAt])
+  @@index([confidenceScore, lastUpdatedAt])
+  @@index([source, lastUpdatedAt])
+}
+
+model MarketPriceHistory {
+  id            String         @id @default(cuid())
+  snapshotId    String
+  label         String
+  valueMinor    Int
+  recordedAt    DateTime
+  createdAt     DateTime       @default(now())
+  snapshot      MarketSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@index([snapshotId, recordedAt])
+  @@index([label, recordedAt])
+}
+
+model WatchlistItem {
+  id                 String              @id @default(cuid())
+  userId             String
+  subjectType        WatchlistSubjectType
+  subjectKey         String
+  productId          String?
+  releaseId          String?
+  collectionItemId   String?
+  marketSnapshotId   String?
+  notificationType   NotificationType    @default(PRICE_MOVEMENT)
+  emailEnabled       Boolean             @default(true)
+  pushEnabled        Boolean             @default(false)
+  inAppEnabled       Boolean             @default(true)
+  note               String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product            Product?            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  release            Release?            @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  collectionItem     CollectionItem?     @relation(fields: [collectionItemId], references: [id], onDelete: Cascade)
+  marketSnapshot     MarketSnapshot?     @relation(fields: [marketSnapshotId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, subjectType, subjectKey])
+  @@index([userId, notificationType])
+  @@index([productId, createdAt])
+  @@index([releaseId, createdAt])
+  @@index([collectionItemId, createdAt])
+  @@index([marketSnapshotId, createdAt])
 }
 
 model Wishlist {
@@ -435,7 +547,7 @@ model CartItem {
 model Order {
   id                 String      @id @default(cuid())
   orderNumber        String      @unique
-  userId             String
+  userId             String?
   status             OrderStatus @default(DRAFT)
   paymentStatus      PaymentStatus @default(REQUIRES_PAYMENT)
   fulfilmentStatus   FulfilmentStatus @default(PENDING)
@@ -466,7 +578,7 @@ model Order {
   cancelledAt        DateTime?
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
-  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   shippingAddress    Address?    @relation("ShippingAddress", fields: [shippingAddressId], references: [id], onDelete: SetNull)
   items              OrderItem[]
 
@@ -619,8 +731,36 @@ model Collection {
   updatedAt     DateTime        @updatedAt
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   items         CollectionItem[]
+  insightSnapshot CollectionInsightSnapshot?
 
   @@index([userId, createdAt])
+}
+
+model CollectionInsightSnapshot {
+  id                     String    @id @default(cuid())
+  userId                 String    @unique
+  collectionId           String    @unique
+  estimatedValueMinor    Int
+  previousValueMinor     Int
+  sevenDayValueMinor     Int
+  thirtyDayValueMinor    Int
+  collectionHealthScore  Int
+  cardsOwned             Int
+  setsOwned              Int
+  favouriteGame          String
+  wishlistOverlapCount   Int
+  deckCompletionPercent  Int
+  recentGrowthMinor      Int
+  heatMap                Json
+  recentActivity         Json
+  lastUpdatedAt          DateTime
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collection             Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@index([collectionHealthScore, lastUpdatedAt])
+  @@index([estimatedValueMinor, lastUpdatedAt])
 }
 
 model CollectionItem {
@@ -639,6 +779,7 @@ model CollectionItem {
   updatedAt        DateTime              @updatedAt
   collection       Collection            @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   product          Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  watchlistItems   WatchlistItem[]
 
   @@unique([collectionId, productId, printVariant, condition, foil, language])
   @@index([collectionId, updatedAt])

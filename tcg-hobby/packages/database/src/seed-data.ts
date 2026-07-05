@@ -5,6 +5,7 @@ import type {
   CatalogueProductDetail,
   Money,
   NotificationPreference,
+  NotificationType,
   ProductReleaseStatus,
 } from '@tcg-hobby/types';
 
@@ -126,6 +127,17 @@ type NotificationSubscriptionSeed = {
   userId: string;
   productSlug: string;
   preference: NotificationPreference;
+};
+
+type NotificationCenterPreferenceSeed = {
+  id: string;
+  userId: string;
+  notificationType: NotificationType;
+  subjectType: 'PRODUCT' | 'RELEASE' | 'COLLECTION_ITEM' | null;
+  subjectLabel: string | null;
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+  inAppEnabled: boolean;
 };
 
 type PricingRuleSeed = {
@@ -318,6 +330,59 @@ type DeckCardSeed = {
   deckId: string;
   productSlug: string;
   quantity: number;
+};
+
+type MarketSnapshotSeed = {
+  id: string;
+  productSlug: string;
+  currentEstimateMinor: number;
+  yesterdayMinor: number;
+  sevenDayMinor: number;
+  thirtyDayMinor: number;
+  trend: 'UP' | 'DOWN' | 'FLAT' | 'VOLATILE';
+  confidenceScore: number;
+  lastUpdatedAt: string;
+  source: string;
+  history: Array<{
+    label: string;
+    valueMinor: number;
+    recordedAt: string;
+  }>;
+};
+
+type WatchlistItemSeed = {
+  id: string;
+  userId: string;
+  subjectType: 'PRODUCT' | 'RELEASE' | 'COLLECTION_ITEM';
+  subjectKey: string;
+  productSlug?: string | null;
+  releaseSlug?: string | null;
+  collectionItemId?: string | null;
+  notificationType: NotificationType;
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+  inAppEnabled: boolean;
+  note: string | null;
+};
+
+type CollectionInsightSnapshotSeed = {
+  id: string;
+  userId: string;
+  collectionId: string;
+  estimatedValueMinor: number;
+  previousValueMinor: number;
+  sevenDayValueMinor: number;
+  thirtyDayValueMinor: number;
+  collectionHealthScore: number;
+  cardsOwned: number;
+  setsOwned: number;
+  favouriteGame: string;
+  wishlistOverlapCount: number;
+  deckCompletionPercent: number;
+  recentGrowthMinor: number;
+  heatMap: Record<string, number>;
+  recentActivity: Array<{ label: string; value: string }>;
+  lastUpdatedAt: string;
 };
 
 export const seedCategories: CategorySeed[] = [
@@ -1499,6 +1564,199 @@ export const seedDeckCards: DeckCardSeed[] = [
   { id: 'deck-card-bolt-1', deckId: 'deck-sam-burn', productSlug: 'lightning-bolt-playset', quantity: 4 },
   { id: 'deck-card-dragon-1', deckId: 'deck-sam-burn', productSlug: 'dragon-lord-secret-rare', quantity: 2 },
   { id: 'deck-card-oracle-1', deckId: 'deck-sam-burn', productSlug: 'mystic-oracle-binder-page', quantity: 1 },
+];
+
+const marketSeedUpdatedAt = '2026-07-04T12:00:00.000Z';
+
+function buildMarketHistory(currentEstimateMinor: number, yesterdayMinor: number, sevenDayMinor: number, thirtyDayMinor: number) {
+  return [
+    { label: '30D', valueMinor: thirtyDayMinor, recordedAt: '2026-06-04T12:00:00.000Z' },
+    { label: '7D', valueMinor: sevenDayMinor, recordedAt: '2026-06-27T12:00:00.000Z' },
+    { label: 'Yesterday', valueMinor: yesterdayMinor, recordedAt: '2026-07-03T12:00:00.000Z' },
+    { label: 'Current', valueMinor: currentEstimateMinor, recordedAt: marketSeedUpdatedAt },
+  ];
+}
+
+function buildMarketSnapshotSeed(product: ProductSeed, index: number): MarketSnapshotSeed {
+  const baseMultiplier =
+    product.categorySlug === 'singles' ? 0.84 :
+    product.categorySlug === 'accessories' ? 0.9 :
+    product.categorySlug === 'events' ? 0.96 :
+    0.92;
+  const trendShift = (index % 5) - 2;
+  const currentEstimateMinor = Math.max(150, Math.round(product.priceMinor * baseMultiplier) + trendShift * 25);
+  const yesterdayMinor = Math.max(150, currentEstimateMinor - trendShift * 15 - 20);
+  const sevenDayMinor = Math.max(150, currentEstimateMinor - trendShift * 20 - 35);
+  const thirtyDayMinor = Math.max(150, currentEstimateMinor - trendShift * 30 - 80);
+  const trend: MarketSnapshotSeed['trend'] =
+    currentEstimateMinor > thirtyDayMinor ? 'UP' : currentEstimateMinor < thirtyDayMinor ? 'DOWN' : index % 3 === 0 ? 'FLAT' : 'VOLATILE';
+  const confidenceScore = 68 + ((index * 7) % 28);
+
+  return {
+    id: `market-${product.slug}`,
+    productSlug: product.slug,
+    currentEstimateMinor,
+    yesterdayMinor,
+    sevenDayMinor,
+    thirtyDayMinor,
+    trend,
+    confidenceScore,
+    lastUpdatedAt: marketSeedUpdatedAt,
+    source: 'Seeded collector market',
+    history: buildMarketHistory(currentEstimateMinor, yesterdayMinor, sevenDayMinor, thirtyDayMinor),
+  };
+}
+
+export const seedMarketSnapshots: MarketSnapshotSeed[] = seedProducts.map((product, index) => buildMarketSnapshotSeed(product, index));
+
+const marketSnapshotLookup = new Map(seedMarketSnapshots.map((snapshot) => [snapshot.productSlug, snapshot]));
+
+export const seedWatchlistItems: WatchlistItemSeed[] = [
+  {
+    id: 'watch-sam-arcane',
+    userId: 'user-customer-sam',
+    subjectType: 'PRODUCT',
+    subjectKey: 'arcane-booster-box',
+    productSlug: 'arcane-booster-box',
+    notificationType: 'PRICE_MOVEMENT',
+    emailEnabled: true,
+    pushEnabled: false,
+    inAppEnabled: true,
+    note: 'Track sealed box movement before restocks.',
+  },
+  {
+    id: 'watch-sam-ancient',
+    userId: 'user-customer-sam',
+    subjectType: 'RELEASE',
+    subjectKey: 'release-ancient-legends',
+    releaseSlug: 'ancient-legends',
+    notificationType: 'UPCOMING_RELEASE',
+    emailEnabled: true,
+    pushEnabled: false,
+    inAppEnabled: true,
+    note: 'Watch the launch window for the next set.',
+  },
+  {
+    id: 'watch-sam-dragon-collection',
+    userId: 'user-customer-sam',
+    subjectType: 'COLLECTION_ITEM',
+    subjectKey: 'collection-item-dragon',
+    collectionItemId: 'collection-item-dragon',
+    productSlug: 'dragon-lord-secret-rare',
+    notificationType: 'COLLECTION_UPDATES',
+    emailEnabled: false,
+    pushEnabled: false,
+    inAppEnabled: true,
+    note: 'Keep an eye on this binder staple.',
+  },
+];
+
+export const seedNotificationCenterPreferences: NotificationCenterPreferenceSeed[] = [
+  {
+    id: 'notify-pref-sam-price',
+    userId: 'user-customer-sam',
+    notificationType: 'PRICE_MOVEMENT',
+    subjectType: null,
+    subjectLabel: 'All watched cards',
+    emailEnabled: true,
+    pushEnabled: false,
+    inAppEnabled: true,
+  },
+  {
+    id: 'notify-pref-sam-release',
+    userId: 'user-customer-sam',
+    notificationType: 'UPCOMING_RELEASE',
+    subjectType: null,
+    subjectLabel: 'Upcoming releases',
+    emailEnabled: true,
+    pushEnabled: false,
+    inAppEnabled: true,
+  },
+  {
+    id: 'notify-pref-sam-wishlist',
+    userId: 'user-customer-sam',
+    notificationType: 'WISHLIST_AVAILABILITY',
+    subjectType: null,
+    subjectLabel: 'Wishlist availability',
+    emailEnabled: false,
+    pushEnabled: false,
+    inAppEnabled: true,
+  },
+  {
+    id: 'notify-pref-sam-collection',
+    userId: 'user-customer-sam',
+    notificationType: 'COLLECTION_UPDATES',
+    subjectType: null,
+    subjectLabel: 'Collection updates',
+    emailEnabled: false,
+    pushEnabled: false,
+    inAppEnabled: true,
+  },
+  {
+    id: 'notify-pref-sam-buylist',
+    userId: 'user-customer-sam',
+    notificationType: 'BUYLIST_UPDATES',
+    subjectType: null,
+    subjectLabel: 'Buylist updates',
+    emailEnabled: true,
+    pushEnabled: false,
+    inAppEnabled: true,
+  },
+];
+
+export const seedCollectionInsightSnapshots: CollectionInsightSnapshotSeed[] = [
+  (() => {
+    const cardsOwned = seedCollectionItems.reduce((sum, item) => sum + item.ownedQuantity, 0);
+    const setsOwned = new Set(seedCollectionItems.map((item) => {
+      const product = seedProducts.find((entry) => entry.slug === item.productSlug);
+      return product?.setName ?? product?.categorySlug ?? item.productSlug;
+    })).size;
+    const favouriteGame = seedCollectionItems.reduce((counts, item) => {
+      const product = seedProducts.find((entry) => entry.slug === item.productSlug);
+      const game = product?.game ?? 'Unknown';
+      counts.set(game, (counts.get(game) ?? 0) + item.ownedQuantity);
+      return counts;
+    }, new Map<string, number>());
+    const favouriteGameName = [...favouriteGame.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Unknown';
+    const estimatedValueMinor = seedCollectionItems.reduce((sum, item) => {
+      const snapshot = marketSnapshotLookup.get(item.productSlug);
+      return sum + ((snapshot?.currentEstimateMinor ?? item.purchasePriceMinor ?? 0) * item.ownedQuantity);
+    }, 0);
+    const previousValueMinor = Math.round(estimatedValueMinor * 0.96);
+    const sevenDayValueMinor = Math.round(estimatedValueMinor * 0.98);
+    const thirtyDayValueMinor = Math.round(estimatedValueMinor * 0.93);
+    const wishlistOverlapCount = seedCollectionItems.filter((item) => seedWishlistItems.some((wishlist) => wishlist.productSlug === item.productSlug)).length;
+    const deckCompletionPercent = 82;
+    const recentGrowthMinor = estimatedValueMinor - thirtyDayValueMinor;
+
+    return {
+      id: 'insight-sam',
+      userId: 'user-customer-sam',
+      collectionId: 'collection-sam',
+      estimatedValueMinor,
+      previousValueMinor,
+      sevenDayValueMinor,
+      thirtyDayValueMinor,
+      collectionHealthScore: 88,
+      cardsOwned,
+      setsOwned,
+      favouriteGame: favouriteGameName,
+      wishlistOverlapCount,
+      deckCompletionPercent,
+      recentGrowthMinor,
+      heatMap: {
+        magic: 6,
+        pokemon: 2,
+        yugioh: 1,
+      },
+      recentActivity: [
+        { label: 'Dragon Lord Secret Rare', value: 'Added 2 copies' },
+        { label: 'Lightning Bolt Playset', value: 'Updated quantity' },
+        { label: 'Mystic Oracle Binder Page', value: 'Imported from catalogue' },
+      ],
+      lastUpdatedAt: marketSeedUpdatedAt,
+    };
+  })(),
 ];
 
 export function isCatalogueProductVisible(product: ProductSeed): boolean {

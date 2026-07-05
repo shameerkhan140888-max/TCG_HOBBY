@@ -26,7 +26,7 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
           <Container className="py-8 sm:py-10">
             <div className="space-y-3">
               <p className="text-sm font-semibold uppercase tracking-wide text-accent">Cart</p>
-              <h1 className="text-3xl font-black sm:text-4xl">Review your items before checkout</h1>
+              <h1 className="text-3xl font-black sm:text-4xl">Review your basket before checkout</h1>
               <p className="max-w-3xl text-sm leading-6 text-neutral-400">Keep track of the products you want to buy, update quantities, and move forward to a secure Stripe checkout.</p>
             </div>
             {cartError ? <ErrorMessage className="mt-4">{cartError}</ErrorMessage> : null}

@@ -181,6 +181,30 @@ Sprint 9 notes:
 - Customers can register interest without email sending yet; notification data is stored for later orchestration.
 - The shared UI package now includes countdown, release, preorder, allocation, and announcement components for reuse across storefront and admin surfaces.
 
+## Sprint 10 Collection Insights and Basket Updates
+
+```bash
+docker compose up -d
+npm run db:generate
+npm run db:seed
+npm run dev
+```
+
+Then open:
+
+- `http://localhost:3000/collection/insights`
+- `http://localhost:3000/watchlist`
+- `http://localhost:3000/checkout`
+- `http://localhost:3000/cart`
+
+Sprint 10 notes:
+
+- Watchlist pages remain members-only and redirect guests to login.
+- Checkout now supports guest baskets as well as signed-in customers.
+- Logged-in customers keep order history linked to their account; guest orders keep the shipping email and address entered at checkout.
+- The storefront header now shows a basket icon with a live item count on desktop and mobile.
+- Collection insights surface approximate market values only, with a clear disclaimer that values are not investment advice.
+
 ## Local Commands
 
 - `npm run db:generate` regenerates the Prisma client.

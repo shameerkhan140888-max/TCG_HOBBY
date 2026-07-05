@@ -38,6 +38,19 @@ export {
   updateAdminRelease,
 } from './releases';
 export {
+  calculateApproximateCollectionValue,
+  calculateTrend,
+  getCollectionInsights,
+  getMarketHistory,
+  getMarketSnapshot,
+  getMarketSnapshots,
+  getNotificationCenterPreferences,
+  getWatchlist,
+  toggleWatchlistItem,
+  updateNotificationCenterPreference,
+  updateWatchlistItemPreferences,
+} from './market';
+export {
   adjustProductStock,
   archiveAdminProduct,
   calculateAvailableRetailMargin,
@@ -65,6 +78,18 @@ export {
   getProductPricingSnapshot,
   refreshProductPricing,
 } from './pricing';
+export {
+  buildCartReservationExpiry,
+  calculateCartSubtotal,
+  calculateCartSummary,
+  calculateLineTotal,
+  calculateOrderTotal,
+  generateOrderNumber,
+  getShippingMethodByCode,
+  getShippingMethodsForCountry,
+  summarizeOrderTotals,
+  validateQuantityAgainstAvailability,
+} from './commerce';
 export {
   addProductToBuylist,
   getAdminBuylists,
@@ -104,6 +129,7 @@ export {
 export {
   getCatalogueCategories,
   getCatalogueHomeData,
+  getCatalogueProductById,
   getCatalogueProductBySlug,
   getCatalogueProducts,
   getFeaturedCatalogueProducts,

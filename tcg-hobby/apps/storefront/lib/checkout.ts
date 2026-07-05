@@ -2,7 +2,7 @@ import 'server-only';
 
 import type { CheckoutAddress, ShippingMethod, ShippingMethodCode } from '@tcg-hobby/types';
 import { getAvailableShippingMethods, prisma } from '@tcg-hobby/database';
-import { getCurrentCustomerSession, requireCustomerSession } from './auth';
+import { getCurrentCustomerSession } from './auth';
 import { getCurrentCustomerCart } from './cart';
 
 export type CheckoutFieldErrors = Record<string, string>;
@@ -36,27 +36,28 @@ const emptyCheckoutValues: CheckoutFormState['values'] = {
 };
 
 export async function getCheckoutPageData(): Promise<CheckoutPageData> {
-  const session = await requireCustomerSession('/login?callbackUrl=%2Fcheckout');
-  const [cart, customerSession, userRecord] = await Promise.all([
+  const [cart, customerSession] = await Promise.all([
     getCurrentCustomerCart(),
     getCurrentCustomerSession(),
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: {
-        addresses: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        },
-      },
-    }),
   ]);
-  const user = customerSession ? customerSession.user : session.user;
+  const user = customerSession?.user ?? null;
+  const userRecord = user
+    ? await prisma.user.findUnique({
+        where: { id: user.id },
+        include: {
+          addresses: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+        },
+      })
+    : null;
   const defaultAddress = userRecord?.addresses[0] ?? null;
   const shippingMethods = await getAvailableShippingMethods(defaultAddress?.country ?? 'GB');
   const defaults: CheckoutFormState['values'] = {
     ...emptyCheckoutValues,
-    fullName: user.name ?? '',
-    email: user.email ?? '',
+    fullName: user?.name ?? '',
+    email: user?.email ?? '',
     line1: defaultAddress?.line1 ?? '',
     line2: defaultAddress?.line2 ?? '',
     city: defaultAddress?.city ?? '',
@@ -70,6 +71,6 @@ export async function getCheckoutPageData(): Promise<CheckoutPageData> {
     cart,
     shippingMethods,
     defaults,
-    sessionEmail: user.email,
+    sessionEmail: user?.email ?? '',
   };
 }

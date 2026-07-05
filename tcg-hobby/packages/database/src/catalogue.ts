@@ -156,6 +156,10 @@ function getSeedProductBySlug(slug: string) {
   return seedProducts.find((product) => product.slug === slug) ?? null;
 }
 
+function getSeedProductById(id: string) {
+  return seedProducts.find((product) => product.id === id) ?? null;
+}
+
 function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] {
   const query = normalizeSearch(filters.search);
   const selectedCategory = normalizeSearch(filters.category);
@@ -226,6 +230,15 @@ function seedProductsToDetail(slug: string): CatalogueProductDetail | null {
     ...toCatalogueProductDetail(product, inventory, category, supplier),
     relatedProducts,
   };
+}
+
+function seedProductToDetailById(id: string): CatalogueProductDetail | null {
+  const product = getSeedProductById(id);
+  if (!product) {
+    return null;
+  }
+
+  return seedProductsToDetail(product.slug);
 }
 
 async function getProductsFromDatabase(
@@ -317,6 +330,44 @@ async function getProductDetailFromDatabase(slug: string): Promise<CatalogueProd
     supplierSku: product.supplierProducts[0].supplierSku,
     leadTimeDays: product.supplierProducts[0].leadTimeDays,
     relatedProducts: related.filter((item) => item.slug !== slug).slice(0, 4),
+  };
+}
+
+async function getProductDetailFromDatabaseById(id: string): Promise<CatalogueProductDetail | null> {
+  const product = (await prisma.product.findUnique({
+    where: { id },
+    include: {
+      category: true,
+      inventory: true,
+      supplierProducts: { include: { supplier: true }, take: 1 },
+    },
+  })) as unknown as CatalogueProductRow | null;
+
+  if (!product || !product.inventory || !product.supplierProducts[0]?.supplier) {
+    return null;
+  }
+
+  const related = await getProductsFromDatabase(
+    {
+      search: '',
+      category: product.category.slug,
+      sort: 'featured',
+      page: 1,
+      pageSize: 4,
+    },
+    { take: 4 },
+  );
+
+  return {
+    ...mapCatalogueProductRow(product),
+    longDescription: product.longDescription,
+    sku: product.sku,
+    setName: product.setName,
+    condition: product.condition as CatalogueProductDetail['condition'],
+    searchText: product.searchText,
+    supplierSku: product.supplierProducts[0].supplierSku,
+    leadTimeDays: product.supplierProducts[0].leadTimeDays,
+    relatedProducts: related.filter((item) => item.slug !== product.slug).slice(0, 4),
   };
 }
 
@@ -502,6 +553,27 @@ export async function getCatalogueProductBySlug(slug: string): Promise<Catalogue
   }
 
   return seedProductsToDetail(slug);
+}
+
+export async function getCatalogueProductById(id: string): Promise<CatalogueProductDetail | null> {
+  if (shouldBypassDatabase()) {
+    return seedProductToDetailById(id);
+  }
+
+  try {
+    const product = await getProductDetailFromDatabaseById(id);
+    if (product) {
+      return product;
+    }
+
+    return null;
+  } catch (error) {
+    if (!canUseSeedFallback()) {
+      throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'product lookup failed');
+    }
+  }
+
+  return seedProductToDetailById(id);
 }
 
 export async function getCatalogueHomeData() {

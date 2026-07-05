@@ -117,6 +117,28 @@ export type {
   RuleBadgeProps,
 } from './pricing';
 export {
+  CollectionHealth,
+  InsightCard,
+  MarketValue,
+  NotificationPreference,
+  PortfolioCard,
+  StatTile,
+  TrendBadge,
+  ValueSparkline,
+  WatchButton,
+} from './insights';
+export type {
+  CollectionHealthProps,
+  InsightCardProps,
+  MarketValueProps,
+  NotificationPreferenceProps,
+  PortfolioCardProps,
+  StatTileProps,
+  TrendBadgeProps,
+  ValueSparklineProps,
+  WatchButtonProps,
+} from './insights';
+export {
   AllocationIndicator,
   AnnouncementBanner,
   NotifyButton,

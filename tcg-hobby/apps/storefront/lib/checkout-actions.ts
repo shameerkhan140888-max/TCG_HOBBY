@@ -10,7 +10,8 @@ import {
 } from '@tcg-hobby/database';
 import { redirect } from 'next/navigation';
 import type { CheckoutFieldErrors, CheckoutFormState } from './checkout';
-import { requireCustomerSession } from './auth';
+import { getCurrentCustomerCart } from './cart';
+import { getCurrentCustomerSession } from './auth';
 
 function siteUrl() {
   return process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
@@ -58,7 +59,8 @@ function parseInput(formData: FormData) {
 }
 
 export async function placeCheckoutOrderAction(_state: CheckoutFormState, formData: FormData): Promise<CheckoutFormState> {
-  const session = await requireCustomerSession('/login?callbackUrl=%2Fcheckout');
+  const session = await getCurrentCustomerSession();
+  const cart = await getCurrentCustomerCart();
   const { shippingAddress, fieldErrors } = parseInput(formData);
   const returnTo = sanitizeReturnUrl(formData.get('returnTo'));
   const shippingMethods = await getAvailableShippingMethods(shippingAddress.country);
@@ -84,7 +86,9 @@ export async function placeCheckoutOrderAction(_state: CheckoutFormState, formDa
     };
   }
 
-  const reservation = await createPendingCheckoutOrder(session.user.id, {
+  const customerUserId = session?.user.role === 'CUSTOMER' && session ? session.user.id : null;
+
+  const reservation = await createPendingCheckoutOrder(customerUserId, cart, {
     shippingAddress,
     shippingMethodCode: shippingMethod.code,
   });

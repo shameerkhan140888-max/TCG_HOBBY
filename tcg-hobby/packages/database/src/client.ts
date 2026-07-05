@@ -42,9 +42,10 @@ function createFallbackClient() {
 
 function createPrismaClient() {
   try {
-    return new PrismaClient({
-      log: ['error', 'warn'],
-    });
+    const logLevels: Array<'error' | 'warn'> = ['error', 'warn'];
+    const options = process.env.NODE_ENV === 'production' ? { log: logLevels } : undefined;
+
+    return new PrismaClient(options);
   } catch {
     if (process.env.NODE_ENV === 'production') {
       throw createDatabaseUnavailableError();
