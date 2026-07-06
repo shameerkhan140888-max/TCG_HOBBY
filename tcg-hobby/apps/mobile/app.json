@@ -5,6 +5,7 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "scheme": "tcghobby",
-    "userInterfaceStyle": "dark"
+    "userInterfaceStyle": "dark",
+    "platforms": ["ios", "android"]
   }
 }

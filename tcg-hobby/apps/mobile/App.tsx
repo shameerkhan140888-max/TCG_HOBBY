@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import type { ProductSummary } from '@tcg-hobby/types';
 
 const featured: ProductSummary = {
@@ -12,13 +12,13 @@ const featured: ProductSummary = {
 
 export default function App() {
   return (
-    <SafeAreaView style={styles.screen}>
+    <View style={styles.screen}>
       <View style={styles.card}>
         <Text style={styles.eyebrow}>TCG Hobby</Text>
         <Text style={styles.title}>Mobile companion</Text>
         <Text style={styles.copy}>{featured.name} is ready for catalogue, wishlist, and collection workflows.</Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

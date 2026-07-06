@@ -186,7 +186,7 @@ export function AccountShell({ sidebarTitle, sidebarSubtitle, sidebar, className
     <div className={cn('grid min-h-screen bg-surface-ink text-neutral-50 lg:grid-cols-[280px_1fr]', className)} {...props}>
       <aside className="border-r border-surface-line bg-surface-base p-5">
         <div className="mb-8">
-          <BrandMark className="h-12 w-12 rounded-md border border-surface-line bg-black/60 p-1.5" />
+          <BrandMark width={160} height={56} className="w-[150px] object-contain" />
           <p className="mt-4 text-lg font-bold">{sidebarTitle}</p>
           {sidebarSubtitle ? <p className="text-sm text-neutral-500">{sidebarSubtitle}</p> : null}
         </div>

@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { calculatePercentage, clampMinorAmount, formatMoney, roundToMinor, slugify, sumMinorAmounts } from './index';
+import { calculatePercentage, clampMinorAmount, formatBasketSummary, formatMoney, roundToMinor, slugify, sumMinorAmounts } from './index';
 
 describe('utils', () => {
   it('formats money in minor units', () => {
     expect(formatMoney({ amountMinor: 1299, currency: 'GBP' })).toContain('12.99');
+  });
+
+  it('formats basket summaries', () => {
+    expect(formatBasketSummary(2499, 2)).toBe('£24.99 · 2 items');
+    expect(formatBasketSummary(0, 0)).toBe('£0.00 · 0 items');
   });
 
   it('creates stable slugs', () => {

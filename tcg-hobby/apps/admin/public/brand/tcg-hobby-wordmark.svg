@@ -1,0 +1,7 @@
+<svg width="960" height="240" viewBox="0 0 960 240" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="TCG Hobby">
+  <image href="/brand/tcg-hobby-logo.png" xlink:href="/brand/tcg-hobby-logo.png" x="0" y="26" width="176" height="176" preserveAspectRatio="xMidYMid meet" />
+  <g transform="translate(220 0)">
+    <text x="0" y="112" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="100" font-weight="900" letter-spacing="0.02em">TCG</text>
+    <text x="0" y="186" fill="#ff7a1a" font-family="Arial, Helvetica, sans-serif" font-size="88" font-weight="900" letter-spacing="0.14em">HOBBY</text>
+  </g>
+</svg>

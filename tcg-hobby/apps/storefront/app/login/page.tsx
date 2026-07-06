@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <Section className="py-14 sm:py-20">
           <Container className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
             <div className="space-y-6">
-              <BrandMark className="h-20 w-20 rounded-md border border-surface-line bg-black/60 p-2" />
+              <BrandMark width={168} height={56} className="w-[160px] object-contain" />
               <p className="text-sm font-semibold uppercase tracking-wide text-accent">Customer access</p>
               <h1 className="text-4xl font-black leading-tight text-neutral-50 sm:text-5xl">Sign in to manage your account and wishlist.</h1>
               <p className="max-w-xl text-base leading-8 text-neutral-300">

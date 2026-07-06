@@ -20,12 +20,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-surface-ink text-neutral-50 lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
       <aside className="border-r border-surface-line bg-surface-base px-5 py-6">
-        <div className="flex items-center gap-3">
-          <BrandMark className="h-11 w-11 rounded-md border border-surface-line bg-black/60 p-1" />
-          <div>
-            <p className="font-bold">TCG Hobby</p>
-            <p className="text-xs text-neutral-500">Business Operations</p>
-          </div>
+        <div className="flex items-center">
+          <BrandMark width={160} height={56} className="w-[150px] object-contain" />
         </div>
 
         <nav className="mt-8 space-y-1">

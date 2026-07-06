@@ -7,6 +7,15 @@ export function formatMoney(value: Money, locale = 'en-GB'): string {
   }).format(value.amountMinor / 100);
 }
 
+export function formatBasketSummary(subtotalMinor: number, itemCount: number, currency = 'GBP'): string {
+  const subtotal = new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency,
+  }).format(subtotalMinor / 100);
+
+  return `${subtotal} · ${itemCount} item${itemCount === 1 ? '' : 's'}`;
+}
+
 export function slugify(input: string): string {
   return input
     .trim()

@@ -6,7 +6,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-glow">
         <CardContent className="space-y-6 p-6">
           <div className="space-y-2 text-center">
-            <BrandMark className="mx-auto h-20 w-20 rounded-md border border-surface-line bg-black/60 p-2" />
+            <BrandMark width={168} height={56} className="mx-auto w-[160px] object-contain" />
             <h1 className="text-2xl font-bold">Admin sign in</h1>
             <p className="text-sm text-neutral-400">UI only placeholder for the future staff authentication flow.</p>
           </div>

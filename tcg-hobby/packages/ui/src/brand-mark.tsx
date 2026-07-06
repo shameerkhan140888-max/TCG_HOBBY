@@ -7,13 +7,15 @@ export type BrandMarkProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | '
 };
 
 export function BrandMark({ className, alt = 'TCG Hobby logo', ...props }: BrandMarkProps) {
+  const width = typeof props.width === 'number' ? props.width : 160;
+  const height = typeof props.height === 'number' ? props.height : 56;
   return (
     <img
       alt={alt}
-      className={cn('block object-contain', className)}
-      height={1280}
-      src="/brand/tcg-hobby-logo.png"
-      width={1280}
+      className={cn('block h-auto object-contain', className)}
+      height={height}
+      src="/brand/tcg-hobby-horizontal.png"
+      width={width}
       {...props}
     />
   );

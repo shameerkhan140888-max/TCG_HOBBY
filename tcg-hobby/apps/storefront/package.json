@@ -6,7 +6,7 @@
     "build": "next build",
     "dev": "node ./scripts/dev.mjs",
     "lint": "tsc -p tsconfig.check.json --noEmit",
-    "test": "tsc -p tsconfig.check.json --noEmit",
+    "test": "vitest run",
     "typecheck": "tsc -p tsconfig.check.json --noEmit"
   },
   "dependencies": {

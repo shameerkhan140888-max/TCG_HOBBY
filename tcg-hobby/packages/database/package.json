@@ -6,12 +6,12 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "build": "node ./scripts/prisma-generate.mjs && tsc -p tsconfig.json",
-    "db:generate": "node ./scripts/prisma-generate.mjs",
-    "db:seed": "prisma db seed",
-    "lint": "prisma validate && tsc -p tsconfig.json --noEmit",
-    "test": "node ./scripts/prisma-generate.mjs && vitest run && prisma validate",
-    "typecheck": "prisma validate && tsc -p tsconfig.json --noEmit"
+    "build": "node ./scripts/prisma-run.mjs generate && tsc -p tsconfig.json",
+    "db:generate": "node ./scripts/prisma-run.mjs generate",
+    "db:seed": "node ./scripts/prisma-run.mjs db seed",
+    "lint": "node ./scripts/prisma-run.mjs validate && tsc -p tsconfig.json --noEmit",
+    "test": "node ./scripts/prisma-run.mjs generate && vitest run && node ./scripts/prisma-run.mjs validate",
+    "typecheck": "node ./scripts/prisma-run.mjs validate && tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@tcg-hobby/auth": "*",
@@ -28,8 +28,5 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     }
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   }
 }

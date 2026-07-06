@@ -205,6 +205,28 @@ Sprint 10 notes:
 - The storefront header now shows a basket icon with a live item count on desktop and mobile.
 - Collection insights surface approximate market values only, with a clear disclaimer that values are not investment advice.
 
+## Sprint 11 Production Hardening
+
+Sprint 11 focuses on commercial polish rather than new features.
+
+Key updates:
+
+- The storefront header now uses a cleaner premium layout with Shop navigation, search, basket access, and customer actions.
+- The storefront shell includes a commercial footer, richer metadata, sitemap support, robots guidance, and app icons.
+- Prisma configuration now lives in `packages/database/prisma.config.ts` so database tooling is easier to maintain.
+- The mobile workspace now has a real build output so Turbo can track it without warning.
+- Temporary lucide-react workspace packages are not part of the monorepo.
+
+Validation:
+
+```bash
+npm run db:generate
+npm run typecheck
+npm run test
+npm run build
+npm run lint
+```
+
 ## Local Commands
 
 - `npm run db:generate` regenerates the Prisma client.

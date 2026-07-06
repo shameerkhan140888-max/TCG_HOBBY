@@ -66,3 +66,11 @@ All notable changes to TCG Hobby are documented here.
 - Expanded the commerce domain and storefront checkout flow to support guest baskets without moving checkout behind authentication.
 - Deferred the storefront header basket summary to Sprint 11 UI polish.
 - Documented the members-only watchlist behavior, guest checkout behavior, and basket UI updates.
+
+## Sprint 11
+
+- Reworked the storefront shell with a cleaner premium header, mobile-friendly menu behavior, search access, and a commercial footer.
+- Added storefront SEO and discovery foundations with metadata, robots, sitemap, manifest, and app icon assets.
+- Moved Prisma configuration into `prisma.config.ts` and added a real mobile build output so Turbo can track workspace builds correctly.
+- Removed the temporary lucide-react workspace package and confirmed the storefront uses local inline SVG icons instead.
+- Deferred the header basket summary to launch polish.
