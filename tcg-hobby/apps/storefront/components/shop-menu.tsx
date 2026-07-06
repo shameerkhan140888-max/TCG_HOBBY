@@ -1,8 +1,9 @@
 'use client';
 
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Button } from '@tcg-hobby/ui';
+import Link from 'next/link';
 
 type ShopLink = {
   label: string;
@@ -17,25 +18,9 @@ const shopLinks: ShopLink[] = [
   { label: 'One Piece', href: '/catalogue?search=One Piece', description: 'Singles, sealed products, and more.' },
   { label: 'Accessories', href: '/catalogue?category=accessories', description: 'Sleeves, binders, cases, and more.' },
   { label: 'Sealed Products', href: '/catalogue?category=sealed-product', description: 'Booster boxes, tins, and boxes.' },
-  { label: 'Pre-orders', href: '/releases', description: 'Reserve upcoming launches early.' },
   { label: 'Coming Soon', href: '/coming-soon', description: 'What is next for the store.' },
+  { label: 'Pre-orders', href: '/releases', description: 'Reserve upcoming launches early.' },
 ];
-
-function MenuIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 shrink-0">
-      <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="h-4 w-4 shrink-0">
-      <path d="M5 7l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 type MenuPosition = {
   top: number;
@@ -43,19 +28,48 @@ type MenuPosition = {
   width: number;
 };
 
+function HamburgerIcon() {
+  return (
+    <span className="grid gap-1.5" aria-hidden="true">
+      <span className="block h-0.5 w-5 rounded-full bg-current" />
+      <span className="block h-0.5 w-5 rounded-full bg-current" />
+      <span className="block h-0.5 w-5 rounded-full bg-current" />
+    </span>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
+      <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function MenuLinkCard({ link, onNavigate }: { link: ShopLink; onNavigate: () => void }) {
+  return (
+    <Link
+      href={link.href}
+      onClick={onNavigate}
+      className="rounded-xl border border-surface-line/80 bg-black/20 p-4 transition-colors hover:border-accent/40 hover:bg-surface-panel focus:outline-none focus:ring-2 focus:ring-accent"
+    >
+      <span className="block text-sm font-semibold text-neutral-50">{link.label}</span>
+      <span className="mt-1 block text-xs leading-5 text-neutral-400">{link.description}</span>
+    </Link>
+  );
+}
+
 export function ShopMenu() {
   const [open, setOpen] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [desktop, setDesktop] = useState(false);
   const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1024px)');
-
-    const update = () => setIsDesktop(media.matches);
+    const update = () => setDesktop(media.matches);
     update();
-
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
@@ -80,12 +94,10 @@ export function ShopMenu() {
   }, []);
 
   useLayoutEffect(() => {
-    if (!open || !isDesktop) {
-      return;
+    if (open && desktop) {
+      updateMenuPosition();
     }
-
-    updateMenuPosition();
-  }, [open, isDesktop, updateMenuPosition]);
+  }, [desktop, open, updateMenuPosition]);
 
   useEffect(() => {
     if (!open) {
@@ -98,80 +110,60 @@ export function ShopMenu() {
       }
     };
 
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!isDesktop) {
+    const handlePointerDown = (event: Event) => {
+      const target = event.target as Node | null;
+      if (!target) {
         return;
       }
 
-      const target = event.target as Node | null;
-      if (menuRef.current && target && !menuRef.current.contains(target) && buttonRef.current && !buttonRef.current.contains(target)) {
+      const clickedMenu = menuRef.current?.contains(target) ?? false;
+      const clickedTrigger = buttonRef.current?.contains(target) ?? false;
+      if (!clickedMenu && !clickedTrigger) {
         setOpen(false);
       }
     };
 
-    const handleResize = () => updateMenuPosition();
-
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('mousedown', handlePointerDown);
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleResize, true);
+    document.addEventListener('touchstart', handlePointerDown);
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handlePointerDown);
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleResize, true);
-    };
-  }, [open, isDesktop, updateMenuPosition]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const original = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = original;
+      document.removeEventListener('touchstart', handlePointerDown);
+      document.body.style.overflow = previousOverflow;
     };
   }, [open]);
 
   const close = () => setOpen(false);
 
   const desktopMenu =
-    open && isDesktop && menuPosition && typeof document !== 'undefined'
+    open && desktop && menuPosition && typeof document !== 'undefined'
       ? createPortal(
           <>
             <button
               type="button"
               aria-label="Close shop menu"
-              className="cursor-default bg-black/55 backdrop-blur-[1px]"
-              style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+              className="fixed inset-0 cursor-default bg-black/55 backdrop-blur-[1px]"
               onClick={close}
             />
             <div
-              id="shop-menu-panel"
               ref={menuRef}
+              id="shop-menu-panel"
               role="menu"
               aria-label="Shop"
-              className="rounded-2xl border border-surface-line bg-surface-ink p-4 shadow-glow"
-              style={{ position: 'fixed', top: menuPosition.top, left: menuPosition.left, width: menuPosition.width, zIndex: 50 }}
+              className="fixed z-50 overflow-hidden rounded-2xl border border-surface-line bg-surface-ink p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45)]"
+              style={{ top: menuPosition.top, left: menuPosition.left, width: menuPosition.width }}
             >
               <div className="grid gap-4 lg:grid-cols-2">
                 <section className="rounded-xl border border-surface-line bg-surface-base/60 p-4">
                   <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-accent">Games</p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {shopLinks.slice(0, 4).map((link) => (
-                      <a
-                        key={link.label}
-                        href={link.href}
-                        onClick={close}
-                        className="rounded-lg border border-surface-line/80 bg-black/20 p-4 transition-colors hover:border-accent/40 hover:bg-surface-panel focus:outline-none focus:ring-2 focus:ring-accent"
-                        role="menuitem"
-                      >
-                        <span className="block text-sm font-semibold text-neutral-50">{link.label}</span>
-                        <span className="mt-1 block text-xs leading-5 text-neutral-400">{link.description}</span>
-                      </a>
+                      <MenuLinkCard key={link.label} link={link} onNavigate={close} />
                     ))}
                   </div>
                 </section>
@@ -180,28 +172,19 @@ export function ShopMenu() {
                   <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-accent">Store</p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {shopLinks.slice(4).map((link) => (
-                      <a
-                        key={link.label}
-                        href={link.href}
-                        onClick={close}
-                        className="rounded-lg border border-surface-line/80 bg-black/20 p-4 transition-colors hover:border-accent/40 hover:bg-surface-panel focus:outline-none focus:ring-2 focus:ring-accent"
-                        role="menuitem"
-                      >
-                        <span className="block text-sm font-semibold text-neutral-50">{link.label}</span>
-                        <span className="mt-1 block text-xs leading-5 text-neutral-400">{link.description}</span>
-                      </a>
+                      <MenuLinkCard key={link.label} link={link} onNavigate={close} />
                     ))}
                   </div>
                 </section>
               </div>
               <div className="mt-4 border-t border-surface-line pt-4 text-center">
-                <a
+                <Link
                   href="/catalogue"
                   onClick={close}
                   className="inline-flex items-center gap-2 text-sm font-semibold text-accent transition-colors hover:text-accent-soft focus:outline-none focus:ring-2 focus:ring-accent"
                 >
                   View all products <span aria-hidden="true">→</span>
-                </a>
+                </Link>
               </div>
             </div>
           </>,
@@ -209,35 +192,44 @@ export function ShopMenu() {
         )
       : null;
 
-  const mobileMenu = open && !isDesktop ? (
-    <div className="fixed inset-0 z-50 lg:hidden">
+  const mobileMenu = open && !desktop ? (
+    <div className="fixed inset-0 z-[60] lg:hidden">
       <button
         type="button"
         aria-label="Close shop menu"
-        className="absolute inset-0 cursor-default bg-black/60"
+        className="absolute inset-0 bg-black/65"
         onClick={close}
       />
-      <div className="absolute left-0 top-0 h-full w-[88vw] max-w-sm border-r border-surface-line bg-surface-ink shadow-2xl">
+
+      <div className="absolute left-0 top-0 h-full w-[min(88vw,24rem)] overflow-y-auto border-r border-surface-line bg-surface-ink shadow-2xl">
         <div className="flex items-center justify-between border-b border-surface-line px-5 py-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Shop</p>
-            <p className="text-sm text-neutral-400">Browse our store</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">Shop</p>
+            <p className="text-sm text-neutral-400">Browse the store</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={close} aria-label="Close shop menu">
-            <span className="text-lg leading-none">×</span>
-          </Button>
+          <button
+            type="button"
+            aria-label="Close shop menu"
+            onClick={close}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md text-white transition hover:bg-surface-panel hover:text-orange-400 focus:outline-none focus:ring-2 focus:ring-accent"
+          >
+            <CloseIcon />
+          </button>
         </div>
-        <div className="space-y-2 overflow-y-auto p-4">
+
+        <div className="space-y-2 p-4">
           {shopLinks.map((link) => (
-            <a
+            <Link
               key={link.label}
               href={link.href}
               onClick={close}
               className="flex items-center justify-between rounded-xl border border-surface-line bg-surface-base px-4 py-3 transition-colors hover:border-accent hover:bg-surface-panel focus:outline-none focus:ring-2 focus:ring-accent"
             >
               <span className="block text-sm font-semibold text-neutral-50">{link.label}</span>
-              <span aria-hidden="true" className="text-lg leading-none text-neutral-500">›</span>
-            </a>
+              <span aria-hidden="true" className="text-lg leading-none text-neutral-500">
+                ›
+              </span>
+            </Link>
           ))}
         </div>
       </div>
@@ -249,15 +241,13 @@ export function ShopMenu() {
       <button
         ref={buttonRef}
         type="button"
-        className="inline-flex items-center gap-2 rounded-md border border-accent/30 bg-surface-base/80 px-3 py-2 text-sm font-semibold text-neutral-50 transition-colors hover:border-accent hover:text-accent-soft focus:outline-none focus:ring-2 focus:ring-accent"
-        aria-haspopup="menu"
+        aria-label="Open shop menu"
         aria-expanded={open}
         aria-controls="shop-menu-panel"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-md border border-white/15 text-white transition hover:border-orange-500 hover:text-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
       >
-        <MenuIcon />
-        <span>Shop</span>
-        <ChevronDownIcon />
+        <HamburgerIcon />
       </button>
 
       {desktopMenu}

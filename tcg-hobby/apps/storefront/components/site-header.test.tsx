@@ -1,7 +1,8 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { SiteHeaderShell } from './site-header-shell';
+import { getCurrentCustomerSession } from '../lib/auth';
+import { SiteHeader } from './site-header';
 
 vi.mock('next/link', () => ({
   default: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
@@ -11,9 +12,13 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-describe('SiteHeaderShell', () => {
-  it('renders the rebuilt storefront header controls', () => {
-    const markup = renderToStaticMarkup(<SiteHeaderShell authenticated={false} />);
+vi.mock('../lib/auth', () => ({
+  getCurrentCustomerSession: vi.fn(async () => null),
+}));
+
+describe('SiteHeader', () => {
+  it('renders the rebuilt storefront header controls', async () => {
+    const markup = renderToStaticMarkup(await SiteHeader());
 
     expect(markup).toContain('aria-label="Open shop menu"');
     expect(markup).toContain('aria-label="Search"');
@@ -22,8 +27,12 @@ describe('SiteHeaderShell', () => {
     expect(markup).toContain('href="/"');
   });
 
-  it('links logged-in customers to the account area', () => {
-    const markup = renderToStaticMarkup(<SiteHeaderShell authenticated={true} />);
+  it('links logged-in customers to the account area', async () => {
+    vi.mocked(getCurrentCustomerSession).mockResolvedValueOnce({
+      user: { role: 'CUSTOMER', name: 'Sam', email: 'sam@tcghobby.test' },
+    } as never);
+
+    const markup = renderToStaticMarkup(await SiteHeader());
 
     expect(markup).toContain('aria-label="Account"');
     expect(markup).toContain('href="/account"');
