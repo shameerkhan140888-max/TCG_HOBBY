@@ -82,6 +82,18 @@ export function calculateOrderTotal(subtotalMinor: number, shippingMinor: number
   };
 }
 
+export function calculateVatEstimateMinor(subtotalMinor: number, ratePercent = 20) {
+  if (!Number.isFinite(subtotalMinor) || subtotalMinor <= 0) {
+    return 0;
+  }
+
+  if (!Number.isFinite(ratePercent) || ratePercent <= 0) {
+    return 0;
+  }
+
+  return Math.round((subtotalMinor * ratePercent) / 100);
+}
+
 export function validateQuantityAgainstAvailability(quantity: number, available: number) {
   if (!Number.isInteger(quantity) || quantity < 1) {
     return { ok: false, message: 'Quantity must be at least 1.' };

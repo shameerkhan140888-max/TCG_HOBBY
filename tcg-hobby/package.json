@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "build": "turbo run build",
+    "predev": "node ./scripts/clean-dev.mjs",
     "dev": "npm run db:generate && turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",

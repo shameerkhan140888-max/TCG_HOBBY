@@ -107,6 +107,16 @@ export async function placeCheckoutOrderAction(_state: CheckoutFormState, formDa
         amountMinor: shippingMethod.amountMinor,
         quantity: 1,
       },
+      ...(reservation.taxMinor
+        ? [
+            {
+              name: 'Estimated VAT',
+              description: 'Estimated UK VAT for this order',
+              amountMinor: reservation.taxMinor,
+              quantity: 1,
+            },
+          ]
+        : []),
     ];
 
     const checkoutSession = await createStripeCheckoutSession({

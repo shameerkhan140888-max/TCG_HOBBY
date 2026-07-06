@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Button, Container, EmptyState, OrderStatusBadge, OrderSummary, PaymentStatusBadge, Section } from '@tcg-hobby/ui';
+import { CommerceProgress } from '../../../components/commerce-progress';
+import { GuestCartClearer } from '../../../components/guest-cart-clearer';
 import { SiteHeader } from '../../../components/site-header';
 import { finalizeOrderFromStripeSession } from '../../../lib/orders';
 
@@ -35,14 +37,16 @@ export default async function CheckoutSuccessPage({
               <h1 className="text-3xl font-black sm:text-4xl">{order ? `Order ${order.orderNumber} confirmed` : 'Confirming your payment'}</h1>
               <p className="max-w-3xl text-sm leading-6 text-neutral-400">We verify the Stripe payment before showing your final order receipt.</p>
             </div>
+            <CommerceProgress currentStep="confirmation" className="mt-6" />
           </Container>
         </Section>
 
         <Container className="py-8">
           {order ? (
-            <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+              <GuestCartClearer enabled={!linkedToAccount} />
               <div className="space-y-4">
-                <div className="rounded-lg border border-surface-line bg-surface-base p-5">
+                <div className="rounded-2xl border border-surface-line bg-surface-base p-5 shadow-sm">
                   <div className="flex flex-wrap items-center gap-3">
                     <PaymentStatusBadge status={order.paymentStatus} />
                     <OrderStatusBadge status={order.fulfilmentStatus} />
@@ -56,7 +60,7 @@ export default async function CheckoutSuccessPage({
 
                 <div className="space-y-3">
                   {order.items.map((item) => (
-                    <div key={item.id} className="rounded-lg border border-surface-line bg-surface-base p-4">
+                    <div key={item.id} className="rounded-xl border border-surface-line bg-surface-base p-4">
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <h2 className="font-semibold text-neutral-50">{item.productName}</h2>
@@ -69,7 +73,7 @@ export default async function CheckoutSuccessPage({
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
                 <OrderSummary
                   summary={{
                     currency: order.currency as 'GBP',

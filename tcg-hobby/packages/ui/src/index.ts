@@ -50,6 +50,7 @@ export type {
 export {
   CartLineItem,
   CheckoutStep,
+  CheckoutProgress,
   EmptyState,
   OrderStatusBadge,
   OrderSummary,
@@ -65,6 +66,7 @@ export {
 export type {
   CartLineItemProps,
   CheckoutStepProps,
+  CheckoutProgressProps,
   EmptyStateProps,
   OrderStatusBadgeProps,
   OrderSummaryProps,

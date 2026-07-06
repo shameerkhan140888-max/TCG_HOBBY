@@ -8,7 +8,6 @@ import {
   retrieveStripeCheckoutSession,
 } from '@tcg-hobby/database';
 import { requireCustomerSession } from './auth';
-import { clearGuestCart } from './cart';
 
 export async function getCurrentCustomerOrders() {
   const session = await requireCustomerSession('/login?callbackUrl=%2Faccount%2Forders');
@@ -37,10 +36,6 @@ export async function finalizeOrderFromStripeSession(sessionId: string) {
     paymentIntentId: stripeSession.payment_intent,
     stripeCheckoutSessionId: stripeSession.id,
   });
-
-  if (!order.userId) {
-    await clearGuestCart();
-  }
 
   return order;
 }

@@ -84,7 +84,7 @@ describe('order repository', () => {
 
     expect(result.order.orderNumber).toBe('TCG-20260704-ABC123');
     expect(result.shippingMethod.name).toBe('UK Standard');
-    expect(result.totalMinor).toBe(2999);
+    expect(result.totalMinor).toBe(3499);
     expect(mockDb.inventoryItem.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: {

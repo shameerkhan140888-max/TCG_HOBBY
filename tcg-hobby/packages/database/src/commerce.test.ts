@@ -3,6 +3,7 @@ import {
   calculateCartSubtotal,
   calculateCartSummary,
   calculateOrderTotal,
+  calculateVatEstimateMinor,
   generateOrderNumber,
   getShippingMethodByCode,
   getShippingMethodsForCountry,
@@ -30,6 +31,11 @@ describe('commerce helpers', () => {
       taxMinor: 0,
       totalMinor: 3498,
     });
+  });
+
+  it('estimates VAT for basket summaries', () => {
+    expect(calculateVatEstimateMinor(10000)).toBe(2000);
+    expect(calculateVatEstimateMinor(0)).toBe(0);
   });
 
   it('validates quantities against available stock', () => {

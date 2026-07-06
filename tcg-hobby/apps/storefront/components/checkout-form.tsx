@@ -25,7 +25,15 @@ function SubmitButton() {
   );
 }
 
-export function CheckoutForm({ state, cartSubtotalMinor }: { state: CheckoutFormState; cartSubtotalMinor: number }) {
+export function CheckoutForm({
+  state,
+  cartSubtotalMinor,
+  taxEstimateMinor,
+}: {
+  state: CheckoutFormState;
+  cartSubtotalMinor: number;
+  taxEstimateMinor: number;
+}) {
   const [formState, formAction] = useActionState(placeCheckoutOrderAction, state);
   const selectedMethod =
     formState.shippingMethods.find((method) => method.code === formState.values.shippingMethodCode) ??
@@ -35,12 +43,12 @@ export function CheckoutForm({ state, cartSubtotalMinor }: { state: CheckoutForm
     currency: 'GBP' as const,
     subtotalMinor: cartSubtotalMinor,
     shippingMinor: selectedMethod?.amountMinor ?? 0,
-    taxMinor: 0,
-    totalMinor: cartSubtotalMinor + (selectedMethod?.amountMinor ?? 0),
+    taxMinor: taxEstimateMinor,
+    totalMinor: cartSubtotalMinor + (selectedMethod?.amountMinor ?? 0) + taxEstimateMinor,
   };
 
   return (
-    <form action={formAction} className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+    <form action={formAction} className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_360px]">
       <input type="hidden" name="returnTo" value="/checkout" />
 
       <div className="space-y-6">
@@ -85,7 +93,7 @@ export function CheckoutForm({ state, cartSubtotalMinor }: { state: CheckoutForm
         </div>
 
         <div className="space-y-4 rounded-lg border border-surface-line bg-surface-base p-5">
-          <CheckoutStep number="2" title="Shipping method" description="Choose the delivery option that matches your destination and timing." />
+          <CheckoutStep number="2" title="Delivery method" description="Choose the delivery option that matches your destination and timing." />
           <div className="grid gap-3">
             {formState.shippingMethods.map((method) => (
               <ShippingMethodCard
@@ -107,12 +115,14 @@ export function CheckoutForm({ state, cartSubtotalMinor }: { state: CheckoutForm
         </div>
       </div>
 
-      <aside className="space-y-4">
+      <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
         <OrderSummary
           summary={summary}
           actionSlot={
             <div className="space-y-3">
-              <p className="text-sm leading-6 text-neutral-400">The final Stripe amount will include your product total plus the shipping method you selected above.</p>
+              <p className="text-sm leading-6 text-neutral-400">
+                The final Stripe amount includes your basket, the selected delivery method, and the VAT estimate shown above.
+              </p>
             </div>
           }
         />
