@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Container } from '@tcg-hobby/ui';
+import { BrandMark, Container } from '@tcg-hobby/ui';
 import { getCurrentCustomerSession } from '../lib/auth';
 import { ShopMenu } from './shop-menu';
 
@@ -44,12 +44,7 @@ export async function SiteHeader() {
       <Container className="flex min-h-[76px] items-center justify-between gap-4 py-3">
         <div className="flex min-w-0 items-center gap-4 sm:gap-5">
           <Link href="/" className="flex flex-none items-center focus:outline-none focus:ring-2 focus:ring-accent" aria-label="TCG Hobby home">
-            <span className="flex flex-col leading-none tracking-tight">
-              <span className="text-[18px] font-extrabold text-white sm:text-[20px]">TCG</span>
-              <span className="-mt-0.5 text-[16px] font-extrabold tracking-[0.22em] text-orange-500 sm:text-[18px]">
-                HOBBY
-              </span>
-            </span>
+            <BrandMark width={160} height={56} className="w-[150px] object-contain sm:w-[160px]" />
           </Link>
           <ShopMenu />
         </div>

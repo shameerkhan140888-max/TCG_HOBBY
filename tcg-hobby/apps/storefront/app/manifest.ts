@@ -11,7 +11,12 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#ff8a00',
     icons: [
       {
-        src: '/icon',
+        src: '/brand/tcg-hobby-icon.png',
+        sizes: '512x512',
+        type: 'image/png',
+      },
+      {
+        src: '/brand/tcg-hobby-icon.png',
         sizes: '512x512',
         type: 'image/png',
       },

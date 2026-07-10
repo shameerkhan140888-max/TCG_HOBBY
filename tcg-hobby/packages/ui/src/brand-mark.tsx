@@ -14,7 +14,7 @@ export function BrandMark({ className, alt = 'TCG Hobby logo', ...props }: Brand
       alt={alt}
       className={cn('block h-auto object-contain', className)}
       height={height}
-      src="/brand/tcg-hobby-horizontal.png"
+      src="/brand/tcg-hobby-horizontal-dark.svg"
       width={width}
       {...props}
     />

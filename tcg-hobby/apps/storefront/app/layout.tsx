@@ -24,9 +24,9 @@ export const metadata: Metadata = {
     url: '/',
     images: [
       {
-        url: '/brand/tcg-hobby-logo.png',
-        width: 1280,
-        height: 1280,
+        url: '/brand/tcg-hobby-horizontal.png',
+        width: 1366,
+        height: 471,
         alt: 'TCG Hobby logo',
       },
     ],
@@ -35,14 +35,14 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'TCG Hobby',
     description: 'Premium trading card game commerce platform.',
-    images: ['/brand/tcg-hobby-logo.png'],
+    images: ['/brand/tcg-hobby-horizontal.png'],
   },
   alternates: {
     canonical: '/',
   },
   icons: {
-    icon: '/icon',
-    apple: '/apple-icon',
+    icon: '/brand/tcg-hobby-icon.svg',
+    apple: '/brand/tcg-hobby-icon.png',
   },
   manifest: '/manifest.webmanifest',
 };
@@ -52,7 +52,7 @@ const structuredData = {
   '@type': 'Organization',
   name: 'TCG Hobby',
   url: siteUrl,
-  logo: `${siteUrl}/brand/tcg-hobby-logo.png`,
+  logo: `${siteUrl}/brand/tcg-hobby-horizontal.png`,
   sameAs: ['https://www.instagram.com', 'https://www.facebook.com', 'https://www.youtube.com'],
 };
 

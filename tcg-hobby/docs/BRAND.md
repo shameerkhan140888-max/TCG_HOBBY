@@ -57,7 +57,8 @@ Typography rules:
 - Never place the logo inside a card, pill, bordered square, or white panel.
 - Never crop the logo or let surrounding containers clip its edges.
 - Maintain generous transparent padding around raster assets.
-- Use the stacked text wordmark only when the image logo is unavailable or unsuitable in constrained UI.
+- Use the approved icon mark for icon-only contexts such as favicons, app icons, and metadata routes.
+- Do not introduce alternate wordmarks or temporary text-only branding.
 - Keep the logo clickable to the homepage.
 
 ## Brand Tone
