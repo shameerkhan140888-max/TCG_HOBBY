@@ -110,6 +110,22 @@ enum NotificationType {
   BUYLIST_UPDATES
 }
 
+enum MarketingSubscriberStatus {
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+  SUPPRESSED
+}
+
+enum MarketingCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  CANCELLED
+  FAILED
+}
+
 enum WatchlistSubjectType {
   PRODUCT
   RELEASE
@@ -160,6 +176,8 @@ model User {
   watchlist     WatchlistItem[]
   notificationPreferences NotificationCenterPreference[]
   collectionInsightSnapshot CollectionInsightSnapshot?
+  marketingSubscribers MarketingSubscriber[]
+  marketingCampaigns MarketingCampaign[]
 }
 
 model Address {
@@ -413,15 +431,80 @@ model NotificationCenterPreference {
   @@index([notificationType, emailEnabled])
 }
 
-model LaunchSignup {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  source    String   @default("storefront")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model MarketingSubscriber {
+  id                              String                    @id @default(cuid())
+  email                           String                    @unique
+  firstName                       String?
+  marketingConsent                Boolean                   @default(false)
+  marketingConsentAt              DateTime?
+  consentSource                   String?
+  privacyPolicyVersion            String?
+  consentIpHash                   String?
+  source                          String                    @default("storefront")
+  lastUpdatedSource               String?
+  status                          MarketingSubscriberStatus @default(ACTIVE)
+  customerId                      String?
+  unsubscribeToken                String                    @unique
+  lastSignupAt                    DateTime                  @default(now())
+  confirmationEmailSentAt         DateTime?
+  confirmationEmailLastAttemptAt  DateTime?
+  confirmationEmailError          String?
+  lastEmailSentAt                 DateTime?
+  bouncedAt                       DateTime?
+  suppressedAt                    DateTime?
+  unsubscribedAt                  DateTime?
+  createdAt                       DateTime                  @default(now())
+  updatedAt                       DateTime                  @updatedAt
+  customer                        User?                     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  tags                            MarketingSubscriberTagAssignment[]
 
-  @@index([createdAt])
+  @@index([status, marketingConsent])
   @@index([source, createdAt])
+  @@index([lastSignupAt])
+  @@index([customerId])
+  @@index([unsubscribedAt])
+}
+
+model MarketingSubscriberTag {
+  id          String                              @id @default(cuid())
+  slug        String                              @unique
+  label       String
+  description String?
+  createdAt   DateTime                            @default(now())
+  updatedAt   DateTime                            @updatedAt
+  subscribers MarketingSubscriberTagAssignment[]
+
+  @@index([label])
+}
+
+model MarketingSubscriberTagAssignment {
+  subscriberId String
+  tagId        String
+  createdAt    DateTime              @default(now())
+  subscriber   MarketingSubscriber   @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  tag          MarketingSubscriberTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([subscriberId, tagId])
+  @@index([tagId])
+}
+
+model MarketingCampaign {
+  id                 String                  @id @default(cuid())
+  name               String
+  subject            String
+  previewText        String?
+  status             MarketingCampaignStatus @default(DRAFT)
+  audienceDefinition Json
+  createdById        String?
+  scheduledAt        DateTime?
+  sentAt             DateTime?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  createdBy          User?                   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([scheduledAt])
+  @@index([createdById])
 }
 
 model MarketSnapshot {

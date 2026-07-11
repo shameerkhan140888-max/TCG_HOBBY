@@ -1,4 +1,4 @@
-export { PrismaClient } from '@prisma/client';
+export { MarketingCampaignStatus, MarketingSubscriberStatus, PrismaClient } from '@prisma/client';
 export type { Prisma } from '@prisma/client';
 export { prisma } from './client';
 export {
@@ -137,9 +137,28 @@ export {
   getFeaturedCatalogueProducts,
 } from './catalogue';
 export {
-  upsertLaunchSignup,
-  validateLaunchSignupEmail,
-} from './launch';
+  DEFAULT_MARKETING_TAGS,
+  createMarketingCampaignDraft,
+  exportMarketingSubscribersCsv,
+  getMarketingCampaigns,
+  getMarketingEligibilityWhere,
+  getMarketingSubscriberById,
+  getMarketingSubscriberDashboard,
+  getMarketingSubscribers,
+  hashSubscriberIp,
+  isMarketingSubscriberEligible,
+  normalizeSubscriberEmail,
+  normalizeSubscriberFirstName,
+  normalizeSubscriberSource,
+  recordMarketingConfirmationAttempt,
+  recordMarketingConfirmationFailure,
+  recordMarketingConfirmationSent,
+  unsubscribeMarketingSubscriberByToken,
+  updateMarketingSubscriberStatus,
+  updateMarketingSubscriberTags,
+  upsertMarketingSubscriberSignup,
+  validateSubscriberEmail,
+} from './marketing';
 export {
   addProductToWishlist,
   getWishlistItems,

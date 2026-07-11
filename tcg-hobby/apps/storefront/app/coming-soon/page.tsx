@@ -64,15 +64,15 @@ function FairPricingCommitment() {
 export default async function ComingSoonPage({
   searchParams,
 }: {
-  searchParams: Promise<{ launchSignup?: string | string[] | undefined }>;
+  searchParams: Promise<{ subscriberSignup?: string | string[] | undefined }>;
 }) {
   const siteUrl = getSiteUrl();
   const resolvedSearchParams = await searchParams;
-  const signupSaved = resolvedSearchParams.launchSignup === 'saved';
+  const signupSaved = resolvedSearchParams.subscriberSignup === 'saved';
   const signupError =
-    resolvedSearchParams.launchSignup === 'invalid'
+    resolvedSearchParams.subscriberSignup === 'invalid'
       ? 'Enter a valid email address.'
-      : resolvedSearchParams.launchSignup === 'save'
+      : resolvedSearchParams.subscriberSignup === 'save' || resolvedSearchParams.subscriberSignup === 'limited'
         ? 'save'
         : undefined;
   const launchStructuredData = {
@@ -136,12 +136,12 @@ export default async function ComingSoonPage({
 
               <div id="launch-list" className="relative z-10 mx-4 -mt-16 rounded-lg border border-accent/30 bg-[rgba(10,11,14,0.92)] p-4 shadow-[0_18px_54px_rgba(0,0,0,0.32)] backdrop-blur-md sm:mx-auto sm:-mt-24 sm:w-[88%] sm:p-5 lg:col-start-1 lg:row-start-2 lg:mx-0 lg:mt-0 lg:w-auto lg:bg-black/20 lg:shadow-[0_18px_54px_rgba(0,0,0,0.22)] lg:backdrop-blur-none">
                 <div className="mb-3 space-y-1 sm:mb-4">
-                  <h2 className="text-lg font-bold text-neutral-50">Join the launch list</h2>
+                  <h2 className="text-lg font-bold text-neutral-50">Be first to know</h2>
                   <p className="text-sm leading-6 text-neutral-400">
-                    Be first to hear about launch day, early access, product drops, pre-orders and opening offers.
+                    Be first to hear about our launch, upcoming releases and important TCG Hobby updates.
                   </p>
                 </div>
-                <LaunchEmailCapture source="holding-page-hero" compact saved={signupSaved} error={signupError} returnTo="/" />
+                <LaunchEmailCapture source="coming-soon-page" compact saved={signupSaved} error={signupError} returnTo="/" />
               </div>
             </div>
           </Container>

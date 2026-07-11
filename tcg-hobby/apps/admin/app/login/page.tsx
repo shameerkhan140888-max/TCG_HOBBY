@@ -15,7 +15,7 @@ export default function LoginPage() {
               <label className="text-sm font-medium text-neutral-300" htmlFor="email">
                 Email
               </label>
-              <Input id="email" type="email" placeholder="ops@tcghobby.co.uk" />
+              <Input id="email" type="email" placeholder="ops@tcg-hobby.co.uk" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-neutral-300" htmlFor="password">

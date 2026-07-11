@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ launchSignup?: string | string[] | undefined }>;
+  searchParams: Promise<{ subscriberSignup?: string | string[] | undefined }>;
 }) {
   if (isComingSoonMode()) {
     return <ComingSoonPage searchParams={searchParams} />;

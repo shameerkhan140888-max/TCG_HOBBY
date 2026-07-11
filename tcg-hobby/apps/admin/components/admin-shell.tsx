@@ -10,6 +10,8 @@ const navItems = [
   { href: '/admin/products', label: 'Products' },
   { href: '/admin/inventory', label: 'Inventory' },
   { href: '/admin/buylist', label: 'Buylist' },
+  { href: '/admin/marketing/subscribers', label: 'Subscribers' },
+  { href: '/admin/marketing/campaigns', label: 'Campaigns' },
   { href: '/admin/suppliers', label: 'Suppliers' },
   { href: '/admin/orders', label: 'Orders' },
 ];

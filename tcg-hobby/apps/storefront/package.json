@@ -13,11 +13,12 @@
     "@tcg-hobby/auth": "*",
     "@tcg-hobby/database": "*",
     "@tcg-hobby/types": "*",
-    "@tcg-hobby/utils": "*",
     "@tcg-hobby/ui": "*",
+    "@tcg-hobby/utils": "*",
     "next": "^15.3.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "resend": "^4.8.0"
   },
   "devDependencies": {
     "@tcg-hobby/config": "*",
