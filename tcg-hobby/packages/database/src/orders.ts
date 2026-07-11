@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type {
   CheckoutAddress,
+  CurrencyCode,
   FulfilmentStatus,
   OrderLineItem,
   PaymentStatus,
@@ -106,6 +107,59 @@ type LocalOrderRecord = OrderRecord & {
   itemCount: number;
 };
 
+export type OrderShippingAddress = {
+  id: string;
+  fullName: string;
+  email: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  region: string | null;
+  postalCode: string;
+  country: string;
+};
+
+export type OrderWithItems = {
+  id: string;
+  orderNumber: string;
+  userId: string | null;
+  status: string;
+  paymentStatus: PaymentStatus;
+  fulfilmentStatus: FulfilmentStatus;
+  paymentProvider: string | null;
+  paymentIntentId: string | null;
+  stripeCheckoutSessionId: string | null;
+  stripeCheckoutUrl: string | null;
+  subtotalMinor: number;
+  shippingMinor: number;
+  taxMinor: number;
+  totalMinor: number;
+  currency: CurrencyCode;
+  shippingMethodCode: ShippingMethodCode;
+  shippingMethodName: string;
+  shippingMethodAmountMinor: number;
+  shippingFullName: string;
+  shippingEmail: string;
+  shippingLine1: string;
+  shippingLine2: string | null;
+  shippingCity: string;
+  shippingRegion: string | null;
+  shippingPostalCode: string;
+  shippingCountry: string;
+  reservationExpiresAt: Date | null;
+  paidAt: Date | null;
+  fulfilledAt: Date | null;
+  cancelledAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  items: OrderLineItem[];
+  shippingAddress: OrderShippingAddress | null;
+};
+
+export type CustomerOrderSummary = OrderWithItems & {
+  itemCount: number;
+};
+
 const localCheckoutOrders = new Map<string, LocalOrderRecord>();
 const localCheckoutOrdersBySessionId = new Map<string, string>();
 const localCheckoutOrdersFile = join(tmpdir(), 'tcg-hobby-local-checkout-orders.json');
@@ -122,7 +176,7 @@ function mapOrderItemRecord(item: OrderItemRecord): OrderLineItem {
   };
 }
 
-function mapOrderRecord(order: OrderRecord) {
+function mapOrderRecord(order: OrderRecord): OrderWithItems {
   return {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -138,7 +192,7 @@ function mapOrderRecord(order: OrderRecord) {
     shippingMinor: order.shippingMinor,
     taxMinor: order.taxMinor,
     totalMinor: order.totalMinor,
-    currency: order.currency,
+    currency: order.currency as CurrencyCode,
     shippingMethodCode: order.shippingMethodCode,
     shippingMethodName: order.shippingMethodName,
     shippingMethodAmountMinor: order.shippingMethodAmountMinor,
@@ -662,22 +716,22 @@ export async function releaseCheckoutOrderReservation(orderId: string, db = pris
   }
 }
 
-export async function finalizePaidCheckoutOrder(input: FinalizeCheckoutOrderInput, db = prisma) {
+export async function finalizePaidCheckoutOrder(input: FinalizeCheckoutOrderInput, db = prisma): Promise<OrderWithItems> {
   try {
-    const order = await db.order.findUnique({
+    const order = (await db.order.findUnique({
       where: { id: input.orderId },
       include: {
         items: true,
         shippingAddress: true,
       },
-    });
+    })) as OrderRecord | null;
 
     if (!order) {
       throw new Error('The order no longer exists.');
     }
 
     if (order.paymentStatus === 'SUCCEEDED') {
-      return order;
+      return mapOrderRecord(order);
     }
 
     return await db.$transaction(async (tx) => {
@@ -703,7 +757,7 @@ export async function finalizePaidCheckoutOrder(input: FinalizeCheckoutOrderInpu
         }
       }
 
-      return tx.order.update({
+      const updatedOrder = (await tx.order.update({
         where: { id: order.id },
         data: {
           status: 'PAID',
@@ -717,7 +771,9 @@ export async function finalizePaidCheckoutOrder(input: FinalizeCheckoutOrderInpu
           items: true,
           shippingAddress: true,
         },
-      });
+      })) as OrderRecord;
+
+      return mapOrderRecord(updatedOrder);
     });
   } catch (error) {
     if (!isDatabaseUnavailableError(error) || process.env.NODE_ENV === 'production') {
@@ -746,11 +802,11 @@ export async function finalizePaidCheckoutOrder(input: FinalizeCheckoutOrderInpu
     localCheckoutOrdersBySessionId.set(input.stripeCheckoutSessionId, input.orderId);
     await persistLocalCheckoutOrders();
 
-    return nextOrder as unknown as OrderRecord;
+    return mapOrderRecord(nextOrder);
   }
 }
 
-export async function getCustomerOrders(userId: string, db = prisma) {
+export async function getCustomerOrders(userId: string, db = prisma): Promise<CustomerOrderSummary[]> {
   try {
     const orders = (await db.order.findMany({
       where: {
@@ -784,11 +840,14 @@ export async function getCustomerOrders(userId: string, db = prisma) {
     await loadLocalCheckoutOrdersFromDisk();
     return Array.from(localCheckoutOrders.values())
       .filter((order) => order.userId === userId && order.status !== 'DRAFT')
-      .map((order) => ({ ...order }));
+      .map((order) => ({
+        ...mapOrderRecord(order),
+        itemCount: order.itemCount,
+      }));
   }
 }
 
-export async function getCustomerOrderByNumber(userId: string, orderNumber: string, db = prisma) {
+export async function getCustomerOrderByNumber(userId: string, orderNumber: string, db = prisma): Promise<OrderWithItems | null> {
   try {
     const order = (await db.order.findFirst({
       where: {
@@ -817,11 +876,11 @@ export async function getCustomerOrderByNumber(userId: string, orderNumber: stri
 
     await loadLocalCheckoutOrdersFromDisk();
     const order = Array.from(localCheckoutOrders.values()).find((entry) => entry.userId === userId && entry.orderNumber === orderNumber);
-    return order ? { ...order } : null;
+    return order ? mapOrderRecord(order) : null;
   }
 }
 
-export async function getOrderByStripeCheckoutSessionId(stripeCheckoutSessionId: string, db = prisma) {
+export async function getOrderByStripeCheckoutSessionId(stripeCheckoutSessionId: string, db = prisma): Promise<OrderWithItems | null> {
   try {
     const order = (await db.order.findUnique({
       where: {
@@ -850,7 +909,7 @@ export async function getOrderByStripeCheckoutSessionId(stripeCheckoutSessionId:
     await loadLocalCheckoutOrdersFromDisk();
     const orderId = localCheckoutOrdersBySessionId.get(stripeCheckoutSessionId);
     const order = orderId ? localCheckoutOrders.get(orderId) : null;
-    return order ? { ...order } : null;
+    return order ? mapOrderRecord(order) : null;
   }
 }
 

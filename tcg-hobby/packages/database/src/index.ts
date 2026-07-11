@@ -128,6 +128,7 @@ export {
   releaseCheckoutOrderReservation,
   retrieveStripeCheckoutSession,
 } from './orders';
+export type { CustomerOrderSummary, OrderShippingAddress, OrderWithItems } from './orders';
 export {
   getCatalogueCategories,
   getCatalogueHomeData,
