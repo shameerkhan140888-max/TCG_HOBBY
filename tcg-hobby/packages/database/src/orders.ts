@@ -3,6 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type {
+  CartLineItem,
   CheckoutAddress,
   CurrencyCode,
   FulfilmentStatus,
@@ -158,6 +159,24 @@ export type OrderWithItems = {
 
 export type CustomerOrderSummary = OrderWithItems & {
   itemCount: number;
+};
+
+export type CheckoutReservationItem = CartLineItem;
+
+export type CheckoutReservationOrder = {
+  id: string;
+  orderNumber: string;
+  userId: string | null;
+};
+
+export type CheckoutReservation = {
+  order: CheckoutReservationOrder;
+  shippingMethod: ShippingMethod;
+  subtotalMinor: number;
+  shippingMinor: number;
+  taxMinor: number;
+  totalMinor: number;
+  items: CheckoutReservationItem[];
 };
 
 const localCheckoutOrders = new Map<string, LocalOrderRecord>();
@@ -496,7 +515,7 @@ export async function createPendingCheckoutOrder(
   cart: CheckoutCart,
   input: CreateCheckoutOrderInput,
   db = prisma,
-) {
+): Promise<CheckoutReservation> {
   if (!cart || cart.items.length === 0) {
     throw new Error('Your cart is empty.');
   }
@@ -584,7 +603,7 @@ export async function createPendingCheckoutOrder(
       }
 
       return {
-        order: order as unknown as OrderRecord,
+        order,
         shippingMethod,
         subtotalMinor,
         shippingMinor,
@@ -602,7 +621,7 @@ export async function createPendingCheckoutOrder(
     await persistLocalCheckoutOrders();
 
     return {
-      order: order as unknown as OrderRecord,
+      order,
       shippingMethod,
       subtotalMinor,
       shippingMinor,
