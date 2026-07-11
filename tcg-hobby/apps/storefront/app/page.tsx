@@ -6,10 +6,20 @@ import { AddToCartButton } from '../components/cart-actions';
 import { getCurrentCustomerSession } from '../lib/auth';
 import { toggleWishlistAction } from '../lib/wishlist';
 import { toggleNotificationAction } from '../lib/release-actions';
+import { isComingSoonMode } from '../lib/site';
+import ComingSoonPage from './coming-soon/page';
 
 export const dynamic = 'force-dynamic';
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ launchSignup?: string | string[] | undefined }>;
+}) {
+  if (isComingSoonMode()) {
+    return <ComingSoonPage searchParams={searchParams} />;
+  }
+
   const [homeData, session] = await Promise.all([
     getCatalogueHomeData(),
     getCurrentCustomerSession(),

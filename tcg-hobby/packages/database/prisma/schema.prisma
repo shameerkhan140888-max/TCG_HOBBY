@@ -413,6 +413,17 @@ model NotificationCenterPreference {
   @@index([notificationType, emailEnabled])
 }
 
+model LaunchSignup {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("storefront")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([source, createdAt])
+}
+
 model MarketSnapshot {
   id                  String          @id @default(cuid())
   productId           String          @unique

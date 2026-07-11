@@ -1,8 +1,7 @@
 import type { MetadataRoute } from 'next';
+import { getSiteUrl, isComingSoonMode } from '../lib/site';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-
-const routes = [
+const commerceRoutes = [
   '/',
   '/catalogue',
   '/coming-soon',
@@ -24,7 +23,21 @@ const routes = [
   '/checkout',
 ];
 
+const launchRoutes = [
+  '/',
+  '/coming-soon',
+  '/about',
+  '/contact',
+  '/shipping',
+  '/returns',
+  '/privacy',
+  '/terms',
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
+  const siteUrl = getSiteUrl();
+  const routes = isComingSoonMode() ? launchRoutes : commerceRoutes;
+
   return routes.map((route) => ({
     url: `${siteUrl}${route}`,
     lastModified: new Date(),

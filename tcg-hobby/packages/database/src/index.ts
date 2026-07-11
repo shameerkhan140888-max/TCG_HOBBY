@@ -137,6 +137,10 @@ export {
   getFeaturedCatalogueProducts,
 } from './catalogue';
 export {
+  upsertLaunchSignup,
+  validateLaunchSignupEmail,
+} from './launch';
+export {
   addProductToWishlist,
   getWishlistItems,
   getWishlistProductIds,

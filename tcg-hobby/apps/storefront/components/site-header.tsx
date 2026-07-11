@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { BrandMark, Container } from '@tcg-hobby/ui';
 import { getCurrentCustomerSession } from '../lib/auth';
+import { getCurrentCustomerCart } from '../lib/cart';
 import { ShopMenu } from './shop-menu';
 
 function SearchIcon() {
@@ -34,10 +35,26 @@ function AccountIcon() {
   );
 }
 
+function BasketIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
+      <path
+        d="M6.5 8.5h11l-1 10h-9l-1-10Zm2.5 0a3 3 0 0 1 6 0M5 8.5h14"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
 export async function SiteHeader() {
-  const session = await getCurrentCustomerSession();
+  const [session, cart] = await Promise.all([getCurrentCustomerSession(), getCurrentCustomerCart()]);
   const authenticated = session?.user.role === 'CUSTOMER';
   const accountHref = authenticated ? '/account' : '/login';
+  const basketCount = cart.totalItems;
 
   return (
     <header className="sticky top-0 z-20 border-b border-surface-line bg-surface-ink/95 backdrop-blur">
@@ -56,6 +73,19 @@ export async function SiteHeader() {
             className="inline-flex h-10 w-10 items-center justify-center text-white transition hover:text-orange-400 focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <SearchIcon />
+          </Link>
+
+          <Link
+            href="/cart"
+            aria-label={`Basket${basketCount ? `, ${basketCount} item${basketCount === 1 ? '' : 's'}` : ''}`}
+            className="relative inline-flex h-10 w-10 items-center justify-center text-white transition hover:text-orange-400 focus:outline-none focus:ring-2 focus:ring-accent"
+          >
+            <BasketIcon />
+            {basketCount > 0 ? (
+              <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-xs font-bold leading-none text-neutral-950">
+                {basketCount > 99 ? '99+' : basketCount}
+              </span>
+            ) : null}
           </Link>
 
           <Link

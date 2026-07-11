@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Button, Container, Input, BrandMark } from '@tcg-hobby/ui';
+import { Container, BrandMark } from '@tcg-hobby/ui';
+import { LaunchEmailCapture } from './launch-email-capture';
 
 const footerColumns = [
   {
@@ -71,14 +72,9 @@ export function SiteFooter() {
           <div className="space-y-4">
             <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-accent">Newsletter</h2>
             <p className="text-sm leading-6 text-neutral-400">
-              A placeholder sign-up for launch updates, release announcements, and collector news.
+              Launch updates, release announcements, and collector news.
             </p>
-            <form className="space-y-3">
-              <Input type="email" placeholder="Email address" aria-label="Newsletter email address" />
-              <Button type="button" className="w-full">
-                Notify me
-              </Button>
-            </form>
+            <LaunchEmailCapture source="footer" />
           </div>
         </div>
 

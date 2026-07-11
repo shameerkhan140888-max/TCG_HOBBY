@@ -2,25 +2,30 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { PageShell } from '@tcg-hobby/ui';
 import { SiteFooter } from '../components/site-footer';
+import { LaunchFooter } from '../components/launch-footer';
+import { getSiteUrl, isComingSoonMode, launchDescription, siteDescription, siteName } from '../lib/site';
 import './globals.css';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+const siteUrl = getSiteUrl();
+const comingSoonMode = isComingSoonMode();
+const activeDescription = comingSoonMode ? launchDescription : siteDescription;
+const activeTitle = comingSoonMode ? `Coming Soon | ${siteName}` : siteName;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'TCG Hobby',
-    template: '%s | TCG Hobby',
+    default: activeTitle,
+    template: `%s | ${siteName}`,
   },
-  description: 'Premium trading card game commerce platform.',
-  applicationName: 'TCG Hobby',
-  keywords: ['trading cards', 'TCG', 'Pokémon', 'Magic: The Gathering', 'Yu-Gi-Oh!', 'One Piece', 'UK store'],
+  description: activeDescription,
+  applicationName: siteName,
+  keywords: ['trading cards', 'TCG', 'Pokemon', 'Magic: The Gathering', 'Yu-Gi-Oh!', 'One Piece', 'UK store'],
   openGraph: {
     type: 'website',
     locale: 'en_GB',
-    siteName: 'TCG Hobby',
-    title: 'TCG Hobby',
-    description: 'Premium trading card game commerce platform.',
+    siteName,
+    title: activeTitle,
+    description: activeDescription,
     url: '/',
     images: [
       {
@@ -33,8 +38,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'TCG Hobby',
-    description: 'Premium trading card game commerce platform.',
+    title: activeTitle,
+    description: activeDescription,
     images: ['/brand/tcg-hobby-horizontal.png'],
   },
   alternates: {
@@ -47,13 +52,25 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
 };
 
-const structuredData = {
+const organizationStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'TCG Hobby',
+  name: siteName,
   url: siteUrl,
   logo: `${siteUrl}/brand/tcg-hobby-horizontal.png`,
   sameAs: ['https://www.instagram.com', 'https://www.facebook.com', 'https://www.youtube.com'],
+};
+
+const webSiteStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: siteName,
+  url: siteUrl,
+  description: activeDescription,
+  publisher: {
+    '@type': 'Organization',
+    name: siteName,
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
@@ -63,11 +80,15 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <PageShell>
           <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteStructuredData) }}
           />
           <div className="flex min-h-screen flex-col">
             <main className="flex-1">{children}</main>
-            <SiteFooter />
+            {comingSoonMode ? <LaunchFooter /> : <SiteFooter />}
           </div>
         </PageShell>
       </body>
