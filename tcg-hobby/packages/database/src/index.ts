@@ -11,6 +11,7 @@ export {
   updateCollectionItemQuantity,
   upsertCollectionItem as addCollectionItem,
 } from './collection';
+export type { UpsertCollectionItemInput } from './collection';
 export {
   addCardToDeck,
   calculateDeckStatistics,

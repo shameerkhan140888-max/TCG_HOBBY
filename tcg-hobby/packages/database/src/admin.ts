@@ -1,3 +1,4 @@
+import type { OrderStatus as PrismaOrderStatus, PaymentStatus as PrismaPaymentStatus, Prisma } from '@prisma/client';
 import type { PaginationMeta, PaymentStatus, FulfilmentStatus, ProductCondition } from '@tcg-hobby/types';
 import { slugify } from '@tcg-hobby/utils';
 import { prisma } from './client';
@@ -14,97 +15,60 @@ import {
   seedUsers,
 } from './seed-data';
 
-type ProductCategoryRow = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  sortOrder: number;
-};
+const adminProductInclude = {
+  category: true,
+  inventory: true,
+  images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
+  supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
+  pricing: { include: { pricingRule: true } },
+} as const satisfies Prisma.ProductInclude;
 
-type SupplierRow = {
-  id: string;
-  name: string;
-  slug: string;
-  email: string | null;
-  phone: string | null;
-  website: string | null;
-  preferred: boolean;
-  active: boolean;
-  contactName: string | null;
-  addressLine1: string | null;
-  addressLine2: string | null;
-  city: string | null;
-  region: string | null;
-  postalCode: string | null;
-  country: string;
-  internalNotes: string | null;
-};
+type ProductRow = Prisma.ProductGetPayload<{ include: typeof adminProductInclude }>;
 
-type InventoryRow = {
-  stockOnHand: number;
-  reservedStock: number;
-  reorderPoint: number;
-  locationCode: string;
-};
+const adminInventoryProductInclude = {
+  category: true,
+  inventory: true,
+  supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
+} as const satisfies Prisma.ProductInclude;
 
-type ProductImageRow = {
-  id: string;
-  url: string;
-  altText: string;
-  imageType: string;
-  sortOrder: number;
-  isPrimary: boolean;
-};
+type AdminInventoryProductRow = Prisma.ProductGetPayload<{ include: typeof adminInventoryProductInclude }>;
 
-type SupplierProductRow = {
-  id: string;
-  supplierSku: string;
-  costMinor: number;
-  currency: string;
-  leadTimeDays: number;
-  supplier: SupplierRow;
-};
+const adminSupplierInclude = {
+  supplierProducts: { select: { id: true, productId: true, product: { select: { id: true, name: true, slug: true } } } },
+} as const satisfies Prisma.SupplierInclude;
 
-type ProductRow = {
-  id: string;
-  sku: string;
-  slug: string;
-  name: string;
-  game: string;
-  setName: string | null;
-  description: string;
-  longDescription: string;
-  condition: ProductCondition;
-  priceMinor: number;
-  currency: string;
-  featured: boolean;
-  published: boolean;
-  archivedAt: Date | null;
-  searchText: string;
-  imageLabel: string;
-  category: ProductCategoryRow;
-  inventory: InventoryRow | null;
-  images: ProductImageRow[];
-  supplierProducts: SupplierProductRow[];
-  pricing: {
-    costMinor: number;
-    retailMinor: number;
-    buyMinor: number;
-    marginMinor: number;
-    markupPercent: number;
-    profitMinor: number;
-    minimumMarginPercent: number;
-    maximumDiscountPercent: number;
-    priceSource: string;
-    priceStatus: string;
-    manualOverride: boolean;
-    updatedAt: Date;
-    pricingRule: { id: string; name: string } | null;
-  } | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
+type AdminSupplierRow = Prisma.SupplierGetPayload<{ include: typeof adminSupplierInclude }>;
+
+const adminSupplierDetailInclude = {
+  supplierProducts: {
+    include: {
+      product: { select: { id: true, name: true, slug: true } },
+    },
+  },
+} as const satisfies Prisma.SupplierInclude;
+
+type AdminSupplierDetailRow = Prisma.SupplierGetPayload<{ include: typeof adminSupplierDetailInclude }>;
+
+const adminOrderListInclude = {
+  items: { select: { quantity: true } },
+  user: { select: { name: true, email: true } },
+} as const satisfies Prisma.OrderInclude;
+
+type OrderListRow = Prisma.OrderGetPayload<{ include: typeof adminOrderListInclude }>;
+
+const adminOrderDetailInclude = {
+  items: { select: { id: true, productName: true, productSlug: true, quantity: true, unitPriceMinor: true, totalMinor: true } },
+  shippingAddress: true,
+  user: { select: { name: true, email: true } },
+} as const satisfies Prisma.OrderInclude;
+
+type OrderRow = Prisma.OrderGetPayload<{ include: typeof adminOrderDetailInclude }>;
+
+const stockAdjustmentHistoryInclude = {
+  product: { select: { name: true } },
+} as const satisfies Prisma.StockAdjustmentInclude;
+
+type StockAdjustmentHistoryRow = Prisma.StockAdjustmentGetPayload<{ include: typeof stockAdjustmentHistoryInclude }>;
 
 type OrderItemRow = {
   id: string;
@@ -124,35 +88,6 @@ type AddressRow = {
   region: string | null;
   postalCode: string;
   country: string;
-};
-
-type OrderRow = {
-  id: string;
-  orderNumber: string;
-  userId: string;
-  status: string;
-  paymentStatus: PaymentStatus;
-  fulfilmentStatus: FulfilmentStatus;
-  subtotalMinor: number;
-  shippingMinor: number;
-  taxMinor: number;
-  totalMinor: number;
-  currency: string;
-  shippingMethodCode: string;
-  shippingMethodName: string;
-  shippingMethodAmountMinor: number;
-  shippingFullName: string;
-  shippingEmail: string;
-  shippingLine1: string;
-  shippingLine2: string | null;
-  shippingCity: string;
-  shippingRegion: string | null;
-  shippingPostalCode: string;
-  shippingCountry: string;
-  createdAt: Date;
-  items: OrderItemRow[];
-  shippingAddress: AddressRow | null;
-  user: { name: string | null; email: string };
 };
 
 type CatalogueFilters = {
@@ -177,6 +112,40 @@ type OrderFilters = {
   paymentStatus?: string;
   page?: number;
   pageSize?: number;
+};
+
+const ORDER_STATUSES = ['DRAFT', 'PENDING_PAYMENT', 'PAID', 'FULFILLING', 'SHIPPED', 'CANCELLED', 'REFUNDED'] as const;
+const PAYMENT_STATUSES = ['REQUIRES_PAYMENT', 'PROCESSING', 'SUCCEEDED', 'FAILED', 'CANCELED', 'REFUNDED'] as const;
+
+function isPrismaOrderStatus(value: string): value is PrismaOrderStatus {
+  return ORDER_STATUSES.includes(value as (typeof ORDER_STATUSES)[number]);
+}
+
+function isPrismaPaymentStatus(value: string): value is PrismaPaymentStatus {
+  return PAYMENT_STATUSES.includes(value as (typeof PAYMENT_STATUSES)[number]);
+}
+
+export type AdminProductFilterOption = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export type AdminProductsResult = {
+  products: AdminProductListItem[];
+  pagination: PaginationMeta;
+  categories: AdminProductFilterOption[];
+  suppliers: AdminProductFilterOption[];
+};
+
+export type AdminSuppliersResult = {
+  suppliers: AdminSupplierListItem[];
+  pagination: PaginationMeta;
+};
+
+export type AdminOrdersResult = {
+  orders: AdminOrderListItem[];
+  pagination: PaginationMeta;
 };
 
 export type AdminMetric = {
@@ -266,7 +235,7 @@ export type AdminProductDetail = AdminProductListItem & {
   supplierEmail: string | null;
   supplierPhone: string | null;
   supplierWebsite: string | null;
-  images: ProductImageRow[];
+  images: ProductRow['images'];
 };
 
 export type AdminInventoryRow = {
@@ -524,7 +493,7 @@ function mapProductDetailRow(product: ProductRow): AdminProductDetail {
   };
 }
 
-function mapSupplierRow(supplier: SupplierRow & { supplierProducts: Array<{ id: string; productId: string; product: { id: string; name: string; slug: string } }>; createdAt: Date }): AdminSupplierListItem {
+function mapSupplierRow(supplier: AdminSupplierRow | AdminSupplierDetailRow): AdminSupplierListItem {
   return {
     id: supplier.id,
     name: supplier.name,
@@ -541,24 +510,11 @@ function mapSupplierRow(supplier: SupplierRow & { supplierProducts: Array<{ id: 
   };
 }
 
-type OrderListRow = {
-  orderNumber: string;
-  status: string;
-  paymentStatus: PaymentStatus;
-  totalMinor: number;
-  currency: string;
-  createdAt: Date;
-  items: Array<{ quantity: number }>;
-  user: { name: string | null; email: string };
-  shippingFullName: string;
-  shippingEmail: string;
-};
-
 function mapOrderRow(order: OrderListRow): AdminOrderListItem {
   return {
     orderNumber: order.orderNumber,
-    customerName: order.user.name ?? order.shippingFullName,
-    customerEmail: order.user.email ?? order.shippingEmail,
+    customerName: order.user?.name ?? order.shippingFullName,
+    customerEmail: order.user?.email ?? order.shippingEmail,
     status: order.status,
     paymentStatus: order.paymentStatus,
     totalMinor: order.totalMinor,
@@ -749,30 +705,21 @@ export async function getAdminDashboardData(db = prisma): Promise<AdminDashboard
       db.order.findMany({
         orderBy: { createdAt: 'desc' },
         take: 5,
-        include: {
-          items: { select: { quantity: true } },
-          user: { select: { name: true, email: true } },
-        },
+        include: adminOrderListInclude,
       }),
       db.product.findMany({
         orderBy: { createdAt: 'desc' },
         take: 50,
-        include: {
-          category: true,
-          inventory: true,
-          images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
-          supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
-          pricing: { include: { pricingRule: true } },
-        },
+        include: adminProductInclude,
       }),
       db.inventoryItem.findMany({
         select: { stockOnHand: true, reservedStock: true, reorderPoint: true },
       }),
     ]);
 
-    const mappedProducts = allProducts.map((product) => mapProductRow(product as unknown as ProductRow));
+    const mappedProducts = allProducts.map(mapProductRow);
     const inventoryPreview = await getAdminInventoryRows(db);
-    const mappedRecentOrders = (recentOrders as unknown as OrderListRow[]).map(mapOrderRow);
+    const mappedRecentOrders = recentOrders.map(mapOrderRow);
     const lowStockCount = inventoryPreview.filter((product) => product.availableStock > 0 && product.availableStock <= product.reorderPoint).length;
     const lowStockProducts = inventoryPreview.filter((product) => product.availableStock > 0 && product.availableStock <= product.reorderPoint).slice(0, 5);
     const outOfStockProducts = inventoryRows.filter((item) => calculateAvailableStock(item.stockOnHand, item.reservedStock) <= 0).length;
@@ -804,12 +751,12 @@ export async function getAdminDashboardData(db = prisma): Promise<AdminDashboard
   }
 }
 
-export async function getAdminProducts(filters: CatalogueFilters, db = prisma) {
+export async function getAdminProducts(filters: CatalogueFilters, db = prisma): Promise<AdminProductsResult> {
   const search = normalizeSearch(filters.search);
   const page = Math.max(filters.page ?? 1, 1);
   const pageSize = Math.max(filters.pageSize ?? 20, 1);
 
-  const where: Record<string, unknown> = {};
+  const where: Prisma.ProductWhereInput = {};
   if (search) {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },
@@ -827,7 +774,7 @@ export async function getAdminProducts(filters: CatalogueFilters, db = prisma) {
     where.supplierProducts = { some: { supplier: { slug: filters.supplier } } };
   }
 
-  const orderBy =
+  const orderBy: Prisma.ProductOrderByWithRelationInput[] =
     filters.sort === 'name-desc'
       ? [{ name: 'desc' }]
       : filters.sort === 'price-asc'
@@ -836,21 +783,15 @@ export async function getAdminProducts(filters: CatalogueFilters, db = prisma) {
           ? [{ priceMinor: 'desc' }]
           : [{ createdAt: 'desc' }];
 
-  const totalItems = await db.product.count({ where: where as any });
+  const totalItems = await db.product.count({ where });
   const pagination = resolvePagination(totalItems, page, pageSize);
   const [rows, categories, suppliers] = await Promise.all([
     db.product.findMany({
-      where: where as any,
-      orderBy: orderBy as any,
+      where,
+      orderBy,
       take: pageSize,
       skip: (pagination.page - 1) * pageSize,
-      include: {
-        category: true,
-        inventory: true,
-        images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
-        supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
-        pricing: { include: { pricingRule: true } },
-      },
+      include: adminProductInclude,
     }),
     db.category.findMany({
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
@@ -863,24 +804,18 @@ export async function getAdminProducts(filters: CatalogueFilters, db = prisma) {
   ]);
 
   return {
-    products: (rows as unknown as ProductRow[]).map(mapProductRow),
+    products: rows.map(mapProductRow),
     pagination,
     categories,
     suppliers,
   };
 }
 
-export async function getAdminProductById(id: string, db = prisma) {
-  const product = (await db.product.findUnique({
+export async function getAdminProductById(id: string, db = prisma): Promise<AdminProductDetail | null> {
+  const product = await db.product.findUnique({
     where: { id },
-    include: {
-      category: true,
-      inventory: true,
-      images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
-      supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
-      pricing: { include: { pricingRule: true } },
-    },
-  })) as unknown as ProductRow | null;
+    include: adminProductInclude,
+  });
 
   if (!product) {
     return null;
@@ -889,7 +824,7 @@ export async function getAdminProductById(id: string, db = prisma) {
   return mapProductDetailRow(product);
 }
 
-export async function createAdminProduct(input: ProductFormInput, db = prisma) {
+export async function createAdminProduct(input: ProductFormInput, db = prisma): Promise<AdminProductDetail | null> {
   const slug = await resolveUniqueProductSlug(input.name, db, input.slug);
 
   const created = await db.$transaction(async (tx) => {
@@ -957,7 +892,7 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma) {
   return getAdminProductById(created.id, db);
 }
 
-export async function updateAdminProduct(id: string, input: ProductFormInput, db = prisma) {
+export async function updateAdminProduct(id: string, input: ProductFormInput, db = prisma): Promise<AdminProductDetail | null> {
   const slug = await resolveUniqueProductSlug(input.name, db, input.slug, id);
 
   const product = await db.$transaction(async (tx) => {
@@ -1035,7 +970,7 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
   return getAdminProductById(product.id, db);
 }
 
-export async function archiveAdminProduct(id: string, db = prisma) {
+export async function archiveAdminProduct(id: string, db = prisma): Promise<void> {
   await db.product.update({
     where: { id },
     data: {
@@ -1045,7 +980,7 @@ export async function archiveAdminProduct(id: string, db = prisma) {
   });
 }
 
-export async function setProductPublication(id: string, published: boolean, db = prisma) {
+export async function setProductPublication(id: string, published: boolean, db = prisma): Promise<void> {
   const data: { published: boolean; archivedAt?: Date | null } = { published };
 
   if (published) {
@@ -1059,14 +994,10 @@ export async function setProductPublication(id: string, published: boolean, db =
 }
 
 export async function getAdminInventoryRows(db = prisma): Promise<AdminInventoryRow[]> {
-  const rows = (await db.product.findMany({
+  const rows = await db.product.findMany({
     orderBy: [{ category: { sortOrder: 'asc' } }, { name: 'asc' }],
-    include: {
-      category: true,
-      inventory: true,
-      supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
-    },
-  })) as unknown as ProductRow[];
+    include: adminInventoryProductInclude,
+  });
 
   return rows.map((product) => {
     const inventory = product.inventory ?? { stockOnHand: 0, reservedStock: 0, reorderPoint: 0, locationCode: 'MAIN' };
@@ -1094,27 +1025,14 @@ export async function getAdminInventoryRows(db = prisma): Promise<AdminInventory
 }
 
 export async function getStockAdjustmentHistory(productId?: string, db = prisma): Promise<AdminStockAdjustmentRow[]> {
-  const query: any = {
+  const where: Prisma.StockAdjustmentWhereInput | undefined = productId ? { productId } : undefined;
+
+  const rows: StockAdjustmentHistoryRow[] = await db.stockAdjustment.findMany({
+    ...(where ? { where } : {}),
     orderBy: { createdAt: 'desc' },
     take: 20,
-    include: { product: { select: { name: true } } },
-  };
-
-  if (productId) {
-    query.where = { productId };
-  }
-
-  const rows = (await db.stockAdjustment.findMany(query)) as Array<{
-    id: string;
-    productId: string;
-    delta: number;
-    beforeStock: number;
-    afterStock: number;
-    reason: string;
-    performedBy: string | null;
-    createdAt: Date;
-    product: { name: string };
-  }>;
+    include: stockAdjustmentHistoryInclude,
+  });
 
   return rows.map((row) => ({
     id: row.id,
@@ -1129,7 +1047,7 @@ export async function getStockAdjustmentHistory(productId?: string, db = prisma)
   }));
 }
 
-export async function adjustProductStock(productId: string, delta: number, reason: string, performedBy = 'Operations Desk', db = prisma) {
+export async function adjustProductStock(productId: string, delta: number, reason: string, performedBy = 'Operations Desk', db = prisma): Promise<AdminInventoryRow[]> {
   if (!Number.isInteger(delta) || delta === 0) {
     throw new Error('Enter a non-zero stock adjustment.');
   }
@@ -1170,12 +1088,12 @@ export async function adjustProductStock(productId: string, delta: number, reaso
   return getAdminInventoryRows(db);
 }
 
-export async function getAdminSuppliers(filters: SupplierFilters = {}, db = prisma) {
+export async function getAdminSuppliers(filters: SupplierFilters = {}, db = prisma): Promise<AdminSuppliersResult> {
   const search = normalizeSearch(filters.search);
   const page = Math.max(filters.page ?? 1, 1);
   const pageSize = Math.max(filters.pageSize ?? 20, 1);
 
-  const where: Record<string, unknown> = {};
+  const where: Prisma.SupplierWhereInput = {};
   if (search) {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },
@@ -1185,27 +1103,25 @@ export async function getAdminSuppliers(filters: SupplierFilters = {}, db = pris
     ];
   }
 
-  const orderBy =
+  const orderBy: Prisma.SupplierOrderByWithRelationInput[] =
     filters.sort === 'name-desc'
       ? [{ name: 'desc' }]
       : filters.sort === 'recent'
         ? [{ createdAt: 'desc' }]
         : [{ name: 'asc' }];
 
-  const totalItems = await db.supplier.count({ where: where as any });
+  const totalItems = await db.supplier.count({ where });
   const pagination = resolvePagination(totalItems, page, pageSize);
   const rows = await db.supplier.findMany({
-    where: where as any,
-    orderBy: orderBy as any,
+    where,
+    orderBy,
     take: pageSize,
     skip: (pagination.page - 1) * pageSize,
-    include: {
-      supplierProducts: { select: { id: true, productId: true, product: { select: { id: true, name: true, slug: true } } } },
-    },
+    include: adminSupplierInclude,
   });
 
   return {
-    suppliers: rows.map((supplier) => mapSupplierRow(supplier as any)),
+    suppliers: rows.map(mapSupplierRow),
     pagination,
   };
 }
@@ -1214,11 +1130,7 @@ export async function getAdminSupplierById(id: string, db = prisma): Promise<Adm
   const supplier = await db.supplier.findUnique({
     where: { id },
     include: {
-      supplierProducts: {
-        include: {
-          product: { select: { id: true, name: true, slug: true } },
-        },
-      },
+      ...adminSupplierDetailInclude,
     },
   });
 
@@ -1227,7 +1139,7 @@ export async function getAdminSupplierById(id: string, db = prisma): Promise<Adm
   }
 
   return {
-    ...mapSupplierRow(supplier as any),
+    ...mapSupplierRow(supplier),
     addressLine1: supplier.addressLine1,
     addressLine2: supplier.addressLine2,
     city: supplier.city,
@@ -1248,7 +1160,7 @@ export async function getAdminSupplierById(id: string, db = prisma): Promise<Adm
   };
 }
 
-export async function createAdminSupplier(input: SupplierFormInput, db = prisma) {
+export async function createAdminSupplier(input: SupplierFormInput, db = prisma): Promise<AdminSupplierDetail | null> {
   const slug = await resolveUniqueSupplierSlug(input.name, db, input.slug);
 
   const supplier = await db.supplier.create({
@@ -1274,7 +1186,7 @@ export async function createAdminSupplier(input: SupplierFormInput, db = prisma)
   return getAdminSupplierById(supplier.id, db);
 }
 
-export async function updateAdminSupplier(id: string, input: SupplierFormInput, db = prisma) {
+export async function updateAdminSupplier(id: string, input: SupplierFormInput, db = prisma): Promise<AdminSupplierDetail | null> {
   const slug = await resolveUniqueSupplierSlug(input.name, db, input.slug, id);
 
   await db.supplier.update({
@@ -1301,12 +1213,12 @@ export async function updateAdminSupplier(id: string, input: SupplierFormInput, 
   return getAdminSupplierById(id, db);
 }
 
-export async function getAdminOrders(filters: OrderFilters = {}, db = prisma) {
+export async function getAdminOrders(filters: OrderFilters = {}, db = prisma): Promise<AdminOrdersResult> {
   const search = normalizeSearch(filters.search);
   const page = Math.max(filters.page ?? 1, 1);
   const pageSize = Math.max(filters.pageSize ?? 20, 1);
 
-  const where: Record<string, unknown> = {};
+  const where: Prisma.OrderWhereInput = {};
   if (search) {
     where.OR = [
       { orderNumber: { contains: search, mode: 'insensitive' } },
@@ -1316,27 +1228,24 @@ export async function getAdminOrders(filters: OrderFilters = {}, db = prisma) {
     ];
   }
 
-  if (filters.status) {
+  if (filters.status && isPrismaOrderStatus(filters.status)) {
     where.status = filters.status;
   }
 
-  if (filters.paymentStatus) {
+  if (filters.paymentStatus && isPrismaPaymentStatus(filters.paymentStatus)) {
     where.paymentStatus = filters.paymentStatus;
   }
 
-  const totalItems = await db.order.count({ where: where as any });
+  const totalItems = await db.order.count({ where });
   const pagination = resolvePagination(totalItems, page, pageSize);
 
-  const rows = (await db.order.findMany({
-    where: where as any,
+  const rows = await db.order.findMany({
+    where,
     orderBy: { createdAt: 'desc' },
     take: pageSize,
     skip: (pagination.page - 1) * pageSize,
-    include: {
-      items: { select: { quantity: true } },
-      user: { select: { name: true, email: true } },
-    },
-  })) as unknown as OrderRow[];
+    include: adminOrderListInclude,
+  });
 
   return {
     orders: rows.map(mapOrderRow),
@@ -1345,14 +1254,10 @@ export async function getAdminOrders(filters: OrderFilters = {}, db = prisma) {
 }
 
 export async function getAdminOrderByNumber(orderNumber: string, db = prisma): Promise<AdminOrderDetail | null> {
-  const order = (await db.order.findUnique({
+  const order = await db.order.findUnique({
     where: { orderNumber },
-    include: {
-      items: { select: { id: true, productName: true, productSlug: true, quantity: true, unitPriceMinor: true, totalMinor: true } },
-      shippingAddress: true,
-      user: { select: { name: true, email: true } },
-    },
-  })) as unknown as OrderRow | null;
+    include: adminOrderDetailInclude,
+  });
 
   if (!order) {
     return null;

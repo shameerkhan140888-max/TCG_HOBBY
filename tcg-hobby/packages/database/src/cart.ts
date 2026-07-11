@@ -1,31 +1,29 @@
 import type { CartLineItem, CartSummary } from '@tcg-hobby/types';
+import type { Prisma } from '@prisma/client';
 import { prisma } from './client';
 import { calculateCartSummary, calculateLineTotal, validateQuantityAgainstAvailability } from './commerce';
 
-type CartProductRow = {
-  id: string;
-  slug: string;
-  name: string;
-  priceMinor: number;
-  currency: string;
-  inventory: {
-    stockOnHand: number;
-    reservedStock: number;
-  } | null;
-};
+const cartRecordInclude = {
+  items: {
+    orderBy: { createdAt: 'asc' },
+    include: {
+      product: {
+        include: {
+          inventory: true,
+        },
+      },
+    },
+  },
+} as const satisfies Prisma.CartInclude;
 
-type CartItemRow = {
-  id: string;
-  quantity: number;
-  unitPriceMinor: number;
-  product: CartProductRow;
-};
+type CartRecord = Prisma.CartGetPayload<{ include: typeof cartRecordInclude }>;
+type CartItemRow = CartRecord['items'][number];
 
-type CartRecord = {
-  id: string;
-  currency: string;
-  items: CartItemRow[];
-};
+const cartProductInclude = {
+  inventory: true,
+} as const satisfies Prisma.ProductInclude;
+
+export type CartProductRow = Prisma.ProductGetPayload<{ include: typeof cartProductInclude }>;
 
 export type CartSnapshot = CartSummary & {
   cartId: string | null;
@@ -62,21 +60,10 @@ async function ensureCart(userId: string, db = prisma) {
 }
 
 async function getCartRecord(userId: string, db = prisma): Promise<CartRecord | null> {
-  const cart = (await db.cart.findUnique({
+  const cart = await db.cart.findUnique({
     where: { userId },
-    include: {
-      items: {
-        orderBy: { createdAt: 'asc' },
-        include: {
-          product: {
-            include: {
-              inventory: true,
-            },
-          },
-        },
-      },
-    },
-  })) as unknown as CartRecord | null;
+    include: cartRecordInclude,
+  });
 
   return cart;
 }
@@ -97,12 +84,10 @@ export async function getCartSnapshot(userId: string, db = prisma): Promise<Cart
 }
 
 async function loadProductForCart(db = prisma, productId: string) {
-  const product = (await db.product.findUnique({
+  const product = await db.product.findUnique({
     where: { id: productId },
-    include: {
-      inventory: true,
-    },
-  })) as unknown as CartProductRow | null;
+    include: cartProductInclude,
+  });
 
   if (!product || !product.inventory) {
     return null;

@@ -1,80 +1,39 @@
 import type {
   NotificationPreference,
   NotificationSubscription,
-  ProductReleaseStatus,
   ReleaseCalendarEntry,
   ReleaseProduct,
   ReleaseSummary,
 } from '@tcg-hobby/types';
+import type { Prisma } from '@prisma/client';
 import { slugify } from '@tcg-hobby/utils';
 import { prisma } from './client';
 import { seedCategories, seedProducts, seedReleases, seedReleaseProducts, seedSuppliers } from './seed-data';
 
-type ReleaseCategoryRow = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  sortOrder: number;
-};
+const releaseInclude = {
+  category: true,
+  products: {
+    orderBy: [{ status: 'asc' }, { releaseDate: 'asc' }],
+    include: {
+      product: {
+        include: {
+          category: true,
+          inventory: true,
+          supplierProducts: { include: { supplier: true }, take: 1 },
+        },
+      },
+    },
+  },
+} as const satisfies Prisma.ReleaseInclude;
 
-type ReleaseProductRow = {
-  id: string;
-  status: ProductReleaseStatus;
-  releaseDate: Date | null;
-  expectedDispatchAt: Date | null;
-  expectedArrivalAt: Date | null;
-  allocationLimit: number | null;
-  customerPurchaseLimit: number | null;
-  supplierAllocation: number | null;
-  allocatedQuantity: number;
-  lowAllocationThreshold: number | null;
-  availabilityMessage: string | null;
-  preorderBadgeLabel: string | null;
-  comingSoonBadgeLabel: string | null;
-  product: {
-    id: string;
-    slug: string;
-    name: string;
-    game: string;
-    description: string;
-    imageLabel: string;
-    featured: boolean;
-    priceMinor: number;
-    currency: string;
-    releaseStatus: ProductReleaseStatus;
-    releaseDate: Date | null;
-    expectedDispatchAt: Date | null;
-    expectedArrivalAt: Date | null;
-    allocationLimit: number | null;
-    customerPurchaseLimit: number | null;
-    supplierAllocation: number | null;
-    lowAllocationThreshold: number | null;
-    availabilityMessage: string | null;
-    preorderBadgeLabel: string | null;
-    comingSoonBadgeLabel: string | null;
-    category: ReleaseCategoryRow;
-    inventory: { stockOnHand: number; reservedStock: number } | null;
-    supplierProducts: Array<{ supplier: { name: string } }>;
-  };
-};
+type ReleaseRow = Prisma.ReleaseGetPayload<{ include: typeof releaseInclude }>;
+type ReleaseProductRow = ReleaseRow['products'][number];
 
-type ReleaseRow = {
-  id: string;
-  name: string;
-  slug: string;
-  brand: string;
-  game: string;
-  releaseDate: Date;
-  expectedDispatchAt: Date | null;
-  expectedArrivalAt: Date | null;
-  announcementText: string | null;
-  releaseNotes: string | null;
-  visible: boolean;
-  featuredOnHomepage: boolean;
-  category: ReleaseCategoryRow;
-  products: ReleaseProductRow[];
-};
+const notificationSubscriptionInclude = {
+  product: { select: { name: true, slug: true } },
+} as const satisfies Prisma.NotificationSubscriptionInclude;
+
+type NotificationSubscriptionResultRow = Prisma.NotificationSubscriptionGetPayload<{ include: typeof notificationSubscriptionInclude }>;
 
 type ReleaseFilters = {
   search?: string;
@@ -404,8 +363,7 @@ async function loadReleasesFromDatabase(
   db = prisma,
   includeHidden = false,
 ): Promise<ReleaseSummary[]> {
-  const where: any = {
-  };
+  const where: Prisma.ReleaseWhereInput = {};
 
   if (!includeHidden) {
     where.visible = true;
@@ -434,25 +392,11 @@ async function loadReleasesFromDatabase(
     }
   }
 
-  const releases = (await db.release.findMany({
+  const releases = await db.release.findMany({
     where,
     orderBy: [{ featuredOnHomepage: 'desc' }, { releaseDate: 'asc' }],
-    include: {
-      category: true,
-      products: {
-        orderBy: [{ status: 'asc' }, { releaseDate: 'asc' }],
-        include: {
-          product: {
-            include: {
-              category: true,
-              inventory: true,
-              supplierProducts: { include: { supplier: true }, take: 1 },
-            },
-          },
-        },
-      },
-    },
-  })) as unknown as ReleaseRow[];
+    include: releaseInclude,
+  });
 
   const mapped = releases.map(mapReleaseRow);
   const query = normalizeSearch(filters.search);
@@ -678,13 +622,13 @@ export async function updateAdminRelease(id: string, input: ReleaseFormInput, db
 }
 
 export async function getCustomerNotificationSubscriptions(userId: string, db = prisma): Promise<NotificationSubscriptionRow[]> {
-  const rows = await db.notificationSubscription.findMany({
+  const rows: NotificationSubscriptionResultRow[] = await db.notificationSubscription.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
-    include: { product: { select: { name: true, slug: true } } },
+    include: notificationSubscriptionInclude,
   });
 
-  return rows.map((row: any) => ({
+  return rows.map((row) => ({
     id: row.id,
     userId: row.userId,
     productId: row.productId,

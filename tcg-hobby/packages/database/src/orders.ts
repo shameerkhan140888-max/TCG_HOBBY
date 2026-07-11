@@ -12,6 +12,7 @@ import type {
   ShippingMethod,
   ShippingMethodCode,
 } from '@tcg-hobby/types';
+import type { Prisma } from '@prisma/client';
 import { prisma } from './client';
 import {
   buildCartReservationExpiry,
@@ -27,61 +28,23 @@ import type { CartSnapshot } from './cart';
 
 type CheckoutAddressInput = CheckoutAddress;
 
-type OrderItemRecord = {
-  id: string;
-  productId: string;
-  productName: string;
-  productSlug: string;
-  quantity: number;
-  unitPriceMinor: number;
-  totalMinor: number;
-};
+const orderRecordInclude = {
+  items: {
+    orderBy: {
+      id: 'asc',
+    },
+  },
+  shippingAddress: true,
+} as const satisfies Prisma.OrderInclude;
 
-type OrderRecord = {
-  id: string;
-  orderNumber: string;
-  userId: string | null;
-  status: string;
-  paymentStatus: PaymentStatus;
-  fulfilmentStatus: FulfilmentStatus;
-  paymentProvider: string | null;
-  paymentIntentId: string | null;
-  stripeCheckoutSessionId: string | null;
-  stripeCheckoutUrl: string | null;
-  subtotalMinor: number;
-  shippingMinor: number;
-  taxMinor: number;
-  totalMinor: number;
+type DatabaseOrderRecord = Prisma.OrderGetPayload<{ include: typeof orderRecordInclude }>;
+type OrderItemRecord = Pick<DatabaseOrderRecord['items'][number], 'id' | 'productId' | 'productName' | 'productSlug' | 'quantity' | 'unitPriceMinor' | 'totalMinor'>;
+
+type OrderRecord = Omit<DatabaseOrderRecord, 'currency' | 'shippingMethodCode' | 'items' | 'shippingAddress'> & {
   currency: string;
   shippingMethodCode: ShippingMethodCode;
-  shippingMethodName: string;
-  shippingMethodAmountMinor: number;
-  shippingFullName: string;
-  shippingEmail: string;
-  shippingLine1: string;
-  shippingLine2: string | null;
-  shippingCity: string;
-  shippingRegion: string | null;
-  shippingPostalCode: string;
-  shippingCountry: string;
-  reservationExpiresAt: Date | null;
-  paidAt: Date | null;
-  fulfilledAt: Date | null;
-  cancelledAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
   items: OrderItemRecord[];
-  shippingAddress: {
-    id: string;
-    fullName: string;
-    email: string;
-    line1: string;
-    line2: string | null;
-    city: string;
-    region: string | null;
-    postalCode: string;
-    country: string;
-  } | null;
+  shippingAddress: OrderShippingAddress | null;
 };
 
 type CreateCheckoutOrderInput = {
@@ -183,6 +146,36 @@ const localCheckoutOrders = new Map<string, LocalOrderRecord>();
 const localCheckoutOrdersBySessionId = new Map<string, string>();
 const localCheckoutOrdersFile = join(tmpdir(), 'tcg-hobby-local-checkout-orders.json');
 
+function normalizeDatabaseOrderRecord(order: DatabaseOrderRecord): OrderRecord {
+  return {
+    ...order,
+    currency: order.currency,
+    shippingMethodCode: order.shippingMethodCode as ShippingMethodCode,
+    items: order.items.map((item) => ({
+      id: item.id,
+      productId: item.productId,
+      productName: item.productName,
+      productSlug: item.productSlug,
+      quantity: item.quantity,
+      unitPriceMinor: item.unitPriceMinor,
+      totalMinor: item.totalMinor,
+    })),
+    shippingAddress: order.shippingAddress
+      ? {
+          id: order.shippingAddress.id,
+          fullName: order.shippingAddress.fullName,
+          email: order.shippingAddress.email,
+          line1: order.shippingAddress.line1,
+          line2: order.shippingAddress.line2,
+          city: order.shippingAddress.city,
+          region: order.shippingAddress.region,
+          postalCode: order.shippingAddress.postalCode,
+          country: order.shippingAddress.country,
+        }
+      : null,
+  };
+}
+
 function mapOrderItemRecord(item: OrderItemRecord): OrderLineItem {
   return {
     id: item.id,
@@ -280,6 +273,7 @@ function createLocalOrderRecord(
     shippingRegion: input.shippingAddress.region || null,
     shippingPostalCode: input.shippingAddress.postalCode,
     shippingCountry: input.shippingAddress.country,
+    shippingAddressId,
     reservationExpiresAt: buildCartReservationExpiry(now),
     paidAt: null,
     fulfilledAt: null,
@@ -469,7 +463,7 @@ export async function createStripeCheckoutSession(params: {
   return stripeRequest<{ id: string; url: string | null; payment_intent: string | null }>('checkout/sessions', body);
 }
 
-async function reserveInventoryForOrder(tx: any, orderId: string, items: Array<{ productId: string; quantity: number }>) {
+async function reserveInventoryForOrder(tx: Prisma.TransactionClient, orderId: string, items: Array<{ productId: string; quantity: number }>) {
   for (const item of items) {
     const inventory = await tx.inventoryItem.findUnique({
       where: { productId: item.productId },
@@ -580,7 +574,7 @@ export async function createPendingCheckoutOrder(
         },
       });
 
-      await reserveInventoryForOrder(tx as typeof prisma, order.id, cart.items);
+      await reserveInventoryForOrder(tx, order.id, cart.items);
 
       await tx.orderItem.createMany({
         data: cart.items.map((item) => ({
@@ -638,11 +632,11 @@ export async function attachStripeSessionToOrder(params: {
   stripeCheckoutUrl: string | null;
   paymentIntentId: string | null;
   db?: typeof prisma;
-}) {
+}): Promise<void> {
   const db = params.db ?? prisma;
 
   try {
-    return await db.order.update({
+    await db.order.update({
       where: { id: params.orderId },
       data: {
         stripeCheckoutSessionId: params.stripeCheckoutSessionId,
@@ -668,7 +662,6 @@ export async function attachStripeSessionToOrder(params: {
 
     localCheckoutOrdersBySessionId.set(params.stripeCheckoutSessionId, params.orderId);
     await persistLocalCheckoutOrders();
-    return order as unknown as typeof db.order;
   }
 }
 
@@ -737,20 +730,19 @@ export async function releaseCheckoutOrderReservation(orderId: string, db = pris
 
 export async function finalizePaidCheckoutOrder(input: FinalizeCheckoutOrderInput, db = prisma): Promise<OrderWithItems> {
   try {
-    const order = (await db.order.findUnique({
+    const order = await db.order.findUnique({
       where: { id: input.orderId },
-      include: {
-        items: true,
-        shippingAddress: true,
-      },
-    })) as OrderRecord | null;
+      include: orderRecordInclude,
+    });
 
     if (!order) {
       throw new Error('The order no longer exists.');
     }
 
-    if (order.paymentStatus === 'SUCCEEDED') {
-      return mapOrderRecord(order);
+    const normalizedOrder = normalizeDatabaseOrderRecord(order);
+
+    if (normalizedOrder.paymentStatus === 'SUCCEEDED') {
+      return mapOrderRecord(normalizedOrder);
     }
 
     return await db.$transaction(async (tx) => {
@@ -776,7 +768,7 @@ export async function finalizePaidCheckoutOrder(input: FinalizeCheckoutOrderInpu
         }
       }
 
-      const updatedOrder = (await tx.order.update({
+      const updatedOrder = await tx.order.update({
         where: { id: order.id },
         data: {
           status: 'PAID',
@@ -786,13 +778,10 @@ export async function finalizePaidCheckoutOrder(input: FinalizeCheckoutOrderInpu
           paymentIntentId: input.paymentIntentId,
           stripeCheckoutSessionId: input.stripeCheckoutSessionId,
         },
-        include: {
-          items: true,
-          shippingAddress: true,
-        },
-      })) as OrderRecord;
+        include: orderRecordInclude,
+      });
 
-      return mapOrderRecord(updatedOrder);
+      return mapOrderRecord(normalizeDatabaseOrderRecord(updatedOrder));
     });
   } catch (error) {
     if (!isDatabaseUnavailableError(error) || process.env.NODE_ENV === 'production') {
@@ -827,7 +816,7 @@ export async function finalizePaidCheckoutOrder(input: FinalizeCheckoutOrderInpu
 
 export async function getCustomerOrders(userId: string, db = prisma): Promise<CustomerOrderSummary[]> {
   try {
-    const orders = (await db.order.findMany({
+    const orders = await db.order.findMany({
       where: {
         userId,
         status: {
@@ -837,20 +826,16 @@ export async function getCustomerOrders(userId: string, db = prisma): Promise<Cu
       orderBy: {
         createdAt: 'desc',
       },
-      include: {
-        items: {
-          orderBy: {
-            id: 'asc',
-          },
-        },
-        shippingAddress: true,
-      },
-    })) as unknown as OrderRecord[];
+      include: orderRecordInclude,
+    });
 
-    return orders.map((order) => ({
-      ...mapOrderRecord(order),
+    return orders.map((order) => {
+      const normalizedOrder = normalizeDatabaseOrderRecord(order);
+      return {
+      ...mapOrderRecord(normalizedOrder),
       itemCount: order.items.reduce((count, item) => count + item.quantity, 0),
-    }));
+      };
+    });
   } catch (error) {
     if (!isDatabaseUnavailableError(error) || process.env.NODE_ENV === 'production') {
       throw error;
@@ -868,26 +853,19 @@ export async function getCustomerOrders(userId: string, db = prisma): Promise<Cu
 
 export async function getCustomerOrderByNumber(userId: string, orderNumber: string, db = prisma): Promise<OrderWithItems | null> {
   try {
-    const order = (await db.order.findFirst({
+    const order = await db.order.findFirst({
       where: {
         userId,
         orderNumber,
       },
-      include: {
-        items: {
-          orderBy: {
-            id: 'asc',
-          },
-        },
-        shippingAddress: true,
-      },
-    })) as unknown as OrderRecord | null;
+      include: orderRecordInclude,
+    });
 
     if (!order) {
       return null;
     }
 
-    return mapOrderRecord(order);
+    return mapOrderRecord(normalizeDatabaseOrderRecord(order));
   } catch (error) {
     if (!isDatabaseUnavailableError(error) || process.env.NODE_ENV === 'production') {
       throw error;
@@ -901,25 +879,18 @@ export async function getCustomerOrderByNumber(userId: string, orderNumber: stri
 
 export async function getOrderByStripeCheckoutSessionId(stripeCheckoutSessionId: string, db = prisma): Promise<OrderWithItems | null> {
   try {
-    const order = (await db.order.findUnique({
+    const order = await db.order.findUnique({
       where: {
         stripeCheckoutSessionId,
       },
-      include: {
-        items: {
-          orderBy: {
-            id: 'asc',
-          },
-        },
-        shippingAddress: true,
-      },
-    })) as unknown as OrderRecord | null;
+      include: orderRecordInclude,
+    });
 
     if (!order) {
       return null;
     }
 
-    return mapOrderRecord(order);
+    return mapOrderRecord(normalizeDatabaseOrderRecord(order));
   } catch (error) {
     if (!isDatabaseUnavailableError(error) || process.env.NODE_ENV === 'production') {
       throw error;

@@ -1,6 +1,6 @@
 'use server';
 
-import { addCollectionItem, removeCollectionItem, updateCollectionItemQuantity } from '@tcg-hobby/database';
+import { addCollectionItem, removeCollectionItem, updateCollectionItemQuantity, type UpsertCollectionItemInput } from '@tcg-hobby/database';
 import { requireCustomerSession } from './auth';
 import { redirect } from 'next/navigation';
 
@@ -41,8 +41,16 @@ export type CollectionQuantityFormState = {
   };
 };
 
-const collectionVariants = new Set(['REGULAR', 'REVERSE_HOLO', 'HOLO', 'PROMO', 'FIRST_EDITION', 'FOIL']);
-const conditions = new Set(['MINT', 'NEAR_MINT', 'LIGHTLY_PLAYED', 'MODERATELY_PLAYED', 'HEAVILY_PLAYED', 'DAMAGED', 'SEALED']);
+const collectionVariants = ['REGULAR', 'REVERSE_HOLO', 'HOLO', 'PROMO', 'FIRST_EDITION', 'FOIL'] as const satisfies readonly UpsertCollectionItemInput['printVariant'][];
+const conditions = ['MINT', 'NEAR_MINT', 'LIGHTLY_PLAYED', 'MODERATELY_PLAYED', 'HEAVILY_PLAYED', 'DAMAGED', 'SEALED'] as const satisfies readonly UpsertCollectionItemInput['condition'][];
+
+function isCollectionPrintVariant(value: string): value is UpsertCollectionItemInput['printVariant'] {
+  return collectionVariants.includes(value as UpsertCollectionItemInput['printVariant']);
+}
+
+function isCollectionCondition(value: string): value is UpsertCollectionItemInput['condition'] {
+  return conditions.includes(value as UpsertCollectionItemInput['condition']);
+}
 
 function asString(value: FormDataEntryValue | null | undefined) {
   return typeof value === 'string' ? value : '';
@@ -85,8 +93,8 @@ export async function addCollectionItemAction(_state: CollectionImportFormState,
   const fieldErrors: FieldErrors = {};
   if (!values.productId) fieldErrors.productId = 'Choose a catalogue product.';
   if (!values.quantity || !Number.isInteger(Number(values.quantity)) || Number(values.quantity) < 1) fieldErrors.quantity = 'Quantity must be at least 1.';
-  if (!collectionVariants.has(values.printVariant)) fieldErrors.printVariant = 'Choose a supported collection variant.';
-  if (!conditions.has(values.condition)) fieldErrors.condition = 'Choose a supported condition.';
+  if (!isCollectionPrintVariant(values.printVariant)) fieldErrors.printVariant = 'Choose a supported collection variant.';
+  if (!isCollectionCondition(values.condition)) fieldErrors.condition = 'Choose a supported condition.';
   if (!values.language.trim()) fieldErrors.language = 'Language is required.';
   const purchasePriceMinor = parseInteger(values.purchasePriceMinor);
   if (values.purchasePriceMinor && purchasePriceMinor === null) fieldErrors.purchasePriceMinor = 'Enter a whole number amount in pence.';
@@ -99,12 +107,24 @@ export async function addCollectionItemAction(_state: CollectionImportFormState,
     };
   }
 
+  const printVariant = values.printVariant;
+  const condition = values.condition;
+  if (!isCollectionPrintVariant(printVariant) || !isCollectionCondition(condition)) {
+    return {
+      fieldErrors: {
+        printVariant: 'Choose a supported collection variant.',
+        condition: 'Choose a supported condition.',
+      },
+      values,
+    };
+  }
+
   try {
     await addCollectionItem(session.user.id, {
       productId: values.productId,
       ownedQuantity: Number(values.quantity),
-      printVariant: values.printVariant as any,
-      condition: values.condition as any,
+      printVariant,
+      condition,
       foil: values.foil,
       language: values.language.trim().toUpperCase(),
       notes: values.notes.trim() || null,
