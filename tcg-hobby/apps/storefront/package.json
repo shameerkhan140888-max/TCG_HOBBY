@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prebuild": "npm --prefix ../.. run db:generate",
     "build": "next build",
     "dev": "node ./scripts/dev.mjs",
     "lint": "tsc -p tsconfig.check.json --noEmit",
