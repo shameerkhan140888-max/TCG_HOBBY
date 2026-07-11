@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { getWishlistItems, prisma } from '@tcg-hobby/database';
+import { getWishlistItems, prisma, type WishlistItem } from '@tcg-hobby/database';
 import {
   SESSION_COOKIE_NAME,
   createSessionExpiry,
@@ -15,6 +15,14 @@ export type CustomerSession = {
   user: SessionUser;
   sessionToken: string;
   expires: Date;
+};
+
+export type CustomerProfile = {
+  session: CustomerSession;
+  user: Awaited<ReturnType<typeof prisma.user.findUnique>>;
+  wishlistItems: {
+    items: WishlistItem[];
+  };
 };
 
 function getReturnTo(value: FormDataEntryValue | null) {
@@ -76,7 +84,7 @@ export async function requireCustomerSession(callbackUrl = '/account') {
   return session;
 }
 
-export async function getCustomerProfile() {
+export async function getCustomerProfile(): Promise<CustomerProfile> {
   const session = await requireCustomerSession('/account');
   const [user, wishlistItems] = await Promise.all([
     prisma.user.findUnique({

@@ -32,6 +32,13 @@ type WishlistItemRow = {
   product: WishlistProductRow;
 };
 
+export type WishlistItem = {
+  id: string;
+  productId: string;
+  addedAt: Date;
+  product: CatalogueProduct;
+};
+
 function mapWishlistProductRow(product: WishlistProductRow): CatalogueProduct {
   const inventory = product.inventory;
   const supplier = product.supplierProducts[0]?.supplier;
@@ -87,7 +94,7 @@ export async function getWishlistProductIds(userId: string, db = prisma) {
   return wishlist?.items.map((item: { productId: string }) => item.productId) ?? [];
 }
 
-export async function getWishlistItems(userId: string, db = prisma) {
+export async function getWishlistItems(userId: string, db = prisma): Promise<WishlistItem[]> {
   const wishlist = await db.wishlist.findUnique({
     where: { userId },
     include: {

@@ -167,3 +167,4 @@ export {
   removeProductFromWishlist,
   toggleWishlistItem,
 } from './wishlist';
+export type { WishlistItem } from './wishlist';
