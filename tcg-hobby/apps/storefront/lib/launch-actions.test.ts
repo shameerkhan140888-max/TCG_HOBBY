@@ -1,0 +1,113 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+  headers: vi.fn(async () => new Map([['x-forwarded-for', '203.0.113.10']])),
+  redirect: vi.fn((url: string) => {
+    throw new Error(`NEXT_REDIRECT:${url}`);
+  }),
+  sendSubscriberConfirmationEmail: vi.fn(),
+  upsertMarketingSubscriberSignup: vi.fn(),
+  validateSubscriberEmail: vi.fn((email: string) => {
+    const normalized = email.trim().toLowerCase();
+    return normalized.includes('@')
+      ? { ok: true as const, email: normalized }
+      : { ok: false as const, email: normalized, error: 'Enter a valid email address.' };
+  }),
+  isSignupRateLimited: vi.fn(() => false),
+}));
+
+vi.mock('next/headers', () => ({
+  headers: mocks.headers,
+}));
+
+vi.mock('next/navigation', () => ({
+  redirect: mocks.redirect,
+}));
+
+vi.mock('@tcg-hobby/database', () => ({
+  upsertMarketingSubscriberSignup: mocks.upsertMarketingSubscriberSignup,
+  validateSubscriberEmail: mocks.validateSubscriberEmail,
+}));
+
+vi.mock('./marketing-email', () => ({
+  sendSubscriberConfirmationEmail: mocks.sendSubscriberConfirmationEmail,
+}));
+
+vi.mock('./signup-rate-limit', () => ({
+  isSignupRateLimited: mocks.isSignupRateLimited,
+}));
+
+import { LAUNCH_MARKETING_CONSENT_VALUE } from './launch-consent';
+import { captureLaunchEmailAction } from './launch-actions';
+
+function createSignupForm(consentValue?: string) {
+  const formData = new FormData();
+  formData.set('email', 'Collector@Example.Test');
+  formData.set('firstName', 'Mia');
+  formData.set('source', 'coming-soon-page');
+  formData.set('returnTo', '/');
+
+  if (typeof consentValue === 'string') {
+    formData.set('marketingConsent', consentValue);
+  }
+
+  return formData;
+}
+
+describe('captureLaunchEmailAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.upsertMarketingSubscriberSignup.mockResolvedValue({
+      subscriberId: 'subscriber-1',
+      email: 'collector@example.test',
+      firstName: 'Mia',
+      created: true,
+      shouldSendConfirmation: true,
+      unsubscribeToken: 'token-1',
+    });
+  });
+
+  it('rejects missing marketing consent before persistence or confirmation email', async () => {
+    await expect(captureLaunchEmailAction(createSignupForm())).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=consent#launch-list');
+
+    expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
+    expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+  });
+
+  it.each(['false', 'on', 'yes'])('rejects malformed marketing consent value %s', async (value) => {
+    await expect(captureLaunchEmailAction(createSignupForm(value))).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=consent#launch-list');
+
+    expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
+    expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+  });
+
+  it('creates an eligible consented subscriber and sends confirmation email', async () => {
+    await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
+      'NEXT_REDIRECT:/?subscriberSignup=saved#launch-list',
+    );
+
+    expect(mocks.upsertMarketingSubscriberSignup).toHaveBeenCalledWith({
+      email: 'collector@example.test',
+      firstName: 'Mia',
+      marketingConsent: true,
+      source: 'coming-soon-page',
+      consentSource: 'coming-soon-page',
+      consentIp: '203.0.113.10',
+    });
+    expect(mocks.sendSubscriberConfirmationEmail).toHaveBeenCalledWith(expect.objectContaining({
+      subscriberId: 'subscriber-1',
+      email: 'collector@example.test',
+      shouldSendConfirmation: true,
+    }));
+  });
+
+  it('keeps the honeypot path quiet without writing subscriber data', async () => {
+    const formData = createSignupForm();
+    formData.set('company', 'bot company');
+
+    await expect(captureLaunchEmailAction(formData)).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=saved#launch-list');
+
+    expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
+    expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+  });
+});

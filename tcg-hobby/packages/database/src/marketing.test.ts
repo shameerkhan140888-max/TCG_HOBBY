@@ -71,6 +71,10 @@ describe('marketing subscribers', () => {
         firstName: 'Mia',
         source: 'coming-soon-page',
         marketingConsent: true,
+        marketingConsentAt: expect.any(Date),
+        consentSource: 'coming-soon-page',
+        privacyPolicyVersion: '2026-07-11',
+        consentIpHash: expect.any(String),
       }),
     }));
     expect(tx.marketingSubscriberTagAssignment.createMany).toHaveBeenCalledWith({
@@ -82,7 +86,7 @@ describe('marketing subscribers', () => {
     });
   });
 
-  it('does not silently grant marketing consent on duplicate signup without consent', async () => {
+  it('rejects duplicate signup without consent before subscriber updates', async () => {
     const existing = {
       id: 'subscriber-1',
       email: 'collector@example.test',
@@ -95,23 +99,38 @@ describe('marketing subscribers', () => {
     };
     const { db, tx } = createSignupDb(existing);
 
-    const result = await upsertMarketingSubscriberSignup({
+    await expect(upsertMarketingSubscriberSignup({
       email: 'collector@example.test',
       source: 'coming-soon-page',
       marketingConsent: false,
-    }, db);
+    }, db)).rejects.toThrow('Marketing consent is required');
 
-    expect(result.created).toBe(false);
-    expect(result.shouldSendConfirmation).toBe(false);
-    expect(tx.marketingSubscriber.update).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.not.objectContaining({
-        marketingConsent: true,
-      }),
-    }));
-    expect(tx.marketingSubscriberTagAssignment.createMany).toHaveBeenCalledWith({
-      data: [{ subscriberId: 'subscriber-1', tagId: 'tag-launch' }],
-      skipDuplicates: true,
-    });
+    expect(db.$transaction).not.toHaveBeenCalled();
+    expect(tx.marketingSubscriber.update).not.toHaveBeenCalled();
+    expect(tx.marketingSubscriberTagAssignment.createMany).not.toHaveBeenCalled();
+  });
+
+  it('does not reactivate previously unsubscribed users without explicit consent', async () => {
+    const existing = {
+      id: 'subscriber-1',
+      email: 'collector@example.test',
+      firstName: null,
+      marketingConsent: false,
+      status: MarketingSubscriberStatus.UNSUBSCRIBED,
+      confirmationEmailSentAt: new Date('2026-01-01'),
+      confirmationEmailLastAttemptAt: new Date('2026-01-01'),
+      unsubscribeToken: 'token-1',
+    };
+    const { db, tx } = createSignupDb(existing);
+
+    await expect(upsertMarketingSubscriberSignup({
+      email: 'collector@example.test',
+      source: 'coming-soon-page',
+      marketingConsent: false,
+    }, db)).rejects.toThrow('Marketing consent is required');
+
+    expect(db.$transaction).not.toHaveBeenCalled();
+    expect(tx.marketingSubscriber.update).not.toHaveBeenCalled();
   });
 
   it('centralizes campaign eligibility', () => {

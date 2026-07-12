@@ -1,4 +1,8 @@
+'use client';
+
+import React, { useId, useRef, useState, type FormEvent } from 'react';
 import { ErrorMessage, FormField, Input } from '@tcg-hobby/ui';
+import { LAUNCH_MARKETING_CONSENT_ERROR, LAUNCH_MARKETING_CONSENT_VALUE } from '../lib/launch-consent';
 import { captureLaunchEmailAction } from '../lib/launch-actions';
 import { LaunchEmailSubmitButton } from './launch-email-submit-button';
 
@@ -15,8 +19,27 @@ export function LaunchEmailCapture({
   error?: string | undefined;
   returnTo?: string;
 }) {
+  const consentErrorId = useId();
+  const consentRef = useRef<HTMLInputElement>(null);
+  const serverConsentError = error === 'consent' ? LAUNCH_MARKETING_CONSENT_ERROR : undefined;
+  const [clientConsentError, setClientConsentError] = useState<string | undefined>(undefined);
+  const consentError = clientConsentError ?? serverConsentError;
+  const emailError = error === 'consent' ? undefined : error;
+
+  function focusConsentCheckbox() {
+    window.requestAnimationFrame(() => consentRef.current?.focus());
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (!consentRef.current?.checked) {
+      event.preventDefault();
+      setClientConsentError(LAUNCH_MARKETING_CONSENT_ERROR);
+      focusConsentCheckbox();
+    }
+  }
+
   return (
-    <form action={captureLaunchEmailAction} className={compact ? 'space-y-3' : 'space-y-4'}>
+    <form action={captureLaunchEmailAction} className={compact ? 'space-y-3' : 'space-y-4'} noValidate onSubmit={handleSubmit}>
       <input type="hidden" name="source" value={source} />
       <input type="hidden" name="returnTo" value={returnTo} />
       <div className="hidden" aria-hidden="true">
@@ -40,7 +63,7 @@ export function LaunchEmailCapture({
         <FormField
           label="Email address"
           htmlFor={`launch-email-${source}`}
-          error={error}
+          error={emailError}
           className={compact ? 'min-w-0' : undefined}
         >
           <Input
@@ -57,17 +80,34 @@ export function LaunchEmailCapture({
           <LaunchEmailSubmitButton compact={compact} />
         </div>
       </div>
-      <label className="flex gap-3 rounded-md border border-surface-line/80 bg-black/20 p-3 text-sm leading-6 text-neutral-300">
+      <label className="flex gap-3 rounded-md border border-surface-line/80 bg-black/20 p-3 text-sm leading-6 text-neutral-300 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent">
         <input
+          ref={consentRef}
           name="marketingConsent"
+          value={LAUNCH_MARKETING_CONSENT_VALUE}
           type="checkbox"
+          required
+          aria-invalid={consentError ? true : undefined}
+          aria-describedby={consentError ? consentErrorId : undefined}
           className="mt-1 h-4 w-4 rounded border-surface-line bg-surface-ink text-accent focus:ring-accent"
+          onChange={(event) => {
+            if (event.currentTarget.checked) {
+              setClientConsentError(undefined);
+            }
+          }}
+          onInvalid={() => {
+            setClientConsentError(LAUNCH_MARKETING_CONSENT_ERROR);
+            focusConsentCheckbox();
+          }}
         />
         <span>
           I agree to receive launch news, product updates and occasional marketing emails from TCG Hobby. I can unsubscribe
           at any time.
         </span>
       </label>
+      <ErrorMessage id={consentErrorId} aria-live="polite">
+        {consentError}
+      </ErrorMessage>
       <ErrorMessage aria-live="polite">
         {error === 'save' || error === 'limited' ? "We couldn't complete your signup. Please try again." : undefined}
       </ErrorMessage>

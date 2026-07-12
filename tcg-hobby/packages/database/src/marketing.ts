@@ -64,6 +64,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SOURCE_MAX_LENGTH = 120;
 const NAME_MAX_LENGTH = 80;
 const PRIVACY_POLICY_VERSION = '2026-07-11';
+const MARKETING_CONSENT_REQUIRED_ERROR = 'Marketing consent is required for launch-list signup.';
 
 export function normalizeSubscriberEmail(email: string) {
   return email.trim().toLowerCase();
@@ -188,6 +189,10 @@ export async function upsertMarketingSubscriberSignup(input: MarketingSignupInpu
 
   if (!validation.ok) {
     throw new Error(validation.error);
+  }
+
+  if (input.marketingConsent !== true) {
+    throw new Error(MARKETING_CONSENT_REQUIRED_ERROR);
   }
 
   const source = normalizeSubscriberSource(input.source);

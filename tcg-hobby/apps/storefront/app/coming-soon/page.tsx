@@ -72,6 +72,8 @@ export default async function ComingSoonPage({
   const signupError =
     resolvedSearchParams.subscriberSignup === 'invalid'
       ? 'Enter a valid email address.'
+      : resolvedSearchParams.subscriberSignup === 'consent'
+        ? 'consent'
       : resolvedSearchParams.subscriberSignup === 'save' || resolvedSearchParams.subscriberSignup === 'limited'
         ? 'save'
         : undefined;

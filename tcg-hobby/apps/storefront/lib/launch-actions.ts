@@ -3,6 +3,7 @@
 import { upsertMarketingSubscriberSignup, validateSubscriberEmail } from '@tcg-hobby/database';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { LAUNCH_MARKETING_CONSENT_VALUE } from './launch-consent';
 import { sendSubscriberConfirmationEmail } from './marketing-email';
 import { isSignupRateLimited } from './signup-rate-limit';
 
@@ -14,7 +15,7 @@ function getReturnTo(value: FormDataEntryValue | null) {
   return value;
 }
 
-function withSubscriberSignupParam(returnTo: string, value: 'saved' | 'invalid' | 'save' | 'limited') {
+function withSubscriberSignupParam(returnTo: string, value: 'saved' | 'invalid' | 'save' | 'limited' | 'consent') {
   const separator = returnTo.includes('?') ? '&' : '?';
   return `${returnTo}${separator}subscriberSignup=${value}#launch-list`;
 }
@@ -32,7 +33,7 @@ export async function captureLaunchEmailAction(formData: FormData) {
   const email = String(formData.get('email') ?? '');
   const firstName = String(formData.get('firstName') ?? '');
   const source = String(formData.get('source') ?? 'coming-soon-page');
-  const consent = formData.get('marketingConsent') === 'on';
+  const consent = formData.get('marketingConsent') === LAUNCH_MARKETING_CONSENT_VALUE;
   const honeypot = String(formData.get('company') ?? '');
   const returnTo = getReturnTo(formData.get('returnTo'));
   const result = validateSubscriberEmail(email);
@@ -43,6 +44,10 @@ export async function captureLaunchEmailAction(formData: FormData) {
 
   if (honeypot.trim()) {
     redirect(withSubscriberSignupParam(returnTo, 'saved'));
+  }
+
+  if (!consent) {
+    redirect(withSubscriberSignupParam(returnTo, 'consent'));
   }
 
   if (isSignupRateLimited(`${result.email}:${source}`)) {
