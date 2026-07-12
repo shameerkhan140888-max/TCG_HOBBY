@@ -109,11 +109,11 @@ export function LaunchEmailCapture({
         {consentError}
       </ErrorMessage>
       <ErrorMessage aria-live="polite">
-        {error === 'save' || error === 'limited' ? "We couldn't complete your signup. Please try again." : undefined}
+        {error === 'save' || error === 'limited' || error === 'spam' ? "We couldn't complete your signup. Please try again." : undefined}
       </ErrorMessage>
       {saved ? (
         <p className="text-sm font-medium text-emerald-300" aria-live="polite">
-          You&rsquo;re on the list. Please check your inbox for confirmation.
+          Thanks! If this email address is eligible, you&rsquo;re on our launch list and we&rsquo;ll be in touch soon.
         </p>
       ) : null}
       <p className="text-xs leading-5 text-neutral-500">

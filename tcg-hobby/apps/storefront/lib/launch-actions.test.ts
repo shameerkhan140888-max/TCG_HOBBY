@@ -101,11 +101,56 @@ describe('captureLaunchEmailAction', () => {
     }));
   });
 
+  it('returns the same generic success path for active duplicates without a second email', async () => {
+    mocks.upsertMarketingSubscriberSignup.mockResolvedValueOnce({
+      subscriberId: 'subscriber-1',
+      email: 'collector@example.test',
+      firstName: 'Mia',
+      created: false,
+      shouldSendConfirmation: false,
+      unsubscribeToken: 'token-1',
+    });
+
+    await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
+      'NEXT_REDIRECT:/?subscriberSignup=saved#launch-list',
+    );
+
+    expect(mocks.upsertMarketingSubscriberSignup).toHaveBeenCalledTimes(1);
+    expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+  });
+
+  it.each(['unsubscribed', 'suppressed', 'bounced'])('returns generic success for %s duplicate records without email', async () => {
+    mocks.upsertMarketingSubscriberSignup.mockResolvedValueOnce({
+      subscriberId: 'subscriber-1',
+      email: 'collector@example.test',
+      firstName: null,
+      created: false,
+      shouldSendConfirmation: false,
+      unsubscribeToken: 'token-1',
+    });
+
+    await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
+      'NEXT_REDIRECT:/?subscriberSignup=saved#launch-list',
+    );
+
+    expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+  });
+
   it('keeps the honeypot path quiet without writing subscriber data', async () => {
     const formData = createSignupForm();
     formData.set('company', 'bot company');
 
-    await expect(captureLaunchEmailAction(formData)).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=saved#launch-list');
+    await expect(captureLaunchEmailAction(formData)).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=spam#launch-list');
+
+    expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
+    expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid email safely without subscriber persistence or email', async () => {
+    const formData = createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE);
+    formData.set('email', 'not-an-email');
+
+    await expect(captureLaunchEmailAction(formData)).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=invalid#launch-list');
 
     expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();

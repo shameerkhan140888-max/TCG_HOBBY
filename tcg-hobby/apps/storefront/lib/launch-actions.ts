@@ -15,7 +15,7 @@ function getReturnTo(value: FormDataEntryValue | null) {
   return value;
 }
 
-function withSubscriberSignupParam(returnTo: string, value: 'saved' | 'invalid' | 'save' | 'limited' | 'consent') {
+function withSubscriberSignupParam(returnTo: string, value: 'saved' | 'invalid' | 'save' | 'limited' | 'consent' | 'spam') {
   const separator = returnTo.includes('?') ? '&' : '?';
   return `${returnTo}${separator}subscriberSignup=${value}#launch-list`;
 }
@@ -43,7 +43,7 @@ export async function captureLaunchEmailAction(formData: FormData) {
   }
 
   if (honeypot.trim()) {
-    redirect(withSubscriberSignupParam(returnTo, 'saved'));
+    redirect(withSubscriberSignupParam(returnTo, 'spam'));
   }
 
   if (!consent) {

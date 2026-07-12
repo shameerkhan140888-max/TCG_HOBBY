@@ -30,4 +30,11 @@ describe('LaunchEmailCapture', () => {
     expect(markup).toContain('aria-invalid="true"');
     expect(markup).toContain('Please confirm that you agree to receive launch news and product updates.');
   });
+
+  it('renders privacy-safe generic success copy', () => {
+    const markup = renderToStaticMarkup(<LaunchEmailCapture source="coming-soon-page" saved />);
+
+    expect(markup).toContain('Thanks! If this email address is eligible');
+    expect(markup).not.toContain('Please check your inbox for confirmation');
+  });
 });

@@ -200,8 +200,6 @@ export async function upsertMarketingSubscriberSignup(input: MarketingSignupInpu
   const signupTags = uniqueTagSlugs(['launch', ...(input.marketingConsent ? ['newsletter'] : []), ...(input.tags ?? [])]);
 
   return db.$transaction(async (tx) => {
-    const tagIds = await ensureMarketingTags(signupTags, tx);
-
     const existing = await tx.marketingSubscriber.findUnique({
       where: { email: validation.email },
       select: {
@@ -215,19 +213,10 @@ export async function upsertMarketingSubscriberSignup(input: MarketingSignupInpu
       },
     });
 
-    const consentUpdate = buildConsentUpdate(input);
-    const canReactivate = input.marketingConsent && existing?.status === MarketingSubscriberStatus.UNSUBSCRIBED;
-    const statusUpdate = input.marketingConsent && (!existing || canReactivate)
-      ? { status: MarketingSubscriberStatus.ACTIVE, unsubscribedAt: null }
-      : {};
-
     const subscriber = existing
       ? await tx.marketingSubscriber.update({
           where: { id: existing.id },
           data: {
-            ...(firstName ? { firstName } : {}),
-            ...consentUpdate,
-            ...statusUpdate,
             lastUpdatedSource: source,
             lastSignupAt: new Date(),
           },
@@ -247,7 +236,7 @@ export async function upsertMarketingSubscriberSignup(input: MarketingSignupInpu
             source,
             lastUpdatedSource: source,
             unsubscribeToken: createUnsubscribeToken(),
-            ...consentUpdate,
+            ...buildConsentUpdate(input),
           },
           select: {
             id: true,
@@ -259,20 +248,24 @@ export async function upsertMarketingSubscriberSignup(input: MarketingSignupInpu
           },
         });
 
-    await tx.marketingSubscriberTagAssignment.createMany({
-      data: signupTags.map((slug) => ({
-        subscriberId: subscriber.id,
-        tagId: tagIds.get(slug) ?? slug,
-      })),
-      skipDuplicates: true,
-    });
+    if (!existing) {
+      const tagIds = await ensureMarketingTags(signupTags, tx);
+
+      await tx.marketingSubscriberTagAssignment.createMany({
+        data: signupTags.map((slug) => ({
+          subscriberId: subscriber.id,
+          tagId: tagIds.get(slug) ?? slug,
+        })),
+        skipDuplicates: true,
+      });
+    }
 
     return {
       subscriberId: subscriber.id,
       email: subscriber.email,
       firstName: subscriber.firstName,
       created: !existing,
-      shouldSendConfirmation: subscriber.confirmationEmailSentAt === null && subscriber.confirmationEmailLastAttemptAt === null,
+      shouldSendConfirmation: !existing && subscriber.confirmationEmailSentAt === null && subscriber.confirmationEmailLastAttemptAt === null,
       unsubscribeToken: subscriber.unsubscribeToken,
     };
   });

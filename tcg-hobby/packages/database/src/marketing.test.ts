@@ -21,6 +21,7 @@ function createSignupDb(existing: any = null) {
       create: vi.fn(async ({ data }: any) => ({
         id: 'subscriber-1',
         email: data.email,
+        firstName: data.firstName,
         unsubscribeToken: data.unsubscribeToken,
         confirmationEmailSentAt: null,
         confirmationEmailLastAttemptAt: null,
@@ -43,6 +44,20 @@ function createSignupDb(existing: any = null) {
   };
 
   return { db: db as any, tx };
+}
+
+function createExistingSubscriber(status: MarketingSubscriberStatus, overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'subscriber-1',
+    email: 'collector@example.test',
+    firstName: 'Existing',
+    marketingConsent: status === MarketingSubscriberStatus.ACTIVE,
+    status,
+    confirmationEmailSentAt: new Date('2026-01-01'),
+    confirmationEmailLastAttemptAt: new Date('2026-01-01'),
+    unsubscribeToken: 'token-1',
+    ...overrides,
+  };
 }
 
 describe('marketing subscribers', () => {
@@ -87,16 +102,7 @@ describe('marketing subscribers', () => {
   });
 
   it('rejects duplicate signup without consent before subscriber updates', async () => {
-    const existing = {
-      id: 'subscriber-1',
-      email: 'collector@example.test',
-      firstName: null,
-      marketingConsent: false,
-      status: MarketingSubscriberStatus.ACTIVE,
-      confirmationEmailSentAt: new Date('2026-01-01'),
-      confirmationEmailLastAttemptAt: new Date('2026-01-01'),
-      unsubscribeToken: 'token-1',
-    };
+    const existing = createExistingSubscriber(MarketingSubscriberStatus.ACTIVE);
     const { db, tx } = createSignupDb(existing);
 
     await expect(upsertMarketingSubscriberSignup({
@@ -110,27 +116,56 @@ describe('marketing subscribers', () => {
     expect(tx.marketingSubscriberTagAssignment.createMany).not.toHaveBeenCalled();
   });
 
-  it('does not reactivate previously unsubscribed users without explicit consent', async () => {
-    const existing = {
-      id: 'subscriber-1',
-      email: 'collector@example.test',
-      firstName: null,
-      marketingConsent: false,
-      status: MarketingSubscriberStatus.UNSUBSCRIBED,
-      confirmationEmailSentAt: new Date('2026-01-01'),
-      confirmationEmailLastAttemptAt: new Date('2026-01-01'),
-      unsubscribeToken: 'token-1',
-    };
+  it('returns duplicate active signups without resending or overwriting consent history', async () => {
+    const existing = createExistingSubscriber(MarketingSubscriberStatus.ACTIVE);
     const { db, tx } = createSignupDb(existing);
 
-    await expect(upsertMarketingSubscriberSignup({
+    const result = await upsertMarketingSubscriberSignup({
+      email: 'collector@example.test',
+      firstName: 'New Name',
+      source: 'coming-soon-page',
+      marketingConsent: true,
+      consentIp: '127.0.0.1',
+    }, db);
+
+    expect(result.created).toBe(false);
+    expect(result.shouldSendConfirmation).toBe(false);
+    expect(tx.marketingSubscriber.create).not.toHaveBeenCalled();
+    expect(tx.marketingSubscriber.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'subscriber-1' },
+      data: {
+        lastUpdatedSource: 'coming-soon-page',
+        lastSignupAt: expect.any(Date),
+      },
+    }));
+    expect(tx.marketingSubscriberTag.upsert).not.toHaveBeenCalled();
+    expect(tx.marketingSubscriberTagAssignment.createMany).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    MarketingSubscriberStatus.UNSUBSCRIBED,
+    MarketingSubscriberStatus.BOUNCED,
+    MarketingSubscriberStatus.SUPPRESSED,
+  ])('preserves %s duplicate state without confirmation email', async (status) => {
+    const existing = createExistingSubscriber(status, { marketingConsent: false });
+    const { db, tx } = createSignupDb(existing);
+
+    const result = await upsertMarketingSubscriberSignup({
       email: 'collector@example.test',
       source: 'coming-soon-page',
-      marketingConsent: false,
-    }, db)).rejects.toThrow('Marketing consent is required');
+      marketingConsent: true,
+    }, db);
 
-    expect(db.$transaction).not.toHaveBeenCalled();
-    expect(tx.marketingSubscriber.update).not.toHaveBeenCalled();
+    expect(result.created).toBe(false);
+    expect(result.shouldSendConfirmation).toBe(false);
+    expect(tx.marketingSubscriber.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.not.objectContaining({
+        status: MarketingSubscriberStatus.ACTIVE,
+        unsubscribedAt: null,
+        marketingConsent: true,
+      }),
+    }));
+    expect(tx.marketingSubscriberTagAssignment.createMany).not.toHaveBeenCalled();
   });
 
   it('centralizes campaign eligibility', () => {

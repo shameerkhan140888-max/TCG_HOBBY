@@ -74,7 +74,7 @@ export default async function ComingSoonPage({
       ? 'Enter a valid email address.'
       : resolvedSearchParams.subscriberSignup === 'consent'
         ? 'consent'
-      : resolvedSearchParams.subscriberSignup === 'save' || resolvedSearchParams.subscriberSignup === 'limited'
+      : resolvedSearchParams.subscriberSignup === 'save' || resolvedSearchParams.subscriberSignup === 'limited' || resolvedSearchParams.subscriberSignup === 'spam'
         ? 'save'
         : undefined;
   const launchStructuredData = {
