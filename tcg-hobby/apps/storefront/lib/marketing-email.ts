@@ -42,7 +42,7 @@ function escapeHtml(value: string) {
 function buildConfirmationEmail(input: ConfirmationEmailInput) {
   const siteUrl = getSiteUrl();
   const unsubscribeUrl = `${siteUrl}/unsubscribe?token=${encodeURIComponent(input.unsubscribeToken)}`;
-  const homeUrl = `${siteUrl}/`;
+  const logoUrl = 'https://www.tcg-hobby.co.uk/brand/tcg-hobby-horizontal-dark.png';
   const escapedEmail = escapeHtml(input.email);
   const greeting = input.firstName ? `Hi ${input.firstName},` : 'Hi there,';
   const escapedGreeting = escapeHtml(greeting);
@@ -64,13 +64,10 @@ function buildConfirmationEmail(input: ConfirmationEmailInput) {
     'Thank you for being here from the beginning.',
     '',
     'The TCG Hobby Team',
-    'tcg-hobby.co.uk',
     '',
     'This is an automated email from TCG Hobby. Replies are sent to our team at info@tcg-hobby.co.uk.',
     '',
     'You are receiving this email because you signed up through the TCG Hobby website.',
-    '',
-    `Unsubscribe: ${unsubscribeUrl}`,
   ];
   const htmlParagraphs = bodyLines
     .filter((line) => line.trim())
@@ -83,12 +80,18 @@ function buildConfirmationEmail(input: ConfirmationEmailInput) {
     html: `
       <div style="background:#08080a;color:#f5f5f5;font-family:Arial,sans-serif;padding:32px">
         <div style="max-width:560px;margin:0 auto;border:1px solid rgba(255,122,26,0.24);border-radius:12px;background:#101014;padding:28px">
-          <p style="color:#ff7a1a;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;margin:0 0 16px">TCG Hobby</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 18px">
+            <tr>
+              <td align="left" valign="middle" style="padding:0;color:#ff7a1a;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase">TCG Hobby</td>
+              <td align="right" valign="middle" style="padding:0">
+                <img src="${logoUrl}" width="132" alt="TCG Hobby" style="display:block;width:132px;max-width:42vw;height:auto;border:0;outline:none;text-decoration:none" />
+              </td>
+            </tr>
+          </table>
           <h1 style="font-size:26px;line-height:1.2;margin:0 0 12px">${escapedGreeting}</h1>
           <p style="color:#a3a3a3;font-size:13px;line-height:1.5;margin:0 0 20px">Confirmation for ${escapedEmail}</p>
           ${htmlParagraphs}
-          <p style="margin:22px 0 24px"><a href="${homeUrl}" style="display:inline-block;background:#ff7a1a;color:#101014;border-radius:8px;padding:12px 18px;font-weight:700;text-decoration:none">Visit tcg-hobby.co.uk</a></p>
-          <p style="color:#a3a3a3;font-size:13px;line-height:1.5;margin:0"><a href="${unsubscribeUrl}" style="color:#ffb36b">Unsubscribe</a></p>
+          <p style="margin:22px 0 0"><a href="${unsubscribeUrl}" style="display:inline-block;border:1px solid rgba(255,122,26,0.48);border-radius:8px;color:#ffb36b;padding:10px 14px;font-size:13px;font-weight:700;text-decoration:none">Unsubscribe</a></p>
         </div>
       </div>
     `,
