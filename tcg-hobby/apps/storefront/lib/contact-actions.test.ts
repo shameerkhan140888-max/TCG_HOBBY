@@ -77,6 +77,8 @@ describe('sendContactEnquiryAction', () => {
       to: 'info@tcg-hobby.co.uk',
       replyTo: 'mia@example.test',
       subject: 'TCG Hobby contact: Launch question',
+      html: expect.stringContaining('Capital Hobby Group Ltd'),
+      text: expect.stringContaining('Company Number 17336948'),
     }));
   });
 

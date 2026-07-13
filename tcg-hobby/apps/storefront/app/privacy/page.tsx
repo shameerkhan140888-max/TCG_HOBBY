@@ -2,7 +2,16 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { Badge, Container, PageShell, Section } from '@tcg-hobby/ui';
 import { LaunchHeader } from '../../components/launch-header';
-import { getSiteUrl, siteName } from '../../lib/site';
+import {
+  getSiteUrl,
+  legalCompanyDescription,
+  legalCompanyName,
+  legalCompanyNumber,
+  legalRegisteredOffice,
+  primaryContactEmail,
+  siteName,
+  supportEmail,
+} from '../../lib/site';
 
 const lastUpdated = '12 July 2026';
 const description = 'Learn how TCG Hobby collects, stores and protects your personal information.';
@@ -53,7 +62,11 @@ const policySections: PolicySection[] = [
     heading: 'Who We Are',
     body: [
       <>
-        TCG Hobby is a UK-based trading card retailer preparing to launch at{' '}
+        {legalCompanyDescription} It is a company registered in England and Wales under company number {legalCompanyNumber}. Our registered office is{' '}
+        {legalRegisteredOffice.join(', ')}.
+      </>,
+      <>
+        Capital Hobby Group Ltd trading as TCG Hobby is a UK-based trading card retailer preparing to launch at{' '}
         <a href="https://tcg-hobby.co.uk" className="text-accent-soft underline decoration-accent/50 underline-offset-4 hover:text-accent">
           https://tcg-hobby.co.uk
         </a>
@@ -61,8 +74,12 @@ const policySections: PolicySection[] = [
       </>,
       <>
         If you have any questions about this Privacy Policy or how we handle your information, you can contact us at{' '}
-        <a href="mailto:info@tcg-hobby.co.uk" className="text-accent-soft underline decoration-accent/50 underline-offset-4 hover:text-accent">
-          info@tcg-hobby.co.uk
+        <a href={`mailto:${primaryContactEmail}`} className="text-accent-soft underline decoration-accent/50 underline-offset-4 hover:text-accent">
+          {primaryContactEmail}
+        </a>
+        {' '}or for support enquiries at{' '}
+        <a href={`mailto:${supportEmail}`} className="text-accent-soft underline decoration-accent/50 underline-offset-4 hover:text-accent">
+          {supportEmail}
         </a>
         .
       </>,
@@ -72,7 +89,7 @@ const policySections: PolicySection[] = [
     number: '2',
     heading: 'Information We Collect',
     body: [
-      'When you join the TCG Hobby launch list, we collect the information you choose to provide, such as your email address, optional first name, consent status, signup source and signup time.',
+      'When you join the Capital Hobby Group Ltd trading as TCG Hobby launch list, we collect the information you choose to provide, such as your email address, optional first name, consent status, signup source and signup time.',
       'We may also collect limited technical information, such as hashed IP address metadata, to help evidence consent, protect the form from misuse and maintain the security of our service.',
     ],
   },
@@ -96,7 +113,7 @@ const policySections: PolicySection[] = [
     number: '5',
     heading: 'How We Store and Protect Your Information',
     body: [
-      'We store subscriber information in secure systems used to operate the TCG Hobby website and launch-list service.',
+      'We store subscriber information in secure systems used to operate the Capital Hobby Group Ltd trading as TCG Hobby website and launch-list service.',
       'We use reasonable technical and organisational measures designed to protect personal information from unauthorised access, misuse, alteration or loss.',
     ],
   },
@@ -112,7 +129,7 @@ const policySections: PolicySection[] = [
     number: '7',
     heading: 'How Long We Keep Information',
     body: [
-      'We keep launch-list subscriber records for as long as needed to manage the launch list, evidence consent, honour unsubscribe requests and operate TCG Hobby responsibly.',
+      'We keep launch-list subscriber records for as long as needed to manage the launch list, evidence consent, honour unsubscribe requests and operate Capital Hobby Group Ltd trading as TCG Hobby responsibly.',
       'If you unsubscribe, we may retain limited information to ensure your unsubscribe request continues to be respected.',
     ],
   },
@@ -123,8 +140,8 @@ const policySections: PolicySection[] = [
       'Depending on your location and applicable law, you may have rights to access, correct, delete, restrict or object to the use of your personal information.',
       <>
         To make a privacy request, contact us at{' '}
-        <a href="mailto:info@tcg-hobby.co.uk" className="text-accent-soft underline decoration-accent/50 underline-offset-4 hover:text-accent">
-          info@tcg-hobby.co.uk
+        <a href={`mailto:${primaryContactEmail}`} className="text-accent-soft underline decoration-accent/50 underline-offset-4 hover:text-accent">
+          {primaryContactEmail}
         </a>
         .
       </>,
@@ -134,7 +151,7 @@ const policySections: PolicySection[] = [
     number: '9',
     heading: 'Cookies and Similar Technologies',
     body: [
-      'The TCG Hobby website may use essential technologies required for core site functionality, security and performance.',
+      'The Capital Hobby Group Ltd trading as TCG Hobby website may use essential technologies required for core site functionality, security and performance.',
       'If we introduce additional analytics, advertising or preference cookies in future, we will provide appropriate information and controls where required.',
     ],
   },
@@ -142,7 +159,7 @@ const policySections: PolicySection[] = [
     number: '10',
     heading: 'Changes to This Policy',
     body: [
-      'We may update this Privacy Policy from time to time as TCG Hobby develops and our services change.',
+      'We may update this Privacy Policy from time to time as Capital Hobby Group Ltd trading as TCG Hobby develops and our services change.',
       'When we make changes, we will update the Last Updated date shown on this page.',
     ],
   },
@@ -158,7 +175,9 @@ export default function PrivacyPage() {
     dateModified: '2026-07-12',
     publisher: {
       '@type': 'Organization',
-      name: siteName,
+      name: legalCompanyName,
+      alternateName: siteName,
+      identifier: legalCompanyNumber,
       url: siteUrl,
     },
   };

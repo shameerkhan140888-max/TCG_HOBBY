@@ -1,5 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { CatalogueCategory, CatalogueProduct, ReleaseSummary } from '@tcg-hobby/types';
+
+vi.mock('@tcg-hobby/database', () => ({
+  getCatalogueCategories: vi.fn(),
+  getCatalogueProducts: vi.fn(),
+  getFeaturedCatalogueProducts: vi.fn(),
+  getComingSoonHubData: vi.fn(),
+}));
+
 import {
   buildHotProducts,
   buildNewsItems,

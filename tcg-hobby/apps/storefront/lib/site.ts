@@ -21,6 +21,13 @@ export function isComingSoonMode() {
 }
 
 export const siteName = 'TCG Hobby';
+export const legalCompanyName = 'Capital Hobby Group Ltd';
+export const legalTradingName = 'TCG Hobby';
+export const legalCompanyDescription = 'Capital Hobby Group Ltd trading as TCG Hobby.';
+export const legalCompanyNumber = '17336948';
+export const legalRegisteredOffice = ['4-6 Greatorex Street', 'London', 'United Kingdom', 'E1 5NF'] as const;
+export const primaryContactEmail = 'info@tcg-hobby.co.uk';
+export const supportEmail = 'support@tcg-hobby.co.uk';
 export const siteDescription =
   'Premium trading card launches, sealed product drops, collector tools, and player-ready TCG releases.';
 export const launchDescription =

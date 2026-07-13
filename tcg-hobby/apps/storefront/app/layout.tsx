@@ -3,7 +3,18 @@ import type { ReactNode } from 'react';
 import { PageShell } from '@tcg-hobby/ui';
 import { SiteFooter } from '../components/site-footer';
 import { LaunchFooter } from '../components/launch-footer';
-import { getSiteSocialLinks, getSiteUrl, isComingSoonMode, launchDescription, siteDescription, siteName } from '../lib/site';
+import {
+  getSiteSocialLinks,
+  getSiteUrl,
+  isComingSoonMode,
+  launchDescription,
+  legalCompanyDescription,
+  legalCompanyName,
+  legalCompanyNumber,
+  legalRegisteredOffice,
+  siteDescription,
+  siteName,
+} from '../lib/site';
 import './globals.css';
 
 const siteUrl = getSiteUrl();
@@ -55,9 +66,20 @@ export const metadata: Metadata = {
 const organizationStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: siteName,
+  name: legalCompanyName,
+  legalName: legalCompanyName,
+  alternateName: siteName,
+  description: legalCompanyDescription,
+  identifier: legalCompanyNumber,
   url: siteUrl,
   logo: `${siteUrl}/brand/tcg-hobby-horizontal.png`,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: legalRegisteredOffice[0],
+    addressLocality: legalRegisteredOffice[1],
+    addressCountry: legalRegisteredOffice[2],
+    postalCode: legalRegisteredOffice[3],
+  },
   sameAs: getSiteSocialLinks().map((link) => link.href),
 };
 
@@ -69,7 +91,8 @@ const webSiteStructuredData = {
   description: activeDescription,
   publisher: {
     '@type': 'Organization',
-    name: siteName,
+    name: legalCompanyName,
+    alternateName: siteName,
   },
 };
 

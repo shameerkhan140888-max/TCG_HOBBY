@@ -103,6 +103,8 @@ export async function sendContactEnquiryAction(formData: FormData) {
           <p><strong>Subject:</strong> ${safeSubject}</p>
           <p><strong>Message:</strong></p>
           <p>${safeMessage}</p>
+          <hr style="border:0;border-top:1px solid #e5e5e5;margin:20px 0" />
+          <p style="font-size:12px;color:#525252;margin:0">Capital Hobby Group Ltd<br />Trading as TCG Hobby<br />Company Number 17336948</p>
         </div>
       `,
       text: [
@@ -113,6 +115,10 @@ export async function sendContactEnquiryAction(formData: FormData) {
         `Subject: ${subject}`,
         '',
         message,
+        '',
+        'Capital Hobby Group Ltd',
+        'Trading as TCG Hobby',
+        'Company Number 17336948',
       ].join('\n'),
     });
   } catch {

@@ -2,7 +2,15 @@ import type { Metadata } from 'next';
 import { Badge, Container, PageShell, Section } from '@tcg-hobby/ui';
 import { ContactForm } from '../../components/contact-form';
 import { LaunchHeader } from '../../components/launch-header';
-import { siteName } from '../../lib/site';
+import {
+  getSiteUrl,
+  legalCompanyName,
+  legalCompanyNumber,
+  legalRegisteredOffice,
+  primaryContactEmail,
+  siteName,
+  supportEmail,
+} from '../../lib/site';
 
 const description =
   'Contact TCG Hobby for launch questions, customer support, supplier enquiries and account-related matters.';
@@ -67,11 +75,49 @@ export default async function ContactPage({
 }) {
   const resolvedSearchParams = await searchParams;
   const contactStatus = typeof resolvedSearchParams.contactStatus === 'string' ? resolvedSearchParams.contactStatus : undefined;
+  const siteUrl = getSiteUrl();
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    name: 'Contact TCG Hobby',
+    url: `${siteUrl}/contact`,
+    publisher: {
+      '@type': 'Organization',
+      name: legalCompanyName,
+      alternateName: siteName,
+      identifier: legalCompanyNumber,
+      url: siteUrl,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: legalRegisteredOffice[0],
+        addressLocality: legalRegisteredOffice[1],
+        addressCountry: legalRegisteredOffice[2],
+        postalCode: legalRegisteredOffice[3],
+      },
+      contactPoint: [
+        {
+          '@type': 'ContactPoint',
+          email: primaryContactEmail,
+          contactType: 'general enquiries',
+        },
+        {
+          '@type': 'ContactPoint',
+          email: supportEmail,
+          contactType: 'customer support',
+        },
+      ],
+    },
+  };
 
   return (
     <PageShell>
       <LaunchHeader />
       <main className="bg-surface-ink text-neutral-50">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+
         <Section className="border-b border-surface-line bg-[radial-gradient(circle_at_top_right,rgba(255,122,26,0.16),transparent_34%),linear-gradient(135deg,#08080a_0%,#101014_62%,#17120e_100%)] py-12 sm:py-16 lg:py-20">
           <Container>
             <div className="max-w-4xl space-y-6">
