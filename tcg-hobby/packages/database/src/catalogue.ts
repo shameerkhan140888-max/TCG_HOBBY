@@ -10,6 +10,7 @@ import { prisma } from './client';
 import {
   seedCategories,
   seedInventory,
+  seedProductImages,
   seedProducts,
   seedSuppliers,
   toCatalogueCategory,
@@ -20,6 +21,7 @@ import {
 const catalogueProductInclude = {
   category: true,
   inventory: true,
+  images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
   supplierProducts: { include: { supplier: true }, take: 1 },
 } as const satisfies Prisma.ProductInclude;
 
@@ -76,6 +78,7 @@ function resolvePagination(totalItems: number, page: number, pageSize: number): 
 function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct {
   const supplier = product.supplierProducts[0]?.supplier;
   const inventory = product.inventory;
+  const primaryImage = product.images.find((image) => image.isPrimary) ?? product.images[0] ?? null;
 
   if (!inventory || !supplier) {
     throw new Error(`Database seed incomplete for product ${product.slug}`);
@@ -97,6 +100,8 @@ function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct 
     supplierName: supplier.name,
     badge: product.featured ? 'Featured' : product.releaseStatus !== 'RELEASED' ? product.releaseStatus.replace('_', ' ') : product.category.name,
     imageLabel: product.imageLabel,
+    imageUrl: primaryImage?.url ?? null,
+    imageAlt: primaryImage?.altText ?? null,
     releaseStatus: product.releaseStatus,
     releaseDate: product.releaseDate?.toISOString() ?? null,
     expectedDispatchAt: product.expectedDispatchAt?.toISOString() ?? null,
@@ -164,12 +169,17 @@ function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] 
     const inventory = getSeedInventoryByProductSlug(product.slug);
     const category = getSeedCategoryBySlug(product.categorySlug);
     const supplier = getSeedSupplierBySlug(product.supplierSlug);
+    const primaryImage = seedProductImages.find((image) => image.productSlug === product.slug && image.isPrimary) ?? seedProductImages.find((image) => image.productSlug === product.slug) ?? null;
 
     if (!inventory || !category || !supplier) {
       throw new Error(`Incomplete seed data for product ${product.slug}`);
     }
 
-    return toCatalogueProduct(product, inventory, category, supplier);
+    return {
+      ...toCatalogueProduct(product, inventory, category, supplier),
+      imageUrl: primaryImage?.url ?? null,
+      imageAlt: primaryImage?.altText ?? null,
+    };
   });
 }
 

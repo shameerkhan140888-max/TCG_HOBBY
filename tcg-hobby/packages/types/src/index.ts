@@ -58,6 +58,8 @@ export type CatalogueProduct = {
   supplierName: string;
   badge: string;
   imageLabel: string;
+  imageUrl?: string | null;
+  imageAlt?: string | null;
   releaseStatus?: ProductReleaseStatus;
   releaseDate?: string | null;
   expectedDispatchAt?: string | null;

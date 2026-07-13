@@ -40,9 +40,10 @@ export type ProductCardProps = HTMLAttributes<HTMLDivElement> & {
   product: CatalogueProduct;
   href: string;
   actionSlot?: ReactNode;
+  mediaSlot?: ReactNode;
 };
 
-export function ProductCard({ product, href, actionSlot, className, ...props }: ProductCardProps) {
+export function ProductCard({ product, href, actionSlot, mediaSlot, className, ...props }: ProductCardProps) {
   const releaseBadge =
     product.releaseStatus && product.releaseStatus !== 'RELEASED'
       ? product.releaseStatus === 'PREORDER'
@@ -56,9 +57,26 @@ export function ProductCard({ product, href, actionSlot, className, ...props }: 
     <Card className={cn('group h-full overflow-hidden transition-colors hover:border-accent/60', className)} {...props}>
       <CardContent className="flex h-full flex-col gap-4">
         <a className="flex h-full flex-col gap-4" href={href}>
-          <div className="aspect-[5/4] rounded-md border border-surface-line bg-gradient-to-br from-surface-panel via-surface-ink to-accent/20 p-4 transition-transform group-hover:scale-[1.01]">
-            <div className="flex h-full flex-col justify-between">
-              <div className="flex items-center justify-between gap-3">
+          <div className="relative aspect-[5/4] overflow-hidden rounded-md border border-surface-line bg-gradient-to-br from-surface-panel via-surface-ink to-accent/20 transition-transform group-hover:scale-[1.01]">
+            {mediaSlot ? (
+              mediaSlot
+            ) : (
+              <div className="flex h-full flex-col justify-between p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'warning' : product.featured ? 'accent' : 'neutral'}>
+                    {releaseBadge}
+                  </Badge>
+                  <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'accent' : product.inStock ? 'success' : 'warning'}>
+                    {product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'Release soon' : product.inStock ? 'In stock' : 'Low stock'}
+                  </Badge>
+                </div>
+                <div className="self-start rounded-md border border-white/10 bg-black/30 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300">
+                  {product.imageLabel}
+                </div>
+              </div>
+            )}
+            {mediaSlot ? (
+              <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
                 <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'warning' : product.featured ? 'accent' : 'neutral'}>
                   {releaseBadge}
                 </Badge>
@@ -66,10 +84,7 @@ export function ProductCard({ product, href, actionSlot, className, ...props }: 
                   {product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'Release soon' : product.inStock ? 'In stock' : 'Low stock'}
                 </Badge>
               </div>
-              <div className="self-start rounded-md border border-white/10 bg-black/30 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300">
-                {product.imageLabel}
-              </div>
-            </div>
+            ) : null}
           </div>
           <div className="space-y-1">
             <p className="text-sm text-neutral-400">{product.game}</p>

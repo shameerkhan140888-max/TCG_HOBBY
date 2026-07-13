@@ -25,3 +25,34 @@ export const siteDescription =
   'Premium trading card launches, sealed product drops, collector tools, and player-ready TCG releases.';
 export const launchDescription =
   'TCG Hobby is preparing a premium trading card launch experience for sealed product drops, preorders, releases, and opening updates.';
+
+export type SiteSocialLink = {
+  label: 'Instagram' | 'TikTok' | 'X';
+  href: string;
+};
+
+function getConfiguredUrl(value: string | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+export function getSiteSocialLinks(): SiteSocialLink[] {
+  const instagramUrl = getConfiguredUrl(process.env.NEXT_PUBLIC_INSTAGRAM_URL);
+  const tiktokUrl = getConfiguredUrl(process.env.NEXT_PUBLIC_TIKTOK_URL);
+  const xUrl = getConfiguredUrl(process.env.NEXT_PUBLIC_X_URL);
+  const links: Array<SiteSocialLink | null> = [
+    instagramUrl ? { label: 'Instagram', href: instagramUrl } : null,
+    tiktokUrl ? { label: 'TikTok', href: tiktokUrl } : null,
+    xUrl ? { label: 'X', href: xUrl } : null,
+  ];
+
+  return links.filter((link): link is SiteSocialLink => Boolean(link));
+}

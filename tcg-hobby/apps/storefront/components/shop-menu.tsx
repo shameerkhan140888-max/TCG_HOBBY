@@ -12,10 +12,10 @@ type ShopLink = {
 };
 
 const shopLinks: ShopLink[] = [
-  { label: 'Pokémon', href: '/catalogue?search=Pokemon', description: 'Singles, sealed products, and more.' },
-  { label: 'Magic: The Gathering', href: '/catalogue?search=Magic', description: 'Singles, sealed products, and more.' },
-  { label: 'Yu-Gi-Oh!', href: '/catalogue?search=Yu-Gi-Oh', description: 'Singles, sealed products, and more.' },
-  { label: 'One Piece', href: '/catalogue?search=One Piece', description: 'Singles, sealed products, and more.' },
+  { label: 'Pokémon', href: '/catalogue?q=Pokemon', description: 'Singles, sealed products, and more.' },
+  { label: 'Magic: The Gathering', href: '/catalogue?q=Magic', description: 'Singles, sealed products, and more.' },
+  { label: 'Yu-Gi-Oh!', href: '/catalogue?q=Yu-Gi-Oh', description: 'Singles, sealed products, and more.' },
+  { label: 'One Piece', href: '/catalogue?q=One+Piece', description: 'Singles, sealed products, and more.' },
   { label: 'Accessories', href: '/catalogue?category=accessories', description: 'Sleeves, binders, cases, and more.' },
   { label: 'Sealed Products', href: '/catalogue?category=sealed-product', description: 'Booster boxes, tins, and boxes.' },
   { label: 'Coming Soon', href: '/coming-soon', description: 'What is next for the store.' },
