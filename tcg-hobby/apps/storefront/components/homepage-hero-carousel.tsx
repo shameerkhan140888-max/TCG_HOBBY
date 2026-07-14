@@ -59,7 +59,7 @@ export function HomepageHeroCarousel({ slides }: { slides: HomepageHeroSlide[] }
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      <div className="relative min-h-[520px] overflow-hidden bg-surface-ink sm:min-h-[580px] lg:min-h-[640px]">
+      <div className="relative min-h-[540px] overflow-hidden bg-surface-ink sm:min-h-[600px] lg:min-h-[680px]">
         <Image
           key={activeSlide.id}
           src={activeSlide.image.src}
@@ -67,18 +67,18 @@ export function HomepageHeroCarousel({ slides }: { slides: HomepageHeroSlide[] }
           fill
           priority={activeIndex === 0}
           sizes="100vw"
-          className="object-cover object-[68%_center] transition-transform duration-700 motion-reduce:transition-none"
+          className="object-cover object-[62%_center] transition-transform duration-700 motion-reduce:transition-none"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,10,0.98)_0%,rgba(8,8,10,0.9)_30%,rgba(8,8,10,0.54)_54%,rgba(8,8,10,0.16)_82%),linear-gradient(180deg,rgba(8,8,10,0.18),rgba(8,8,10,0.72))]" aria-hidden="true" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,10,0.98)_0%,rgba(8,8,10,0.86)_28%,rgba(8,8,10,0.36)_48%,rgba(8,8,10,0.06)_76%),linear-gradient(180deg,rgba(8,8,10,0.08),rgba(8,8,10,0.64))]" aria-hidden="true" />
 
-        <div className="relative z-10 mx-auto flex min-h-[520px] w-full max-w-7xl flex-col justify-center px-4 py-12 sm:min-h-[580px] sm:px-6 lg:min-h-[640px] lg:px-8">
+        <div className="relative z-10 mx-auto flex min-h-[540px] w-full max-w-7xl flex-col justify-center px-4 py-12 sm:min-h-[600px] sm:px-6 lg:min-h-[680px] lg:px-8">
           <div className="space-y-7">
             <Badge variant="accent">{activeSlide.eyebrow}</Badge>
             <div className="space-y-5">
-              <h1 id={labelledBy} className="max-w-3xl text-4xl font-black leading-tight text-neutral-50 sm:text-5xl lg:text-6xl">
+              <h1 id={labelledBy} className="max-w-2xl text-4xl font-black leading-tight text-neutral-50 sm:text-5xl lg:text-6xl">
                 {activeSlide.headline}
               </h1>
-              <p className="max-w-2xl text-base leading-8 text-neutral-300 sm:text-lg">{activeSlide.body}</p>
+              <p className="max-w-xl text-base leading-8 text-neutral-300 sm:text-lg">{activeSlide.body}</p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button size="lg" asChild>

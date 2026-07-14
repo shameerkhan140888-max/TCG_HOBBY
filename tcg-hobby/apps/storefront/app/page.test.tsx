@@ -60,10 +60,6 @@ import HomePage from './page';
 function homepageData(overrides: Partial<ProductionHomepageData> = {}): ProductionHomepageData {
   return {
     heroSlides: [],
-    releaseHub: {
-      featuredRelease: null,
-      upcomingReleases: [],
-    },
     featuredProducts: [],
     newReleaseProducts: [],
     ...overrides,
@@ -91,9 +87,12 @@ describe('HomePage mode switch', () => {
 
     expect(markup).toContain('Storefront Header');
     expect(markup).toContain('Hero banner');
+    expect(markup).toContain('Popular catalogue categories');
+    expect(markup).toContain('Magic: The Gathering');
     expect(markup).toContain('Featured products');
     expect(markup).toContain('New releases');
-    expect(markup).toContain('Founding member');
+    expect(markup).toContain('Trusted Service');
+    expect(markup).not.toContain('Founding member');
     expect(markup).not.toContain('Shop by game');
     expect(markup).not.toContain('Today');
     expect(markup).not.toContain('Collection and player tools');

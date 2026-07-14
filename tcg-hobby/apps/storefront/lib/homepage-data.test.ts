@@ -4,7 +4,6 @@ import type { CatalogueProduct } from '@tcg-hobby/types';
 vi.mock('@tcg-hobby/database', () => ({
   getCatalogueProducts: vi.fn(),
   getFeaturedCatalogueProducts: vi.fn(),
-  getComingSoonHubData: vi.fn(),
 }));
 
 import {

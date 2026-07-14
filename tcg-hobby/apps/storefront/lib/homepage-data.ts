@@ -1,7 +1,6 @@
-import type { CatalogueProduct, ReleaseSummary } from '@tcg-hobby/types';
+import type { CatalogueProduct } from '@tcg-hobby/types';
 import {
   getCatalogueProducts,
-  getComingSoonHubData,
   getFeaturedCatalogueProducts,
 } from '@tcg-hobby/database';
 
@@ -19,10 +18,6 @@ export type HomepageHeroSlide = {
 
 export type ProductionHomepageData = {
   heroSlides: HomepageHeroSlide[];
-  releaseHub: {
-    featuredRelease: ReleaseSummary | null;
-    upcomingReleases: ReleaseSummary[];
-  };
   featuredProducts: CatalogueProduct[];
   newReleaseProducts: CatalogueProduct[];
 };
@@ -65,8 +60,8 @@ export const homepageHeroSlides: HomepageHeroSlide[] = [
     id: 'future-buylist',
     eyebrow: 'Future buylist',
     headline: 'More ways to grow your hobby are coming.',
-    body: 'Founding members will be first to hear when trade-in and buylist tools become available.',
-    primaryCta: { label: 'Join as a founding member', href: '#newsletter' },
+    body: 'Newsletter subscribers will be first to hear when trade-in and buylist tools become available.',
+    primaryCta: { label: 'Join the launch list', href: '#newsletter' },
     image: {
       src: '/launch/tcg-hobby-collector-hero.png',
       alt: 'Original trading card collector artwork with glowing card in a premium retail environment',
@@ -120,10 +115,9 @@ export function selectHomepageNewReleaseProducts(
 }
 
 export async function getProductionHomepageData(): Promise<ProductionHomepageData> {
-  const [newestProductsResult, featuredProducts, releaseHub] = await Promise.all([
+  const [newestProductsResult, featuredProducts] = await Promise.all([
     getCatalogueProducts({ search: '', category: '', sort: 'newest', page: 1, pageSize: 12 }),
     getFeaturedCatalogueProducts(12),
-    getComingSoonHubData(),
   ]);
 
   const newestProducts = newestProductsResult.products;
@@ -131,10 +125,6 @@ export async function getProductionHomepageData(): Promise<ProductionHomepageDat
 
   return {
     heroSlides: homepageHeroSlides,
-    releaseHub: {
-      featuredRelease: releaseHub.featuredRelease,
-      upcomingReleases: releaseHub.upcomingReleases.slice(0, 3),
-    },
     featuredProducts: selectedFeaturedProducts,
     newReleaseProducts: selectHomepageNewReleaseProducts(newestProducts, selectedFeaturedProducts, 4),
   };

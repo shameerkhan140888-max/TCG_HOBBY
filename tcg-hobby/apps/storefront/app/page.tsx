@@ -11,7 +11,7 @@ import {
   Section,
   WishlistButton,
 } from '@tcg-hobby/ui';
-import type { CatalogueProduct, ReleaseSummary } from '@tcg-hobby/types';
+import type { CatalogueProduct } from '@tcg-hobby/types';
 import { getCustomerNotificationSubscriptions, getWishlistProductIds } from '@tcg-hobby/database';
 import { SiteHeader } from '../components/site-header';
 import { AddToCartButton } from '../components/cart-actions';
@@ -127,7 +127,7 @@ function HomepageProductCard({
   const stockLabel = upcoming ? product.releaseStatus === 'PREORDER' ? 'Pre-order' : 'Coming soon' : product.inStock ? 'In stock' : 'Low stock';
 
   return (
-    <article className="group flex h-full flex-col gap-4 rounded-2xl bg-surface-raised/70 p-4 transition duration-200 hover:-translate-y-1 hover:bg-surface-raised motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+    <article className="group flex h-full flex-col gap-4 rounded-2xl bg-surface-raised/85 p-4 shadow-[0_18px_55px_rgba(0,0,0,0.22)] transition duration-200 hover:-translate-y-1 hover:bg-surface-raised hover:shadow-[0_24px_70px_rgba(255,122,26,0.14)] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
       <a href={`/catalogue/${product.slug}`} className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-base focus:outline-none focus:ring-2 focus:ring-accent">
         <ProductMedia product={product} priority={priority} />
       </a>
@@ -179,6 +179,97 @@ function HomepageProductCard({
   );
 }
 
+const categoryPills = [
+  { label: 'Pokémon', href: '/catalogue?q=Pokemon' },
+  { label: 'Magic: The Gathering', href: '/catalogue?q=Magic' },
+  { label: 'Disney Lorcana', href: '/catalogue?q=Lorcana' },
+  { label: 'One Piece Card Game', href: '/catalogue?q=One+Piece' },
+  { label: 'Yu-Gi-Oh!', href: '/catalogue?q=Yu-Gi-Oh' },
+  { label: 'Accessories', href: '/catalogue?category=accessories' },
+];
+
+function CategoryPillNav() {
+  return (
+    <nav aria-label="Popular catalogue categories" className="bg-surface-ink py-6">
+      <Container>
+        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+          {categoryPills.map((category) => (
+            <a
+              key={category.label}
+              href={category.href}
+              className="shrink-0 rounded-full bg-surface-raised/75 px-5 py-3 text-sm font-bold text-neutral-200 shadow-[0_12px_34px_rgba(0,0,0,0.18)] transition hover:bg-accent hover:text-neutral-950 focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              {category.label}
+            </a>
+          ))}
+        </div>
+      </Container>
+    </nav>
+  );
+}
+
+function SlimArtworkBanner({
+  eyebrow,
+  title,
+  description,
+  href,
+  linkLabel,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  href: string;
+  linkLabel: string;
+}) {
+  return (
+    <Section className="bg-surface-ink py-8 sm:py-10">
+      <Container>
+        <div className="relative overflow-hidden rounded-3xl bg-surface-base px-6 py-8 shadow-[0_22px_80px_rgba(0,0,0,0.26)] sm:px-8 lg:px-10">
+          <Image
+            src="/launch/tcg-hobby-production-hero.png"
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover object-[72%_center] opacity-35"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,10,0.96),rgba(8,8,10,0.76)_46%,rgba(8,8,10,0.2))]" aria-hidden="true" />
+          <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">{eyebrow}</p>
+              <h2 className="text-2xl font-black text-neutral-50 sm:text-3xl">{title}</h2>
+              <p className="max-w-2xl text-sm leading-6 text-neutral-300">{description}</p>
+            </div>
+            <Button asChild variant="outline">
+              <a href={href}>{linkLabel}</a>
+            </Button>
+          </div>
+        </div>
+      </Container>
+    </Section>
+  );
+}
+
+function TrustStrip() {
+  return (
+    <Section className="bg-surface-ink py-10 sm:py-12">
+      <Container>
+        <div className="grid gap-4 rounded-3xl bg-surface-raised/60 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.2)] md:grid-cols-3">
+          {[
+            ['Trusted Service', 'Clear updates and careful support from launch onward.'],
+            ['Competitive Prices', 'Fair retail pricing wherever product conditions allow.'],
+            ['Community Focused', 'Built for UK collectors, players and long-term hobby growth.'],
+          ].map(([title, copy]) => (
+            <div key={title} className="space-y-2 px-2 py-3">
+              <h2 className="text-base font-black text-neutral-50">{title}</h2>
+              <p className="text-sm leading-6 text-neutral-400">{copy}</p>
+            </div>
+          ))}
+        </div>
+      </Container>
+    </Section>
+  );
+}
+
 function SectionHeading({
   eyebrow,
   title,
@@ -200,15 +291,6 @@ function SectionHeading({
       {action}
     </div>
   );
-}
-
-function formatReleaseDate(release: ReleaseSummary): string {
-  return new Date(release.releaseDate).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
 }
 
 function ProductSection({
@@ -307,10 +389,6 @@ export default async function HomePage({
       logo: `${siteUrl}/brand/tcg-hobby-horizontal.png`,
     },
   ];
-  const supportingReleases = homeData.releaseHub.upcomingReleases
-    .filter((release) => release.id !== homeData.releaseHub.featuredRelease?.id)
-    .slice(0, 2);
-
   return (
     <>
       <SiteHeader />
@@ -320,6 +398,7 @@ export default async function HomePage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
         <HomepageHeroCarousel slides={homeData.heroSlides} />
+        <CategoryPillNav />
 
         <ProductSection
           eyebrow="Featured products"
@@ -339,6 +418,14 @@ export default async function HomePage({
           }
         />
 
+        <SlimArtworkBanner
+          eyebrow="Pre-orders"
+          title="Plan ahead without the noise."
+          description="Follow upcoming releases and product windows with clear information, realistic timing and collector-first communication."
+          href="/releases"
+          linkLabel="View releases"
+        />
+
         <ProductSection
           eyebrow="New releases"
           title="Fresh arrivals for launch."
@@ -356,88 +443,6 @@ export default async function HomePage({
             </Button>
           }
         />
-
-        <Section className="bg-surface-base py-16 sm:py-20 lg:py-24">
-          <Container className="space-y-10">
-            <SectionHeading
-              eyebrow="Releases and pre-orders"
-              title="Plan ahead for the next big release."
-              action={
-                <Button asChild variant="outline">
-                  <a href="/releases">View releases</a>
-                </Button>
-              }
-            />
-            {homeData.releaseHub.featuredRelease ? (
-              <div className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
-                <div className="overflow-hidden rounded-3xl bg-[linear-gradient(135deg,rgba(255,122,26,0.18),rgba(18,18,21,0.95)_46%,rgba(8,8,10,1))] p-6 sm:p-8">
-                  <div className="space-y-6">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="warning">
-                        {homeData.releaseHub.featuredRelease.preorderProductCount > 0 ? 'Pre-order' : 'Coming soon'}
-                      </Badge>
-                      <Badge variant="accent">{homeData.releaseHub.featuredRelease.brand}</Badge>
-                    </div>
-                    <div className="space-y-3">
-                      <h2 className="text-3xl font-black leading-tight text-neutral-50 sm:text-4xl">
-                        {homeData.releaseHub.featuredRelease.name}
-                      </h2>
-                      <p className="max-w-3xl text-sm leading-6 text-neutral-300">
-                        {homeData.releaseHub.featuredRelease.announcementText ?? 'Release details are available in the calendar.'}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-300">
-                      <span>{homeData.releaseHub.featuredRelease.game}</span>
-                      <span aria-hidden="true">/</span>
-                      <span>{formatReleaseDate(homeData.releaseHub.featuredRelease)}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                      {authenticated && homeData.releaseHub.featuredRelease.products[0] ? (
-                        <NotifyButton
-                          productId={homeData.releaseHub.featuredRelease.products[0].productId}
-                          subscribed={notificationIds.includes(homeData.releaseHub.featuredRelease.products[0].productId)}
-                          preference="ALL"
-                          action={toggleNotificationAction}
-                          returnTo={returnTo}
-                        />
-                      ) : (
-                        <Button asChild>
-                          <a href={`/login?callbackUrl=${encodeURIComponent(returnTo)}`}>Notify me</a>
-                        </Button>
-                      )}
-                      <Button asChild variant="outline">
-                        <a href="/releases">Release calendar</a>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {supportingReleases.length ? (
-                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
-                    {supportingReleases.map((release) => (
-                      <a
-                        key={release.id}
-                        href="/releases"
-                        className="rounded-2xl bg-surface-raised/75 p-5 transition hover:-translate-y-1 hover:bg-surface-raised focus:outline-none focus:ring-2 focus:ring-accent motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-                      >
-                        <Badge variant="accent">{release.brand}</Badge>
-                        <h3 className="mt-4 text-lg font-black leading-tight text-neutral-50">{release.name}</h3>
-                        <p className="mt-2 text-sm text-neutral-400">{formatReleaseDate(release)}</p>
-                      </a>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            ) : (
-              <div className="rounded-2xl bg-surface-raised/60 p-8 text-center">
-                <h3 className="text-xl font-black text-neutral-50">Release calendar is being prepared</h3>
-                <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-neutral-400">
-                  Upcoming releases will appear here when products are scheduled.
-                </p>
-              </div>
-            )}
-          </Container>
-        </Section>
 
         <Section className="bg-surface-ink py-16 sm:py-20 lg:py-24">
           <Container className="space-y-10">
@@ -465,22 +470,15 @@ export default async function HomePage({
           </Container>
         </Section>
 
-        <Section className="bg-surface-base py-16 sm:py-20 lg:py-24">
-          <Container>
-            <div className="grid gap-8 rounded-3xl bg-[linear-gradient(135deg,rgba(255,122,26,0.18),rgba(18,18,21,0.96)_48%,rgba(8,8,10,1))] p-7 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div className="space-y-4">
-                <Badge variant="accent">Founding member</Badge>
-                <h2 className="text-3xl font-black tracking-tight text-neutral-50 sm:text-4xl">Join before the full storefront opens.</h2>
-                <p className="max-w-3xl text-sm leading-6 text-neutral-300 sm:text-base">
-                  Become a founding member for launch updates, early product news, pre-order alerts and first access to future collector services.
-                </p>
-              </div>
-              <Button asChild size="lg">
-                <a href="#newsletter">Join the list</a>
-              </Button>
-            </div>
-          </Container>
-        </Section>
+        <SlimArtworkBanner
+          eyebrow="Collector essentials"
+          title="Accessories that keep collections display-ready."
+          description="Protect cards, organise binders and prepare for launch day with products chosen for collectors and players."
+          href="/catalogue?category=accessories"
+          linkLabel="Shop accessories"
+        />
+
+        <TrustStrip />
       </main>
     </>
   );
