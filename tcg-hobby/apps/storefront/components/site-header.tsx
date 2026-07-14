@@ -35,11 +35,11 @@ function AccountIcon() {
   );
 }
 
-function BasketIcon() {
+function CartIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
       <path
-        d="M6.5 8.5h11l-1 10h-9l-1-10Zm2.5 0a3 3 0 0 1 6 0M5 8.5h14"
+        d="M4.5 5.5h2.2l2.1 9.4a2 2 0 0 0 1.95 1.56h5.95a2 2 0 0 0 1.9-1.38l1.35-4.15H8.1M10 20a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm8 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
@@ -76,24 +76,24 @@ export async function SiteHeader() {
           </Link>
 
           <Link
-            href="/cart"
-            aria-label={`Basket${basketCount ? `, ${basketCount} item${basketCount === 1 ? '' : 's'}` : ''}`}
-            className="relative inline-flex h-10 w-10 items-center justify-center text-white transition hover:text-orange-400 focus:outline-none focus:ring-2 focus:ring-accent"
-          >
-            <BasketIcon />
-            {basketCount > 0 ? (
-              <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-xs font-bold leading-none text-neutral-950">
-                {basketCount > 99 ? '99+' : basketCount}
-              </span>
-            ) : null}
-          </Link>
-
-          <Link
             href={accountHref}
             aria-label={authenticated ? 'Account' : 'Log in'}
             className="inline-flex h-10 w-10 items-center justify-center text-white transition hover:text-orange-400 focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <AccountIcon />
+          </Link>
+
+          <Link
+            href="/cart"
+            aria-label={`Cart${basketCount ? `, ${basketCount} item${basketCount === 1 ? '' : 's'}` : ''}`}
+            className="relative inline-flex h-10 w-10 items-center justify-center text-white transition hover:text-orange-400 focus:outline-none focus:ring-2 focus:ring-accent"
+          >
+            <CartIcon />
+            {basketCount > 0 ? (
+              <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-xs font-bold leading-none text-neutral-950">
+                {basketCount > 99 ? '99+' : basketCount}
+              </span>
+            ) : null}
           </Link>
         </div>
       </Container>

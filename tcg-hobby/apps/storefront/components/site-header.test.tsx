@@ -34,11 +34,13 @@ describe('SiteHeader', () => {
 
     expect(markup).toContain('aria-label="Open shop menu"');
     expect(markup).toContain('aria-label="Search"');
-    expect(markup).toContain('aria-label="Basket"');
-    expect(markup).toContain('href="/cart"');
     expect(markup).toContain('aria-label="Log in"');
     expect(markup).toContain('href="/login"');
+    expect(markup).toContain('aria-label="Cart"');
+    expect(markup).toContain('href="/cart"');
     expect(markup).toContain('href="/"');
+    expect(markup.indexOf('aria-label="Search"')).toBeLessThan(markup.indexOf('aria-label="Log in"'));
+    expect(markup.indexOf('aria-label="Log in"')).toBeLessThan(markup.indexOf('aria-label="Cart"'));
   });
 
   it('shows the basket count when cart items exist', async () => {
@@ -52,7 +54,7 @@ describe('SiteHeader', () => {
 
     const markup = renderToStaticMarkup(await SiteHeader());
 
-    expect(markup).toContain('aria-label="Basket, 3 items"');
+    expect(markup).toContain('aria-label="Cart, 3 items"');
     expect(markup).toContain('>3</span>');
   });
 
@@ -73,7 +75,7 @@ describe('LaunchHeader', () => {
     const markup = renderToStaticMarkup(<LaunchHeader />);
 
     expect(markup).toContain('Join launch list');
-    expect(markup).not.toContain('aria-label="Basket"');
+    expect(markup).not.toContain('aria-label="Cart"');
     expect(markup).not.toContain('aria-label="Search"');
     expect(markup).not.toContain('aria-label="Open shop menu"');
   });

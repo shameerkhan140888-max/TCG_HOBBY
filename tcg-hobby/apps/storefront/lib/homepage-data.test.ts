@@ -1,20 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { CatalogueCategory, CatalogueProduct, ReleaseSummary } from '@tcg-hobby/types';
+import type { CatalogueProduct } from '@tcg-hobby/types';
 
 vi.mock('@tcg-hobby/database', () => ({
-  getCatalogueCategories: vi.fn(),
   getCatalogueProducts: vi.fn(),
   getFeaturedCatalogueProducts: vi.fn(),
   getComingSoonHubData: vi.fn(),
 }));
 
 import {
-  buildHotProducts,
-  buildNewsItems,
-  buildShopGameCategories,
   dedupeProducts,
-  selectFeaturedProducts,
-  selectNewReleaseProducts,
+  homepageHeroSlides,
+  selectHomepageFeaturedProducts,
+  selectHomepageNewReleaseProducts,
 } from './homepage-data';
 
 function product(overrides: Partial<CatalogueProduct> = {}): CatalogueProduct {
@@ -54,100 +51,66 @@ function product(overrides: Partial<CatalogueProduct> = {}): CatalogueProduct {
   };
 }
 
-function category(overrides: Partial<CatalogueCategory> = {}): CatalogueCategory {
-  return {
-    id: overrides.id ?? 'cat-sealed',
-    name: overrides.name ?? 'Sealed Product',
-    slug: overrides.slug ?? 'sealed-product',
-    description: overrides.description ?? 'Sealed products.',
-    sortOrder: overrides.sortOrder ?? 1,
-    productCount: overrides.productCount ?? 1,
-  };
-}
-
-function release(overrides: Partial<ReleaseSummary> = {}): ReleaseSummary {
-  return {
-    id: overrides.id ?? 'release-1',
-    name: overrides.name ?? 'Release One',
-    slug: overrides.slug ?? 'release-one',
-    brand: overrides.brand ?? 'Pokemon',
-    game: overrides.game ?? 'Pokemon',
-    categorySlug: overrides.categorySlug ?? 'sealed-product',
-    categoryName: overrides.categoryName ?? 'Sealed Product',
-    releaseDate: overrides.releaseDate ?? '2026-08-01T00:00:00.000Z',
-    expectedDispatchAt: overrides.expectedDispatchAt ?? null,
-    expectedArrivalAt: overrides.expectedArrivalAt ?? null,
-    announcementText: overrides.announcementText ?? 'A real release announcement.',
-    releaseNotes: overrides.releaseNotes ?? null,
-    visible: overrides.visible ?? true,
-    featuredOnHomepage: overrides.featuredOnHomepage ?? false,
-    supplierName: overrides.supplierName ?? 'Supplier',
-    productCount: overrides.productCount ?? 1,
-    preorderProductCount: overrides.preorderProductCount ?? 0,
-    comingSoonProductCount: overrides.comingSoonProductCount ?? 1,
-    lowAllocationCount: overrides.lowAllocationCount ?? 0,
-    products: overrides.products ?? [],
-  };
-}
-
 describe('homepage data selection', () => {
-  it('builds valid shop category links without requiring matching products for every tile', () => {
-    const categories = buildShopGameCategories([category({ name: 'Accessories', slug: 'accessories' })], [
-      product({ game: 'Magic: The Gathering', id: 'magic-1' }),
+  it('uses promotional hero slides rather than game-category rotation', () => {
+    expect(homepageHeroSlides.map((slide) => slide.id)).toEqual([
+      'new-releases',
+      'preorders',
+      'accessories',
+      'future-buylist',
     ]);
-
-    expect(categories).toHaveLength(6);
-    expect(categories.every((item) => item.href.startsWith('/catalogue'))).toBe(true);
-    expect(categories.find((item) => item.name === 'Magic: The Gathering')?.available).toBe(true);
-    expect(categories.find((item) => item.name === 'Disney Lorcana')?.available).toBe(false);
-    expect(categories.map((item) => item.href).join(' ')).not.toContain('search=');
+    expect(homepageHeroSlides).toHaveLength(4);
+    expect(homepageHeroSlides.every((slide) => slide.primaryCta.href)).toBe(true);
   });
 
-  it('selects released new products and excludes preorder-only rows', () => {
-    const rows = [
-      product({ id: 'new-1', releaseStatus: 'RELEASED' }),
-      product({ id: 'preorder-1', releaseStatus: 'PREORDER' }),
+  it('selects one featured product set with a maximum of four products', () => {
+    const featured = [
+      product({ id: 'featured-1', featured: true }),
+      product({ id: 'featured-2', featured: true }),
+      product({ id: 'preorder-1', releaseStatus: 'PREORDER', featured: true }),
+    ];
+    const newest = [
+      product({ id: 'featured-1' }),
+      product({ id: 'new-1' }),
       product({ id: 'new-2' }),
+      product({ id: 'new-3' }),
     ];
 
-    expect(selectNewReleaseProducts(rows).map((item) => item.id)).toEqual(['new-1', 'new-2']);
+    const selected = selectHomepageFeaturedProducts(featured, newest);
+
+    expect(selected).toHaveLength(4);
+    expect(selected.map((item) => item.id)).toEqual(['featured-1', 'featured-2', 'new-1', 'new-2']);
+    expect(new Set(selected.map((item) => item.id)).size).toBe(selected.length);
   });
 
-  it('filters featured duplicates already shown in new releases', () => {
-    const rows = [product({ id: 'new-1' }), product({ id: 'featured-1' })];
+  it('selects new releases separately without duplicating featured products', () => {
+    const selected = selectHomepageNewReleaseProducts(
+      [
+        product({ id: 'featured-1' }),
+        product({ id: 'new-1' }),
+        product({ id: 'new-2' }),
+        product({ id: 'new-3' }),
+        product({ id: 'new-4' }),
+        product({ id: 'new-5' }),
+      ],
+      [product({ id: 'featured-1' })],
+    );
 
-    expect(selectFeaturedProducts(rows, new Set(['new-1']))).toEqual([rows[1]]);
+    expect(selected.map((item) => item.id)).toEqual(['new-1', 'new-2', 'new-3', 'new-4']);
+  });
+
+  it('can include one upcoming product in featured products when there is room', () => {
+    const selected = selectHomepageFeaturedProducts(
+      [product({ id: 'featured-1', featured: true }), product({ id: 'preorder-1', releaseStatus: 'PREORDER', featured: true })],
+      [product({ id: 'new-1' })],
+    );
+
+    expect(selected.map((item) => item.id)).toEqual(['featured-1', 'new-1', 'preorder-1']);
   });
 
   it('deduplicates products by id while preserving first appearance', () => {
     const rows = [product({ id: 'a', name: 'First A' }), product({ id: 'b' }), product({ id: 'a', name: 'Second A' })];
 
     expect(dedupeProducts(rows).map((item) => item.name)).toEqual(['First A', 'Product One']);
-  });
-
-  it('builds deterministic hot products without fabricated analytics', () => {
-    const rows = [
-      product({ id: 'standard', featured: false, stockOnHand: 2 }),
-      product({ id: 'featured', featured: true, stockOnHand: 1 }),
-      product({ id: 'oos', inStock: false, stockOnHand: 0 }),
-    ];
-
-    const hotProducts = buildHotProducts(rows);
-
-    expect(hotProducts.map((item) => item.product.id)).toEqual(['featured', 'standard']);
-    expect(hotProducts[0]?.badge).toBe('Popular');
-    expect(hotProducts.map((item) => item.reason).join(' ')).toContain('deterministic');
-  });
-
-  it('builds news items from real release announcements', () => {
-    const items = buildNewsItems([release({ name: 'August Wave', brand: 'One Piece Card Game' })]);
-
-    expect(items).toEqual([
-      expect.objectContaining({
-        title: 'August Wave',
-        label: 'One Piece Card Game',
-        href: '/releases',
-      }),
-    ]);
   });
 });

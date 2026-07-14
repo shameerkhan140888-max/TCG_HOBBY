@@ -40,7 +40,7 @@ vi.mock('../components/cart-actions', () => ({
 }));
 
 vi.mock('../components/homepage-hero-carousel', () => ({
-  HomepageHeroCarousel: () => <section>Hero carousel</section>,
+  HomepageHeroCarousel: () => <section>Hero banner</section>,
 }));
 
 vi.mock('../lib/wishlist', () => ({
@@ -60,24 +60,12 @@ import HomePage from './page';
 function homepageData(overrides: Partial<ProductionHomepageData> = {}): ProductionHomepageData {
   return {
     heroSlides: [],
-    categories: [
-      {
-        name: 'Pokemon',
-        href: '/catalogue?q=Pokemon',
-        description: 'Cards and sealed products.',
-        accent: 'Orange',
-        available: true,
-      },
-    ],
-    newReleases: [],
     releaseHub: {
       featuredRelease: null,
       upcomingReleases: [],
     },
     featuredProducts: [],
-    hotProducts: [],
-    tools: [],
-    news: [],
+    newReleaseProducts: [],
     ...overrides,
   };
 }
@@ -98,12 +86,16 @@ describe('HomePage mode switch', () => {
     expect(mocks.getProductionHomepageData).not.toHaveBeenCalled();
   });
 
-  it('renders the production storefront homepage when launch mode is disabled', async () => {
+  it('renders the refined production storefront homepage when launch mode is disabled', async () => {
     const markup = renderToStaticMarkup(await HomePage({ searchParams: Promise.resolve({}) }));
 
     expect(markup).toContain('Storefront Header');
-    expect(markup).toContain('Shop by game');
-    expect(markup).toContain('Stay close to launch drops.');
-    expect(markup).toContain('name="marketingConsent"');
+    expect(markup).toContain('Hero banner');
+    expect(markup).toContain('Featured products');
+    expect(markup).toContain('New releases');
+    expect(markup).toContain('Founding member');
+    expect(markup).not.toContain('Shop by game');
+    expect(markup).not.toContain('Today');
+    expect(markup).not.toContain('Collection and player tools');
   });
 });
