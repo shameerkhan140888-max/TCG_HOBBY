@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import React from 'react';
 import { Badge, Container, PageShell, Section } from '@tcg-hobby/ui';
 import { ContactForm } from '../../components/contact-form';
 import { LaunchHeader } from '../../components/launch-header';

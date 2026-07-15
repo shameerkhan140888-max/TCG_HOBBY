@@ -75,6 +75,7 @@ describe('LaunchHeader', () => {
     const markup = renderToStaticMarkup(<LaunchHeader />);
 
     expect(markup).toContain('Join launch list');
+    expect(markup).toContain('href="/#join-launch-list"');
     expect(markup).not.toContain('aria-label="Cart"');
     expect(markup).not.toContain('aria-label="Search"');
     expect(markup).not.toContain('aria-label="Open shop menu"');

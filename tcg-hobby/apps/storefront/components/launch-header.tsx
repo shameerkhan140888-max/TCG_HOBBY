@@ -6,8 +6,8 @@ import { BrandMark, Button, Container } from '@tcg-hobby/ui';
 
 export function LaunchHeader() {
   const handleJoinClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    const form = document.getElementById('launch-list');
-    const email = document.getElementById('launch-email-holding-page-hero');
+    const form = document.getElementById('join-launch-list');
+    const email = document.getElementById('launch-email-coming-soon-page');
 
     if (!form) {
       return;
@@ -20,7 +20,7 @@ export function LaunchHeader() {
       email?.focus({ preventScroll: true });
     }, 450);
 
-    window.history.replaceState(null, '', '#launch-list');
+    window.history.replaceState(null, '', '#join-launch-list');
   };
 
   return (
@@ -34,7 +34,7 @@ export function LaunchHeader() {
           size="sm"
           className="transition-[background-color,box-shadow,filter,transform] duration-200 ease-out hover:-translate-y-0.5 hover:bg-[linear-gradient(135deg,#ff8a2a,#ff6f12)] hover:shadow-[0_0_28px_rgba(255,122,26,0.34)] hover:brightness-105 focus-visible:-translate-y-0.5 focus-visible:shadow-[0_0_28px_rgba(255,122,26,0.34)] motion-reduce:transform-none"
         >
-          <a href="#launch-list" onClick={handleJoinClick}>
+          <a href="/#join-launch-list" onClick={handleJoinClick}>
             Join launch list
           </a>
         </Button>
