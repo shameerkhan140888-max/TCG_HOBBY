@@ -4,6 +4,7 @@ import { copyFile, mkdir, readFile, readdir, stat, writeFile } from 'node:fs/pro
 import path from 'node:path';
 import { Prisma, type PrismaClient } from '@prisma/client';
 import { prisma } from './client';
+import { assertProductImportLookupData } from './canonical-seed';
 
 export type ProductImportGame = 'POKEMON' | 'MAGIC' | 'ONE_PIECE' | 'LORCANA' | 'YUGIOH' | 'ACCESSORIES';
 export type ProductLifecycleState =
@@ -90,6 +91,7 @@ export type ProductImportManifest = {
 export type NormalisedProductImportInput = ProductImportManifest & {
   slug: string;
   sku: string;
+  skuWasProvided: boolean;
   fullDescription: string;
   seo: {
     title: string;
@@ -161,6 +163,16 @@ export type ProductImportPlan = {
   media: ProductImportMediaOutput[];
   stages: ProductImportStage[];
   warnings: string[];
+};
+
+type ProductImportMatch = ProductImportPlan['productMatch'];
+
+type ExistingProductMatch = {
+  productMatch: Exclude<ProductImportMatch, 'new'>;
+  productId: string;
+} | {
+  productMatch: 'new';
+  productId: undefined;
 };
 
 export type ProductImportResult = ProductImportPlan & {
@@ -422,7 +434,8 @@ export function validateProductImportManifest(
   const name = readString(rawManifest, 'name');
   const derivedSlug = name ? slugifyProductName(name) : '';
   const slug = readString(rawManifest, 'slug') ?? derivedSlug;
-  const sku = readString(rawManifest, 'sku') ?? deriveSku(slug);
+  const suppliedSku = readString(rawManifest, 'sku');
+  const sku = suppliedSku ?? deriveSku(slug);
   const game = parseEnum(readString(rawManifest, 'game'), ['POKEMON', 'MAGIC', 'ONE_PIECE', 'LORCANA', 'YUGIOH', 'ACCESSORIES'] as const);
   const category = readString(rawManifest, 'category');
   const priceMinor = readInteger(rawManifest, 'priceMinor');
@@ -509,7 +522,7 @@ export function validateProductImportManifest(
   const importId = readString(rawManifest, 'importId');
   const barcode = readString(rawManifest, 'barcode');
 
-  if (!readString(rawManifest, 'sku')) {
+  if (!suppliedSku) {
     warnings.push(`SKU omitted. Import will use internal SKU ${sku}.`);
   }
 
@@ -543,6 +556,7 @@ export function validateProductImportManifest(
     name,
     slug,
     sku,
+    skuWasProvided: Boolean(suppliedSku),
     game,
     category,
     priceMinor,
@@ -655,6 +669,47 @@ function outputFilenameForImage(image: ProductImportImage, sortOrder: number): s
   return `gallery-${String(sortOrder).padStart(2, '0')}${extension}`;
 }
 
+function formatDatabaseLookupError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.stack ?? error.message;
+  }
+
+  return String(error);
+}
+
+async function findExistingProductForImport(
+  input: NormalisedProductImportInput,
+  db: PrismaClient | Prisma.TransactionClient,
+): Promise<ExistingProductMatch> {
+  const lookupStages: Array<{
+    productMatch: Exclude<ProductImportMatch, 'new'>;
+    value: string | undefined;
+    where: (value: string) => Prisma.ProductWhereUniqueInput;
+  }> = [
+    { productMatch: 'importId', value: input.importId, where: (value) => ({ importId: value }) },
+    { productMatch: 'id', value: input.id, where: (value) => ({ id: value }) },
+    { productMatch: 'sku', value: input.skuWasProvided ? input.sku : undefined, where: (value) => ({ sku: value }) },
+    { productMatch: 'slug', value: input.slug, where: (value) => ({ slug: value }) },
+  ];
+
+  for (const stage of lookupStages) {
+    if (!stage.value) {
+      continue;
+    }
+
+    const product = await db.product.findUnique({
+      where: stage.where(stage.value),
+      select: { id: true },
+    });
+
+    if (product) {
+      return { productMatch: stage.productMatch, productId: product.id };
+    }
+  }
+
+  return { productMatch: 'new', productId: undefined };
+}
+
 export async function createProductImportPlan(folderPath: string, db: PrismaClient | Prisma.TransactionClient = prisma): Promise<ProductImportPlan> {
   const validation = await validateProductImportFolder(folderPath);
   if (!validation.valid || !validation.input) {
@@ -662,28 +717,13 @@ export async function createProductImportPlan(folderPath: string, db: PrismaClie
   }
 
   const { input } = validation;
-  let product: { id: string } | null = null;
-  let slugProduct: { id: string } | null = null;
+  let existingProduct: ExistingProductMatch;
   try {
-    product = input.importId
-      ? await db.product.findUnique({ where: { importId: input.importId } })
-      : input.id
-        ? await db.product.findUnique({ where: { id: input.id } })
-        : input.sku
-          ? await db.product.findUnique({ where: { sku: input.sku } })
-          : null;
-    slugProduct = product ? null : await db.product.findUnique({ where: { slug: input.slug } });
+    existingProduct = await findExistingProductForImport(input, db);
+    await assertProductImportLookupData(db, input);
   } catch (error) {
-    const errorMessage =
-      error instanceof Error
-        ? error.message.split('\n').map((line) => line.trim()).find(Boolean) ?? error.message
-        : String(error);
-    validation.warnings.push(
-      `Database lookup unavailable during planning: ${errorMessage}`,
-    );
+    throw new Error(`Product import database lookup failed. Dry-run/import stopped before planning changes.\n${formatDatabaseLookupError(error)}`);
   }
-  const matchedProduct = product ?? slugProduct;
-  const productMatch: ProductImportPlan['productMatch'] = input.importId && product ? 'importId' : input.id && product ? 'id' : product ? 'sku' : slugProduct ? 'slug' : 'new';
   const outputRoot = path.join(PUBLIC_STOREFRONT_PRODUCTS_ROOT, gameFolderByImportGame[input.game], input.slug);
   const media: ProductImportMediaOutput[] = [];
 
@@ -731,11 +771,11 @@ export async function createProductImportPlan(folderPath: string, db: PrismaClie
 
   return {
     input,
-    productMatch,
+    productMatch: existingProduct.productMatch,
     media,
     stages: PIPELINE_STAGES,
     warnings: validation.warnings,
-    ...(matchedProduct?.id ? { productId: matchedProduct.id } : {}),
+    ...(existingProduct.productId ? { productId: existingProduct.productId } : {}),
   };
 }
 

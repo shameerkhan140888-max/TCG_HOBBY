@@ -4,11 +4,59 @@ TCG Hobby products are imported through a reviewed folder workflow. The importer
 
 ## Add A Product In Five Steps
 
-1. Create `product-imports/{game}/{product-slug}/`.
-2. Add `product.json`, `media.json` and approved images under `images/`.
-3. Run `npm run product:validate -- --path product-imports/{game}/{product-slug}`.
-4. Run `npm run product:dry-run -- --path product-imports/{game}/{product-slug}` and review planned changes.
-5. Run `npm run product:import -- --path product-imports/{game}/{product-slug}`, review in Admin, then publish only after approval.
+1. Run `npm run db:seed` to ensure canonical lookup data exists.
+2. Create `product-imports/{game}/{product-slug}/`.
+3. Add `product.json`, `media.json` and approved images under `images/`.
+4. Run `npm run product:validate -- --path product-imports/{game}/{product-slug}`.
+5. Run `npm run product:dry-run -- --path product-imports/{game}/{product-slug}` and review planned changes.
+6. Run `npm run product:import -- --path product-imports/{game}/{product-slug}`, review in Admin, then publish only after approval.
+
+## Seed Process
+
+`npm run db:seed` inserts only canonical lookup data required by imports. It does not wipe products, orders, carts, users or customer data.
+
+The seed prints permanent operational progress logs:
+
+```text
+Seed starting...
+Connecting to database...
+Seeding categories...
+Seeding suppliers...
+Seeding products...
+Seeding users...
+Verifying canonical lookup data...
+Disconnecting Prisma...
+Seed complete.
+```
+
+`Seeding products...` and `Seeding users...` are retained as operational checkpoints. The production lookup seed does not create demo products or demo users.
+
+## Required Lookup Data
+
+The importer expects canonical lookup rows to exist before dry-run or import. Run `npm run db:seed` after migrations and before the first product import.
+
+Canonical category slugs:
+
+- `pokemon-tcg`
+- `magic-the-gathering`
+- `one-piece-card-game`
+- `accessories`
+- `sealed-product`
+- `singles`
+- `supplies`
+- `events`
+
+Canonical supplier slugs:
+
+- `card-citadel`
+- `gamegrid-wholesale`
+
+The Mega Greninja manifest uses:
+
+- `category: "sealed-product"`
+- `supplierSlug: "card-citadel"`
+
+If a category or supplier is missing, dry-run/import fails before writing product data and reports the exact missing slug.
 
 ## Folder Structure
 
@@ -108,6 +156,7 @@ Each stage is represented in the dry-run output and covered by importer tests wh
 ## Commands
 
 ```bash
+npm run db:seed
 npm run product:validate -- --path product-imports/pokemon/example-product
 npm run product:dry-run -- --path product-imports/pokemon/example-product
 npm run product:import -- --path product-imports/pokemon/example-product
@@ -121,6 +170,14 @@ npm run product:import:all
 `product:import` creates or updates one product, copies media, registers gallery data and records audit history.
 
 `product:import:all` processes every product folder independently and reports success or failure for each one.
+
+## Troubleshooting
+
+If seed appears to stop after Prisma config output, check that the command is running the current lookup-only seed and that the database URL is reachable from the process. The seed should always print `Seed starting...` before connecting.
+
+If dry-run fails with `Product import prerequisite missing: category "..." does not exist`, run `npm run db:seed` and confirm the manifest category slug matches one of the canonical category slugs above.
+
+If dry-run fails with `Product import database lookup failed`, fix the database connection first. Dry-run must never treat a failed database lookup as a new product.
 
 ## Idempotent Updates
 

@@ -1,7 +1,7 @@
 import { mkdtemp, mkdir, writeFile, copyFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createProductImportPlan,
   derivePublicStockState,
@@ -180,13 +180,39 @@ describe('product import validation', () => {
 });
 
 describe('product import planning', () => {
+  function databaseWithProductMatches(matches: Record<string, { id: string } | null> = {}) {
+    const findUnique = vi.fn(async ({ where }: { where: Record<string, string> }) => {
+      const [field, value] = Object.entries(where)[0] ?? [];
+      return field && value ? matches[`${field}:${value}`] ?? null : null;
+    });
+    const categoryFindUnique = vi.fn(async ({ where }: { where: { slug: string } }) =>
+      where.slug === 'sealed-product' ? { slug: where.slug } : null,
+    );
+    const supplierFindUnique = vi.fn(async ({ where }: { where: { slug: string } }) =>
+      where.slug === 'card-citadel' ? { slug: where.slug } : null,
+    );
+
+    return {
+      db: {
+        product: {
+          findUnique,
+        },
+        category: {
+          findUnique: categoryFindUnique,
+        },
+        supplier: {
+          findUnique: supplierFindUnique,
+        },
+      },
+      findUnique,
+      categoryFindUnique,
+      supplierFindUnique,
+    };
+  }
+
   it('orders media, keeps the primary first and plans card-safe output', async () => {
     const folder = await createImportFolder(validManifest());
-    const db = {
-      product: {
-        findUnique: async () => null,
-      },
-    };
+    const { db } = databaseWithProductMatches();
 
     const plan = await createProductImportPlan(folder, db as never);
 
@@ -210,6 +236,103 @@ describe('product import planning', () => {
       isPrimary: true,
     });
     expect(plan.media.some((item) => item.outputFilename === 'primary-card.webp')).toBe(true);
+  });
+
+  it('skips absent optional identifiers and falls back to slug lookup', async () => {
+    const folder = await createImportFolder(validManifest({ sku: undefined }));
+    const { db, findUnique } = databaseWithProductMatches();
+
+    const plan = await createProductImportPlan(folder, db as never);
+
+    expect(plan.productMatch).toBe('new');
+    expect(findUnique).toHaveBeenCalledTimes(1);
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { slug: 'test-product' },
+      select: { id: true },
+    });
+  });
+
+  it('matches an existing product by slug after importId, id and sku miss', async () => {
+    const folder = await createImportFolder(
+      validManifest({
+        importId: 'import-123',
+        id: 'missing-product-id',
+        sku: 'MISSING-SKU',
+      }),
+    );
+    const { db, findUnique } = databaseWithProductMatches({
+      'slug:test-product': { id: 'existing-product-id' },
+    });
+
+    const plan = await createProductImportPlan(folder, db as never);
+
+    expect(plan.productMatch).toBe('slug');
+    expect(plan.productId).toBe('existing-product-id');
+    expect(findUnique).toHaveBeenNthCalledWith(1, {
+      where: { importId: 'import-123' },
+      select: { id: true },
+    });
+    expect(findUnique).toHaveBeenNthCalledWith(2, {
+      where: { id: 'missing-product-id' },
+      select: { id: true },
+    });
+    expect(findUnique).toHaveBeenNthCalledWith(3, {
+      where: { sku: 'MISSING-SKU' },
+      select: { id: true },
+    });
+    expect(findUnique).toHaveBeenNthCalledWith(4, {
+      where: { slug: 'test-product' },
+      select: { id: true },
+    });
+  });
+
+  it('stops planning when database lookup fails', async () => {
+    const folder = await createImportFolder(validManifest());
+    const db = {
+      product: {
+        findUnique: vi.fn(async () => {
+          throw new Error('database unavailable');
+        }),
+      },
+      category: {
+        findUnique: vi.fn(),
+      },
+      supplier: {
+        findUnique: vi.fn(),
+      },
+    };
+
+    await expect(createProductImportPlan(folder, db as never)).rejects.toThrow('Product import database lookup failed');
+  });
+
+  it('stops planning with a clear message when the canonical category is missing', async () => {
+    const folder = await createImportFolder(validManifest({ category: 'sealed-product' }));
+    const { db } = databaseWithProductMatches();
+    db.category.findUnique = vi.fn(async () => null);
+
+    await expect(createProductImportPlan(folder, db as never)).rejects.toThrow('category "sealed-product" does not exist');
+  });
+
+  it('returns new only after successful lookups find no existing product', async () => {
+    const folder = await createImportFolder(validManifest({ importId: 'import-123' }));
+    const { db, findUnique } = databaseWithProductMatches();
+
+    const plan = await createProductImportPlan(folder, db as never);
+
+    expect(plan.productMatch).toBe('new');
+    expect(plan.productId).toBeUndefined();
+    expect(findUnique).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not publish genuinely new products unless the manifest explicitly requests publication', async () => {
+    const folder = await createImportFolder(validManifest({ lifecycleState: undefined, status: undefined, visible: undefined }));
+    const { db } = databaseWithProductMatches();
+
+    const plan = await createProductImportPlan(folder, db as never);
+
+    expect(plan.productMatch).toBe('new');
+    expect(plan.input.lifecycleState).toBe('DRAFT');
+    expect(plan.input.visible).toBe(false);
   });
 
   it('does not require WebP-only inputs', async () => {

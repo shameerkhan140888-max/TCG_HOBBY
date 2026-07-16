@@ -1,13 +1,70 @@
 import path from 'node:path';
-import {
-  createProductImportPlan,
-  discoverProductImportFolders,
-  importProductFromFolder,
-  validateProductImportFolder,
-} from '../packages/database/src/product-import';
-import { prisma } from '../packages/database/src/client';
+import { existsSync, readFileSync } from 'node:fs';
+import type { validateProductImportFolder } from '../packages/database/src/product-import';
 
 type Command = 'validate' | 'dry-run' | 'import' | 'import-all';
+type PrismaDisconnectable = {
+  $disconnect(): Promise<void>;
+};
+
+let prismaClient: PrismaDisconnectable | undefined;
+
+function applyEnvFile(filePath: string, options: { overrideInvalidDatabaseUrl?: boolean } = {}): void {
+  if (!existsSync(filePath)) {
+    return;
+  }
+
+  const contents = readFileSync(filePath, 'utf8');
+  for (const rawLine of contents.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) {
+      continue;
+    }
+
+    const separatorIndex = line.indexOf('=');
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const key = line.slice(0, separatorIndex).trim();
+    if (!key) {
+      continue;
+    }
+
+    const existingValue = process.env[key];
+    const shouldKeepExisting =
+      existingValue &&
+      !(options.overrideInvalidDatabaseUrl && key === 'DATABASE_URL' && !isPostgresUrl(existingValue));
+    if (shouldKeepExisting) {
+      continue;
+    }
+
+    let value = line.slice(separatorIndex + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[key] = value;
+  }
+}
+
+function isPostgresUrl(value: string | undefined): boolean {
+  return Boolean(value?.startsWith('postgresql://') || value?.startsWith('postgres://'));
+}
+
+function bootstrapDatabaseEnv(): void {
+  const rootDir = process.cwd();
+  applyEnvFile(path.join(rootDir, '.env.local'), { overrideInvalidDatabaseUrl: true });
+  applyEnvFile(path.join(rootDir, '.env'), { overrideInvalidDatabaseUrl: true });
+
+  if (isPostgresUrl(process.env.DIRECT_DATABASE_URL) && !isPostgresUrl(process.env.DATABASE_URL)) {
+    process.env.DATABASE_URL = process.env.DIRECT_DATABASE_URL;
+  }
+
+  if (!process.env.DATABASE_URL) {
+    applyEnvFile(path.join(rootDir, '.env.example'));
+  }
+}
 
 function readArg(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -40,6 +97,15 @@ function printValidationResult(result: Awaited<ReturnType<typeof validateProduct
 }
 
 async function main(): Promise<void> {
+  bootstrapDatabaseEnv();
+  const {
+    createProductImportPlan,
+    discoverProductImportFolders,
+    importProductFromFolder,
+    validateProductImportFolder: validateFolder,
+  } = await import('../packages/database/src/product-import');
+  const { prisma } = await import('../packages/database/src/client');
+  prismaClient = prisma;
   const command = process.argv[2] as Command | undefined;
 
   if (!command || !['validate', 'dry-run', 'import', 'import-all'].includes(command)) {
@@ -47,7 +113,7 @@ async function main(): Promise<void> {
   }
 
   if (command === 'validate') {
-    printValidationResult(await validateProductImportFolder(resolveImportPath()));
+    printValidationResult(await validateFolder(resolveImportPath()));
     return;
   }
 
@@ -109,5 +175,5 @@ main()
     process.exitCode = 1;
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await prismaClient?.$disconnect();
   });

@@ -46,7 +46,13 @@ function applyEnvFile(filePath) {
   }
 }
 
+applyEnvFile(resolve(rootDir, '.env.local'));
 applyEnvFile(resolve(rootDir, '.env'));
+applyEnvFile(resolve(rootDir, 'packages/database/.env.local'));
+applyEnvFile(resolve(rootDir, 'packages/database/.env'));
+if (env.DIRECT_DATABASE_URL && (!env.DATABASE_URL || !/^postgres(?:ql)?:\/\//.test(env.DATABASE_URL))) {
+  env.DATABASE_URL = env.DIRECT_DATABASE_URL;
+}
 applyEnvFile(resolve(rootDir, '.env.example'));
 
 if (process.platform === 'win32' && existsSync(localEnginePath) && !env.PRISMA_QUERY_ENGINE_LIBRARY) {
@@ -71,7 +77,7 @@ if (process.platform === 'win32' && existsSync(generatedClientDir)) {
 
 const prismaArgs = process.argv.slice(2);
 const commandArgs = prismaArgs.length ? prismaArgs : ['generate'];
-if (process.platform === 'win32' && commandArgs[0] === 'generate') {
+if (process.platform === 'win32' && commandArgs[0] === 'generate' && env.TCG_HOBBY_PRISMA_NO_ENGINE === '1') {
   commandArgs.push('--no-engine');
 }
 const result = spawnSync(process.execPath, [prismaCli, ...commandArgs], {

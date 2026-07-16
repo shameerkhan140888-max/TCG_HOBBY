@@ -185,6 +185,14 @@ export type {
   ShippingPromotionType,
 } from './product-import';
 export {
+  assertProductImportLookupData,
+  canonicalCategories,
+  canonicalSuppliers,
+  seedCanonicalLookupData,
+  verifyCanonicalLookupData,
+} from './canonical-seed';
+export type { CanonicalCategory, CanonicalSupplier } from './canonical-seed';
+export {
   DEFAULT_MARKETING_TAGS,
   createMarketingCampaignDraft,
   exportMarketingSubscribersCsv,
