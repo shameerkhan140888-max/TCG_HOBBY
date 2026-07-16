@@ -38,6 +38,7 @@ export default async function CheckoutPage() {
                 shippingMethods: data.shippingMethods,
               }}
               cartSubtotalMinor={data.cart.subtotalMinor}
+              cartItems={data.cart.items}
               taxEstimateMinor={calculateVatEstimateMinor(data.cart.subtotalMinor)}
             />
           ) : (

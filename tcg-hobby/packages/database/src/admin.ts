@@ -19,6 +19,7 @@ const adminProductInclude = {
   category: true,
   inventory: true,
   images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
+  importAudits: { orderBy: { createdAt: 'desc' }, take: 10 },
   supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
   pricing: { include: { pricingRule: true } },
 } as const satisfies Prisma.ProductInclude;
@@ -212,7 +213,14 @@ export type AdminProductListItem = {
   priceUpdatedAt: Date | null;
   currency: string;
   featured: boolean;
+  homepagePriority: number | null;
+  heroFeatured: boolean;
+  freeUkStandardShipping: boolean;
+  shippingPromotionProductOnly: boolean;
+  lifecycleState: string;
   published: boolean;
+  customerPurchaseLimit: number | null;
+  availabilityMessage: string | null;
   archivedAt: Date | null;
   stockOnHand: number;
   reservedStock: number;
@@ -221,6 +229,11 @@ export type AdminProductListItem = {
   locationCode: string;
   imageCount: number;
   primaryImageUrl: string | null;
+  importSourceType: string | null;
+  importSourceReference: string | null;
+  importedAt: Date | null;
+  lastImportedAt: Date | null;
+  importValidationWarnings: string | null;
   createdAt: Date;
 };
 
@@ -236,6 +249,7 @@ export type AdminProductDetail = AdminProductListItem & {
   supplierPhone: string | null;
   supplierWebsite: string | null;
   images: ProductRow['images'];
+  importAudits: ProductRow['importAudits'];
 };
 
 export type AdminInventoryRow = {
@@ -323,6 +337,8 @@ type ProductFormInput = {
   imageLabel: string;
   featured: boolean;
   published: boolean;
+  customerPurchaseLimit?: number | null;
+  availabilityMessage?: string | null;
   primaryImageUrl?: string;
   galleryImageUrl?: string;
 };
@@ -460,7 +476,14 @@ function mapProductRow(product: ProductRow): AdminProductListItem {
     priceUpdatedAt: pricing?.updatedAt ?? null,
     currency: product.currency,
     featured: product.featured,
+    homepagePriority: product.homepagePriority,
+    heroFeatured: product.heroFeatured,
+    freeUkStandardShipping: product.freeUkStandardShipping,
+    shippingPromotionProductOnly: product.shippingPromotionProductOnly,
+    lifecycleState: product.lifecycleState,
     published: product.published,
+    customerPurchaseLimit: product.customerPurchaseLimit,
+    availabilityMessage: product.availabilityMessage,
     archivedAt: product.archivedAt,
     stockOnHand: inventory.stockOnHand,
     reservedStock: inventory.reservedStock,
@@ -469,6 +492,11 @@ function mapProductRow(product: ProductRow): AdminProductListItem {
     locationCode: inventory.locationCode,
     imageCount: product.images.length,
     primaryImageUrl: product.images.find((image) => image.isPrimary)?.url ?? product.images[0]?.url ?? null,
+    importSourceType: product.importSourceType,
+    importSourceReference: product.importSourceReference,
+    importedAt: product.importedAt,
+    lastImportedAt: product.lastImportedAt,
+    importValidationWarnings: product.importValidationWarnings,
     createdAt: product.createdAt,
   };
 }
@@ -490,6 +518,7 @@ function mapProductDetailRow(product: ProductRow): AdminProductDetail {
     supplierPhone: supplierProduct?.supplier.phone ?? null,
     supplierWebsite: supplierProduct?.supplier.website ?? null,
     images: product.images,
+    importAudits: product.importAudits,
   };
 }
 
@@ -611,7 +640,14 @@ function buildSeedProductListItem(product: (typeof seedProducts)[number], index:
     priceUpdatedAt: new Date(Date.UTC(2026, 6, 5 - index, 12, 0, 0)),
     currency: product.currency,
     featured: product.featured,
+    homepagePriority: product.homepagePriority ?? null,
+    heroFeatured: product.heroFeatured ?? false,
+    freeUkStandardShipping: product.freeUkStandardShipping ?? false,
+    shippingPromotionProductOnly: product.shippingPromotionProductOnly ?? true,
+    lifecycleState: product.lifecycleState ?? (product.published ? 'PUBLISHED' : 'DRAFT'),
     published: product.published,
+    customerPurchaseLimit: product.customerPurchaseLimit ?? null,
+    availabilityMessage: product.availabilityMessage ?? null,
     archivedAt: null,
     stockOnHand: inventory.stockOnHand,
     reservedStock: inventory.reservedStock,
@@ -620,6 +656,11 @@ function buildSeedProductListItem(product: (typeof seedProducts)[number], index:
     locationCode: inventory.locationCode,
     imageCount: 2,
     primaryImageUrl: `https://images.tcghobby.test/products/${product.slug}/primary.jpg`,
+    importSourceType: product.importSourceType ?? null,
+    importSourceReference: product.importSourceReference ?? null,
+    importedAt: product.importSourceType ? new Date(Date.UTC(2026, 6, 5 - index, 12, 0, 0)) : null,
+    lastImportedAt: product.importSourceType ? new Date(Date.UTC(2026, 6, 5 - index, 12, 0, 0)) : null,
+    importValidationWarnings: product.importValidationWarnings ?? null,
     createdAt: new Date(Date.UTC(2026, 6, 5 - index, 12, 0, 0)),
   };
 }
@@ -842,6 +883,8 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma): 
         currency: 'GBP',
         featured: input.featured,
         published: input.published,
+        customerPurchaseLimit: input.customerPurchaseLimit ?? null,
+        availabilityMessage: input.availabilityMessage || null,
         searchText: `${input.name} ${input.sku} ${input.game} ${input.description} ${input.longDescription}`.toLowerCase(),
         imageLabel: input.imageLabel,
         categoryId: input.categoryId,
@@ -911,6 +954,8 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
         currency: 'GBP',
         featured: input.featured,
         published: input.published,
+        customerPurchaseLimit: input.customerPurchaseLimit ?? null,
+        availabilityMessage: input.availabilityMessage || null,
         searchText: `${input.name} ${input.sku} ${input.game} ${input.description} ${input.longDescription}`.toLowerCase(),
         imageLabel: input.imageLabel,
         categoryId: input.categoryId,

@@ -52,6 +52,9 @@ export type CatalogueProduct = {
   categorySlug: string;
   price: Money;
   featured: boolean;
+  homepagePriority?: number | null;
+  heroFeatured?: boolean;
+  lifecycleState?: string;
   inStock: boolean;
   stockOnHand: number;
   reservedStock: number;
@@ -60,6 +63,10 @@ export type CatalogueProduct = {
   imageLabel: string;
   imageUrl?: string | null;
   imageAlt?: string | null;
+  heroImageUrl?: string | null;
+  vatRate?: number;
+  freeUkStandardShipping?: boolean;
+  shippingPromotionProductOnly?: boolean;
   releaseStatus?: ProductReleaseStatus;
   releaseDate?: string | null;
   expectedDispatchAt?: string | null;
@@ -73,6 +80,15 @@ export type CatalogueProduct = {
   comingSoonBadgeLabel?: string | null;
 };
 
+export type CatalogueProductImage = {
+  id: string;
+  url: string;
+  altText: string;
+  imageType: string;
+  sortOrder: number;
+  isPrimary: boolean;
+};
+
 export type CatalogueProductDetail = CatalogueProduct & {
   sku: string;
   setName: string | null;
@@ -81,6 +97,7 @@ export type CatalogueProductDetail = CatalogueProduct & {
   searchText: string;
   supplierSku: string;
   leadTimeDays: number;
+  images: CatalogueProductImage[];
   relatedProducts: CatalogueProduct[];
 };
 
@@ -125,6 +142,8 @@ export type CartLineItem = {
   unitPriceMinor: number;
   totalMinor: number;
   inStock: boolean;
+  customerPurchaseLimit?: number | null;
+  freeUkStandardShipping?: boolean;
 };
 
 export type CartSummary = {

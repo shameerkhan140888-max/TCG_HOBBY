@@ -1,6 +1,9 @@
 import { randomBytes } from 'node:crypto';
 import type { CartLineItem, CartSummary, CurrencyCode, OrderSummary, ShippingMethod, ShippingMethodCode } from '@tcg-hobby/types';
 
+export const MEGA_GRENINJA_PRODUCT_SLUG = 'pokemon-tcg-mega-greninja-ex-premium-collection';
+export const FREE_UK_STANDARD_SHIPPING_PRODUCT_SLUGS = new Set([MEGA_GRENINJA_PRODUCT_SLUG]);
+
 export const shippingMethods: ShippingMethod[] = [
   {
     code: 'UK_STANDARD',
@@ -78,8 +81,45 @@ export function calculateOrderTotal(subtotalMinor: number, shippingMinor: number
     subtotalMinor,
     shippingMinor,
     taxMinor,
-    totalMinor: subtotalMinor + shippingMinor + taxMinor,
+    totalMinor: subtotalMinor + shippingMinor,
   };
+}
+
+export function hasFreeUkStandardShipping(productSlug: string): boolean {
+  return FREE_UK_STANDARD_SHIPPING_PRODUCT_SLUGS.has(productSlug);
+}
+
+export function calculatePromotionalShippingMinor(
+  shippingMethod: Pick<ShippingMethod, 'code' | 'amountMinor'>,
+  items: Pick<CartLineItem, 'productSlug' | 'freeUkStandardShipping'>[],
+  country = 'GB',
+): number {
+  const normalizedCountry = normalizeCountry(country);
+  const allItemsEligible = items.length > 0 && items.every((item) => item.freeUkStandardShipping || hasFreeUkStandardShipping(item.productSlug));
+
+  if (shippingMethod.code === 'UK_STANDARD' && (normalizedCountry === 'GB' || normalizedCountry === 'UK') && allItemsEligible) {
+    return 0;
+  }
+
+  return shippingMethod.amountMinor;
+}
+
+export function validateQuantityAgainstPurchaseLimit(quantity: number, limit: number | null | undefined) {
+  if (!limit || limit < 1) {
+    return { ok: true as const };
+  }
+
+  if (quantity > limit) {
+    return {
+      ok: false as const,
+      message:
+        limit === 1
+          ? 'Limited to one collection per person or household.'
+          : `Limited to ${limit} per person or household.`,
+    };
+  }
+
+  return { ok: true as const };
 }
 
 export function calculateVatEstimateMinor(subtotalMinor: number, ratePercent = 20) {
@@ -91,7 +131,7 @@ export function calculateVatEstimateMinor(subtotalMinor: number, ratePercent = 2
     return 0;
   }
 
-  return Math.round((subtotalMinor * ratePercent) / 100);
+  return Math.round((subtotalMinor * ratePercent) / (100 + ratePercent));
 }
 
 export function validateQuantityAgainstAvailability(quantity: number, available: number) {
@@ -132,6 +172,6 @@ export function summarizeOrderTotals(params: {
     subtotalMinor: params.subtotalMinor,
     shippingMinor: params.shippingMinor,
     taxMinor,
-    totalMinor: params.subtotalMinor + params.shippingMinor + taxMinor,
+    totalMinor: params.subtotalMinor + params.shippingMinor,
   };
 }

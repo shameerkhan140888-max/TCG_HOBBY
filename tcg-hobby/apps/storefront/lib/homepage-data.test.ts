@@ -1,17 +1,20 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
 import type { CatalogueProduct } from '@tcg-hobby/types';
 
 vi.mock('@tcg-hobby/database', () => ({
   getCatalogueProducts: vi.fn(),
   getFeaturedCatalogueProducts: vi.fn(),
+  MEGA_GRENINJA_PRODUCT_SLUG: 'pokemon-tcg-mega-greninja-ex-premium-collection',
 }));
 
 import {
   dedupeProducts,
+  getProductionHomepageData,
   homepageHeroSlides,
   selectHomepageFeaturedProducts,
   selectHomepageNewReleaseProducts,
 } from './homepage-data';
+import { getCatalogueProducts, getFeaturedCatalogueProducts } from '@tcg-hobby/database';
 
 function product(overrides: Partial<CatalogueProduct> = {}): CatalogueProduct {
   const base: CatalogueProduct = {
@@ -36,6 +39,10 @@ function product(overrides: Partial<CatalogueProduct> = {}): CatalogueProduct {
     ...base,
     ...(overrides.imageUrl !== undefined ? { imageUrl: overrides.imageUrl } : {}),
     ...(overrides.imageAlt !== undefined ? { imageAlt: overrides.imageAlt } : {}),
+    ...(overrides.heroImageUrl !== undefined ? { heroImageUrl: overrides.heroImageUrl } : {}),
+    ...(overrides.homepagePriority !== undefined ? { homepagePriority: overrides.homepagePriority } : {}),
+    ...(overrides.heroFeatured !== undefined ? { heroFeatured: overrides.heroFeatured } : {}),
+    ...(overrides.freeUkStandardShipping !== undefined ? { freeUkStandardShipping: overrides.freeUkStandardShipping } : {}),
     ...(overrides.releaseStatus !== undefined ? { releaseStatus: overrides.releaseStatus } : {}),
     ...(overrides.releaseDate !== undefined ? { releaseDate: overrides.releaseDate } : {}),
     ...(overrides.expectedDispatchAt !== undefined ? { expectedDispatchAt: overrides.expectedDispatchAt } : {}),
@@ -105,6 +112,60 @@ describe('homepage data selection', () => {
     );
 
     expect(selected.map((item) => item.id)).toEqual(['featured-1', 'new-1', 'preorder-1']);
+  });
+
+  it('prioritizes products by homepage priority in featured products', () => {
+    const selected = selectHomepageFeaturedProducts(
+      [
+        product({ id: 'featured-1', featured: true }),
+        product({ id: 'priority', slug: 'priority-product', featured: true, homepagePriority: 1 }),
+      ],
+      [],
+    );
+
+    expect(selected[0]?.slug).toBe('priority-product');
+  });
+
+  it('uses the default hero until the Mega Greninja product image exists in catalogue data', async () => {
+    vi.mocked(getCatalogueProducts).mockResolvedValue({ products: [], categories: [], filters: { search: '', category: '', sort: 'newest', page: 1, pageSize: 12 }, pagination: { page: 1, pageSize: 12, totalItems: 0, totalPages: 1, hasNextPage: false, hasPreviousPage: false } });
+    vi.mocked(getFeaturedCatalogueProducts).mockResolvedValue([
+      product({
+        id: 'mega',
+        slug: 'pokemon-tcg-mega-greninja-ex-premium-collection',
+        name: 'PokÃ©mon TCG: Mega Greninja ex Premium Collection',
+        featured: true,
+        heroFeatured: true,
+      }),
+    ]);
+
+    const data = await getProductionHomepageData();
+
+    expect(data.featuredProducts[0]?.slug).toBe('pokemon-tcg-mega-greninja-ex-premium-collection');
+    expect(data.heroSlides[0]?.id).toBe('new-releases');
+    expect(data.heroSlides[0]?.image.src).toBe('/launch/tcg-hobby-production-hero.png');
+  });
+
+  it('switches the first hero slide to Mega Greninja when the primary product image is available', async () => {
+    vi.mocked(getCatalogueProducts).mockResolvedValue({ products: [], categories: [], filters: { search: '', category: '', sort: 'newest', page: 1, pageSize: 12 }, pagination: { page: 1, pageSize: 12, totalItems: 0, totalPages: 1, hasNextPage: false, hasPreviousPage: false } });
+    vi.mocked(getFeaturedCatalogueProducts).mockResolvedValue([
+      product({
+        id: 'mega',
+        slug: 'pokemon-tcg-mega-greninja-ex-premium-collection',
+        name: 'PokÃ©mon TCG: Mega Greninja ex Premium Collection',
+        featured: true,
+        heroFeatured: true,
+        imageUrl: '/products/pokemon/mega-greninja-ex-premium-collection/primary.webp',
+        imageAlt: 'PokÃ©mon TCG Mega Greninja ex Premium Collection box',
+      }),
+    ]);
+
+    const data = await getProductionHomepageData();
+
+    expect(data.heroSlides[0]).toMatchObject({
+      eyebrow: 'NOW AVAILABLE',
+      primaryCta: { label: 'Shop now', href: '/catalogue/pokemon-tcg-mega-greninja-ex-premium-collection' },
+      image: { src: '/products/pokemon/mega-greninja-ex-premium-collection/primary.webp' },
+    });
   });
 
   it('deduplicates products by id while preserving first appearance', () => {

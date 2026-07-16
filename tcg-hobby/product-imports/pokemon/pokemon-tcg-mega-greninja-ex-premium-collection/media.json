@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "images": [
+    {
+      "filename": "01-primary.webp",
+      "displayOrder": 1,
+      "alt": "Pokémon TCG Mega Greninja ex Premium Collection box",
+      "role": "PRIMARY",
+      "heroEligible": true,
+      "homepageEligible": true,
+      "openGraphEligible": true,
+      "thumbnailUsage": "BOTH",
+      "provenance": "OWNER_SUPPLIED",
+      "licensingNotes": "Product assets supplied by the business owner for use on the TCG Hobby product listing."
+    },
+    {
+      "filename": "02-booster-packs.webp",
+      "displayOrder": 2,
+      "alt": "Eight Pokémon TCG booster packs included in the Mega Greninja ex Premium Collection",
+      "role": "GALLERY",
+      "heroEligible": false,
+      "homepageEligible": false,
+      "openGraphEligible": false,
+      "thumbnailUsage": "GALLERY",
+      "provenance": "OWNER_SUPPLIED"
+    },
+    {
+      "filename": "03-promo-cards.webp",
+      "displayOrder": 3,
+      "alt": "Mega Greninja ex promotional card and oversized lenticular promotional card",
+      "role": "GALLERY",
+      "heroEligible": false,
+      "homepageEligible": false,
+      "openGraphEligible": false,
+      "thumbnailUsage": "GALLERY",
+      "provenance": "OWNER_SUPPLIED"
+    },
+    {
+      "filename": "04-rear-packaging.webp",
+      "displayOrder": 4,
+      "alt": "Rear packaging of the Pokémon TCG Mega Greninja ex Premium Collection",
+      "role": "GALLERY",
+      "heroEligible": false,
+      "homepageEligible": false,
+      "openGraphEligible": true,
+      "thumbnailUsage": "GALLERY",
+      "provenance": "OWNER_SUPPLIED",
+      "internalNotes": "Packaging reference verifies included contents."
+    }
+  ]
+}

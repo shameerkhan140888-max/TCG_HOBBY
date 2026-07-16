@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "importId": "owner-supplied-pokemon-mega-greninja-ex-premium-collection",
+  "id": "prod-mega-greninja-ex-premium-collection",
+  "name": "Pokémon TCG: Mega Greninja ex Premium Collection",
+  "slug": "pokemon-tcg-mega-greninja-ex-premium-collection",
+  "sku": "PKM-MGREN-PC-001",
+  "game": "POKEMON",
+  "category": "sealed-product",
+  "productType": "Premium Collection",
+  "priceMinor": 4999,
+  "vatRate": 20,
+  "stockQuantity": 3,
+  "lifecycleState": "PUBLISHED",
+  "visible": true,
+  "featured": true,
+  "homepagePriority": 1,
+  "heroFeatured": true,
+  "preorder": false,
+  "supplierSlug": "card-citadel",
+  "supplierCostMinor": 3500,
+  "purchaseLimit": {
+    "quantity": 1,
+    "scope": "PERSON_OR_HOUSEHOLD"
+  },
+  "shippingPromotion": {
+    "type": "FREE_STANDARD_UK",
+    "productOnly": true
+  },
+  "shortDescription": "Take Mega Greninja ex into battle with an exclusive promotional card, an oversized lenticular card, a reusable tech sticker and eight Pokémon TCG booster packs.",
+  "fullDescription": "Mega Greninja ex flips the battle upside down in this premium Pokémon TCG collection.\n\nThe collection includes Mega Greninja ex in both playable and oversized display formats, alongside a reusable tech sticker and eight Pokémon TCG booster packs. It is a strong choice for collectors, players and Mega Greninja fans looking for a premium sealed Pokémon TCG release.",
+  "contents": [
+    "1 foil promo card featuring Mega Greninja ex",
+    "1 oversized lenticular promo card featuring Mega Greninja ex",
+    "1 tech sticker featuring Mega Greninja",
+    "8 Pokémon TCG booster packs"
+  ],
+  "variationNotice": "Booster-pack artwork and assortment may vary.",
+  "seo": {
+    "title": "Pokémon TCG Mega Greninja ex Premium Collection | TCG Hobby",
+    "description": "Shop the Pokémon TCG Mega Greninja ex Premium Collection for £49.99, including exclusive Mega Greninja ex promotional cards, a tech sticker and eight booster packs. Free UK standard delivery. Limit one per household."
+  },
+  "source": {
+    "type": "OWNER_SUPPLIED",
+    "reference": "Product assets supplied by the business owner for this TCG Hobby product listing. These may later be replaced with TCG Hobby photography or authorised supplier, distributor or manufacturer retailer assets."
+  }
+}

@@ -18,11 +18,13 @@ import {
   buildCartReservationExpiry,
   calculateCartSubtotal,
   calculateOrderTotal,
+  calculatePromotionalShippingMinor,
   calculateVatEstimateMinor,
   generateOrderNumber,
   getShippingMethodByCode,
   getShippingMethodsForCountry,
   validateQuantityAgainstAvailability,
+  validateQuantityAgainstPurchaseLimit,
 } from './commerce';
 import type { CartSnapshot } from './cart';
 
@@ -522,7 +524,14 @@ export async function createPendingCheckoutOrder(
 
   const subtotalMinor = calculateCartSubtotal(cart.items);
   const taxMinor = calculateVatEstimateMinor(subtotalMinor);
-  const { totalMinor, shippingMinor } = calculateOrderTotal(subtotalMinor, shippingMethod.amountMinor, taxMinor);
+  for (const item of cart.items) {
+    const limitValidation = validateQuantityAgainstPurchaseLimit(item.quantity, item.customerPurchaseLimit);
+    if (!limitValidation.ok) {
+      throw new Error(limitValidation.message);
+    }
+  }
+  const chargedShippingMinor = calculatePromotionalShippingMinor(shippingMethod, cart.items, input.shippingAddress.country);
+  const { totalMinor, shippingMinor } = calculateOrderTotal(subtotalMinor, chargedShippingMinor, taxMinor);
   const reservationExpiresAt = buildCartReservationExpiry();
 
   try {

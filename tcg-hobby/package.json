@@ -16,6 +16,10 @@
     "typecheck": "turbo run typecheck",
     "db:generate": "npm run db:generate -w @tcg-hobby/database",
     "db:seed": "npm run db:seed -w @tcg-hobby/database",
+    "product:validate": "tsx scripts/product-import.ts validate",
+    "product:dry-run": "tsx scripts/product-import.ts dry-run",
+    "product:import": "tsx scripts/product-import.ts import",
+    "product:import:all": "tsx scripts/product-import.ts import-all",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml,css}\""
   },
   "devDependencies": {

@@ -99,4 +99,15 @@ describe('catalogue queries', () => {
     expect(product?.relatedProducts.length).toBeGreaterThan(0);
     expect(product?.relatedProducts.every((item) => typeof item.slug === 'string')).toBe(true);
   });
+
+  it('does not expose missing gallery image URLs before approved assets are added', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.TCG_HOBBY_CATALOGUE_DATA_SOURCE = 'seed';
+
+    const product = await getCatalogueProductBySlug('pokemon-tcg-mega-greninja-ex-premium-collection');
+
+    expect(product).not.toBeNull();
+    expect(product?.images).toEqual([]);
+    expect(product?.imageUrl).toBeNull();
+  });
 });

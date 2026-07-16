@@ -40,6 +40,9 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
   if (Number.isNaN(Number.parseInt(values.stockOnHand, 10)) || Number.parseInt(values.stockOnHand, 10) < 0) fieldErrors.stockOnHand = 'Enter current stock in whole units.';
   if (Number.isNaN(Number.parseInt(values.reservedStock, 10)) || Number.parseInt(values.reservedStock, 10) < 0) fieldErrors.reservedStock = 'Enter reserved stock in whole units.';
   if (Number.isNaN(Number.parseInt(values.reorderPoint, 10)) || Number.parseInt(values.reorderPoint, 10) < 0) fieldErrors.reorderPoint = 'Enter a reorder point.';
+  if (values.customerPurchaseLimit && (Number.isNaN(Number.parseInt(values.customerPurchaseLimit, 10)) || Number.parseInt(values.customerPurchaseLimit, 10) < 1)) {
+    fieldErrors.customerPurchaseLimit = 'Enter a purchase limit of at least 1, or leave it blank.';
+  }
 
   if (Object.keys(fieldErrors).length) {
     return { fieldErrors, values };
@@ -63,6 +66,8 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
     imageLabel: values.imageLabel || values.name,
     featured: values.featured,
     published: values.published,
+    customerPurchaseLimit: values.customerPurchaseLimit ? Number.parseInt(values.customerPurchaseLimit, 10) : null,
+    availabilityMessage: values.availabilityMessage,
   };
 
   if (values.slug) input.slug = values.slug;

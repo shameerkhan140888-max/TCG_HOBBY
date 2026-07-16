@@ -1,12 +1,16 @@
 import type {
   CatalogueCategory,
   CatalogueFilters,
+  CatalogueProductImage,
   CatalogueProduct,
   CatalogueProductDetail,
   PaginationMeta,
 } from '@tcg-hobby/types';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Prisma } from '@prisma/client';
 import { prisma } from './client';
+import { hasFreeUkStandardShipping } from './commerce';
 import {
   seedCategories,
   seedInventory,
@@ -26,6 +30,7 @@ const catalogueProductInclude = {
 } as const satisfies Prisma.ProductInclude;
 
 type CatalogueProductRow = Prisma.ProductGetPayload<{ include: typeof catalogueProductInclude }>;
+type CatalogueProductImageRow = CatalogueProductRow['images'][number];
 
 const catalogueCategoryInclude = {
   products: { where: { published: true }, select: { id: true } },
@@ -57,6 +62,28 @@ function createCatalogueDatabaseError(reason: string) {
   return new Error(`Catalogue database query failed in production: ${reason}`);
 }
 
+function localPublicImageExists(url: string): boolean {
+  if (!url.startsWith('/')) {
+    return true;
+  }
+
+  const relativePath = url.replace(/^\/+/, '');
+  const candidates = [
+    join(process.cwd(), 'public', relativePath),
+    join(process.cwd(), 'apps', 'storefront', 'public', relativePath),
+  ];
+
+  return candidates.some((path) => existsSync(path));
+}
+
+function resolveRenderableImageUrl(url: string | null | undefined): string | null {
+  if (!url) {
+    return null;
+  }
+
+  return localPublicImageExists(url) ? url : null;
+}
+
 function normalizeSearch(value: string | null | undefined): string {
   return value?.trim().toLowerCase() ?? '';
 }
@@ -79,6 +106,7 @@ function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct 
   const supplier = product.supplierProducts[0]?.supplier;
   const inventory = product.inventory;
   const primaryImage = product.images.find((image) => image.isPrimary) ?? product.images[0] ?? null;
+  const heroImage = product.images.find((image) => image.imageType === 'hero') ?? null;
 
   if (!inventory || !supplier) {
     throw new Error(`Database seed incomplete for product ${product.slug}`);
@@ -94,14 +122,21 @@ function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct 
     categorySlug: product.category.slug,
     price: { amountMinor: product.priceMinor, currency: product.currency as CatalogueProduct['price']['currency'] },
     featured: product.featured,
+    homepagePriority: product.homepagePriority,
+    heroFeatured: product.heroFeatured,
+    lifecycleState: product.lifecycleState,
     inStock: inventory.stockOnHand - inventory.reservedStock > 0,
     stockOnHand: inventory.stockOnHand,
     reservedStock: inventory.reservedStock,
     supplierName: supplier.name,
     badge: product.featured ? 'Featured' : product.releaseStatus !== 'RELEASED' ? product.releaseStatus.replace('_', ' ') : product.category.name,
     imageLabel: product.imageLabel,
-    imageUrl: primaryImage?.url ?? null,
+    imageUrl: resolveRenderableImageUrl(primaryImage?.url),
     imageAlt: primaryImage?.altText ?? null,
+    heroImageUrl: resolveRenderableImageUrl(heroImage?.url),
+    vatRate: product.vatRate,
+    freeUkStandardShipping: product.freeUkStandardShipping || hasFreeUkStandardShipping(product.slug),
+    shippingPromotionProductOnly: product.shippingPromotionProductOnly,
     releaseStatus: product.releaseStatus,
     releaseDate: product.releaseDate?.toISOString() ?? null,
     expectedDispatchAt: product.expectedDispatchAt?.toISOString() ?? null,
@@ -114,6 +149,45 @@ function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct 
     preorderBadgeLabel: product.preorderBadgeLabel,
     comingSoonBadgeLabel: product.comingSoonBadgeLabel,
   };
+}
+
+function mapCatalogueProductImageRow(image: CatalogueProductImageRow): CatalogueProductImage | null {
+  const url = resolveRenderableImageUrl(image.url);
+
+  if (!url) {
+    return null;
+  }
+
+  return {
+    id: image.id,
+    url,
+    altText: image.altText,
+    imageType: image.imageType,
+    sortOrder: image.sortOrder,
+    isPrimary: image.isPrimary,
+  };
+}
+
+function mapSeedProductImages(productSlug: string): CatalogueProductImage[] {
+  return seedProductImages
+    .filter((image) => image.productSlug === productSlug)
+    .map((image) => {
+      const url = resolveRenderableImageUrl(image.url);
+
+      if (!url) {
+        return null;
+      }
+
+      return {
+        id: image.id,
+        url,
+        altText: image.altText,
+        imageType: image.imageType,
+        sortOrder: image.sortOrder,
+        isPrimary: image.isPrimary,
+      };
+    })
+    .filter((image): image is CatalogueProductImage => image !== null);
 }
 
 function getSeedCategoryBySlug(slug: string) {
@@ -170,6 +244,7 @@ function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] 
     const category = getSeedCategoryBySlug(product.categorySlug);
     const supplier = getSeedSupplierBySlug(product.supplierSlug);
     const primaryImage = seedProductImages.find((image) => image.productSlug === product.slug && image.isPrimary) ?? seedProductImages.find((image) => image.productSlug === product.slug) ?? null;
+    const heroImage = seedProductImages.find((image) => image.productSlug === product.slug && image.imageType === 'hero') ?? null;
 
     if (!inventory || !category || !supplier) {
       throw new Error(`Incomplete seed data for product ${product.slug}`);
@@ -177,8 +252,9 @@ function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] 
 
     return {
       ...toCatalogueProduct(product, inventory, category, supplier),
-      imageUrl: primaryImage?.url ?? null,
+      imageUrl: resolveRenderableImageUrl(primaryImage?.url),
       imageAlt: primaryImage?.altText ?? null,
+      heroImageUrl: resolveRenderableImageUrl(heroImage?.url),
     };
   });
 }
@@ -209,6 +285,9 @@ function seedProductsToDetail(slug: string): CatalogueProductDetail | null {
 
   return {
     ...toCatalogueProductDetail(product, inventory, category, supplier),
+    imageUrl: resolveRenderableImageUrl(seedProductImages.find((image) => image.productSlug === product.slug && image.isPrimary)?.url),
+    heroImageUrl: resolveRenderableImageUrl(seedProductImages.find((image) => image.productSlug === product.slug && image.imageType === 'hero')?.url),
+    images: mapSeedProductImages(product.slug),
     relatedProducts,
   };
 }
@@ -251,7 +330,9 @@ async function getProductsFromDatabase(
         ? [{ featured: 'desc' }, { priceMinor: 'asc' }]
         : filters.sort === 'newest'
           ? [{ featured: 'desc' }, { createdAt: 'desc' }]
-          : [{ featured: 'desc' }, { name: 'asc' }, { createdAt: 'desc' }];
+          : filters.sort === 'featured'
+            ? [{ featured: 'desc' }, { homepagePriority: 'asc' }, { name: 'asc' }, { createdAt: 'desc' }]
+            : [{ featured: 'desc' }, { name: 'asc' }, { createdAt: 'desc' }];
 
   const rows = await prisma.product.findMany({
     where,
@@ -294,6 +375,7 @@ async function getProductDetailFromDatabase(slug: string): Promise<CatalogueProd
     searchText: product.searchText,
     supplierSku: product.supplierProducts[0].supplierSku,
     leadTimeDays: product.supplierProducts[0].leadTimeDays,
+    images: product.images.map(mapCatalogueProductImageRow).filter((image): image is CatalogueProductImage => image !== null),
     relatedProducts: related.filter((item) => item.slug !== slug).slice(0, 4),
   };
 }
@@ -328,6 +410,7 @@ async function getProductDetailFromDatabaseById(id: string): Promise<CataloguePr
     searchText: product.searchText,
     supplierSku: product.supplierProducts[0].supplierSku,
     leadTimeDays: product.supplierProducts[0].leadTimeDays,
+    images: product.images.map(mapCatalogueProductImageRow).filter((image): image is CatalogueProductImage => image !== null),
     relatedProducts: related.filter((item) => item.slug !== product.slug).slice(0, 4),
   };
 }

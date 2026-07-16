@@ -71,10 +71,7 @@ if (process.platform === 'win32' && existsSync(generatedClientDir)) {
 
 const prismaArgs = process.argv.slice(2);
 const commandArgs = prismaArgs.length ? prismaArgs : ['generate'];
-if (process.platform === 'win32' && commandArgs[0] === 'generate' && existsSync(generatedEnginePath)) {
-  process.exit(0);
-}
-if (process.platform === 'win32' && env.TCG_HOBBY_PRISMA_NO_ENGINE === '1' && commandArgs[0] === 'generate') {
+if (process.platform === 'win32' && commandArgs[0] === 'generate') {
   commandArgs.push('--no-engine');
 }
 const result = spawnSync(process.execPath, [prismaCli, ...commandArgs], {

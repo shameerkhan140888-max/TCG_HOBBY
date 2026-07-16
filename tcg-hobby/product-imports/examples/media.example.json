@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "images": [
+    {
+      "filename": "01-primary.webp",
+      "displayOrder": 1,
+      "alt": "Example Product Name box",
+      "role": "PRIMARY",
+      "heroEligible": false,
+      "homepageEligible": true,
+      "openGraphEligible": true,
+      "thumbnailUsage": "BOTH",
+      "provenance": "OWNER_SUPPLIED",
+      "licensingNotes": "Approved by the business owner for this listing."
+    },
+    {
+      "filename": "02-gallery.webp",
+      "displayOrder": 2,
+      "alt": "Example Product Name gallery image",
+      "role": "GALLERY",
+      "heroEligible": false,
+      "homepageEligible": false,
+      "openGraphEligible": false,
+      "thumbnailUsage": "GALLERY",
+      "provenance": "OWNER_SUPPLIED"
+    }
+  ]
+}

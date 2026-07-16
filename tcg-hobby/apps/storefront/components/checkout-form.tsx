@@ -12,8 +12,28 @@ import {
   SecureCheckoutNotice,
   ShippingMethodCard,
 } from '@tcg-hobby/ui';
+import type { CartLineItem } from '@tcg-hobby/types';
 import type { CheckoutFormState } from '../lib/checkout';
 import { placeCheckoutOrderAction } from '../lib/checkout-actions';
+
+const FREE_UK_STANDARD_PRODUCT_SLUG = 'pokemon-tcg-mega-greninja-ex-premium-collection';
+
+function calculateCheckoutShippingMinor(
+  method: NonNullable<CheckoutFormState['shippingMethods'][number]>,
+  items: CartLineItem[],
+  country: string,
+) {
+  const normalizedCountry = country.trim().toUpperCase();
+  const allItemsEligible =
+    items.length > 0 &&
+    items.every((item) => item.freeUkStandardShipping || item.productSlug === FREE_UK_STANDARD_PRODUCT_SLUG);
+
+  if (method.code === 'UK_STANDARD' && (normalizedCountry === 'GB' || normalizedCountry === 'UK') && allItemsEligible) {
+    return 0;
+  }
+
+  return method.amountMinor;
+}
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -28,10 +48,12 @@ function SubmitButton() {
 export function CheckoutForm({
   state,
   cartSubtotalMinor,
+  cartItems,
   taxEstimateMinor,
 }: {
   state: CheckoutFormState;
   cartSubtotalMinor: number;
+  cartItems: CartLineItem[];
   taxEstimateMinor: number;
 }) {
   const [formState, formAction] = useActionState(placeCheckoutOrderAction, state);
@@ -39,12 +61,14 @@ export function CheckoutForm({
     formState.shippingMethods.find((method) => method.code === formState.values.shippingMethodCode) ??
     formState.shippingMethods[0];
 
+  const chargedShippingMinor = selectedMethod ? calculateCheckoutShippingMinor(selectedMethod, cartItems, formState.values.country) : 0;
+
   const summary = {
     currency: 'GBP' as const,
     subtotalMinor: cartSubtotalMinor,
-    shippingMinor: selectedMethod?.amountMinor ?? 0,
+    shippingMinor: chargedShippingMinor,
     taxMinor: taxEstimateMinor,
-    totalMinor: cartSubtotalMinor + (selectedMethod?.amountMinor ?? 0) + taxEstimateMinor,
+    totalMinor: cartSubtotalMinor + chargedShippingMinor,
   };
 
   return (
@@ -121,7 +145,7 @@ export function CheckoutForm({
           actionSlot={
             <div className="space-y-3">
               <p className="text-sm leading-6 text-neutral-400">
-                The final Stripe amount includes your basket, the selected delivery method, and the VAT estimate shown above.
+                The final Stripe amount includes your basket and selected delivery method. VAT is included in product prices.
               </p>
             </div>
           }

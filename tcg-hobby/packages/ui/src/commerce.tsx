@@ -44,6 +44,23 @@ export type ProductCardProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 export function ProductCard({ product, href, actionSlot, mediaSlot, className, ...props }: ProductCardProps) {
+  const availableQuantity = Math.max(product.stockOnHand - product.reservedStock, 0);
+  const publicStockLabel =
+    product.releaseStatus && product.releaseStatus !== 'RELEASED'
+      ? 'Release soon'
+      : availableQuantity <= 0
+        ? 'OUT OF STOCK'
+        : availableQuantity <= 3
+          ? 'LOW STOCK'
+          : 'IN STOCK';
+  const publicStockVariant =
+    product.releaseStatus && product.releaseStatus !== 'RELEASED'
+      ? 'accent'
+      : availableQuantity <= 0
+        ? 'warning'
+        : availableQuantity <= 3
+          ? 'warning'
+          : 'success';
   const releaseBadge =
     product.releaseStatus && product.releaseStatus !== 'RELEASED'
       ? product.releaseStatus === 'PREORDER'
@@ -66,9 +83,7 @@ export function ProductCard({ product, href, actionSlot, mediaSlot, className, .
                   <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'warning' : product.featured ? 'accent' : 'neutral'}>
                     {releaseBadge}
                   </Badge>
-                  <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'accent' : product.inStock ? 'success' : 'warning'}>
-                    {product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'Release soon' : product.inStock ? 'In stock' : 'Low stock'}
-                  </Badge>
+                <Badge variant={publicStockVariant}>{publicStockLabel}</Badge>
                 </div>
                 <div className="self-start rounded-md border border-white/10 bg-black/30 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300">
                   {product.imageLabel}
@@ -80,9 +95,7 @@ export function ProductCard({ product, href, actionSlot, mediaSlot, className, .
                 <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'warning' : product.featured ? 'accent' : 'neutral'}>
                   {releaseBadge}
                 </Badge>
-                <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'accent' : product.inStock ? 'success' : 'warning'}>
-                  {product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'Release soon' : product.inStock ? 'In stock' : 'Low stock'}
-                </Badge>
+                  <Badge variant={publicStockVariant}>{publicStockLabel}</Badge>
               </div>
             ) : null}
           </div>
@@ -338,7 +351,7 @@ export function OrderSummary({ summary, actionSlot, className, ...props }: Order
   const rows = [
     { label: 'Subtotal', value: summary.subtotalMinor },
     { label: 'Delivery', value: summary.shippingMinor },
-    { label: 'VAT', value: summary.taxMinor },
+    { label: 'VAT included', value: summary.taxMinor },
   ];
 
   return (

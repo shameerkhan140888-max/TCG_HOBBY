@@ -4,6 +4,19 @@ import { Button } from './button';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { cn } from './lib/cn';
 
+function HeartIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill={filled ? 'currentColor' : 'none'}>
+      <path
+        d="M20.8 4.6c-2-1.9-5.2-1.8-7.1.2L12 6.5l-1.7-1.7c-1.9-2-5.1-2.1-7.1-.2-2.1 2-2.2 5.3-.2 7.4l8.2 8.1a1.1 1.1 0 0 0 1.6 0L21 12c2-2.1 1.9-5.4-.2-7.4Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export type AuthCardProps = HTMLAttributes<HTMLDivElement> & {
   title: string;
   description: string;
@@ -69,10 +82,14 @@ export type WishlistButtonProps = {
 };
 
 export function WishlistButton({ productId, wishlisted, authenticated, action, loginHref, returnTo }: WishlistButtonProps) {
+  const label = wishlisted ? 'Remove from wishlist' : 'Add to wishlist';
+
   if (!authenticated || !action) {
     return (
-      <Button asChild size="sm" variant="outline">
-        <a href={loginHref}>{wishlisted ? 'Remove' : 'Save'}</a>
+      <Button asChild size="icon" variant="outline" title={label}>
+        <a href={loginHref} aria-label={label}>
+          <HeartIcon filled={wishlisted} />
+        </a>
       </Button>
     );
   }
@@ -81,8 +98,8 @@ export function WishlistButton({ productId, wishlisted, authenticated, action, l
     <form action={action}>
       <input type="hidden" name="productId" value={productId} />
       {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
-      <Button size="sm" variant={wishlisted ? 'secondary' : 'outline'} type="submit" aria-pressed={wishlisted}>
-        {wishlisted ? 'Remove' : 'Save'}
+      <Button size="icon" variant={wishlisted ? 'secondary' : 'outline'} type="submit" aria-pressed={wishlisted} aria-label={label} title={label}>
+        <HeartIcon filled={wishlisted} />
       </Button>
     </form>
   );

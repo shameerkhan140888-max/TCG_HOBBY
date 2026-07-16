@@ -13,19 +13,30 @@ export function AddToCartButton({ productId, returnTo }: BaseProps) {
       <input type="hidden" name="quantity" value="1" />
       <input type="hidden" name="returnTo" value={returnTo} />
       <Button size="sm" type="submit">
-        Add to cart
+        Add to basket
       </Button>
     </form>
   );
 }
 
-export function AddToCartWithQuantityForm({ productId, returnTo, maxQuantity }: BaseProps & { maxQuantity?: number }) {
+export function AddToCartWithQuantityForm({
+  productId,
+  returnTo,
+  maxQuantity,
+  hideQuantity = false,
+}: BaseProps & { maxQuantity?: number; hideQuantity?: boolean }) {
   return (
-    <form action={addToCartAction} className="flex flex-wrap items-end gap-3">
+    <form action={addToCartAction} className={hideQuantity ? 'w-full sm:w-auto' : 'flex flex-wrap items-end gap-3'}>
       <input type="hidden" name="productId" value={productId} />
       <input type="hidden" name="returnTo" value={returnTo} />
-      <QuantitySelector name="quantity" value={1} {...(maxQuantity !== undefined ? { max: maxQuantity } : {})} />
-      <Button type="submit">Add to cart</Button>
+      {hideQuantity ? (
+        <input type="hidden" name="quantity" value="1" />
+      ) : (
+        <QuantitySelector name="quantity" value={1} {...(maxQuantity !== undefined ? { max: maxQuantity } : {})} />
+      )}
+      <Button type="submit" className={hideQuantity ? 'w-full sm:w-auto' : 'flex-1 sm:flex-none'}>
+        Add to basket
+      </Button>
     </form>
   );
 }

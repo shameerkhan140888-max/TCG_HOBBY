@@ -23,6 +23,8 @@ export type ProductFormValues = {
   imageLabel: string;
   primaryImageUrl: string;
   galleryImageUrl: string;
+  customerPurchaseLimit: string;
+  availabilityMessage: string;
   featured: boolean;
   published: boolean;
 };
@@ -92,6 +94,8 @@ export const emptyProductFormValues: ProductFormValues = {
   imageLabel: '',
   primaryImageUrl: '',
   galleryImageUrl: '',
+  customerPurchaseLimit: '',
+  availabilityMessage: '',
   featured: false,
   published: true,
 };
@@ -163,6 +167,8 @@ export function buildProductValues(formData: FormData): ProductFormValues {
     imageLabel: getString(formData, 'imageLabel'),
     primaryImageUrl: getString(formData, 'primaryImageUrl'),
     galleryImageUrl: getString(formData, 'galleryImageUrl'),
+    customerPurchaseLimit: getString(formData, 'customerPurchaseLimit'),
+    availabilityMessage: getString(formData, 'availabilityMessage'),
     featured: getBoolean(formData, 'featured'),
     published: getBoolean(formData, 'published', true),
   };

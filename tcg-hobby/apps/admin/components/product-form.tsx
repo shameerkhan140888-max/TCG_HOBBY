@@ -105,6 +105,14 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
           <FormField label="Gallery image URL" htmlFor="galleryImageUrl">
             <Input id="galleryImageUrl" name="galleryImageUrl" defaultValue={formState.values.galleryImageUrl} placeholder="Optional secondary image" />
           </FormField>
+          <FormField label="Availability / shipping promotion" htmlFor="availabilityMessage">
+            <Textarea
+              id="availabilityMessage"
+              name="availabilityMessage"
+              defaultValue={formState.values.availabilityMessage}
+              placeholder="Optional product-specific delivery, limit or availability note"
+            />
+          </FormField>
         </div>
       </FormSection>
 
@@ -127,6 +135,16 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
           </FormField>
           <FormField label="Reorder point" htmlFor="reorderPoint" error={formState.fieldErrors.reorderPoint} required>
             <Input id="reorderPoint" name="reorderPoint" type="number" min={0} defaultValue={formState.values.reorderPoint} />
+          </FormField>
+          <FormField label="Purchase limit" htmlFor="customerPurchaseLimit" error={formState.fieldErrors.customerPurchaseLimit}>
+            <Input
+              id="customerPurchaseLimit"
+              name="customerPurchaseLimit"
+              type="number"
+              min={1}
+              defaultValue={formState.values.customerPurchaseLimit}
+              placeholder="Optional"
+            />
           </FormField>
         </div>
       </FormSection>

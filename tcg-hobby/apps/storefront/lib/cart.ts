@@ -8,10 +8,12 @@ import {
   clearCart as clearMemberCart,
   getCatalogueProductById,
   getCustomerCartDetails,
+  hasFreeUkStandardShipping,
   prisma,
   removeCartItem as removeMemberCartItem,
   updateCartItemQuantity as updateMemberCartItemQuantity,
   validateQuantityAgainstAvailability,
+  validateQuantityAgainstPurchaseLimit,
 } from '@tcg-hobby/database';
 import { getCurrentCustomerSession } from './auth';
 
@@ -32,6 +34,8 @@ type CartProductRow = {
     stockOnHand: number;
     reservedStock: number;
   } | null;
+  customerPurchaseLimit: number | null;
+  freeUkStandardShipping: boolean;
 };
 
 type CartSnapshot = Awaited<ReturnType<typeof getCustomerCartDetails>>;
@@ -128,6 +132,8 @@ async function loadGuestCartSnapshot(db = prisma): Promise<CartSnapshot> {
           stockOnHand: product.stockOnHand,
           reservedStock: product.reservedStock,
         },
+        customerPurchaseLimit: product.customerPurchaseLimit ?? null,
+        freeUkStandardShipping: product.freeUkStandardShipping ?? hasFreeUkStandardShipping(product.slug),
       } as CartProductRow;
     }),
   );
@@ -154,6 +160,8 @@ async function loadGuestCartSnapshot(db = prisma): Promise<CartSnapshot> {
         unitPriceMinor: product.priceMinor,
         totalMinor: product.priceMinor * entry.quantity,
         inStock: available > 0,
+        customerPurchaseLimit: product.customerPurchaseLimit,
+        freeUkStandardShipping: product.freeUkStandardShipping,
       },
     ];
   });
@@ -184,6 +192,8 @@ async function loadProductForCart(productId: string, db = prisma) {
       stockOnHand: product.stockOnHand,
       reservedStock: product.reservedStock,
     },
+    customerPurchaseLimit: product.customerPurchaseLimit ?? null,
+    freeUkStandardShipping: product.freeUkStandardShipping ?? hasFreeUkStandardShipping(product.slug),
   } as CartProductRow;
 }
 
@@ -210,6 +220,10 @@ async function addGuestCartItem(productId: string, quantity: number, db = prisma
   const nextValidation = validateQuantityAgainstAvailability(nextQuantity, available);
   if (!nextValidation.ok) {
     throw new Error(nextValidation.message);
+  }
+  const limitValidation = validateQuantityAgainstPurchaseLimit(nextQuantity, product.customerPurchaseLimit);
+  if (!limitValidation.ok) {
+    throw new Error(limitValidation.message);
   }
 
   if (existing) {
@@ -248,6 +262,10 @@ async function updateGuestCartItem(productId: string, quantity: number, db = pri
   const validation = validateQuantityAgainstAvailability(quantity, available);
   if (!validation.ok) {
     throw new Error(validation.message);
+  }
+  const limitValidation = validateQuantityAgainstPurchaseLimit(quantity, product.customerPurchaseLimit);
+  if (!limitValidation.ok) {
+    throw new Error(limitValidation.message);
   }
 
   if (index >= 0) {

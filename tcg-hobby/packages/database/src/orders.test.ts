@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { MEGA_GRENINJA_PRODUCT_SLUG } from './commerce';
 import { createPendingCheckoutOrder, finalizePaidCheckoutOrder } from './orders';
 
 function createDbMock() {
@@ -84,7 +85,8 @@ describe('order repository', () => {
 
     expect(result.order.orderNumber).toBe('TCG-20260704-ABC123');
     expect(result.shippingMethod.name).toBe('UK Standard');
-    expect(result.totalMinor).toBe(3499);
+    expect(result.taxMinor).toBe(417);
+    expect(result.totalMinor).toBe(2999);
     expect(mockDb.inventoryItem.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: {
@@ -145,6 +147,106 @@ describe('order repository', () => {
       }),
     );
   });
+
+  it('uses free UK standard shipping for an eligible product-only basket', async () => {
+    const mockDb = createDbMock();
+    mockDb.address.create.mockResolvedValue({ id: 'addr-1' });
+    mockDb.order.create.mockResolvedValue({
+      id: 'order-1',
+      orderNumber: 'TCG-20260704-FREEUK',
+    });
+    mockDb.inventoryItem.findUnique.mockResolvedValue({
+      id: 'inv-1',
+      stockOnHand: 3,
+      reservedStock: 0,
+    });
+    mockDb.inventoryItem.updateMany.mockResolvedValue({ count: 1 });
+    mockDb.orderItem.createMany.mockResolvedValue({ count: 1 });
+
+    const result = await createPendingCheckoutOrder(
+      null,
+      {
+        cartId: null,
+        currency: 'GBP',
+        items: [
+          {
+            id: 'cart-item-mega',
+            quantity: 1,
+            unitPriceMinor: 4999,
+            productId: 'prod-mega',
+            productName: 'Pokemon TCG: Mega Greninja ex Premium Collection',
+            productSlug: MEGA_GRENINJA_PRODUCT_SLUG,
+            totalMinor: 4999,
+            inStock: true,
+            customerPurchaseLimit: 1,
+            freeUkStandardShipping: true,
+          },
+        ],
+      },
+      {
+        shippingAddress: {
+          fullName: 'Guest Collector',
+          email: 'guest@example.com',
+          line1: '1 Guest Street',
+          line2: '',
+          city: 'Leeds',
+          region: '',
+          postalCode: 'LS1 2AB',
+          country: 'GB',
+        },
+        shippingMethodCode: 'UK_STANDARD',
+      },
+      mockDb,
+    );
+
+    expect(result.shippingMinor).toBe(0);
+    expect(result.taxMinor).toBe(833);
+    expect(result.totalMinor).toBe(4999);
+  });
+
+  it('rejects checkout when a cart item exceeds its purchase limit', async () => {
+    const mockDb = createDbMock();
+
+    await expect(
+      createPendingCheckoutOrder(
+        null,
+        {
+          cartId: null,
+          currency: 'GBP',
+          items: [
+            {
+              id: 'cart-item-mega',
+              quantity: 2,
+              unitPriceMinor: 4999,
+              productId: 'prod-mega',
+              productName: 'Pokemon TCG: Mega Greninja ex Premium Collection',
+              productSlug: MEGA_GRENINJA_PRODUCT_SLUG,
+              totalMinor: 9998,
+              inStock: true,
+              customerPurchaseLimit: 1,
+              freeUkStandardShipping: true,
+            },
+          ],
+        },
+        {
+          shippingAddress: {
+            fullName: 'Guest Collector',
+            email: 'guest@example.com',
+            line1: '1 Guest Street',
+            line2: '',
+            city: 'Leeds',
+            region: '',
+            postalCode: 'LS1 2AB',
+            country: 'GB',
+          },
+          shippingMethodCode: 'UK_STANDARD',
+        },
+        mockDb,
+      ),
+    ).rejects.toThrow('Limited to one collection per person or household.');
+    expect(mockDb.order.create).not.toHaveBeenCalled();
+  });
+
 
   it('finalizes a paid order by reducing reserved stock', async () => {
     const finalizationDb = createDbMock();

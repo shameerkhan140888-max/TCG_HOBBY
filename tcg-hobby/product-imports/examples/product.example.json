@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "importId": "manual-example-product-name",
+  "name": "Example Product Name",
+  "slug": "example-product-name",
+  "sku": "EXAMPLE-SKU-001",
+  "game": "POKEMON",
+  "category": "sealed-product",
+  "productType": "Premium Collection",
+  "priceMinor": 4999,
+  "vatRate": 20,
+  "stockQuantity": 3,
+  "lifecycleState": "DRAFT",
+  "visible": false,
+  "featured": false,
+  "homepagePriority": null,
+  "heroFeatured": false,
+  "preorder": false,
+  "supplierSlug": "card-citadel",
+  "supplierCostMinor": 0,
+  "purchaseLimit": {
+    "quantity": 1,
+    "scope": "PERSON_OR_HOUSEHOLD"
+  },
+  "shippingPromotion": {
+    "type": "NONE",
+    "productOnly": true
+  },
+  "shortDescription": "A concise original product summary.",
+  "fullDescription": "Original product copy approved for TCG Hobby.",
+  "contents": [
+    "Verified content item one",
+    "Verified content item two"
+  ],
+  "variationNotice": "Product artwork and assortment may vary.",
+  "seo": {
+    "title": "Example Product Name | TCG Hobby",
+    "description": "Shop Example Product Name from TCG Hobby."
+  },
+  "source": {
+    "type": "OWNER_SUPPLIED",
+    "reference": "Internal note describing source approval."
+  }
+}

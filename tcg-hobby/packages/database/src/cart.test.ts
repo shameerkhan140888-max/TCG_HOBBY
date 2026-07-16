@@ -81,6 +81,27 @@ describe('cart repository', () => {
     await expect(addProductToCart('user-1', 'prod-1', 3, db)).rejects.toThrow('Only 2 in stock for this item.');
   });
 
+  it('prevents adding more units than the customer purchase limit', async () => {
+    const db = createDbMock();
+    db.product.findUnique.mockResolvedValue({
+      id: 'prod-1',
+      slug: 'pokemon-tcg-mega-greninja-ex-premium-collection',
+      name: 'Pokemon TCG: Mega Greninja ex Premium Collection',
+      priceMinor: 4999,
+      customerPurchaseLimit: 1,
+      inventory: { stockOnHand: 3, reservedStock: 0 },
+    });
+    db.cart.findUnique.mockImplementation(async (args: any) => {
+      if (args?.select) {
+        return { items: [{ quantity: 1 }] };
+      }
+
+      return { id: 'cart-1', currency: 'GBP', items: [] };
+    });
+
+    await expect(addProductToCart('user-1', 'prod-1', 1, db)).rejects.toThrow('Limited to one collection per person or household.');
+  });
+
   it('removes an item when the requested quantity drops to zero', async () => {
     const db = createDbMock();
     db.product.findUnique.mockResolvedValue({

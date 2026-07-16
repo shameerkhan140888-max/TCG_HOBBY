@@ -103,20 +103,10 @@ export async function placeCheckoutOrderAction(_state: CheckoutFormState, formDa
       })),
       {
         name: shippingMethod.name,
-        description: shippingMethod.etaLabel,
-        amountMinor: shippingMethod.amountMinor,
+        description: reservation.shippingMinor === 0 ? `${shippingMethod.etaLabel} - free for this basket` : shippingMethod.etaLabel,
+        amountMinor: reservation.shippingMinor,
         quantity: 1,
       },
-      ...(reservation.taxMinor
-        ? [
-            {
-              name: 'Estimated VAT',
-              description: 'Estimated UK VAT for this order',
-              amountMinor: reservation.taxMinor,
-              quantity: 1,
-            },
-          ]
-        : []),
     ];
 
     const checkoutSession = await createStripeCheckoutSession({

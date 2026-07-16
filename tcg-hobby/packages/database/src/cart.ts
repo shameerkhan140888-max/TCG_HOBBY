@@ -1,7 +1,13 @@
 import type { CartLineItem, CartSummary } from '@tcg-hobby/types';
 import type { Prisma } from '@prisma/client';
 import { prisma } from './client';
-import { calculateCartSummary, calculateLineTotal, validateQuantityAgainstAvailability } from './commerce';
+import {
+  calculateCartSummary,
+  calculateLineTotal,
+  hasFreeUkStandardShipping,
+  validateQuantityAgainstAvailability,
+  validateQuantityAgainstPurchaseLimit,
+} from './commerce';
 
 const cartRecordInclude = {
   items: {
@@ -42,6 +48,8 @@ function mapCartItemRow(item: CartItemRow): CartLineItem {
     unitPriceMinor: item.unitPriceMinor,
     totalMinor: calculateLineTotal(item.unitPriceMinor, item.quantity),
     inStock: available > 0,
+    customerPurchaseLimit: item.product.customerPurchaseLimit,
+    freeUkStandardShipping: item.product.freeUkStandardShipping || hasFreeUkStandardShipping(item.product.slug),
   };
 }
 
@@ -98,6 +106,14 @@ async function loadProductForCart(db = prisma, productId: string) {
 
 function assertAvailableQuantity(quantity: number, available: number) {
   const result = validateQuantityAgainstAvailability(quantity, available);
+
+  if (!result.ok) {
+    throw new Error(result.message);
+  }
+}
+
+function assertPurchaseLimit(quantity: number, limit: number | null | undefined) {
+  const result = validateQuantityAgainstPurchaseLimit(quantity, limit);
 
   if (!result.ok) {
     throw new Error(result.message);
@@ -167,6 +183,7 @@ export async function addProductToCart(userId: string, productId: string, quanti
   const existingQuantity = await getCartItemQuantity(userId, productId, db);
   const nextQuantity = existingQuantity + quantity;
   assertAvailableQuantity(nextQuantity, available);
+  assertPurchaseLimit(nextQuantity, product.customerPurchaseLimit);
 
   await db.cartItem.upsert({
     where: {
@@ -219,6 +236,7 @@ export async function updateCartItemQuantity(userId: string, productId: string, 
   }
 
   assertAvailableQuantity(quantity, available);
+  assertPurchaseLimit(quantity, product.customerPurchaseLimit);
 
   await db.cartItem.upsert({
     where: {

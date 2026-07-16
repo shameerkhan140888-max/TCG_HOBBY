@@ -270,6 +270,7 @@ model Supplier {
 
 model Product {
   id            String           @id @default(cuid())
+  importId      String?          @unique
   sku           String           @unique
   slug          String           @unique
   name          String
@@ -279,8 +280,14 @@ model Product {
   longDescription String
   condition     ProductCondition @default(SEALED)
   priceMinor    Int
+  vatRate       Int              @default(20)
   currency      String           @default("GBP")
   featured      Boolean          @default(false)
+  homepagePriority Int?
+  heroFeatured Boolean           @default(false)
+  freeUkStandardShipping Boolean @default(false)
+  shippingPromotionProductOnly Boolean @default(true)
+  lifecycleState String          @default("DRAFT")
   published     Boolean          @default(true)
   archivedAt    DateTime?
   searchText    String
@@ -314,17 +321,47 @@ model Product {
   notificationSubscriptions NotificationSubscription[]
   marketSnapshots MarketSnapshot[]
   watchlistItems WatchlistItem[]
+  importSourceType String?
+  importSourceReference String?
+  importedAt     DateTime?
+  lastImportedAt DateTime?
+  importValidationWarnings String?
+  importAudits   ProductImportAudit[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
+  @@index([importId])
   @@index([slug, published])
   @@index([categoryId, published])
   @@index([archivedAt, published])
   @@index([published, featured])
+  @@index([published, featured, homepagePriority])
+  @@index([published, heroFeatured])
+  @@index([lifecycleState, published])
   @@index([releaseStatus, releaseDate])
   @@index([published, releaseStatus])
   @@index([name])
   @@index([searchText])
+}
+
+model ProductImportAudit {
+  id             String   @id @default(cuid())
+  productId      String?
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  importId       String?
+  sourceType     String
+  sourceReference String?
+  lifecycleState String
+  changedFields  Json
+  previousValues Json?
+  nextValues     Json?
+  warnings       String?
+  performedBy    String?
+  createdAt      DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@index([importId])
+  @@index([createdAt])
 }
 
 model ProductImage {

@@ -1,6 +1,6 @@
 import { Button, CartLineItem, Container, EmptyState, ErrorMessage, OrderSummary, Section } from '@tcg-hobby/ui';
 import { formatMoney } from '@tcg-hobby/utils';
-import { calculateVatEstimateMinor, getAvailableShippingMethods } from '@tcg-hobby/database';
+import { calculatePromotionalShippingMinor, calculateVatEstimateMinor, getAvailableShippingMethods } from '@tcg-hobby/database';
 import { clearCartAction } from '../../lib/cart';
 import { CartLineQuantityForm, RemoveCartItemButton } from '../../components/cart-actions';
 import { CommerceProgress } from '../../components/commerce-progress';
@@ -20,14 +20,14 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
   const cartError = asString(params.cartError);
   const cart = await getCurrentCustomerCart();
   const shippingMethods = await getAvailableShippingMethods('GB');
-  const estimatedShippingMinor = shippingMethods[0]?.amountMinor ?? 0;
+  const estimatedShippingMinor = shippingMethods[0] ? calculatePromotionalShippingMinor(shippingMethods[0], cart.items, 'GB') : 0;
   const vatEstimateMinor = calculateVatEstimateMinor(cart.subtotalMinor);
   const summary = {
     currency: cart.currency,
     subtotalMinor: cart.subtotalMinor,
     shippingMinor: estimatedShippingMinor,
     taxMinor: vatEstimateMinor,
-    totalMinor: cart.subtotalMinor + estimatedShippingMinor + vatEstimateMinor,
+    totalMinor: cart.subtotalMinor + estimatedShippingMinor,
   };
   const currentHref = '/cart';
 
@@ -71,8 +71,16 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
                       className="overflow-hidden"
                       actionSlot={
                         <div className="flex flex-col gap-3 sm:min-w-44">
-                          <CartLineQuantityForm productId={item.productId} quantity={item.quantity} returnTo={currentHref} />
+                          <CartLineQuantityForm
+                            productId={item.productId}
+                            quantity={item.quantity}
+                            returnTo={currentHref}
+                            {...(item.customerPurchaseLimit ? { maxQuantity: item.customerPurchaseLimit } : {})}
+                          />
                           <RemoveCartItemButton productId={item.productId} returnTo={currentHref} />
+                          {item.customerPurchaseLimit === 1 ? (
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Limit 1 per household</p>
+                          ) : null}
                         </div>
                       }
                     />
@@ -85,12 +93,14 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
                     <div className="rounded-xl border border-surface-line bg-surface-ink p-4">
                       <p className="text-xs uppercase tracking-wide text-neutral-500">Delivery</p>
                       <p className="mt-2 text-lg font-bold text-neutral-50">{shippingMethods[0]?.name ?? 'Delivery'}</p>
-                      <p className="mt-1 text-sm text-neutral-400">{shippingMethods[0]?.etaLabel ?? 'Calculated at checkout'}</p>
+                      <p className="mt-1 text-sm text-neutral-400">
+                        {estimatedShippingMinor === 0 ? 'Free UK standard delivery for this basket' : shippingMethods[0]?.etaLabel ?? 'Calculated at checkout'}
+                      </p>
                     </div>
                     <div className="rounded-xl border border-surface-line bg-surface-ink p-4">
-                      <p className="text-xs uppercase tracking-wide text-neutral-500">VAT</p>
+                      <p className="text-xs uppercase tracking-wide text-neutral-500">VAT included</p>
                       <p className="mt-2 text-lg font-bold text-neutral-50">{formatMoney({ amountMinor: vatEstimateMinor, currency: cart.currency })}</p>
-                      <p className="mt-1 text-sm text-neutral-400">Estimated for UK delivery</p>
+                      <p className="mt-1 text-sm text-neutral-400">Included in product prices</p>
                     </div>
                     <div className="rounded-xl border border-surface-line bg-surface-ink p-4">
                       <p className="text-xs uppercase tracking-wide text-neutral-500">Order total</p>
@@ -121,7 +131,7 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
                 />
                 <div className="rounded-2xl border border-surface-line bg-surface-base p-4 text-sm leading-6 text-neutral-400">
                   <p className="font-semibold text-neutral-50">Need help?</p>
-                  <p className="mt-2">Availability is checked against stock on hand before quantities are changed or checkout begins.</p>
+                  <p className="mt-2">Availability is checked before quantities are changed or checkout begins.</p>
                 </div>
               </div>
             </div>

@@ -59,6 +59,7 @@ type AddressSeed = {
 
 type ProductSeed = {
   id: string;
+  importId?: string | null;
   sku: string;
   slug: string;
   name: string;
@@ -68,8 +69,14 @@ type ProductSeed = {
   longDescription: string;
   condition: 'MINT' | 'NEAR_MINT' | 'LIGHTLY_PLAYED' | 'MODERATELY_PLAYED' | 'HEAVILY_PLAYED' | 'DAMAGED' | 'SEALED';
   priceMinor: number;
+  vatRate?: number;
   currency: Money['currency'];
   featured: boolean;
+  homepagePriority?: number | null;
+  heroFeatured?: boolean;
+  freeUkStandardShipping?: boolean;
+  shippingPromotionProductOnly?: boolean;
+  lifecycleState?: string;
   published: boolean;
   searchText: string;
   imageLabel: string;
@@ -86,7 +93,12 @@ type ProductSeed = {
   availabilityMessage?: string | null;
   preorderBadgeLabel?: string | null;
   comingSoonBadgeLabel?: string | null;
+  importSourceType?: string | null;
+  importSourceReference?: string | null;
+  importValidationWarnings?: string | null;
 };
+
+export const MEGA_GRENINJA_PREMIUM_COLLECTION_SLUG = 'pokemon-tcg-mega-greninja-ex-premium-collection';
 
 type ReleaseSeed = {
   id: string;
@@ -502,6 +514,39 @@ export const seedAddresses: AddressSeed[] = [
 ];
 
 const seededProducts: ProductSeed[] = [
+  {
+    id: 'prod-mega-greninja-ex-premium-collection',
+    importId: 'owner-supplied-pokemon-mega-greninja-ex-premium-collection',
+    sku: 'PKM-MGREN-PC-001',
+    slug: MEGA_GRENINJA_PREMIUM_COLLECTION_SLUG,
+    name: 'Pokémon TCG: Mega Greninja ex Premium Collection',
+    game: 'Pokémon TCG',
+    setName: 'Premium Collection',
+    description:
+      'Take Mega Greninja ex into battle with an exclusive promotional card, an oversized lenticular card, a reusable tech sticker and eight Pokémon TCG booster packs.',
+    longDescription:
+      'Mega Greninja ex flips the battle upside down in this premium Pokémon TCG collection.\n\nTake Mega Greninja ex into battle with an exclusive promotional card, an oversized lenticular card, a reusable tech sticker and eight Pokémon TCG booster packs.\n\nThe collection includes Mega Greninja ex in both playable and oversized display formats, making it a strong choice for collectors, players and Mega Greninja fans looking for a premium Pokémon TCG release.',
+    condition: 'SEALED',
+    priceMinor: 4999,
+    vatRate: 20,
+    currency: 'GBP',
+    featured: true,
+    homepagePriority: 1,
+    heroFeatured: true,
+    freeUkStandardShipping: true,
+    shippingPromotionProductOnly: true,
+    lifecycleState: 'PUBLISHED',
+    published: true,
+    searchText:
+      'pokemon tcg mega greninja ex premium collection promo card oversized lenticular tech sticker eight booster packs free uk standard delivery limit one household',
+    imageLabel: 'Mega Greninja ex collection',
+    categorySlug: 'sealed-product',
+    supplierSlug: 'card-citadel',
+    customerPurchaseLimit: 1,
+    availabilityMessage: 'Free UK Standard Delivery. Limited to one per household.',
+    importSourceType: 'OWNER_SUPPLIED',
+    importSourceReference: 'Business-owner supplied media and verified packaging contents.',
+  },
   {
     id: 'prod-arcane-booster-box',
     sku: 'SEALED-ARC-001',
@@ -1049,6 +1094,22 @@ export const seedPricingRules: PricingRuleSeed[] = [
 
 export const seedProductPricing: ProductPricingSeed[] = [
   {
+    id: 'price-mega-greninja',
+    productSlug: MEGA_GRENINJA_PREMIUM_COLLECTION_SLUG,
+    pricingRuleId: 'rule-sealed-supplier',
+    costMinor: 3500,
+    retailMinor: 4999,
+    buyMinor: 3000,
+    marginMinor: 1499,
+    markupPercent: 43,
+    profitMinor: 1499,
+    minimumMarginPercent: 30,
+    maximumDiscountPercent: 18,
+    priceSource: 'Manual launch price',
+    priceStatus: 'MANUAL_OVERRIDE',
+    manualOverride: true,
+  },
+  {
     id: 'price-arcane',
     productSlug: 'arcane-booster-box',
     pricingRuleId: 'rule-sealed-supplier',
@@ -1344,6 +1405,7 @@ export const seedBuylistItems: BuylistItemSeed[] = [
 ];
 
 export const seedInventory: InventorySeed[] = [
+  { id: 'inv-mega-greninja', productSlug: MEGA_GRENINJA_PREMIUM_COLLECTION_SLUG, stockOnHand: 3, reservedStock: 0, reorderPoint: 0, locationCode: 'MAIN' },
   { id: 'inv-arcane', productSlug: 'arcane-booster-box', stockOnHand: 14, reservedStock: 2, reorderPoint: 4, locationCode: 'MAIN' },
   { id: 'inv-stellar', productSlug: 'stellar-crown-elite-trainer-box', stockOnHand: 22, reservedStock: 4, reorderPoint: 6, locationCode: 'MAIN' },
   { id: 'inv-midnight', productSlug: 'midnight-rites-booster-display', stockOnHand: 8, reservedStock: 1, reorderPoint: 3, locationCode: 'MAIN' },
@@ -1436,6 +1498,7 @@ export const seedOrderItems: OrderItemSeed[] = [
 ];
 
 export const seedSupplierProducts: SupplierProductSeed[] = [
+  { id: 'sp-mega-greninja', supplierSlug: 'card-citadel', productSlug: MEGA_GRENINJA_PREMIUM_COLLECTION_SLUG, supplierSku: 'PKM-MGREN-PC-001', costMinor: 3500, currency: 'GBP', leadTimeDays: 5 },
   { id: 'sp-arcane', supplierSlug: 'card-citadel', productSlug: 'arcane-booster-box', supplierSku: 'CC-ARC-001', costMinor: 8750, currency: 'GBP', leadTimeDays: 4 },
   { id: 'sp-stellar', supplierSlug: 'card-citadel', productSlug: 'stellar-crown-elite-trainer-box', supplierSku: 'CC-PKM-002', costMinor: 3150, currency: 'GBP', leadTimeDays: 4 },
   { id: 'sp-midnight', supplierSlug: 'gamegrid-wholesale', productSlug: 'midnight-rites-booster-display', supplierSku: 'GG-BOX-003', costMinor: 6540, currency: 'GBP', leadTimeDays: 6 },
@@ -1453,6 +1516,48 @@ export const seedSupplierProducts: SupplierProductSeed[] = [
 ];
 
 export const seedProductImages: ProductImageSeed[] = seedProducts.flatMap((product) => {
+  if (product.slug === MEGA_GRENINJA_PREMIUM_COLLECTION_SLUG) {
+    const baseUrl = '/products/pokemon/mega-greninja-ex-premium-collection';
+    return [
+      {
+        id: 'img-mega-greninja-primary',
+        productSlug: product.slug,
+        url: `${baseUrl}/primary.webp`,
+        altText: 'Pokémon TCG Mega Greninja ex Premium Collection box',
+        imageType: 'primary',
+        sortOrder: 1,
+        isPrimary: true,
+      },
+      {
+        id: 'img-mega-greninja-booster-packs',
+        productSlug: product.slug,
+        url: `${baseUrl}/booster-packs.webp`,
+        altText: 'Eight Pokémon TCG booster packs included in the Mega Greninja ex Premium Collection',
+        imageType: 'gallery',
+        sortOrder: 2,
+        isPrimary: false,
+      },
+      {
+        id: 'img-mega-greninja-promo-cards',
+        productSlug: product.slug,
+        url: `${baseUrl}/promo-cards.webp`,
+        altText: 'Mega Greninja ex promotional card and oversized lenticular promotional card',
+        imageType: 'gallery',
+        sortOrder: 3,
+        isPrimary: false,
+      },
+      {
+        id: 'img-mega-greninja-rear-packaging',
+        productSlug: product.slug,
+        url: `${baseUrl}/rear-packaging.webp`,
+        altText: 'Rear packaging of the Pokémon TCG Mega Greninja ex Premium Collection',
+        imageType: 'gallery',
+        sortOrder: 4,
+        isPrimary: false,
+      },
+    ];
+  }
+
   const baseUrl = `https://images.tcghobby.test/products/${product.slug}`;
   return [
     {
@@ -1789,6 +1894,9 @@ export function toCatalogueProduct(seed: ProductSeed, inventory: InventorySeed, 
     categorySlug: category.slug,
     price: toMoney(seed.priceMinor, seed.currency),
     featured: seed.featured,
+    homepagePriority: seed.homepagePriority ?? null,
+    heroFeatured: seed.heroFeatured ?? false,
+    lifecycleState: seed.lifecycleState ?? (seed.published ? 'PUBLISHED' : 'DRAFT'),
     inStock: inventory.stockOnHand - inventory.reservedStock > 0,
     stockOnHand: inventory.stockOnHand,
     reservedStock: inventory.reservedStock,
@@ -1806,6 +1914,9 @@ export function toCatalogueProduct(seed: ProductSeed, inventory: InventorySeed, 
     availabilityMessage: seed.availabilityMessage ?? null,
     preorderBadgeLabel: seed.preorderBadgeLabel ?? null,
     comingSoonBadgeLabel: seed.comingSoonBadgeLabel ?? null,
+    vatRate: seed.vatRate ?? 20,
+    freeUkStandardShipping: seed.freeUkStandardShipping ?? seed.slug === MEGA_GRENINJA_PREMIUM_COLLECTION_SLUG,
+    shippingPromotionProductOnly: seed.shippingPromotionProductOnly ?? true,
   };
 }
 
@@ -1826,6 +1937,7 @@ export function toCatalogueProductDetail(
     searchText: seed.searchText,
     supplierSku: supplierProduct?.supplierSku ?? `${seed.sku}-SEED`,
     leadTimeDays: supplierProduct?.leadTimeDays ?? 5,
+    images: [],
     relatedProducts: [],
   };
 }

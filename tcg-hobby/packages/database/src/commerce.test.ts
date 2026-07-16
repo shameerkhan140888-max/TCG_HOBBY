@@ -3,11 +3,14 @@ import {
   calculateCartSubtotal,
   calculateCartSummary,
   calculateOrderTotal,
+  calculatePromotionalShippingMinor,
   calculateVatEstimateMinor,
   generateOrderNumber,
   getShippingMethodByCode,
   getShippingMethodsForCountry,
+  MEGA_GRENINJA_PRODUCT_SLUG,
   validateQuantityAgainstAvailability,
+  validateQuantityAgainstPurchaseLimit,
 } from './commerce';
 
 describe('commerce helpers', () => {
@@ -33,8 +36,9 @@ describe('commerce helpers', () => {
     });
   });
 
-  it('estimates VAT for basket summaries', () => {
-    expect(calculateVatEstimateMinor(10000)).toBe(2000);
+  it('extracts VAT included in public basket prices', () => {
+    expect(calculateVatEstimateMinor(10000)).toBe(1667);
+    expect(calculateVatEstimateMinor(4999)).toBe(833);
     expect(calculateVatEstimateMinor(0)).toBe(0);
   });
 
@@ -60,6 +64,23 @@ describe('commerce helpers', () => {
     const methods = getShippingMethodsForCountry('US');
     expect(methods).toHaveLength(1);
     expect(methods[0]?.code).toBe('WORLDWIDE_STANDARD');
+  });
+
+  it('applies free UK standard shipping only when every basket item is eligible', () => {
+    const standard = getShippingMethodByCode('UK_STANDARD', 'GB');
+
+    expect(standard).not.toBeNull();
+    expect(calculatePromotionalShippingMinor(standard!, [{ productSlug: MEGA_GRENINJA_PRODUCT_SLUG }], 'GB')).toBe(0);
+    expect(calculatePromotionalShippingMinor(standard!, [{ productSlug: MEGA_GRENINJA_PRODUCT_SLUG }, { productSlug: 'other-product' }], 'GB')).toBe(499);
+    expect(calculatePromotionalShippingMinor(standard!, [{ productSlug: MEGA_GRENINJA_PRODUCT_SLUG }], 'US')).toBe(499);
+  });
+
+  it('validates customer purchase limits', () => {
+    expect(validateQuantityAgainstPurchaseLimit(1, 1)).toEqual({ ok: true });
+    expect(validateQuantityAgainstPurchaseLimit(2, 1)).toEqual({
+      ok: false,
+      message: 'Limited to one collection per person or household.',
+    });
   });
 
   it('generates readable order numbers with a testable entropy segment', () => {
