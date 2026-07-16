@@ -12,15 +12,20 @@ type ShopLink = {
 };
 
 const shopLinks: ShopLink[] = [
-  { label: 'Pokémon', href: '/catalogue?q=Pokemon', description: 'Singles, sealed products, and more.' },
-  { label: 'Magic: The Gathering', href: '/catalogue?q=Magic', description: 'Singles, sealed products, and more.' },
-  { label: 'Yu-Gi-Oh!', href: '/catalogue?q=Yu-Gi-Oh', description: 'Singles, sealed products, and more.' },
-  { label: 'One Piece', href: '/catalogue?q=One+Piece', description: 'Singles, sealed products, and more.' },
-  { label: 'Accessories', href: '/catalogue?category=accessories', description: 'Sleeves, binders, cases, and more.' },
-  { label: 'Sealed Products', href: '/catalogue?category=sealed-product', description: 'Booster boxes, tins, and boxes.' },
-  { label: 'Coming Soon', href: '/coming-soon', description: 'What is next for the store.' },
+  { label: 'Pokémon', href: '/catalogue?q=Pokemon', description: 'Sealed products, singles and collector essentials.' },
+  { label: 'Magic: The Gathering', href: '/catalogue?q=Magic', description: 'New releases, sealed products and play-ready picks.' },
+  { label: 'Yu-Gi-Oh!', href: '/catalogue?q=Yu-Gi-Oh', description: 'Core sets, sealed products and player essentials.' },
+  { label: 'One Piece', href: '/catalogue?q=One+Piece', description: 'Upcoming releases and sealed products.' },
+  { label: 'Sealed Products', href: '/catalogue?category=sealed-product', description: 'Booster boxes, tins and collections.' },
+  { label: 'Accessories', href: '/catalogue?category=accessories', description: 'Sleeves, binders, cases and protection.' },
   { label: 'Pre-orders', href: '/releases', description: 'Reserve upcoming launches early.' },
+  { label: 'Coming Soon', href: '/coming-soon', description: 'What is next for the store.' },
 ];
+
+export const shopMenuGroups = [
+  { title: 'Games', links: shopLinks.slice(0, 4) },
+  { title: 'Store', links: shopLinks.slice(4) },
+] as const;
 
 type MenuPosition = {
   top: number;
@@ -51,9 +56,9 @@ function MenuLinkCard({ link, onNavigate }: { link: ShopLink; onNavigate: () => 
     <Link
       href={link.href}
       onClick={onNavigate}
-      className="rounded-xl border border-surface-line/80 bg-black/20 p-4 transition-colors hover:border-accent/40 hover:bg-surface-panel focus:outline-none focus:ring-2 focus:ring-accent"
+      className="group block rounded-lg px-3 py-3 transition-colors hover:bg-white/[0.045] focus:outline-none focus:ring-2 focus:ring-accent"
     >
-      <span className="block text-sm font-semibold text-neutral-50">{link.label}</span>
+      <span className="block text-sm font-semibold text-neutral-50 transition-colors group-hover:text-accent-soft">{link.label}</span>
       <span className="mt-1 block text-xs leading-5 text-neutral-400">{link.description}</span>
     </Link>
   );
@@ -65,6 +70,7 @@ export function ShopMenu() {
   const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const closeTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1024px)');
@@ -80,14 +86,14 @@ export function ShopMenu() {
     }
 
     const rect = buttonRef.current.getBoundingClientRect();
-    const width = Math.min(820, window.innerWidth - 32);
+    const width = Math.min(720, window.innerWidth - 32);
     const left = Math.min(
-      Math.max(16, rect.left + rect.width / 2 - width / 2),
+      Math.max(16, rect.left - 12),
       Math.max(16, window.innerWidth - width - 16),
     );
 
     setMenuPosition({
-      top: rect.bottom + 14,
+      top: rect.bottom + 8,
       left,
       width,
     });
@@ -106,7 +112,7 @@ export function ShopMenu() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setOpen(false);
+        close();
       }
     };
 
@@ -119,7 +125,7 @@ export function ShopMenu() {
       const clickedMenu = menuRef.current?.contains(target) ?? false;
       const clickedTrigger = buttonRef.current?.contains(target) ?? false;
       if (!clickedMenu && !clickedTrigger) {
-        setOpen(false);
+        close();
       }
     };
 
@@ -138,7 +144,27 @@ export function ShopMenu() {
     };
   }, [open]);
 
-  const close = () => setOpen(false);
+  const cancelClose = () => {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const close = () => {
+    cancelClose();
+    setOpen(false);
+  };
+
+  const openMenu = () => {
+    cancelClose();
+    setOpen(true);
+  };
+
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimerRef.current = window.setTimeout(() => setOpen(false), 180);
+  };
 
   const desktopMenu =
     open && desktop && menuPosition && typeof document !== 'undefined'
@@ -147,7 +173,7 @@ export function ShopMenu() {
             <button
               type="button"
               aria-label="Close shop menu"
-              className="fixed inset-0 cursor-default bg-black/55 backdrop-blur-[1px]"
+              className="fixed inset-0 cursor-default bg-transparent"
               onClick={close}
             />
             <div
@@ -155,35 +181,30 @@ export function ShopMenu() {
               id="shop-menu-panel"
               role="menu"
               aria-label="Shop"
-              className="fixed z-50 overflow-hidden rounded-2xl border border-surface-line bg-surface-ink p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45)]"
+              className="fixed z-50 overflow-hidden rounded-2xl bg-[#09090b]/[0.98] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.46),0_0_0_1px_rgba(255,122,26,0.14),0_-1px_0_rgba(255,122,26,0.28)] backdrop-blur-xl"
               style={{ top: menuPosition.top, left: menuPosition.left, width: menuPosition.width }}
+              onMouseEnter={cancelClose}
+              onMouseLeave={scheduleClose}
             >
-              <div className="grid gap-4 lg:grid-cols-2">
-                <section className="rounded-xl border border-surface-line bg-surface-base/60 p-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-accent">Games</p>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {shopLinks.slice(0, 4).map((link) => (
-                      <MenuLinkCard key={link.label} link={link} onNavigate={close} />
-                    ))}
-                  </div>
-                </section>
-
-                <section className="rounded-xl border border-surface-line bg-surface-base/60 p-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-accent">Store</p>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {shopLinks.slice(4).map((link) => (
-                      <MenuLinkCard key={link.label} link={link} onNavigate={close} />
-                    ))}
-                  </div>
-                </section>
+              <div className="grid gap-6 lg:grid-cols-2">
+                {shopMenuGroups.map((group, index) => (
+                  <section key={group.title} className={index === 1 ? 'lg:border-l lg:border-white/10 lg:pl-6' : undefined}>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-accent">{group.title}</p>
+                    <div className="grid gap-1">
+                      {group.links.map((link) => (
+                        <MenuLinkCard key={link.label} link={link} onNavigate={close} />
+                      ))}
+                    </div>
+                  </section>
+                ))}
               </div>
-              <div className="mt-4 border-t border-surface-line pt-4 text-center">
+              <div className="mt-4 pt-4">
                 <Link
                   href="/catalogue"
                   onClick={close}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-accent transition-colors hover:text-accent-soft focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent/10 hover:text-accent-soft focus:outline-none focus:ring-2 focus:ring-accent"
                 >
-                  View all products <span aria-hidden="true">→</span>
+                  View all products <span aria-hidden="true">&rarr;</span>
                 </Link>
               </div>
             </div>
@@ -227,7 +248,7 @@ export function ShopMenu() {
             >
               <span className="block text-sm font-semibold text-neutral-50">{link.label}</span>
               <span aria-hidden="true" className="text-lg leading-none text-neutral-500">
-                ›
+                &rsaquo;
               </span>
             </Link>
           ))}
@@ -245,6 +266,16 @@ export function ShopMenu() {
         aria-expanded={open}
         aria-controls="shop-menu-panel"
         onClick={() => setOpen((current) => !current)}
+        onMouseEnter={() => {
+          if (desktop) {
+            openMenu();
+          }
+        }}
+        onMouseLeave={() => {
+          if (desktop) {
+            scheduleClose();
+          }
+        }}
         className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-md border border-white/15 text-white transition hover:border-orange-500 hover:text-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
       >
         <HamburgerIcon />
