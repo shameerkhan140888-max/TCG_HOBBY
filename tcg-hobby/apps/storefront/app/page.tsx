@@ -12,9 +12,8 @@ import {
   WishlistButton,
 } from '@tcg-hobby/ui';
 import type { CatalogueProduct } from '@tcg-hobby/types';
-import { getCustomerNotificationSubscriptions, getWishlistProductIds } from '@tcg-hobby/database';
+import { getCustomerNotificationSubscriptions, getWishlistProductIds, MEGA_GRENINJA_PRODUCT_SLUG } from '@tcg-hobby/database';
 import { SiteHeader } from '../components/site-header';
-import { AddToCartButton } from '../components/cart-actions';
 import { HomepageHeroCarousel } from '../components/homepage-hero-carousel';
 import { getCurrentCustomerSession } from '../lib/auth';
 import { toggleWishlistAction } from '../lib/wishlist';
@@ -103,7 +102,7 @@ function ProductMedia({ product, priority = false }: { product: CatalogueProduct
       fill
       priority={priority}
       sizes="(min-width: 1280px) 25vw, (min-width: 768px) 45vw, 88vw"
-      className="object-cover transition duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+      className="object-contain p-3 transition duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
     />
   );
 }
@@ -124,7 +123,17 @@ function HomepageProductCard({
   priority?: boolean;
 }) {
   const upcoming = product.releaseStatus && product.releaseStatus !== 'RELEASED';
-  const stockLabel = upcoming ? product.releaseStatus === 'PREORDER' ? 'Pre-order' : 'Coming soon' : product.inStock ? 'In stock' : 'Low stock';
+  const availableQuantity = Math.max(product.stockOnHand - product.reservedStock, 0);
+  const stockLabel = upcoming
+    ? product.releaseStatus === 'PREORDER'
+      ? 'Pre-order'
+      : 'Coming soon'
+    : availableQuantity <= 0
+      ? 'OUT OF STOCK'
+      : availableQuantity <= 3
+        ? 'LOW STOCK'
+        : 'IN STOCK';
+  const isLaunchProduct = product.slug === MEGA_GRENINJA_PRODUCT_SLUG;
 
   return (
     <article className="group flex h-full flex-col gap-4 rounded-2xl bg-surface-raised/85 p-4 shadow-[0_18px_55px_rgba(0,0,0,0.22)] transition duration-200 hover:-translate-y-1 hover:bg-surface-raised hover:shadow-[0_24px_70px_rgba(255,122,26,0.14)] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
@@ -135,14 +144,20 @@ function HomepageProductCard({
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-3">
             <p className="truncate text-sm text-neutral-400">{product.game}</p>
-            <Badge variant={upcoming ? 'warning' : product.inStock ? 'success' : 'neutral'}>{stockLabel}</Badge>
+              <Badge variant={upcoming ? 'warning' : availableQuantity <= 0 ? 'neutral' : availableQuantity <= 3 ? 'warning' : 'success'}>{stockLabel}</Badge>
           </div>
           <h2 className="line-clamp-2 min-h-[3.25rem] text-lg font-black leading-snug text-neutral-50">
             <a href={`/catalogue/${product.slug}`} className="transition hover:text-accent-soft focus:outline-none focus:ring-2 focus:ring-accent">
               {product.name}
             </a>
           </h2>
-          <p className="text-sm text-neutral-500">{product.categoryName}</p>
+          {!isLaunchProduct ? <p className="text-sm text-neutral-500">{product.categoryName}</p> : null}
+          {isLaunchProduct ? (
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Badge variant="success">FREE UK STANDARD DELIVERY</Badge>
+              <Badge variant="accent">LIMIT 1 PER HOUSEHOLD</Badge>
+            </div>
+          ) : null}
         </div>
         <div className="mt-auto space-y-4">
           <Price value={product.price} />
@@ -162,7 +177,9 @@ function HomepageProductCard({
                 </Button>
               )
             ) : (
-              <AddToCartButton productId={product.id} returnTo={returnTo} />
+              <Button asChild size="sm">
+                <a href={`/catalogue/${product.slug}`}>{isLaunchProduct ? 'Shop Now' : 'View product'}</a>
+              </Button>
             )}
             <WishlistButton
               productId={product.id}

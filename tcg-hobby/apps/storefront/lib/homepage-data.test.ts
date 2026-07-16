@@ -132,7 +132,7 @@ describe('homepage data selection', () => {
       product({
         id: 'mega',
         slug: 'pokemon-tcg-mega-greninja-ex-premium-collection',
-        name: 'PokÃ©mon TCG: Mega Greninja ex Premium Collection',
+        name: 'Pokémon TCG: Mega Greninja ex Premium Collection',
         featured: true,
         heroFeatured: true,
       }),
@@ -151,11 +151,11 @@ describe('homepage data selection', () => {
       product({
         id: 'mega',
         slug: 'pokemon-tcg-mega-greninja-ex-premium-collection',
-        name: 'PokÃ©mon TCG: Mega Greninja ex Premium Collection',
+        name: 'Pokémon TCG: Mega Greninja ex Premium Collection',
         featured: true,
         heroFeatured: true,
         imageUrl: '/products/pokemon/mega-greninja-ex-premium-collection/primary.webp',
-        imageAlt: 'PokÃ©mon TCG Mega Greninja ex Premium Collection box',
+        imageAlt: 'Pokémon TCG Mega Greninja ex Premium Collection box',
       }),
     ]);
 

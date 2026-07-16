@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-07-16T21:41:58.646Z",
+  "note": "Assets were copied without cropping. Replace with authorised optimised media when required.",
+  "files": [
+    {
+      "sourceFilename": "01-primary.webp",
+      "outputFilename": "primary.webp",
+      "checksum": "7d2bebb11de533b562bda0a5e2857862986ac1a7d4600a6a92e6621d45596b2f",
+      "role": "PRIMARY",
+      "sortOrder": 1,
+      "alt": "Pokémon TCG Mega Greninja ex Premium Collection box",
+      "isPrimary": true,
+      "heroEligible": true,
+      "homepageEligible": true,
+      "openGraphEligible": true,
+      "thumbnailUsage": "BOTH",
+      "provenance": "OWNER_SUPPLIED"
+    },
+    {
+      "sourceFilename": "01-primary.webp",
+      "outputFilename": "primary-card.webp",
+      "checksum": "7d2bebb11de533b562bda0a5e2857862986ac1a7d4600a6a92e6621d45596b2f",
+      "role": "GALLERY",
+      "sortOrder": 999,
+      "alt": "Pokémon TCG Mega Greninja ex Premium Collection box",
+      "isPrimary": false,
+      "heroEligible": false,
+      "homepageEligible": true,
+      "openGraphEligible": false,
+      "thumbnailUsage": "CARD",
+      "provenance": "OWNER_SUPPLIED"
+    },
+    {
+      "sourceFilename": "02-booster-packs.webp",
+      "outputFilename": "gallery-02.webp",
+      "checksum": "86ca31810b3cb14c66d9ac2ad65b3c05240307db315a011d103d24781d8a682b",
+      "role": "GALLERY",
+      "sortOrder": 2,
+      "alt": "Eight Pokémon TCG booster packs included in the Mega Greninja ex Premium Collection",
+      "isPrimary": false,
+      "heroEligible": false,
+      "homepageEligible": false,
+      "openGraphEligible": false,
+      "thumbnailUsage": "GALLERY",
+      "provenance": "OWNER_SUPPLIED"
+    },
+    {
+      "sourceFilename": "03-promo-cards.webp",
+      "outputFilename": "gallery-03.webp",
+      "checksum": "89638220c7db070d6791320e96b2f6ff7f9ffe4acdf8829aa2fabfc282937a7b",
+      "role": "GALLERY",
+      "sortOrder": 3,
+      "alt": "Mega Greninja ex promotional card and oversized lenticular promotional card",
+      "isPrimary": false,
+      "heroEligible": false,
+      "homepageEligible": false,
+      "openGraphEligible": false,
+      "thumbnailUsage": "GALLERY",
+      "provenance": "OWNER_SUPPLIED"
+    },
+    {
+      "sourceFilename": "04-rear-packaging.webp",
+      "outputFilename": "gallery-04.webp",
+      "checksum": "5e8c76dc456540e24930056ed4d273239900abeef9f3fa6440e8b84602721c08",
+      "role": "GALLERY",
+      "sortOrder": 4,
+      "alt": "Rear packaging of the Pokémon TCG Mega Greninja ex Premium Collection",
+      "isPrimary": false,
+      "heroEligible": false,
+      "homepageEligible": false,
+      "openGraphEligible": true,
+      "thumbnailUsage": "GALLERY",
+      "provenance": "OWNER_SUPPLIED"
+    }
+  ]
+}
