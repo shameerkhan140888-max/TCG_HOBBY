@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { PageShell } from '@tcg-hobby/ui';
 import { SiteFooter } from '../components/site-footer';
 import { LaunchFooter } from '../components/launch-footer';
+import { PaymentTrustBanner } from '../components/payment-trust-banner';
 import {
   getSiteSocialLinks,
   getSiteUrl,
@@ -111,6 +112,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           />
           <div className="flex min-h-screen flex-col">
             <main className="flex-1">{children}</main>
+            <PaymentTrustBanner />
             {comingSoonMode ? <LaunchFooter /> : <SiteFooter />}
           </div>
         </PageShell>

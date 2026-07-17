@@ -1,11 +1,12 @@
 ﻿import React from 'react';
 import { notFound } from 'next/navigation';
-import { Badge, Breadcrumbs, Button, Container, ProductCard, Section, WishlistButton, NotifyButton } from '@tcg-hobby/ui';
+import { Badge, Breadcrumbs, Button, Container, Section, WishlistButton, NotifyButton } from '@tcg-hobby/ui';
 import { formatMoney } from '@tcg-hobby/utils';
-import { getCatalogueProductBySlug, getCustomerNotificationSubscriptions, getWishlistProductIds } from '@tcg-hobby/database';
+import { getCatalogueProductBySlug, getCustomerNotificationSubscriptions, getRelatedProducts, getWishlistProductIds } from '@tcg-hobby/database';
 import { SiteHeader } from '../../../components/site-header';
 import { ProductGallery } from '../../../components/product-gallery';
-import { AddToCartButton, AddToCartWithQuantityForm } from '../../../components/cart-actions';
+import { AddToCartWithQuantityForm } from '../../../components/cart-actions';
+import { ProductMerchandisingRail } from '../../../components/product-merchandising-rail';
 import { getCurrentCustomerSession } from '../../../lib/auth';
 import { getProductContents } from '../../../lib/product-merchandising';
 import { getSiteUrl } from '../../../lib/site';
@@ -83,17 +84,22 @@ export async function generateMetadata({ params }: { params: Promise<ParamsValue
 
 export default async function ProductPage({ params }: { params: Promise<ParamsValue> }) {
   const { slug } = await params;
-  const [product, session] = await Promise.all([
-    getCatalogueProductBySlug(slug),
-    getCurrentCustomerSession(),
-  ]);
-  const wishlistIds = session?.user.role === 'CUSTOMER' ? await getWishlistProductIds(session.user.id) : [];
-  const notificationIds =
-    session?.user.role === 'CUSTOMER' ? (await getCustomerNotificationSubscriptions(session.user.id)).map((item) => item.productId) : [];
+  const [product, session] = await Promise.all([getCatalogueProductBySlug(slug), getCurrentCustomerSession()]);
 
   if (!product) {
     notFound();
   }
+
+  const [wishlistIds, notificationRows, recommendedProducts] = await Promise.all([
+    session?.user.role === 'CUSTOMER' ? getWishlistProductIds(session.user.id) : Promise.resolve([]),
+    session?.user.role === 'CUSTOMER' ? getCustomerNotificationSubscriptions(session.user.id) : Promise.resolve([]),
+    getRelatedProducts({
+      sourceProductId: product.id,
+      resultLimit: 4,
+      excludedProductIds: [product.id],
+    }),
+  ]);
+  const notificationIds = notificationRows.map((item) => item.productId);
 
   const currentHref = `/catalogue/${slug}`;
   const availableQuantity = Math.max(product.stockOnHand - product.reservedStock, 0);
@@ -103,7 +109,6 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
   const stockState = resolveStockState(availableQuantity);
   const productContents = getProductContents(product.slug);
   const siteUrl = getSiteUrl();
-  const relatedProducts = product.relatedProducts;
   const displayImages = product.images.length
     ? product.images
     : product.imageUrl
@@ -323,61 +328,13 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
             </div>
           </section>
 
-          {relatedProducts.length ? (
-          <Section className="pb-0 pt-12">
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-accent">Related products</p>
-              <h2 className="mt-2 text-2xl font-bold">More in {product.categoryName}</h2>
-            </div>
-            <Button asChild variant="ghost">
-              <a href={`/catalogue?category=${product.categorySlug}`}>Browse category</a>
-            </Button>
-          </div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {relatedProducts.map((item) => (
-                <ProductCard
-                  key={item.id}
-                  product={item}
-                  href={`/catalogue/${item.slug}`}
-                  actionSlot={
-                    <div className="flex items-center gap-2">
-                      {item.releaseStatus && item.releaseStatus !== 'RELEASED' ? (
-                        session?.user.role === 'CUSTOMER' ? (
-                          <NotifyButton
-                            productId={item.id}
-                            subscribed={notificationIds.includes(item.id)}
-                            preference={item.releaseStatus === 'PREORDER' ? 'PREORDER' : 'RELEASE'}
-                            action={toggleNotificationAction}
-                            returnTo={`/catalogue/${item.slug}`}
-                          />
-                        ) : (
-                          <Button asChild size="sm" variant="secondary">
-                            <a href={`/login?callbackUrl=${encodeURIComponent(`/catalogue/${item.slug}`)}`}>Notify me</a>
-                          </Button>
-                        )
-                      ) : item.inStock ? (
-                        <AddToCartButton productId={item.id} returnTo={`/catalogue/${item.slug}`} />
-                      ) : (
-                        <Button disabled size="sm">
-                          Out of stock
-                        </Button>
-                      )}
-                      <WishlistButton
-                        productId={item.id}
-                        wishlisted={wishlistIds.includes(item.id)}
-                        authenticated={session?.user.role === 'CUSTOMER'}
-                        action={toggleWishlistAction}
-                        loginHref={`/login?callbackUrl=${encodeURIComponent(`/catalogue/${item.slug}`)}`}
-                        returnTo={`/catalogue/${item.slug}`}
-                      />
-                    </div>
-                  }
-                />
-              ))}
-            </div>
-        </Section>
-          ) : null}
+          <ProductMerchandisingRail
+            products={recommendedProducts}
+            placement="PRODUCT_RELATED"
+            sourceProductId={product.id}
+            authenticated={session?.user.role === 'CUSTOMER'}
+            wishlistProductIds={wishlistIds}
+          />
       </Container>
       </main>
     </>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { CatalogueProductDetail } from '@tcg-hobby/types';
+import type { MerchandisingRecommendation } from '@tcg-hobby/database';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -8,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   session: null as { user: { id: string; role: 'CUSTOMER' } } | null,
   wishlistIds: [] as string[],
   notificationIds: [] as Array<{ productId: string }>,
+  recommendations: [] as MerchandisingRecommendation[],
 }));
 
 vi.mock('next/navigation', () => ({
@@ -20,6 +22,7 @@ vi.mock('@tcg-hobby/database', () => ({
   MEGA_GRENINJA_PRODUCT_SLUG: 'pokemon-tcg-mega-greninja-ex-premium-collection',
   getCatalogueProductBySlug: vi.fn(async () => mocks.product),
   getCustomerNotificationSubscriptions: vi.fn(async () => mocks.notificationIds),
+  getRelatedProducts: vi.fn(async () => mocks.recommendations),
   getWishlistProductIds: vi.fn(async () => mocks.wishlistIds),
 }));
 
@@ -36,6 +39,21 @@ vi.mock('../../../components/product-gallery', () => ({
 vi.mock('../../../components/cart-actions', () => ({
   AddToCartButton: ({ productId }: { productId: string }) => <button type="button">Add {productId}</button>,
   AddToCartWithQuantityForm: ({ productId }: { productId: string }) => <button type="button">Add to basket {productId}</button>,
+}));
+
+vi.mock('../../../components/product-merchandising-rail', () => ({
+  ProductMerchandisingRail: ({
+    products,
+    sourceProductId,
+  }: {
+    products: MerchandisingRecommendation[];
+    sourceProductId: string;
+  }) =>
+    products.length ? (
+      <section data-testid="merchandising-rail" data-source-product-id={sourceProductId}>
+        You may also like {products.map((product) => product.name).join(', ')}
+      </section>
+    ) : null,
 }));
 
 vi.mock('../../../lib/auth', () => ({
@@ -112,6 +130,25 @@ describe('Product detail page', () => {
     mocks.session = { user: { id: 'customer-1', role: 'CUSTOMER' } };
     mocks.wishlistIds = [];
     mocks.notificationIds = [];
+    mocks.recommendations = [
+      {
+        id: 'prod-accessory',
+        slug: 'premium-sleeves',
+        name: 'Premium card sleeves',
+        imageUrl: '/products/accessories/premium-sleeves.webp',
+        imageAlt: 'Premium card sleeves',
+        price: { amountMinor: 599, currency: 'GBP' },
+        publicStockState: 'IN_STOCK',
+        gameLabel: 'Accessories',
+        categoryLabel: 'Accessories',
+        categorySlug: 'accessories',
+        freeUkStandardShipping: false,
+        customerPurchaseLimit: null,
+        wishlistEligible: true,
+        basketEligible: true,
+        strategyId: 'accessories',
+      },
+    ];
   });
 
   it('renders a premium purchase-focused hierarchy with consolidated product information', async () => {
@@ -124,12 +161,16 @@ describe('Product detail page', () => {
 
     const galleryIndex = markup.indexOf('data-testid="product-gallery"');
     const informationIndex = markup.indexOf('product-information-heading');
+    const merchandisingIndex = markup.indexOf('data-testid="merchandising-rail"');
     const lowStockIndex = markup.indexOf('LOW STOCK');
     const priceIndex = markup.indexOf('49.99', lowStockIndex);
     const overviewCopyIndex = markup.indexOf('Take Mega Greninja ex into battle with an exclusive promotional card');
 
     expect(galleryIndex).toBeGreaterThan(-1);
     expect(informationIndex).toBeGreaterThan(galleryIndex);
+    expect(merchandisingIndex).toBeGreaterThan(informationIndex);
+    expect(markup).toContain('data-source-product-id="prod-mega-greninja"');
+    expect(markup).toContain('Premium card sleeves');
     expect(lowStockIndex).toBeGreaterThan(-1);
     expect(lowStockIndex).toBeLessThan(priceIndex);
     expect(markup).toContain('LOW STOCK');

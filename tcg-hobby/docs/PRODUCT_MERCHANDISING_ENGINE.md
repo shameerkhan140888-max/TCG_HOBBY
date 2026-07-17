@@ -230,9 +230,57 @@ Event context supports placement, source product, recommended product, strategy,
 
 No cookies, client tracking, personal data collection, dashboards or analytics storage are implemented in WP2A.
 
+## WP2B Storefront Integration
+
+Work Package 2B connects the product-detail page to the merchandising engine.
+
+The customer-facing product page calls:
+
+```ts
+getRelatedProducts({
+  sourceProductId: product.id,
+  resultLimit: 4,
+  excludedProductIds: [product.id],
+});
+```
+
+Selection remains server-side. The browser receives only the storefront-safe recommendation projection, never exact stock, supplier data, inventory metadata or recommendation internals.
+
+The product page renders the rail directly beneath the consolidated Product Information section. If the engine returns no eligible products, the section is not rendered.
+
+## Recommendation Rail
+
+The storefront rail is split into two pieces:
+
+- a server-rendered product rail that maps safe recommendation data into product cards, wishlist controls and add-to-basket forms
+- a small client scroller that only handles horizontal navigation, overflow detection and reduced-motion-aware scrolling
+
+The rail supports:
+
+- up to four product-detail recommendations for the current placement
+- mobile horizontal swipe with scroll snapping
+- keyboard-accessible previous and next controls when overflow exists
+- deterministic analytics metadata attributes for future tracking
+- public stock states only: `IN STOCK`, `LOW STOCK`, `OUT OF STOCK`
+- product-specific free delivery and purchase-limit badges only when backed by data
+
+The rail does not emit analytics events in WP2B. It exposes stable metadata attributes so a future analytics package can record impressions and clicks deliberately.
+
+## Global Payment Trust Banner
+
+WP2B also adds a compact storefront payment reassurance strip above the footer.
+
+The banner uses wording supported by the current checkout implementation:
+
+- card payments are processed through Stripe
+- Visa and Mastercard are shown as supported card brands
+- VAT is included in product prices
+
+PayPal and other payment methods are intentionally not shown because the current checkout path only creates Stripe card checkout sessions.
+
 ## Future Consumers
 
-Future product pages can call `getRelatedProducts({ sourceProductId, resultLimit: 4 })` and render the returned storefront-safe cards.
+Product pages call `getRelatedProducts({ sourceProductId, resultLimit: 4 })` and render the returned storefront-safe cards through the recommendation rail.
 
 Future Admin controls can manage `ProductRecommendation` records, merchandising flags and preview placements by calling the same engine with `placement: 'ADMIN_PREVIEW'`.
 
@@ -249,10 +297,9 @@ If no recommendations appear, check:
 - campaign influence is active and date-valid
 - requested strategy IDs are enabled
 
-## Intentionally Not Implemented In WP2A
+## Intentionally Not Implemented In WP2A/WP2B
 
-- storefront carousel
-- product-page recommendation section
+- homepage merchandising redesign
 - full Admin relationship editor
 - campaign-management UI
 - analytics storage
@@ -260,3 +307,5 @@ If no recommendations appear, check:
 - frequently bought together
 - customers also bought
 - recently viewed recommendations
+- client recommendation selection
+- fake analytics, fake products or unsupported payment-method claims
