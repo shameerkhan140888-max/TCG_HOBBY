@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { existsSync, readFileSync } from 'node:fs';
+import { configureWindowsPrismaEngine, defaultWorkspaceRoot, loadRootDatabaseEnv } from './lib/database-env.mjs';
 import type { validateProductImportFolder } from '../packages/database/src/product-import';
 
 type Command = 'validate' | 'dry-run' | 'import' | 'import-all';
@@ -9,66 +9,14 @@ type PrismaDisconnectable = {
 
 let prismaClient: PrismaDisconnectable | undefined;
 
-function applyEnvFile(filePath: string, options: { overrideInvalidDatabaseUrl?: boolean } = {}): void {
-  if (!existsSync(filePath)) {
-    return;
-  }
-
-  const contents = readFileSync(filePath, 'utf8');
-  for (const rawLine of contents.split(/\r?\n/)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith('#')) {
-      continue;
-    }
-
-    const separatorIndex = line.indexOf('=');
-    if (separatorIndex === -1) {
-      continue;
-    }
-
-    const key = line.slice(0, separatorIndex).trim();
-    if (!key) {
-      continue;
-    }
-
-    const existingValue = process.env[key];
-    const shouldKeepExisting =
-      existingValue &&
-      !(options.overrideInvalidDatabaseUrl && key === 'DATABASE_URL' && !isPostgresUrl(existingValue));
-    if (shouldKeepExisting) {
-      continue;
-    }
-
-    let value = line.slice(separatorIndex + 1).trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      value = value.slice(1, -1);
-    }
-
-    process.env[key] = value;
-  }
-}
-
-function isPostgresUrl(value: string | undefined): boolean {
-  return Boolean(value?.startsWith('postgresql://') || value?.startsWith('postgres://'));
-}
-
-function bootstrapDatabaseEnv(): void {
-  const rootDir = process.cwd();
-  applyEnvFile(path.join(rootDir, '.env.local'), { overrideInvalidDatabaseUrl: true });
-  applyEnvFile(path.join(rootDir, '.env'), { overrideInvalidDatabaseUrl: true });
-
-  if (isPostgresUrl(process.env.DIRECT_DATABASE_URL) && !isPostgresUrl(process.env.DATABASE_URL)) {
-    process.env.DATABASE_URL = process.env.DIRECT_DATABASE_URL;
-  }
-
-  if (!process.env.DATABASE_URL) {
-    applyEnvFile(path.join(rootDir, '.env.example'));
-  }
-
-  const windowsQueryEngine = path.join(rootDir, 'node_modules', '@prisma', 'engines', 'query_engine-windows.dll.node');
-  if (process.platform === 'win32' && existsSync(windowsQueryEngine) && !process.env.PRISMA_QUERY_ENGINE_LIBRARY) {
-    process.env.PRISMA_QUERY_ENGINE_LIBRARY = windowsQueryEngine;
-  }
+function bootstrapDatabaseEnv(command: Command): void {
+  loadRootDatabaseEnv({
+    rootDir: defaultWorkspaceRoot,
+    env: process.env,
+    requireDatabaseUrl: command !== 'validate',
+    logger: command === 'validate' ? undefined : console.log,
+  });
+  configureWindowsPrismaEngine({ rootDir: defaultWorkspaceRoot, env: process.env });
 }
 
 function readArg(name: string): string | undefined {
@@ -102,7 +50,13 @@ function printValidationResult(result: Awaited<ReturnType<typeof validateProduct
 }
 
 async function main(): Promise<void> {
-  bootstrapDatabaseEnv();
+  const command = process.argv[2] as Command | undefined;
+
+  if (!command || !['validate', 'dry-run', 'import', 'import-all'].includes(command)) {
+    throw new Error('Use one of: validate, dry-run, import, import-all.');
+  }
+
+  bootstrapDatabaseEnv(command);
   const {
     createProductImportPlan,
     discoverProductImportFolders,
@@ -111,11 +65,6 @@ async function main(): Promise<void> {
   } = await import('../packages/database/src/product-import');
   const { prisma } = await import('../packages/database/src/client');
   prismaClient = prisma;
-  const command = process.argv[2] as Command | undefined;
-
-  if (!command || !['validate', 'dry-run', 'import', 'import-all'].includes(command)) {
-    throw new Error('Use one of: validate, dry-run, import, import-all.');
-  }
 
   if (command === 'validate') {
     printValidationResult(await validateFolder(resolveImportPath()));

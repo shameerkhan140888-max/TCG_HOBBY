@@ -20,6 +20,8 @@ The new baseline creates all enums before tables. `ProductCondition` is created 
 
 ## Deploying Migrations
 
+Before running migration commands, configure `DATABASE_URL` in the repository root `.env.local` or export it in the current process. Database tooling uses the shared root environment loader described in `docs/DATABASE_ENVIRONMENT.md`; `.env.example` is documentation only.
+
 For production and shared environments, deploy migrations with:
 
 ```bash

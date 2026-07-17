@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "prebuild": "npm --prefix ../.. run db:generate",
-    "build": "next build",
+    "build": "node ../../scripts/with-database-env.mjs next build",
     "dev": "node ./scripts/dev.mjs",
     "lint": "tsc -p tsconfig.check.json --noEmit",
     "test": "vitest run",

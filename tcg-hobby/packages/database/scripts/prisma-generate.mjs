@@ -3,18 +3,23 @@ import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { configureWindowsPrismaEngine, loadRootDatabaseEnv } from '../../../scripts/lib/database-env.mjs';
 
 const require = createRequire(import.meta.url);
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const rootDir = resolve(__dirname, '../../..');
 const env = { ...process.env };
-const localEnginePath = resolve(__dirname, '../../../node_modules/@prisma/engines/query_engine-windows.dll.node');
 
-if (process.platform === 'win32' && existsSync(localEnginePath) && !env.PRISMA_QUERY_ENGINE_LIBRARY) {
-  env.PRISMA_QUERY_ENGINE_LIBRARY = localEnginePath;
+try {
+  loadRootDatabaseEnv({ rootDir, env, logger: console.log });
+  configureWindowsPrismaEngine({ rootDir, env });
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
 }
 
 const prismaCli = require.resolve('prisma/build/index.js');
-const generatedClientDir = resolve(__dirname, '../../../node_modules/.prisma/client');
+const generatedClientDir = resolve(rootDir, 'node_modules/.prisma/client');
 const generatedEnginePath = resolve(generatedClientDir, 'query_engine-windows.dll.node');
 
 if (process.platform === 'win32' && existsSync(generatedClientDir)) {

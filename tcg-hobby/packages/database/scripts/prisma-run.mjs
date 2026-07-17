@@ -1,62 +1,26 @@
-import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { copyFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { configureWindowsPrismaEngine, loadRootDatabaseEnv } from '../../../scripts/lib/database-env.mjs';
 
 const require = createRequire(import.meta.url);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, '../../..');
 const env = { ...process.env };
-const localEnginePath = resolve(rootDir, 'node_modules/@prisma/engines/query_engine-windows.dll.node');
 const prismaCli = require.resolve('prisma/build/index.js');
 const generatedClientDir = resolve(rootDir, 'node_modules/.prisma/client');
 const generatedEnginePath = resolve(generatedClientDir, 'query_engine-windows.dll.node');
 const bundledEnginePath = resolve(rootDir, 'node_modules/@prisma/engines/query_engine-windows.dll.node');
 
-function applyEnvFile(filePath) {
-  if (!existsSync(filePath)) {
-    return;
-  }
-
-  const contents = readFileSync(filePath, 'utf8');
-  for (const rawLine of contents.split(/\r?\n/)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith('#')) {
-      continue;
-    }
-
-    const separatorIndex = line.indexOf('=');
-    if (separatorIndex === -1) {
-      continue;
-    }
-
-    const key = line.slice(0, separatorIndex).trim();
-    if (!key || env[key]) {
-      continue;
-    }
-
-    let value = line.slice(separatorIndex + 1).trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      value = value.slice(1, -1);
-    }
-
-    env[key] = value;
-  }
-}
-
-applyEnvFile(resolve(rootDir, '.env.local'));
-applyEnvFile(resolve(rootDir, '.env'));
-applyEnvFile(resolve(rootDir, 'packages/database/.env.local'));
-applyEnvFile(resolve(rootDir, 'packages/database/.env'));
-if (env.DIRECT_DATABASE_URL && (!env.DATABASE_URL || !/^postgres(?:ql)?:\/\//.test(env.DATABASE_URL))) {
-  env.DATABASE_URL = env.DIRECT_DATABASE_URL;
-}
-applyEnvFile(resolve(rootDir, '.env.example'));
-
-if (process.platform === 'win32' && existsSync(localEnginePath) && !env.PRISMA_QUERY_ENGINE_LIBRARY) {
-  env.PRISMA_QUERY_ENGINE_LIBRARY = localEnginePath;
+try {
+  loadRootDatabaseEnv({ rootDir, env, logger: console.log });
+  configureWindowsPrismaEngine({ rootDir, env });
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
 }
 
 if (process.platform === 'win32' && existsSync(generatedClientDir)) {

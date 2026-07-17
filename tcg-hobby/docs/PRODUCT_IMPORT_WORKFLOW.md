@@ -4,7 +4,7 @@ TCG Hobby products are imported through a reviewed folder workflow. The importer
 
 ## Add A Product In Five Steps
 
-1. Run `npm run db:seed` to ensure canonical lookup data exists.
+1. Confirm root `.env.local` contains the intended PostgreSQL `DATABASE_URL`, then run `npm run db:seed` to ensure canonical lookup data exists.
 2. Create `product-imports/{game}/{product-slug}/`.
 3. Add `product.json`, `media.json` and approved images under `images/`.
 4. Run `npm run product:validate -- --path product-imports/{game}/{product-slug}`.
@@ -14,6 +14,8 @@ TCG Hobby products are imported through a reviewed folder workflow. The importer
 ## Seed Process
 
 `npm run db:seed` inserts only canonical lookup data required by imports. It does not wipe products, orders, carts, users or customer data.
+
+Database commands load `DATABASE_URL` from the shared root environment loader. See `docs/DATABASE_ENVIRONMENT.md` for the exact loading order and diagnostics. `.env.example` is not used at runtime.
 
 The seed prints permanent operational progress logs:
 
@@ -57,6 +59,16 @@ The Mega Greninja manifest uses:
 - `supplierSlug: "card-citadel"`
 
 If a category or supplier is missing, dry-run/import fails before writing product data and reports the exact missing slug.
+
+Before a real import, use:
+
+```bash
+npm run db:status
+npm run db:verify
+npm run product:dry-run -- --path product-imports/{game}/{product-slug}
+```
+
+`db:verify` prints only the database hostname and safe record counts. It never prints credentials.
 
 ## Folder Structure
 
