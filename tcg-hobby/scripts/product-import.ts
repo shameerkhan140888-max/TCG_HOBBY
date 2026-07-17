@@ -64,6 +64,11 @@ function bootstrapDatabaseEnv(): void {
   if (!process.env.DATABASE_URL) {
     applyEnvFile(path.join(rootDir, '.env.example'));
   }
+
+  const windowsQueryEngine = path.join(rootDir, 'node_modules', '@prisma', 'engines', 'query_engine-windows.dll.node');
+  if (process.platform === 'win32' && existsSync(windowsQueryEngine) && !process.env.PRISMA_QUERY_ENGINE_LIBRARY) {
+    process.env.PRISMA_QUERY_ENGINE_LIBRARY = windowsQueryEngine;
+  }
 }
 
 function readArg(name: string): string | undefined {
