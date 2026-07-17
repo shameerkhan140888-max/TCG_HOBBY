@@ -99,6 +99,12 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
                     <div className="font-semibold text-neutral-50">{product.name}</div>
                     <div className="text-xs text-neutral-500">{product.sku}</div>
                     <div className="text-xs text-neutral-500">{product.slug}</div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {product.isAccessory ? <StatusBadge tone="neutral">Accessory</StatusBadge> : null}
+                      {product.isStaffPick ? <StatusBadge tone="accent">Staff pick</StatusBadge> : null}
+                      {product.isBestSeller ? <StatusBadge tone="warning">Best seller</StatusBadge> : null}
+                      {product.isNewArrival ? <StatusBadge tone="success">New arrival</StatusBadge> : null}
+                    </div>
                   </td>
                   <td className="px-4 py-4 text-neutral-300">{product.categoryName}</td>
                   <td className="px-4 py-4 text-neutral-300">{product.supplierName}</td>

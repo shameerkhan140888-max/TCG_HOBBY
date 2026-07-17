@@ -278,6 +278,85 @@ The banner uses wording supported by the current checkout implementation:
 
 PayPal and other payment methods are intentionally not shown because the current checkout path only creates Stripe card checkout sessions.
 
+## WP2C Admin Merchandising Controls
+
+Work Package 2C adds Admin controls to the existing product detail page at `/admin/products/[id]`.
+
+The Admin panel supports:
+
+- editing `recommendationWeight`
+- toggling `isAccessory`, `isStaffPick`, `isBestSeller` and `isNewArrival`
+- creating manual `ProductRecommendation` relationships
+- editing relationship type, priority and active state
+- deleting relationship records without deleting products
+- searching bounded product candidates by name, SKU or slug
+- viewing eligibility reasons for each manual relationship
+- previewing the first four effective recommendations using the actual merchandising engine
+
+## Admin Diagnostic Preview
+
+The Admin preview uses `getRelatedProducts({ sourceProductId, resultLimit: 4 })`.
+
+It returns Admin-safe diagnostic data:
+
+- final position
+- product name
+- price
+- public stock state
+- strategy identifier
+- whether the product is part of an active manual relationship
+
+It does not expose supplier cost, private inventory metadata, customer data or campaign internals.
+
+## Relationship Priority
+
+Manual relationship priority uses the WP2A convention:
+
+Lower number means higher priority.
+
+Manual relationships are still subject to central eligibility. An active manual relationship can be skipped when the target is draft, hidden, archived, unavailable, out of stock or missing a storefront route.
+
+## Admin Eligibility Visibility
+
+Admin relationship rows show concise eligibility states:
+
+- Eligible
+- Inactive relationship
+- Unpublished
+- Hidden
+- Archived
+- Discontinued
+- Out of stock
+- Missing storefront route
+- Otherwise ineligible
+
+Stored relationships are preserved even when temporarily ineligible so future publication or stock changes can make them effective again.
+
+## Storefront Revalidation
+
+After Admin merchandising changes, the server actions revalidate:
+
+- `/admin/products`
+- `/admin/products/[id]`
+- `/catalogue/[source-product-slug]`
+
+This targets the source product page whose recommendation rail can change. The whole storefront is not invalidated.
+
+## Import Versus Admin Ownership
+
+Product import manifests may set merchandising flags when the fields are explicitly provided.
+
+The safe ownership policy is:
+
+- omitted import fields do not overwrite existing Admin merchandising values
+- explicitly provided import fields update those values
+- manual product relationships are managed through Admin
+- repeated imports remain idempotent
+
+## Audit Notes
+
+WP2C does not add a new audit-log subsystem. Relationship records retain `createdAt` and `updatedAt`, and service/action boundaries are structured so a future audit layer can record acting Admin, old values and new values.
+
 ## Future Consumers
 
 Product pages call `getRelatedProducts({ sourceProductId, resultLimit: 4 })` and render the returned storefront-safe cards through the recommendation rail.

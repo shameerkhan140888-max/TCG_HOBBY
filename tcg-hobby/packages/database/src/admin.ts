@@ -1,8 +1,11 @@
+import { ProductRecommendationType } from '@prisma/client';
 import type { OrderStatus as PrismaOrderStatus, PaymentStatus as PrismaPaymentStatus, Prisma } from '@prisma/client';
 import type { PaginationMeta, PaymentStatus, FulfilmentStatus, ProductCondition } from '@tcg-hobby/types';
 import { slugify } from '@tcg-hobby/utils';
 import { prisma } from './client';
 import { calculateMarginPercentage, calculateAvailableStock } from './admin-math';
+import { derivePublicStockState } from './product-import';
+import { getRelatedProducts, isMerchandisingProductEligible } from './merchandising';
 import { refreshProductPricing } from './pricing';
 import {
   seedCategories,
@@ -25,6 +28,32 @@ const adminProductInclude = {
 } as const satisfies Prisma.ProductInclude;
 
 type ProductRow = Prisma.ProductGetPayload<{ include: typeof adminProductInclude }>;
+
+const adminMerchandisingProductSelect = {
+  id: true,
+  sku: true,
+  slug: true,
+  name: true,
+  game: true,
+  setName: true,
+  priceMinor: true,
+  currency: true,
+  lifecycleState: true,
+  published: true,
+  archivedAt: true,
+  releaseStatus: true,
+  category: { select: { name: true, slug: true } },
+  inventory: { select: { stockOnHand: true, reservedStock: true } },
+  images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }], take: 1 },
+} as const satisfies Prisma.ProductSelect;
+
+type AdminMerchandisingProductRow = Prisma.ProductGetPayload<{ select: typeof adminMerchandisingProductSelect }>;
+
+const adminRecommendationInclude = {
+  recommendedProduct: { select: adminMerchandisingProductSelect },
+} as const satisfies Prisma.ProductRecommendationInclude;
+
+type AdminRecommendationRow = Prisma.ProductRecommendationGetPayload<{ include: typeof adminRecommendationInclude }>;
 
 const adminInventoryProductInclude = {
   category: true,
@@ -215,6 +244,11 @@ export type AdminProductListItem = {
   featured: boolean;
   homepagePriority: number | null;
   heroFeatured: boolean;
+  recommendationWeight: number;
+  isAccessory: boolean;
+  isStaffPick: boolean;
+  isBestSeller: boolean;
+  isNewArrival: boolean;
   freeUkStandardShipping: boolean;
   shippingPromotionProductOnly: boolean;
   lifecycleState: string;
@@ -250,6 +284,74 @@ export type AdminProductDetail = AdminProductListItem & {
   supplierWebsite: string | null;
   images: ProductRow['images'];
   importAudits: ProductRow['importAudits'];
+};
+
+export type AdminMerchandisingSettingsInput = {
+  recommendationWeight?: number;
+  isAccessory?: boolean;
+  isStaffPick?: boolean;
+  isBestSeller?: boolean;
+  isNewArrival?: boolean;
+};
+
+export type AdminProductRecommendationInput = {
+  sourceProductId: string;
+  recommendedProductId: string;
+  relationshipType: ProductRecommendationType;
+  priority: number;
+  active: boolean;
+};
+
+export type AdminProductRecommendationUpdateInput = {
+  relationshipType: ProductRecommendationType;
+  priority: number;
+  active: boolean;
+};
+
+export type AdminMerchandisingProductSummary = {
+  id: string;
+  sku: string;
+  slug: string;
+  name: string;
+  game: string;
+  categoryName: string;
+  categorySlug: string;
+  imageUrl: string | null;
+  imageAlt: string | null;
+  priceMinor: number;
+  currency: string;
+  lifecycleState: string;
+  published: boolean;
+  archived: boolean;
+  publicStockState: 'OUT_OF_STOCK' | 'LOW_STOCK' | 'IN_STOCK';
+};
+
+export type AdminProductRecommendationItem = {
+  id: string;
+  recommendedProduct: AdminMerchandisingProductSummary;
+  relationshipType: ProductRecommendationType;
+  priority: number;
+  active: boolean;
+  eligibility: {
+    eligible: boolean;
+    label: string;
+    reasons: string[];
+  };
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type AdminProductMerchandisingPanel = {
+  settings: {
+    recommendationWeight: number;
+    isAccessory: boolean;
+    isStaffPick: boolean;
+    isBestSeller: boolean;
+    isNewArrival: boolean;
+  };
+  recommendations: AdminProductRecommendationItem[];
+  candidates: AdminMerchandisingProductSummary[];
+  preview: Array<AdminMerchandisingProductSummary & { position: number; strategyId: string; manual: boolean }>;
 };
 
 export type AdminInventoryRow = {
@@ -478,6 +580,11 @@ function mapProductRow(product: ProductRow): AdminProductListItem {
     featured: product.featured,
     homepagePriority: product.homepagePriority,
     heroFeatured: product.heroFeatured,
+    recommendationWeight: product.recommendationWeight,
+    isAccessory: product.isAccessory,
+    isStaffPick: product.isStaffPick,
+    isBestSeller: product.isBestSeller,
+    isNewArrival: product.isNewArrival,
     freeUkStandardShipping: product.freeUkStandardShipping,
     shippingPromotionProductOnly: product.shippingPromotionProductOnly,
     lifecycleState: product.lifecycleState,
@@ -564,6 +671,105 @@ export function generateProductSlug(name: string, sku?: string) {
   return slugify(sku || name) || 'product';
 }
 
+const PRODUCT_RECOMMENDATION_TYPES = Object.values(ProductRecommendationType);
+const MIN_RECOMMENDATION_WEIGHT = -1000;
+const MAX_RECOMMENDATION_WEIGHT = 1000;
+const MAX_RECOMMENDATION_PRIORITY = 10_000;
+
+function assertRecommendationType(value: ProductRecommendationType): void {
+  if (!PRODUCT_RECOMMENDATION_TYPES.includes(value)) {
+    throw new Error('Choose a valid relationship type.');
+  }
+}
+
+function assertRecommendationPriority(value: number): void {
+  if (!Number.isInteger(value) || value < 0 || value > MAX_RECOMMENDATION_PRIORITY) {
+    throw new Error('Priority must be a whole number from 0 to 10000. Lower numbers appear first.');
+  }
+}
+
+function assertRecommendationWeight(value: number): void {
+  if (!Number.isInteger(value) || value < MIN_RECOMMENDATION_WEIGHT || value > MAX_RECOMMENDATION_WEIGHT) {
+    throw new Error('Recommendation weight must be a whole number from -1000 to 1000.');
+  }
+}
+
+function toPublicStockState(product: { inventory: { stockOnHand: number; reservedStock: number } | null }) {
+  return derivePublicStockState(calculateAvailableStock(product.inventory?.stockOnHand ?? 0, product.inventory?.reservedStock ?? 0));
+}
+
+function mapAdminMerchandisingProduct(product: AdminMerchandisingProductRow): AdminMerchandisingProductSummary {
+  const image = product.images[0] ?? null;
+
+  return {
+    id: product.id,
+    sku: product.sku,
+    slug: product.slug,
+    name: product.name,
+    game: product.game,
+    categoryName: product.category.name,
+    categorySlug: product.category.slug,
+    imageUrl: image?.url ?? null,
+    imageAlt: image?.altText ?? null,
+    priceMinor: product.priceMinor,
+    currency: product.currency,
+    lifecycleState: product.lifecycleState,
+    published: product.published,
+    archived: Boolean(product.archivedAt),
+    publicStockState: toPublicStockState(product),
+  };
+}
+
+function getRecommendationEligibility(
+  row: AdminRecommendationRow,
+  sourceProductId: string,
+): AdminProductRecommendationItem['eligibility'] {
+  const product = row.recommendedProduct;
+  const reasons: string[] = [];
+
+  if (!row.active) reasons.push('Inactive relationship');
+  if (!product.slug) reasons.push('Missing storefront route');
+  if (!product.published) reasons.push('Unpublished');
+  if (product.lifecycleState !== 'PUBLISHED') reasons.push(product.lifecycleState === 'HIDDEN' ? 'Hidden' : product.lifecycleState);
+  if (product.archivedAt) reasons.push('Archived');
+  if (product.releaseStatus === 'ARCHIVED') reasons.push('Discontinued');
+  if (calculateAvailableStock(product.inventory?.stockOnHand ?? 0, product.inventory?.reservedStock ?? 0) <= 0) reasons.push('Out of stock');
+
+  const engineEligible =
+    row.active &&
+    isMerchandisingProductEligible(
+      {
+        id: product.id,
+        slug: product.slug,
+        published: product.published,
+        lifecycleState: product.lifecycleState,
+        archivedAt: product.archivedAt,
+        releaseStatus: product.releaseStatus,
+        inventory: product.inventory,
+      },
+      { sourceProductId, excludedProductIds: [], requireInStock: true },
+    );
+
+  return {
+    eligible: engineEligible,
+    label: engineEligible ? 'Eligible' : reasons[0] ?? 'Otherwise ineligible',
+    reasons: engineEligible ? [] : reasons.length ? reasons : ['Otherwise ineligible'],
+  };
+}
+
+function mapAdminRecommendation(row: AdminRecommendationRow, sourceProductId: string): AdminProductRecommendationItem {
+  return {
+    id: row.id,
+    recommendedProduct: mapAdminMerchandisingProduct(row.recommendedProduct),
+    relationshipType: row.relationshipType,
+    priority: row.priority,
+    active: row.active,
+    eligibility: getRecommendationEligibility(row, sourceProductId),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
 function isProduction() {
   return process.env.NODE_ENV === 'production';
 }
@@ -642,6 +848,11 @@ function buildSeedProductListItem(product: (typeof seedProducts)[number], index:
     featured: product.featured,
     homepagePriority: product.homepagePriority ?? null,
     heroFeatured: product.heroFeatured ?? false,
+    recommendationWeight: 0,
+    isAccessory: false,
+    isStaffPick: false,
+    isBestSeller: false,
+    isNewArrival: false,
     freeUkStandardShipping: product.freeUkStandardShipping ?? false,
     shippingPromotionProductOnly: product.shippingPromotionProductOnly ?? true,
     lifecycleState: product.lifecycleState ?? (product.published ? 'PUBLISHED' : 'DRAFT'),
@@ -1013,6 +1224,217 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
 
   await refreshProductPricing(product.id, db);
   return getAdminProductById(product.id, db);
+}
+
+export async function updateProductMerchandisingSettings(
+  productId: string,
+  input: AdminMerchandisingSettingsInput,
+  db = prisma,
+): Promise<void> {
+  if (input.recommendationWeight !== undefined) {
+    assertRecommendationWeight(input.recommendationWeight);
+  }
+
+  const product = await db.product.findUnique({ where: { id: productId }, select: { id: true } });
+  if (!product) {
+    throw new Error('Product not found.');
+  }
+
+  await db.product.update({
+    where: { id: productId },
+    data: {
+      ...(input.recommendationWeight !== undefined ? { recommendationWeight: input.recommendationWeight } : {}),
+      ...(input.isAccessory !== undefined ? { isAccessory: input.isAccessory } : {}),
+      ...(input.isStaffPick !== undefined ? { isStaffPick: input.isStaffPick } : {}),
+      ...(input.isBestSeller !== undefined ? { isBestSeller: input.isBestSeller } : {}),
+      ...(input.isNewArrival !== undefined ? { isNewArrival: input.isNewArrival } : {}),
+    },
+  });
+}
+
+export async function createAdminProductRecommendation(
+  input: AdminProductRecommendationInput,
+  db = prisma,
+): Promise<{ id: string }> {
+  if (input.sourceProductId === input.recommendedProductId) {
+    throw new Error('A product cannot recommend itself.');
+  }
+  assertRecommendationType(input.relationshipType);
+  assertRecommendationPriority(input.priority);
+
+  const [sourceProduct, recommendedProduct] = await Promise.all([
+    db.product.findUnique({ where: { id: input.sourceProductId }, select: { id: true } }),
+    db.product.findUnique({ where: { id: input.recommendedProductId }, select: { id: true } }),
+  ]);
+
+  if (!sourceProduct) throw new Error('Source product not found.');
+  if (!recommendedProduct) throw new Error('Recommended product not found.');
+
+  try {
+    return await db.productRecommendation.create({
+      data: {
+        sourceProductId: input.sourceProductId,
+        recommendedProductId: input.recommendedProductId,
+        relationshipType: input.relationshipType,
+        priority: input.priority,
+        active: input.active,
+      },
+      select: { id: true },
+    });
+  } catch (error) {
+    if (typeof error === 'object' && error && 'code' in error && error.code === 'P2002') {
+      throw new Error('This recommendation already exists for the selected relationship type.');
+    }
+    throw error;
+  }
+}
+
+export async function updateAdminProductRecommendation(
+  recommendationId: string,
+  input: AdminProductRecommendationUpdateInput,
+  db = prisma,
+): Promise<void> {
+  assertRecommendationType(input.relationshipType);
+  assertRecommendationPriority(input.priority);
+
+  const current = await db.productRecommendation.findUnique({
+    where: { id: recommendationId },
+    select: { id: true, sourceProductId: true, recommendedProductId: true },
+  });
+
+  if (!current) {
+    throw new Error('Recommendation not found.');
+  }
+
+  try {
+    await db.productRecommendation.update({
+      where: { id: recommendationId },
+      data: {
+        relationshipType: input.relationshipType,
+        priority: input.priority,
+        active: input.active,
+      },
+    });
+  } catch (error) {
+    if (typeof error === 'object' && error && 'code' in error && error.code === 'P2002') {
+      throw new Error('Changing this relationship would duplicate an existing recommendation.');
+    }
+    throw error;
+  }
+}
+
+export async function deleteAdminProductRecommendation(recommendationId: string, db = prisma): Promise<void> {
+  const current = await db.productRecommendation.findUnique({
+    where: { id: recommendationId },
+    select: { id: true },
+  });
+
+  if (!current) {
+    throw new Error('Recommendation not found.');
+  }
+
+  await db.productRecommendation.delete({ where: { id: recommendationId } });
+}
+
+export async function searchAdminMerchandisingProducts(
+  input: { sourceProductId: string; search?: string; take?: number },
+  db = prisma,
+): Promise<AdminMerchandisingProductSummary[]> {
+  const search = normalizeSearch(input.search);
+  const take = Math.min(Math.max(input.take ?? 12, 1), 24);
+
+  if (!search) {
+    return [];
+  }
+
+  const existingRelationships = await db.productRecommendation.findMany({
+    where: { sourceProductId: input.sourceProductId },
+    select: { recommendedProductId: true },
+    take: 250,
+  });
+  const excludedIds = [input.sourceProductId, ...existingRelationships.map((item) => item.recommendedProductId)];
+
+  const rows = await db.product.findMany({
+    where: {
+      id: { notIn: excludedIds },
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { sku: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ],
+    },
+    select: adminMerchandisingProductSelect,
+    orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    take,
+  });
+
+  return rows.map(mapAdminMerchandisingProduct);
+}
+
+export async function getAdminProductMerchandisingPanel(
+  productId: string,
+  options: { search?: string } = {},
+  db = prisma,
+): Promise<AdminProductMerchandisingPanel | null> {
+  const product = await db.product.findUnique({
+    where: { id: productId },
+    select: {
+      id: true,
+      recommendationWeight: true,
+      isAccessory: true,
+      isStaffPick: true,
+      isBestSeller: true,
+      isNewArrival: true,
+    },
+  });
+
+  if (!product) {
+    return null;
+  }
+
+  const [recommendationRows, candidates, previewRows] = await Promise.all([
+    db.productRecommendation.findMany({
+      where: { sourceProductId: productId },
+      include: adminRecommendationInclude,
+      orderBy: [{ active: 'desc' }, { priority: 'asc' }, { updatedAt: 'desc' }, { id: 'asc' }],
+    }),
+    searchAdminMerchandisingProducts({ sourceProductId: productId, ...(options.search !== undefined ? { search: options.search } : {}) }, db),
+    getRelatedProducts({ sourceProductId: productId, resultLimit: 4, excludedProductIds: [productId] }, db),
+  ]);
+
+  const manualProductIds = new Set(recommendationRows.filter((row) => row.active).map((row) => row.recommendedProductId));
+
+  return {
+    settings: {
+      recommendationWeight: product.recommendationWeight,
+      isAccessory: product.isAccessory,
+      isStaffPick: product.isStaffPick,
+      isBestSeller: product.isBestSeller,
+      isNewArrival: product.isNewArrival,
+    },
+    recommendations: recommendationRows.map((row) => mapAdminRecommendation(row, productId)),
+    candidates,
+    preview: previewRows.map((item, index) => ({
+      id: item.id,
+      sku: '',
+      slug: item.slug,
+      name: item.name,
+      game: item.gameLabel,
+      categoryName: item.categoryLabel,
+      categorySlug: item.categorySlug,
+      imageUrl: item.imageUrl,
+      imageAlt: item.imageAlt,
+      priceMinor: item.price.amountMinor,
+      currency: item.price.currency,
+      lifecycleState: 'PUBLISHED',
+      published: true,
+      archived: false,
+      publicStockState: item.publicStockState,
+      position: index + 1,
+      strategyId: item.strategyId,
+      manual: manualProductIds.has(item.id),
+    })),
+  };
 }
 
 export async function archiveAdminProduct(id: string, db = prisma): Promise<void> {

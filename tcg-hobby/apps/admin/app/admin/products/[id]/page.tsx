@@ -2,14 +2,20 @@ import { notFound } from 'next/navigation';
 import { Button, Card, CardContent, Container, Section } from '@tcg-hobby/ui';
 import { PageHeader, StatusBadge } from '@tcg-hobby/ui';
 import { EmptyPricingState, PricingCard } from '@tcg-hobby/ui';
-import { getAdminProductById, getAdminProducts } from '@tcg-hobby/database';
+import { getAdminProductById, getAdminProductMerchandisingPanel, getAdminProducts } from '@tcg-hobby/database';
 import { emptyProductFormValues } from '../../../../lib/admin-form-state';
 import { archiveProductAction, toggleProductPublicationAction } from '../../../../lib/admin-actions.server';
 import { ProductForm } from '../../../../components/product-form';
+import { ProductMerchandisingPanel } from '../../../../components/product-merchandising-panel';
 
 export const dynamic = 'force-dynamic';
 
 type ParamsValue = { id: string };
+type SearchParamsValue = Record<string, string | string[] | undefined>;
+
+function asString(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] ?? '' : value ?? '';
+}
 
 function productState(product: NonNullable<Awaited<ReturnType<typeof getAdminProductById>>>) {
   return {
@@ -44,11 +50,19 @@ function productState(product: NonNullable<Awaited<ReturnType<typeof getAdminPro
   };
 }
 
-export default async function AdminProductDetailPage({ params }: { params: Promise<ParamsValue> }) {
+export default async function AdminProductDetailPage({ params, searchParams }: { params: Promise<ParamsValue>; searchParams: Promise<SearchParamsValue> }) {
   const { id } = await params;
-  const [product, options] = await Promise.all([getAdminProductById(id), getAdminProducts({ page: 1, pageSize: 1 })]);
+  const query = await searchParams;
+  const recommendationSearch = asString(query.recommendationSearch);
+  const merchandisingStatus = asString(query.merchandisingStatus);
+  const merchandisingMessage = asString(query.merchandisingMessage);
+  const [product, options, merchandising] = await Promise.all([
+    getAdminProductById(id),
+    getAdminProducts({ page: 1, pageSize: 1 }),
+    getAdminProductMerchandisingPanel(id, { search: recommendationSearch }),
+  ]);
 
-  if (!product) {
+  if (!product || !merchandising) {
     notFound();
   }
 
@@ -219,6 +233,14 @@ export default async function AdminProductDetailPage({ params }: { params: Promi
           categories={options.categories.map((item) => ({ id: item.id, label: item.name }))}
           suppliers={options.suppliers.map((item) => ({ id: item.id, label: item.name }))}
           submitLabel="Save product"
+        />
+
+        <ProductMerchandisingPanel
+          product={product}
+          merchandising={merchandising}
+          searchValue={recommendationSearch}
+          status={merchandisingStatus}
+          message={merchandisingMessage}
         />
       </Container>
     </Section>

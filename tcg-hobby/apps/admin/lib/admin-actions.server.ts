@@ -1,14 +1,20 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import {
   adjustProductStock,
   archiveAdminProduct,
   createAdminProduct,
+  createAdminProductRecommendation,
   createAdminSupplier,
+  deleteAdminProductRecommendation,
   setProductPublication,
   updateAdminProduct,
+  updateAdminProductRecommendation,
   updateAdminSupplier,
+  updateProductMerchandisingSettings,
+  ProductRecommendationType,
 } from '@tcg-hobby/database';
 import {
   buildProductValues,
@@ -19,6 +25,42 @@ import {
   type StockAdjustmentFormState,
   type SupplierFormState,
 } from './admin-form-state';
+
+const RECOMMENDATION_TYPES = Object.values(ProductRecommendationType);
+
+function asString(value: FormDataEntryValue | null): string {
+  return typeof value === 'string' ? value : '';
+}
+
+function asBoolean(value: FormDataEntryValue | null): boolean {
+  return value === 'true' || value === 'on' || value === '1';
+}
+
+function parseWholeNumber(value: string): number | null {
+  if (!value.trim()) return null;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && String(parsed) === value.trim() ? parsed : null;
+}
+
+function parseRecommendationType(value: string): ProductRecommendationType | null {
+  return RECOMMENDATION_TYPES.includes(value as ProductRecommendationType) ? (value as ProductRecommendationType) : null;
+}
+
+function redirectToProductMerchandising(productId: string, status: 'saved' | 'created' | 'updated' | 'deleted' | 'error', message?: string): never {
+  const params = new URLSearchParams({ merchandisingStatus: status });
+  if (message) {
+    params.set('merchandisingMessage', message);
+  }
+  redirect(`/admin/products/${productId}?${params.toString()}#merchandising`);
+}
+
+function revalidateMerchandising(productId: string, productSlug?: string): void {
+  revalidatePath(`/admin/products/${productId}`);
+  revalidatePath('/admin/products');
+  if (productSlug) {
+    revalidatePath(`/catalogue/${productSlug}`);
+  }
+}
 
 export async function saveProductAction(_state: ProductFormState, formData: FormData): Promise<ProductFormState> {
   const values = buildProductValues(formData);
@@ -117,6 +159,122 @@ export async function toggleProductPublicationAction(formData: FormData) {
 
   await setProductPublication(productId, published);
   redirect(`/admin/products/${productId}`);
+}
+
+export async function saveProductMerchandisingSettingsAction(formData: FormData) {
+  const productId = asString(formData.get('productId'));
+  const productSlug = asString(formData.get('productSlug'));
+  const recommendationWeight = parseWholeNumber(asString(formData.get('recommendationWeight')));
+
+  if (!productId) {
+    redirect('/admin/products');
+  }
+  if (recommendationWeight === null) {
+    redirectToProductMerchandising(productId, 'error', 'Enter a whole-number recommendation weight.');
+  }
+
+  try {
+    await updateProductMerchandisingSettings(productId, {
+      recommendationWeight,
+      isAccessory: asBoolean(formData.get('isAccessory')),
+      isStaffPick: asBoolean(formData.get('isStaffPick')),
+      isBestSeller: asBoolean(formData.get('isBestSeller')),
+      isNewArrival: asBoolean(formData.get('isNewArrival')),
+    });
+    revalidateMerchandising(productId, productSlug);
+    redirectToProductMerchandising(productId, 'saved');
+  } catch (error) {
+    redirectToProductMerchandising(productId, 'error', error instanceof Error ? error.message : 'Unable to save merchandising settings.');
+  }
+}
+
+export async function addProductRecommendationAction(formData: FormData) {
+  const sourceProductId = asString(formData.get('sourceProductId'));
+  const sourceProductSlug = asString(formData.get('sourceProductSlug'));
+  const recommendedProductId = asString(formData.get('recommendedProductId'));
+  const relationshipType = parseRecommendationType(asString(formData.get('relationshipType')));
+  const priority = parseWholeNumber(asString(formData.get('priority')));
+
+  if (!sourceProductId) {
+    redirect('/admin/products');
+  }
+  if (!recommendedProductId) {
+    redirectToProductMerchandising(sourceProductId, 'error', 'Choose a product to recommend.');
+  }
+  if (!relationshipType) {
+    redirectToProductMerchandising(sourceProductId, 'error', 'Choose a valid relationship type.');
+  }
+  if (priority === null) {
+    redirectToProductMerchandising(sourceProductId, 'error', 'Enter a whole-number priority.');
+  }
+
+  try {
+    await createAdminProductRecommendation({
+      sourceProductId,
+      recommendedProductId,
+      relationshipType,
+      priority,
+      active: asBoolean(formData.get('active')),
+    });
+    revalidateMerchandising(sourceProductId, sourceProductSlug);
+    redirectToProductMerchandising(sourceProductId, 'created');
+  } catch (error) {
+    redirectToProductMerchandising(sourceProductId, 'error', error instanceof Error ? error.message : 'Unable to create recommendation.');
+  }
+}
+
+export async function updateProductRecommendationAction(formData: FormData) {
+  const productId = asString(formData.get('productId'));
+  const productSlug = asString(formData.get('productSlug'));
+  const recommendationId = asString(formData.get('recommendationId'));
+  const relationshipType = parseRecommendationType(asString(formData.get('relationshipType')));
+  const priority = parseWholeNumber(asString(formData.get('priority')));
+
+  if (!productId) {
+    redirect('/admin/products');
+  }
+  if (!recommendationId) {
+    redirectToProductMerchandising(productId, 'error', 'Recommendation not found.');
+  }
+  if (!relationshipType) {
+    redirectToProductMerchandising(productId, 'error', 'Choose a valid relationship type.');
+  }
+  if (priority === null) {
+    redirectToProductMerchandising(productId, 'error', 'Enter a whole-number priority.');
+  }
+
+  try {
+    await updateAdminProductRecommendation(recommendationId, {
+      relationshipType,
+      priority,
+      active: asBoolean(formData.get('active')),
+    });
+    revalidateMerchandising(productId, productSlug);
+    redirectToProductMerchandising(productId, 'updated');
+  } catch (error) {
+    redirectToProductMerchandising(productId, 'error', error instanceof Error ? error.message : 'Unable to update recommendation.');
+  }
+}
+
+export async function deleteProductRecommendationAction(formData: FormData) {
+  const productId = asString(formData.get('productId'));
+  const productSlug = asString(formData.get('productSlug'));
+  const recommendationId = asString(formData.get('recommendationId'));
+
+  if (!productId) {
+    redirect('/admin/products');
+  }
+  if (!recommendationId) {
+    redirectToProductMerchandising(productId, 'error', 'Recommendation not found.');
+  }
+
+  try {
+    await deleteAdminProductRecommendation(recommendationId);
+    revalidateMerchandising(productId, productSlug);
+    redirectToProductMerchandising(productId, 'deleted');
+  } catch (error) {
+    redirectToProductMerchandising(productId, 'error', error instanceof Error ? error.message : 'Unable to delete recommendation.');
+  }
 }
 
 export async function saveSupplierAction(_state: SupplierFormState, formData: FormData): Promise<SupplierFormState> {

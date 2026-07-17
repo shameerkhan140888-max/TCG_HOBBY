@@ -1,6 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { calculateAvailableStock, calculateMarginPercentage } from './admin-math';
-import { adjustProductStock, generateProductSlug, getAdminDashboardData, getAdminProducts, getAdminSuppliers } from './admin';
+import {
+  adjustProductStock,
+  createAdminProductRecommendation,
+  deleteAdminProductRecommendation,
+  generateProductSlug,
+  getAdminDashboardData,
+  getAdminProducts,
+  getAdminSuppliers,
+  searchAdminMerchandisingProducts,
+  updateProductMerchandisingSettings,
+} from './admin';
 
 const originalNodeEnv = process.env.NODE_ENV;
 
@@ -21,6 +31,13 @@ function createDbMock() {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
+    },
+    productRecommendation: {
+      create: vi.fn(),
+      delete: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
       update: vi.fn(),
     },
     order: {
@@ -282,5 +299,154 @@ describe('admin repositories', () => {
     db.inventoryItem.findMany.mockResolvedValue([]);
 
     await expect(getAdminDashboardData(db)).rejects.toThrow('Admin dashboard data is unavailable in production');
+  });
+
+  it('updates merchandising settings without touching unrelated product fields', async () => {
+    const db = createDbMock();
+    db.product.findUnique.mockResolvedValue({ id: 'prod-1' });
+    db.product.update.mockResolvedValue({ id: 'prod-1' });
+
+    await updateProductMerchandisingSettings(
+      'prod-1',
+      {
+        recommendationWeight: 25,
+        isAccessory: true,
+        isStaffPick: false,
+        isBestSeller: false,
+        isNewArrival: true,
+      },
+      db,
+    );
+
+    expect(db.product.update).toHaveBeenCalledWith({
+      where: { id: 'prod-1' },
+      data: {
+        recommendationWeight: 25,
+        isAccessory: true,
+        isStaffPick: false,
+        isBestSeller: false,
+        isNewArrival: true,
+      },
+    });
+  });
+
+  it('rejects invalid merchandising weight values', async () => {
+    const db = createDbMock();
+
+    await expect(updateProductMerchandisingSettings('prod-1', { recommendationWeight: 5000 }, db)).rejects.toThrow('Recommendation weight');
+    expect(db.product.update).not.toHaveBeenCalled();
+  });
+
+  it('creates a valid manual product recommendation', async () => {
+    const db = createDbMock();
+    db.product.findUnique.mockResolvedValueOnce({ id: 'source' }).mockResolvedValueOnce({ id: 'target' });
+    db.productRecommendation.create.mockResolvedValue({ id: 'rel-1' });
+
+    const result = await createAdminProductRecommendation(
+      {
+        sourceProductId: 'source',
+        recommendedProductId: 'target',
+        relationshipType: 'RELATED',
+        priority: 10,
+        active: true,
+      },
+      db,
+    );
+
+    expect(result.id).toBe('rel-1');
+    expect(db.productRecommendation.create).toHaveBeenCalledWith({
+      data: {
+        sourceProductId: 'source',
+        recommendedProductId: 'target',
+        relationshipType: 'RELATED',
+        priority: 10,
+        active: true,
+      },
+      select: { id: true },
+    });
+  });
+
+  it('rejects self-recommendations before writing', async () => {
+    const db = createDbMock();
+
+    await expect(
+      createAdminProductRecommendation(
+        {
+          sourceProductId: 'prod-1',
+          recommendedProductId: 'prod-1',
+          relationshipType: 'RELATED',
+          priority: 100,
+          active: true,
+        },
+        db,
+      ),
+    ).rejects.toThrow('cannot recommend itself');
+    expect(db.productRecommendation.create).not.toHaveBeenCalled();
+  });
+
+  it('translates duplicate recommendation constraint failures', async () => {
+    const db = createDbMock();
+    db.product.findUnique.mockResolvedValueOnce({ id: 'source' }).mockResolvedValueOnce({ id: 'target' });
+    db.productRecommendation.create.mockRejectedValue({ code: 'P2002' });
+
+    await expect(
+      createAdminProductRecommendation(
+        {
+          sourceProductId: 'source',
+          recommendedProductId: 'target',
+          relationshipType: 'ACCESSORY',
+          priority: 100,
+          active: true,
+        },
+        db,
+      ),
+    ).rejects.toThrow('already exists');
+  });
+
+  it('deletes only the recommendation relationship', async () => {
+    const db = createDbMock();
+    db.productRecommendation.findUnique.mockResolvedValue({ id: 'rel-1' });
+    db.productRecommendation.delete.mockResolvedValue({ id: 'rel-1' });
+
+    await deleteAdminProductRecommendation('rel-1', db);
+
+    expect(db.productRecommendation.delete).toHaveBeenCalledWith({ where: { id: 'rel-1' } });
+    expect(db.product.update).not.toHaveBeenCalled();
+  });
+
+  it('searches bounded recommendation candidates while excluding source and linked products', async () => {
+    const db = createDbMock();
+    db.productRecommendation.findMany.mockResolvedValue([{ recommendedProductId: 'linked' }]);
+    db.product.findMany.mockResolvedValue([
+      {
+        id: 'target',
+        sku: 'SKU-TARGET',
+        slug: 'target-product',
+        name: 'Target Product',
+        game: 'Pokemon TCG',
+        setName: 'Premium Collection',
+        priceMinor: 4999,
+        currency: 'GBP',
+        lifecycleState: 'PUBLISHED',
+        published: true,
+        archivedAt: null,
+        releaseStatus: 'RELEASED',
+        category: { name: 'Pokemon', slug: 'pokemon' },
+        inventory: { stockOnHand: 3, reservedStock: 0 },
+        images: [],
+      },
+    ]);
+
+    const results = await searchAdminMerchandisingProducts({ sourceProductId: 'source', search: 'target', take: 12 }, db);
+
+    expect(db.product.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: { notIn: ['source', 'linked'] },
+        }),
+        take: 12,
+      }),
+    );
+    expect(results[0]?.publicStockState).toBe('LOW_STOCK');
   });
 });
