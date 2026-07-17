@@ -1,4 +1,4 @@
-export { MarketingCampaignStatus, MarketingSubscriberStatus, PrismaClient } from '@prisma/client';
+export { MarketingCampaignStatus, MarketingSubscriberStatus, PrismaClient, ProductRecommendationType } from '@prisma/client';
 export type { Prisma } from '@prisma/client';
 export { prisma } from './client';
 export {
@@ -149,6 +149,35 @@ export {
   getCatalogueProducts,
   getFeaturedCatalogueProducts,
 } from './catalogue';
+export {
+  AccessoryStrategy,
+  FeaturedStrategy,
+  LatestProductStrategy,
+  ManualRelationshipStrategy,
+  NewArrivalStrategy,
+  SameCategoryStrategy,
+  SameGameStrategy,
+  SameProductTypeStrategy,
+  createProductRecommendation,
+  defaultMerchandisingStrategies,
+  getAccessoryRecommendations,
+  getFeaturedProducts as getMerchandisingFeaturedProducts,
+  getLatestProducts as getMerchandisingLatestProducts,
+  getRecommendedProducts,
+  getRelatedProducts,
+  isMerchandisingProductEligible,
+} from './merchandising';
+export type {
+  MerchandisingCampaignInfluence,
+  MerchandisingCampaignProductInfluence,
+  MerchandisingContext,
+  MerchandisingPlacement,
+  MerchandisingRecommendation,
+  MerchandisingStrategy,
+  RecommendationAnalyticsEvent,
+  RecommendationAnalyticsEventContext,
+  StorefrontSafeMerchandisingProduct,
+} from './merchandising';
 export {
   createProductImportPlan,
   derivePublicStockState,

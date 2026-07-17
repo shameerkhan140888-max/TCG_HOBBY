@@ -92,6 +92,30 @@ describe('product import validation', () => {
     expect(result.input?.slug).toBe('test-product');
     expect(result.input?.lifecycleState).toBe('DRAFT');
     expect(result.input?.seo.title).toBe('Test Product | TCG Hobby');
+    expect(result.input?.recommendationWeight).toBe(0);
+    expect(result.input?.isAccessory).toBe(false);
+  });
+
+  it('accepts optional merchandising metadata without making it required', async () => {
+    const folder = await createImportFolder(
+      validManifest({
+        recommendationWeight: 25,
+        isAccessory: true,
+        isStaffPick: true,
+        isBestSeller: false,
+        isNewArrival: true,
+      }),
+    );
+    const result = await validateProductImportFolder(folder);
+
+    expect(result.valid).toBe(true);
+    expect(result.input).toMatchObject({
+      recommendationWeight: 25,
+      isAccessory: true,
+      isStaffPick: true,
+      isBestSeller: false,
+      isNewArrival: true,
+    });
   });
 
   it('rejects invalid price, negative stock and bad slugs', async () => {
@@ -100,6 +124,7 @@ describe('product import validation', () => {
         slug: 'Bad Slug',
         priceMinor: 49.99,
         stockQuantity: -1,
+        recommendationWeight: -1,
       }),
     );
     const result = await validateProductImportFolder(folder);
@@ -108,6 +133,7 @@ describe('product import validation', () => {
     expect(result.errors).toContain('slug must use lowercase letters, numbers and hyphens.');
     expect(result.errors).toContain('priceMinor must be a non-negative integer minor-unit amount.');
     expect(result.errors).toContain('stockQuantity must be a non-negative integer.');
+    expect(result.errors).toContain('recommendationWeight must be a non-negative integer.');
   });
 
   it('rejects unsupported categories and missing published supplier data', async () => {

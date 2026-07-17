@@ -62,6 +62,11 @@ export type ProductImportManifest = {
   featured?: boolean;
   homepagePriority?: number | null;
   heroFeatured?: boolean;
+  recommendationWeight?: number;
+  isAccessory?: boolean;
+  isStaffPick?: boolean;
+  isBestSeller?: boolean;
+  isNewArrival?: boolean;
   releaseDate?: string;
   preorder: boolean;
   supplierSlug?: string;
@@ -106,6 +111,11 @@ export type NormalisedProductImportInput = ProductImportManifest & {
   lifecycleState: ProductLifecycleState;
   visible: boolean;
   featured: boolean;
+  recommendationWeight: number;
+  isAccessory: boolean;
+  isStaffPick: boolean;
+  isBestSeller: boolean;
+  isNewArrival: boolean;
   images: ProductImportImage[];
 };
 
@@ -445,6 +455,11 @@ export function validateProductImportManifest(
   const lifecycleState = normalizeLifecycleState(rawLifecycle);
   const featured = readBoolean(rawManifest, 'featured') ?? false;
   const visible = readBoolean(rawManifest, 'visible') ?? isPublishedLifecycleState(lifecycleState);
+  const recommendationWeight = readInteger(rawManifest, 'recommendationWeight') ?? 0;
+  const isAccessory = readBoolean(rawManifest, 'isAccessory') ?? false;
+  const isStaffPick = readBoolean(rawManifest, 'isStaffPick') ?? false;
+  const isBestSeller = readBoolean(rawManifest, 'isBestSeller') ?? false;
+  const isNewArrival = readBoolean(rawManifest, 'isNewArrival') ?? false;
   const preorder = readBoolean(rawManifest, 'preorder');
   const shortDescription = readString(rawManifest, 'shortDescription');
   const fullDescription = readString(rawManifest, 'fullDescription') ?? shortDescription;
@@ -456,6 +471,7 @@ export function validateProductImportManifest(
   if (priceMinor === undefined || priceMinor < 0) errors.push('priceMinor must be a non-negative integer minor-unit amount.');
   if (vatRate === undefined || vatRate < 0) errors.push('vatRate must be a non-negative integer.');
   if (stockQuantity === undefined || stockQuantity < 0) errors.push('stockQuantity must be a non-negative integer.');
+  if (recommendationWeight < 0) errors.push('recommendationWeight must be a non-negative integer.');
   if (preorder === undefined) errors.push('preorder must be true or false.');
   if (!shortDescription) errors.push('shortDescription is required.');
   if (rawLifecycle && lifecycleState === 'DRAFT' && !['DRAFT', 'ACTIVE'].includes(rawLifecycle)) {
@@ -566,6 +582,11 @@ export function validateProductImportManifest(
     lifecycleState,
     visible,
     featured,
+    recommendationWeight,
+    isAccessory,
+    isStaffPick,
+    isBestSeller,
+    isNewArrival,
     homepagePriority,
     heroFeatured,
     preorder,
@@ -859,6 +880,11 @@ function toProductData(input: NormalisedProductImportInput, categoryId: string, 
     featured: input.featured,
     homepagePriority: input.homepagePriority ?? null,
     heroFeatured: input.heroFeatured ?? false,
+    recommendationWeight: input.recommendationWeight,
+    isAccessory: input.isAccessory,
+    isStaffPick: input.isStaffPick,
+    isBestSeller: input.isBestSeller,
+    isNewArrival: input.isNewArrival,
     freeUkStandardShipping: input.shippingPromotion.type === 'FREE_STANDARD_UK',
     shippingPromotionProductOnly: input.shippingPromotion.productOnly,
     lifecycleState: input.lifecycleState,
@@ -893,6 +919,11 @@ function pickAuditSnapshot(product: {
   featured: boolean;
   homepagePriority: number | null;
   heroFeatured: boolean;
+  recommendationWeight: number;
+  isAccessory: boolean;
+  isStaffPick: boolean;
+  isBestSeller: boolean;
+  isNewArrival: boolean;
   freeUkStandardShipping: boolean;
   shippingPromotionProductOnly: boolean;
   lifecycleState: string;
@@ -911,6 +942,11 @@ function pickAuditSnapshot(product: {
     featured: product.featured,
     homepagePriority: product.homepagePriority,
     heroFeatured: product.heroFeatured,
+    recommendationWeight: product.recommendationWeight,
+    isAccessory: product.isAccessory,
+    isStaffPick: product.isStaffPick,
+    isBestSeller: product.isBestSeller,
+    isNewArrival: product.isNewArrival,
     freeUkStandardShipping: product.freeUkStandardShipping,
     shippingPromotionProductOnly: product.shippingPromotionProductOnly,
     lifecycleState: product.lifecycleState,
@@ -979,6 +1015,11 @@ export async function importProductFromFolder(
             featured: true,
             homepagePriority: true,
             heroFeatured: true,
+            recommendationWeight: true,
+            isAccessory: true,
+            isStaffPick: true,
+            isBestSeller: true,
+            isNewArrival: true,
             freeUkStandardShipping: true,
             shippingPromotionProductOnly: true,
             lifecycleState: true,

@@ -96,6 +96,14 @@ enum ProductReleaseStatus {
   ARCHIVED
 }
 
+enum ProductRecommendationType {
+  RELATED
+  ACCESSORY
+  UPSELL
+  CROSS_SELL
+  MANUAL
+}
+
 enum NotificationPreference {
   ALL
   PREORDER
@@ -285,6 +293,11 @@ model Product {
   featured      Boolean          @default(false)
   homepagePriority Int?
   heroFeatured Boolean           @default(false)
+  recommendationWeight Int       @default(0)
+  isAccessory   Boolean          @default(false)
+  isStaffPick   Boolean          @default(false)
+  isBestSeller  Boolean          @default(false)
+  isNewArrival  Boolean          @default(false)
   freeUkStandardShipping Boolean @default(false)
   shippingPromotionProductOnly Boolean @default(true)
   lifecycleState String          @default("DRAFT")
@@ -321,6 +334,8 @@ model Product {
   notificationSubscriptions NotificationSubscription[]
   marketSnapshots MarketSnapshot[]
   watchlistItems WatchlistItem[]
+  recommendationsFrom ProductRecommendation[] @relation("ProductRecommendationSource")
+  recommendationsTo   ProductRecommendation[] @relation("ProductRecommendationTarget")
   importSourceType String?
   importSourceReference String?
   importedAt     DateTime?
@@ -336,12 +351,35 @@ model Product {
   @@index([archivedAt, published])
   @@index([published, featured])
   @@index([published, featured, homepagePriority])
+  @@index([published, recommendationWeight])
+  @@index([published, isAccessory])
+  @@index([published, isStaffPick])
+  @@index([published, isBestSeller])
+  @@index([published, isNewArrival])
   @@index([published, heroFeatured])
   @@index([lifecycleState, published])
   @@index([releaseStatus, releaseDate])
   @@index([published, releaseStatus])
   @@index([name])
   @@index([searchText])
+}
+
+model ProductRecommendation {
+  id                   String                    @id @default(cuid())
+  sourceProductId      String
+  recommendedProductId String
+  relationshipType     ProductRecommendationType @default(RELATED)
+  priority             Int                       @default(100)
+  active               Boolean                   @default(true)
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  sourceProduct        Product                   @relation("ProductRecommendationSource", fields: [sourceProductId], references: [id], onDelete: Cascade)
+  recommendedProduct   Product                   @relation("ProductRecommendationTarget", fields: [recommendedProductId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceProductId, recommendedProductId, relationshipType])
+  @@index([sourceProductId, active, priority])
+  @@index([recommendedProductId])
+  @@index([relationshipType, active])
 }
 
 model ProductImportAudit {
