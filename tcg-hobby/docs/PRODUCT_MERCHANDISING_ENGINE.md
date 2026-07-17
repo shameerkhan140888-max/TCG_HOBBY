@@ -23,9 +23,10 @@ The public service surface includes:
 - `getAccessoryRecommendations(context)`
 - `getMerchandisingFeaturedProducts(limit)`
 - `getMerchandisingLatestProducts(limit)`
+- `getMerchandisingStaffPickProducts(limit)`
 - `createProductRecommendation(input)`
 
-The `getMerchandisingFeaturedProducts` and `getMerchandisingLatestProducts` export names avoid clashing with the existing catalogue helpers.
+The homepage-oriented export names avoid clashing with the existing catalogue helpers.
 
 ## Merchandising Context
 
@@ -95,9 +96,10 @@ The default strategy order is:
 3. Same game and product type
 4. Same game
 5. Accessories
-6. Featured or staff-pick products
-7. New arrivals
-8. Latest eligible products
+6. Featured products
+7. Staff picks
+8. New arrivals
+9. Latest eligible products
 
 Within strategy output, ranking is deterministic:
 
@@ -278,6 +280,39 @@ The banner uses wording supported by the current checkout implementation:
 
 PayPal and other payment methods are intentionally not shown because the current checkout path only creates Stripe card checkout sessions.
 
+## WP2D Homepage Merchandising Rollout
+
+Work Package 2D connects the production homepage to the merchandising engine.
+
+Homepage data is assembled by `apps/storefront/lib/homepage-data.ts` using:
+
+- `getMerchandisingFeaturedProducts(8)`
+- `getMerchandisingLatestProducts(8)`
+- `getMerchandisingStaffPickProducts(8)`
+
+The homepage then performs only adjacent-section deduplication before rendering:
+
+- Featured products
+- Latest arrivals
+- Staff picks
+
+Sections with no eligible products are not rendered. The page does not show fabricated products or filler empty states.
+
+The visible homepage product cards use the same `ProductMerchandisingRail` component as product-detail recommendations, so stock labels, wishlist controls, free-delivery badges, purchase-limit badges and add-to-basket behaviour remain consistent.
+
+## Staff Pick Strategy
+
+WP2D adds `StaffPickStrategy`.
+
+It selects eligible products where `isStaffPick` is true and ranks them deterministically by:
+
+1. `recommendationWeight`
+2. `homepagePriority`
+3. creation date
+4. product id
+
+Staff picks remain subject to the central eligibility rules. A draft, hidden, archived, unavailable or out-of-stock staff pick is not rendered on the storefront.
+
 ## WP2C Admin Merchandising Controls
 
 Work Package 2C adds Admin controls to the existing product detail page at `/admin/products/[id]`.
@@ -361,6 +396,8 @@ WP2C does not add a new audit-log subsystem. Relationship records retain `create
 
 Product pages call `getRelatedProducts({ sourceProductId, resultLimit: 4 })` and render the returned storefront-safe cards through the recommendation rail.
 
+The production homepage calls the homepage merchandising services and renders the same rail surface with homepage-specific headings.
+
 Future Admin controls can manage `ProductRecommendation` records, merchandising flags and preview placements by calling the same engine with `placement: 'ADMIN_PREVIEW'`.
 
 ## Troubleshooting Missing Recommendations
@@ -376,10 +413,8 @@ If no recommendations appear, check:
 - campaign influence is active and date-valid
 - requested strategy IDs are enabled
 
-## Intentionally Not Implemented In WP2A/WP2B
+## Intentionally Not Implemented In WP2A-WP2D
 
-- homepage merchandising redesign
-- full Admin relationship editor
 - campaign-management UI
 - analytics storage
 - personalisation

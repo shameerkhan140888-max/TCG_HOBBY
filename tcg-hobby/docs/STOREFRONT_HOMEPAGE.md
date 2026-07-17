@@ -1,76 +1,95 @@
 # Production Storefront Homepage
 
 The storefront homepage is the public retail homepage used when `TCG_HOBBY_STOREFRONT_MODE=storefront`.
+
 When `TCG_HOBBY_STOREFRONT_MODE=coming-soon`, `/` continues to render the approved launch landing page. The `/coming-soon` route remains available in both modes.
 
 ## Structure
 
 The production homepage renders these sections in order:
 
-1. Storefront header with shop menu, search, account, wishlist rules and basket count.
-2. Merchandising hero carousel with up to three structured slides.
-3. Shop by game category tiles.
-4. New releases from catalogue data.
-5. Coming soon and pre-orders from release data.
-6. Featured products from catalogue merchandising data.
-7. Today's hot products using honest available catalogue signals.
+1. Storefront header with shop menu, search, account and basket count.
+2. Structured merchandising hero carousel.
+3. Compact category pill navigation.
+4. Featured products from the merchandising engine.
+5. Slim pre-order/releases banner.
+6. Latest arrivals from the merchandising engine.
+7. Staff picks from the merchandising engine, only when eligible products exist.
 8. Why TCG Hobby trust commitments.
-9. Collection and player tool shortcuts.
-10. Latest from TCG Hobby, currently sourced from release announcements.
-11. Newsletter signup using the shared privacy-safe launch-list flow.
-12. Storefront footer with legal links and configured social links only.
+9. Slim accessories banner.
+10. Compact trust strip.
+11. Follow TCG Hobby social section, only when approved social URLs are configured.
+12. Newsletter strip, payment trust banner and storefront footer from the global layout.
 
 ## Data Sources
 
 Homepage data is assembled by `apps/storefront/lib/homepage-data.ts`.
 
-- Categories come from `getCatalogueCategories`.
-- New releases and product cards come from `getCatalogueProducts`.
-- Featured products come from `getFeaturedCatalogueProducts`.
-- Release cards and news items come from `getComingSoonHubData`.
-- Newsletter signup uses the existing `LaunchEmailCapture` component and launch subscription server action.
+Product sections use the WP2A merchandising engine:
 
-Visual components do not query Prisma directly. The homepage uses typed repository/service results and passes those into presentational sections.
+- Featured products: `getMerchandisingFeaturedProducts`
+- Latest arrivals: `getMerchandisingLatestProducts`
+- Staff picks: `getMerchandisingStaffPickProducts`
+
+The homepage performs only adjacent-section deduplication. Ranking, eligibility and storefront-safe projection stay inside the merchandising engine.
+
+Visual components do not query Prisma directly. The homepage passes typed service results into reusable presentational components.
 
 ## Product Selection
 
-New releases show up to eight catalogue products sorted by newest data, excluding preorder and coming-soon-only rows.
+Featured products, latest arrivals and staff picks show eligible products only.
 
-Featured products show up to eight featured catalogue products and avoid repeating products already shown in New releases where practical.
+Eligibility requires products to be published, routeable, not archived, not discontinued and in stock according to the central merchandising rules.
 
-Today's hot products currently uses a deterministic fallback because reliable analytics are not yet connected. The fallback prioritises in-stock featured products, then available stock, release timing and product name. Badges are only shown when backed by available data:
+Sections with no eligible products are hidden instead of displaying fake products or customer-facing filler.
 
-- `Popular` for featured catalogue products.
-- `Recently restocked` for products with comparatively strong available stock.
-- `New arrival` for released products with a release date.
+## Product Rendering
 
-Future analytics can replace this fallback with most viewed, recently restocked, most wishlisted or demand-based signals without changing the homepage component structure.
+Homepage merchandising uses `ProductMerchandisingRail`, the same reusable rail used by product-detail recommendations.
 
-## Shop Links
+This keeps the following consistent across homepage and catalogue/product flows:
 
-Shop by game tiles link to existing catalogue routes:
+- public stock labels
+- product images
+- VAT-inclusive prices
+- wishlist heart control
+- add-to-basket behaviour
+- product-specific free-delivery badges
+- purchase-limit badges
 
-- Pokémon: `/catalogue?q=Pokemon`
+## Category Links
+
+The compact category pill navigation links to existing catalogue routes:
+
+- Pokemon: `/catalogue?q=Pokemon`
 - Magic: `/catalogue?q=Magic`
 - Disney Lorcana: `/catalogue?q=Lorcana`
 - Yu-Gi-Oh!: `/catalogue?q=Yu-Gi-Oh`
 - One Piece Card Game: `/catalogue?q=One+Piece`
 - Accessories: `/catalogue?category=accessories`
 
-Tiles remain visible even when a category has no current catalogue products, so launch merchandising can be stable without showing fake products.
+The row is navigational only. It does not imply product availability where no products are currently published.
 
 ## Social Links
 
-Storefront social links are configured through environment variables and omitted when not configured:
+The homepage follow section and storefront footer use the shared `SocialLinks` component.
 
+Approved platforms for WP2D:
+
+- Facebook
+- Instagram
+- TikTok
+
+Configuration:
+
+- `NEXT_PUBLIC_FACEBOOK_URL`
 - `NEXT_PUBLIC_INSTAGRAM_URL`
 - `NEXT_PUBLIC_TIKTOK_URL`
-- `NEXT_PUBLIC_X_URL`
 
 Only valid HTTPS URLs are rendered. Placeholder links are not displayed.
 
 ## Future Integrations
 
-News content currently uses real release announcements. A future blog or CMS source can be connected by replacing `buildNewsItems` while preserving the homepage section contract.
+Future homepage merchandising can add campaign influence through the existing merchandising context without replacing the homepage component structure.
 
-Hot-product ranking should move to analytics-backed signals when product views, restocks and wishlist counts are available in a reliable production dataset.
+Future social platforms can be added by extending the central site configuration and `SocialLinks` platform map.

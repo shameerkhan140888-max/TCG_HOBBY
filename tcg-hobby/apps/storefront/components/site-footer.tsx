@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { BrandMark, Container } from '@tcg-hobby/ui';
 import { getSiteSocialLinks } from '../lib/site';
 import { LaunchEmailCapture } from './launch-email-capture';
+import { SocialLinks } from './social-links';
 
 const legalLinks = [
   { label: 'Privacy', href: '/privacy' },
@@ -46,23 +47,7 @@ export function SiteFooter() {
               <p className="max-w-sm text-sm leading-6 text-neutral-400">
                 A premium UK trading card retailer for collectors and players.
               </p>
-              {socialLinks.length ? (
-                <nav aria-label="Social links" className="hidden lg:block">
-                  <ul className="flex flex-wrap gap-3">
-                    {socialLinks.map((link) => (
-                      <li key={link.label}>
-                        <a
-                          href={link.href}
-                          className="inline-flex h-9 min-w-9 items-center justify-center rounded-full bg-surface-panel px-3 text-xs font-bold text-neutral-300 transition-colors hover:bg-accent hover:text-neutral-950 focus:outline-none focus:ring-2 focus:ring-accent"
-                          rel="noreferrer"
-                        >
-                          {link.label}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </nav>
-              ) : null}
+              <SocialLinks links={socialLinks} compact className="hidden lg:block" />
             </div>
 
             <nav className="space-y-3" aria-label="Legal links">
@@ -107,23 +92,7 @@ export function SiteFooter() {
               </p>
             </div>
 
-            {socialLinks.length ? (
-              <nav aria-label="Social links" className="lg:hidden">
-                <ul className="flex flex-wrap gap-3">
-                  {socialLinks.map((link) => (
-                    <li key={link.label}>
-                      <a
-                        href={link.href}
-                        className="inline-flex h-9 min-w-9 items-center justify-center rounded-full bg-surface-panel px-3 text-xs font-bold text-neutral-300 transition-colors hover:bg-accent hover:text-neutral-950 focus:outline-none focus:ring-2 focus:ring-accent"
-                        rel="noreferrer"
-                      >
-                        {link.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            ) : null}
+            <SocialLinks links={socialLinks} compact className="lg:hidden" />
           </div>
 
           <div className="mt-6 flex flex-col gap-2 border-t border-surface-line/70 pt-4 text-xs text-neutral-500 sm:flex-row sm:items-center sm:justify-between">

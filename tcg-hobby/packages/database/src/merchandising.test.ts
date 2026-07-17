@@ -7,8 +7,10 @@ import {
   SameCategoryStrategy,
   SameGameStrategy,
   SameProductTypeStrategy,
+  StaffPickStrategy,
   createProductRecommendation,
   getRecommendedProducts,
+  getStaffPickProducts,
   isMerchandisingProductEligible,
   type MerchandisingStrategy,
 } from './merchandising';
@@ -129,6 +131,9 @@ function createDb(options: {
     product: {
       findUnique: vi.fn(async () => options.source === undefined ? sourceProduct() : options.source),
       findMany: vi.fn(async ({ where }: { where: Record<string, unknown> }) => {
+        if (where.isStaffPick) {
+          return products.filter((item) => item.isStaffPick);
+        }
         if (where.isAccessory || JSON.stringify(where).includes('accessories')) {
           return products.filter((item) => item.isAccessory || item.category.slug === 'accessories');
         }
@@ -253,6 +258,17 @@ describe('merchandising strategy pipeline', () => {
 
     expect(disabled).toEqual([]);
     expect(enabled[0]?.id).toBe('custom');
+  });
+
+  it('selects staff picks through the dedicated merchandising strategy', async () => {
+    const staffPick = product({ id: 'staff-pick', isStaffPick: true });
+    const featuredOnly = product({ id: 'featured-only', featured: true });
+    const db = createDb({ products: [featuredOnly, staffPick] });
+
+    const result = await getStaffPickProducts(4, db as never);
+
+    expect(result.map((item) => item.id)).toEqual(['staff-pick']);
+    expect(result[0]?.strategyId).toBe(StaffPickStrategy.id);
   });
 
   it('applies deterministic campaign influence without bypassing eligibility', async () => {

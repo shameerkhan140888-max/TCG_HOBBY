@@ -392,6 +392,20 @@ export const FeaturedStrategy: MerchandisingStrategy = {
   },
 };
 
+export const StaffPickStrategy: MerchandisingStrategy = {
+  id: 'staff-picks',
+  priority: 65,
+  async getCandidates(_context, helpers) {
+    const products = await helpers.findProducts(helpers.buildProductWhere({ isStaffPick: true }), [
+      { recommendationWeight: 'desc' },
+      { homepagePriority: 'asc' },
+      { createdAt: 'desc' },
+      { id: 'asc' },
+    ]);
+    return rankRows(StaffPickStrategy, products);
+  },
+};
+
 export const NewArrivalStrategy: MerchandisingStrategy = {
   id: 'new-arrivals',
   priority: 70,
@@ -421,6 +435,7 @@ export const defaultMerchandisingStrategies: MerchandisingStrategy[] = [
   SameGameStrategy,
   AccessoryStrategy,
   FeaturedStrategy,
+  StaffPickStrategy,
   NewArrivalStrategy,
   LatestProductStrategy,
 ];
@@ -480,6 +495,10 @@ export function getFeaturedProducts(limit = DEFAULT_LIMIT, db: PrismaClient | Pr
 
 export function getLatestProducts(limit = DEFAULT_LIMIT, db: PrismaClient | Prisma.TransactionClient = prisma) {
   return getRecommendedProducts({ resultLimit: limit, placement: 'HOMEPAGE_NEW_ARRIVALS', enabledStrategyIds: ['new-arrivals', 'latest-products'] }, db);
+}
+
+export function getStaffPickProducts(limit = DEFAULT_LIMIT, db: PrismaClient | Prisma.TransactionClient = prisma) {
+  return getRecommendedProducts({ resultLimit: limit, placement: 'HOMEPAGE_FEATURED', enabledStrategyIds: ['staff-picks'] }, db);
 }
 
 export async function createProductRecommendation(

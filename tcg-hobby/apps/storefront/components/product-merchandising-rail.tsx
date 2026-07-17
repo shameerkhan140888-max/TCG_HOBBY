@@ -10,12 +10,16 @@ import { MerchandisingRailScroller } from './merchandising-rail-scroller';
 
 export type ProductMerchandisingRailProps = {
   products: MerchandisingRecommendation[];
+  eyebrow?: string;
   title?: string;
   description?: string;
   placement: 'PRODUCT_RELATED' | 'PRODUCT_ACCESSORIES' | 'HOMEPAGE_FEATURED' | 'HOMEPAGE_NEW_ARRIVALS';
   sourceProductId?: string;
   authenticated: boolean;
   wishlistProductIds: string[];
+  actionHref?: string;
+  actionLabel?: string;
+  className?: string;
 };
 
 const STOCK_LABELS: Record<MerchandisingRecommendation['publicStockState'], { label: string; variant: 'success' | 'warning' }> = {
@@ -26,36 +30,40 @@ const STOCK_LABELS: Record<MerchandisingRecommendation['publicStockState'], { la
 
 export function ProductMerchandisingRail({
   products,
+  eyebrow = 'Recommended',
   title = 'You may also like',
   description = 'More products selected for collectors like you.',
   placement,
   sourceProductId,
   authenticated,
   wishlistProductIds,
+  actionHref = '/catalogue',
+  actionLabel = 'View catalogue',
+  className = 'mt-12',
 }: ProductMerchandisingRailProps) {
   if (products.length === 0) {
     return null;
   }
 
-  const headingId = `${placement.toLowerCase().replaceAll('_', '-')}-heading`;
+  const headingId = `${placement.toLowerCase().replaceAll('_', '-')}-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-heading`;
 
   return (
     <section
-      className="mt-12 space-y-6"
+      className={`${className} space-y-6`}
       aria-labelledby={headingId}
       data-merchandising-placement={placement}
       {...(sourceProductId ? { 'data-source-product-id': sourceProductId } : {})}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">Recommended</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">{eyebrow}</p>
           <h2 id={headingId} className="mt-2 text-2xl font-black text-neutral-50">
             {title}
           </h2>
           <p className="mt-2 text-sm leading-6 text-neutral-400">{description}</p>
         </div>
         <Button asChild variant="ghost" className="w-fit">
-          <Link href="/catalogue">View catalogue</Link>
+          <Link href={actionHref}>{actionLabel}</Link>
         </Button>
       </div>
 

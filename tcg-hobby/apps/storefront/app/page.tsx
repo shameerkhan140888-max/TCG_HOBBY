@@ -3,23 +3,19 @@ import type { Metadata } from 'next';
 import React from 'react';
 import type { ReactNode } from 'react';
 import {
-  Badge,
   Button,
   Container,
-  NotifyButton,
-  Price,
   Section,
-  WishlistButton,
 } from '@tcg-hobby/ui';
-import type { CatalogueProduct } from '@tcg-hobby/types';
-import { getCustomerNotificationSubscriptions, getWishlistProductIds, MEGA_GRENINJA_PRODUCT_SLUG } from '@tcg-hobby/database';
+import type { MerchandisingRecommendation } from '@tcg-hobby/database';
+import { getWishlistProductIds } from '@tcg-hobby/database';
 import { SiteHeader } from '../components/site-header';
 import { HomepageHeroCarousel } from '../components/homepage-hero-carousel';
+import { ProductMerchandisingRail } from '../components/product-merchandising-rail';
+import { SocialLinks } from '../components/social-links';
 import { getCurrentCustomerSession } from '../lib/auth';
-import { toggleWishlistAction } from '../lib/wishlist';
-import { toggleNotificationAction } from '../lib/release-actions';
 import { getProductionHomepageData } from '../lib/homepage-data';
-import { getSiteUrl, isComingSoonMode, launchDescription, siteName } from '../lib/site';
+import { getSiteSocialLinks, getSiteUrl, isComingSoonMode, launchDescription, siteName } from '../lib/site';
 import ComingSoonPage from './coming-soon/page';
 
 export const dynamic = 'force-dynamic';
@@ -82,118 +78,6 @@ export async function generateMetadata(): Promise<Metadata> {
       follow: true,
     },
   };
-}
-
-function ProductMedia({ product, priority = false }: { product: CatalogueProduct; priority?: boolean }) {
-  if (!product.imageUrl) {
-    return (
-      <div className="flex h-full items-end rounded-xl bg-[linear-gradient(135deg,#1d1d22,#0f0f12_55%,rgba(255,122,26,0.22))] p-4">
-        <span className="rounded-md bg-black/35 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-300">
-          {product.imageLabel}
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <Image
-      src={product.imageUrl}
-      alt={product.imageAlt ?? product.name}
-      fill
-      priority={priority}
-      sizes="(min-width: 1280px) 25vw, (min-width: 768px) 45vw, 88vw"
-      className="object-contain p-3 transition duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-    />
-  );
-}
-
-function HomepageProductCard({
-  product,
-  authenticated,
-  notificationIds,
-  returnTo,
-  wishlistIds,
-  priority = false,
-}: {
-  product: CatalogueProduct;
-  authenticated: boolean;
-  notificationIds: string[];
-  returnTo: string;
-  wishlistIds: string[];
-  priority?: boolean;
-}) {
-  const upcoming = product.releaseStatus && product.releaseStatus !== 'RELEASED';
-  const availableQuantity = Math.max(product.stockOnHand - product.reservedStock, 0);
-  const stockLabel = upcoming
-    ? product.releaseStatus === 'PREORDER'
-      ? 'Pre-order'
-      : 'Coming soon'
-    : availableQuantity <= 0
-      ? 'OUT OF STOCK'
-      : availableQuantity <= 3
-        ? 'LOW STOCK'
-        : 'IN STOCK';
-  const isLaunchProduct = product.slug === MEGA_GRENINJA_PRODUCT_SLUG;
-
-  return (
-    <article className="group flex h-full flex-col gap-4 rounded-2xl bg-surface-raised/85 p-4 shadow-[0_18px_55px_rgba(0,0,0,0.22)] transition duration-200 hover:-translate-y-1 hover:bg-surface-raised hover:shadow-[0_24px_70px_rgba(255,122,26,0.14)] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
-      <a href={`/catalogue/${product.slug}`} className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-base focus:outline-none focus:ring-2 focus:ring-accent">
-        <ProductMedia product={product} priority={priority} />
-      </a>
-      <div className="flex flex-1 flex-col gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <p className="truncate text-sm text-neutral-400">{product.game}</p>
-              <Badge variant={upcoming ? 'warning' : availableQuantity <= 0 ? 'neutral' : availableQuantity <= 3 ? 'warning' : 'success'}>{stockLabel}</Badge>
-          </div>
-          <h2 className="line-clamp-2 min-h-[3.25rem] text-lg font-black leading-snug text-neutral-50">
-            <a href={`/catalogue/${product.slug}`} className="transition hover:text-accent-soft focus:outline-none focus:ring-2 focus:ring-accent">
-              {product.name}
-            </a>
-          </h2>
-          {!isLaunchProduct ? <p className="text-sm text-neutral-500">{product.categoryName}</p> : null}
-          {isLaunchProduct ? (
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Badge variant="success">FREE UK STANDARD DELIVERY</Badge>
-              <Badge variant="accent">LIMIT 1 PER HOUSEHOLD</Badge>
-            </div>
-          ) : null}
-        </div>
-        <div className="mt-auto space-y-4">
-          <Price value={product.price} />
-          <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-            {upcoming ? (
-              authenticated ? (
-                <NotifyButton
-                  productId={product.id}
-                  subscribed={notificationIds.includes(product.id)}
-                  preference={product.releaseStatus === 'PREORDER' ? 'PREORDER' : 'RELEASE'}
-                  action={toggleNotificationAction}
-                  returnTo={returnTo}
-                />
-              ) : (
-                <Button asChild size="sm">
-                  <a href={`/login?callbackUrl=${encodeURIComponent(returnTo)}`}>Notify me</a>
-                </Button>
-              )
-            ) : (
-              <Button asChild size="sm">
-                <a href={`/catalogue/${product.slug}`}>{isLaunchProduct ? 'Shop Now' : 'View product'}</a>
-              </Button>
-            )}
-            <WishlistButton
-              productId={product.id}
-              wishlisted={wishlistIds.includes(product.id)}
-              authenticated={authenticated}
-              action={toggleWishlistAction}
-              loginHref={`/login?callbackUrl=${encodeURIComponent(returnTo)}`}
-              returnTo={returnTo}
-            />
-          </div>
-        </div>
-      </div>
-    </article>
-  );
 }
 
 const categoryPills = [
@@ -310,55 +194,69 @@ function SectionHeading({
   );
 }
 
-function ProductSection({
+function HomepageMerchandisingSection({
   title,
   eyebrow,
   description,
   products,
   authenticated,
-  notificationIds,
   wishlistIds,
-  returnTo,
-  emptyTitle,
-  emptyDescription,
-  action,
+  placement,
+  actionHref,
+  actionLabel,
 }: {
   title: string;
   eyebrow: string;
   description: string;
-  products: CatalogueProduct[];
+  products: MerchandisingRecommendation[];
   authenticated: boolean;
-  notificationIds: string[];
   wishlistIds: string[];
-  returnTo: string;
-  emptyTitle: string;
-  emptyDescription: string;
-  action: ReactNode;
+  placement: 'HOMEPAGE_FEATURED' | 'HOMEPAGE_NEW_ARRIVALS';
+  actionHref: string;
+  actionLabel: string;
 }) {
+  if (products.length === 0) {
+    return null;
+  }
+
   return (
     <Section className="bg-surface-ink py-16 sm:py-20 lg:py-24">
-      <Container className="space-y-10">
-        <SectionHeading eyebrow={eyebrow} title={title} description={description} action={action} />
-        {products.length ? (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            {products.map((product, index) => (
-              <HomepageProductCard
-                key={product.id}
-                product={product}
-                notificationIds={notificationIds}
-                wishlistIds={wishlistIds}
-                authenticated={authenticated}
-                returnTo={returnTo}
-                priority={index === 0}
-              />
-            ))}
+      <Container>
+        <ProductMerchandisingRail
+          products={products}
+          eyebrow={eyebrow}
+          title={title}
+          description={description}
+          placement={placement}
+          authenticated={authenticated}
+          wishlistProductIds={wishlistIds}
+          actionHref={actionHref}
+          actionLabel={actionLabel}
+          className="mt-0"
+        />
+      </Container>
+    </Section>
+  );
+}
+
+function FollowSection({ socialLinks }: { socialLinks: ReturnType<typeof getSiteSocialLinks> }) {
+  if (socialLinks.length === 0) {
+    return null;
+  }
+
+  return (
+    <Section className="bg-surface-ink py-12 sm:py-16">
+      <Container>
+        <div className="flex flex-col gap-5 rounded-3xl bg-surface-raised/65 p-6 shadow-[0_18px_60px_rgba(0,0,0,0.18)] sm:p-8 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-2">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-accent">Follow TCG Hobby</p>
+            <h2 className="text-2xl font-black text-neutral-50 sm:text-3xl">New releases, restocks and product announcements.</h2>
+            <p className="max-w-2xl text-sm leading-6 text-neutral-400">
+              Follow along for launch updates, special offers and collector-focused product news.
+            </p>
           </div>
-        ) : (
-          <div className="rounded-2xl bg-surface-raised/60 p-8 text-center">
-            <h3 className="text-xl font-black text-neutral-50">{emptyTitle}</h3>
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-neutral-400">{emptyDescription}</p>
-          </div>
-        )}
+          <SocialLinks links={socialLinks} />
+        </div>
       </Container>
     </Section>
   );
@@ -378,13 +276,8 @@ export default async function HomePage({
     getCurrentCustomerSession(),
   ]);
   const authenticated = session?.user.role === 'CUSTOMER';
-  const [wishlistIds, notificationIds] = authenticated
-    ? await Promise.all([
-        getWishlistProductIds(session.user.id),
-        getCustomerNotificationSubscriptions(session.user.id).then((items) => items.map((item) => item.productId)),
-      ])
-    : [[], []];
-  const returnTo = '/';
+  const wishlistIds = authenticated ? await getWishlistProductIds(session.user.id) : [];
+  const socialLinks = getSiteSocialLinks();
   const siteUrl = getSiteUrl();
   const structuredData = [
     {
@@ -417,22 +310,16 @@ export default async function HomePage({
         <HomepageHeroCarousel slides={homeData.heroSlides} />
         <CategoryPillNav />
 
-        <ProductSection
+        <HomepageMerchandisingSection
           eyebrow="Featured products"
           title="Curated picks from the catalogue."
           description="Discover hand-picked products, collector essentials and upcoming highlights."
           products={homeData.featuredProducts}
-          notificationIds={notificationIds}
           wishlistIds={wishlistIds}
           authenticated={authenticated}
-          returnTo={returnTo}
-          emptyTitle="Featured products are being curated"
-          emptyDescription="Selected products will appear here as the catalogue opens."
-          action={
-            <Button asChild>
-              <a href="/catalogue">View all products</a>
-            </Button>
-          }
+          placement="HOMEPAGE_FEATURED"
+          actionHref="/catalogue"
+          actionLabel="View all products"
         />
 
         <SlimArtworkBanner
@@ -443,22 +330,28 @@ export default async function HomePage({
           linkLabel="View releases"
         />
 
-        <ProductSection
-          eyebrow="New releases"
+        <HomepageMerchandisingSection
+          eyebrow="Latest arrivals"
           title="Fresh arrivals for launch."
-          description="Browse the latest products added to the TCG Hobby catalogue."
-          products={homeData.newReleaseProducts}
-          notificationIds={notificationIds}
+          description="Browse the latest eligible products added to the TCG Hobby catalogue."
+          products={homeData.latestProducts}
           wishlistIds={wishlistIds}
           authenticated={authenticated}
-          returnTo={returnTo}
-          emptyTitle="New releases are being prepared"
-          emptyDescription="Fresh products will appear here as launch stock is published."
-          action={
-            <Button asChild variant="outline">
-              <a href="/catalogue?sort=newest">View new releases</a>
-            </Button>
-          }
+          placement="HOMEPAGE_NEW_ARRIVALS"
+          actionHref="/catalogue?sort=newest"
+          actionLabel="View latest"
+        />
+
+        <HomepageMerchandisingSection
+          eyebrow="Staff picks"
+          title="Selected by TCG Hobby."
+          description="A compact edit of products highlighted through Admin merchandising."
+          products={homeData.staffPickProducts}
+          wishlistIds={wishlistIds}
+          authenticated={authenticated}
+          placement="HOMEPAGE_FEATURED"
+          actionHref="/catalogue"
+          actionLabel="View catalogue"
         />
 
         <Section className="bg-surface-ink py-16 sm:py-20 lg:py-24">
@@ -496,6 +389,7 @@ export default async function HomePage({
         />
 
         <TrustStrip />
+        <FollowSection socialLinks={socialLinks} />
       </main>
     </>
   );

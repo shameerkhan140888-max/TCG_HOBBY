@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SiteFooter } from './site-footer';
 
 const mocks = vi.hoisted(() => ({
-  socialLinks: [] as Array<{ label: 'Instagram' | 'TikTok' | 'X'; href: string }>,
+  socialLinks: [] as Array<{ label: 'Facebook' | 'Instagram' | 'TikTok'; href: string }>,
 }));
 
 vi.mock('next/link', () => ({
@@ -79,18 +79,20 @@ describe('SiteFooter', () => {
     expect(markup).not.toContain('aria-label="Social links"');
   });
 
-  it('renders configured Instagram, TikTok and X links only', () => {
+  it('renders configured Facebook, Instagram and TikTok links only', () => {
     mocks.socialLinks = [
+      { label: 'Facebook', href: 'https://www.facebook.com/tcghobby' },
       { label: 'Instagram', href: 'https://instagram.com/tcghobby' },
       { label: 'TikTok', href: 'https://www.tiktok.com/@tcghobby' },
-      { label: 'X', href: 'https://x.com/tcghobby' },
     ];
 
     const markup = renderToStaticMarkup(<SiteFooter />);
 
     expect(markup).toContain('aria-label="Social links"');
+    expect(markup).toContain('Follow TCG Hobby on Facebook');
     expect(markup).toContain('Instagram');
     expect(markup).toContain('TikTok');
-    expect(markup).toContain('>X</a>');
+    expect(markup).toContain('target="_blank"');
+    expect(markup).toContain('rel="noopener noreferrer"');
   });
 });

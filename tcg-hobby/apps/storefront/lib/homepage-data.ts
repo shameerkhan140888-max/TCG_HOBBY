@@ -1,7 +1,8 @@
-﻿import type { CatalogueProduct } from '@tcg-hobby/types';
 import {
-  getCatalogueProducts,
-  getFeaturedCatalogueProducts,
+  getMerchandisingFeaturedProducts,
+  getMerchandisingLatestProducts,
+  getMerchandisingStaffPickProducts,
+  type MerchandisingRecommendation,
 } from '@tcg-hobby/database';
 
 export type HomepageHeroSlide = {
@@ -20,8 +21,9 @@ export type HomepageHeroSlide = {
 
 export type ProductionHomepageData = {
   heroSlides: HomepageHeroSlide[];
-  featuredProducts: CatalogueProduct[];
-  newReleaseProducts: CatalogueProduct[];
+  featuredProducts: MerchandisingRecommendation[];
+  latestProducts: MerchandisingRecommendation[];
+  staffPickProducts: MerchandisingRecommendation[];
 };
 
 export const homepageHeroSlides: HomepageHeroSlide[] = [
@@ -71,9 +73,9 @@ export const homepageHeroSlides: HomepageHeroSlide[] = [
   },
 ];
 
-export function dedupeProducts(products: CatalogueProduct[]): CatalogueProduct[] {
+export function dedupeProducts<T extends { id: string }>(products: T[]): T[] {
   const seen = new Set<string>();
-  const result: CatalogueProduct[] = [];
+  const result: T[] = [];
 
   for (const product of products) {
     if (seen.has(product.id)) {
@@ -87,22 +89,9 @@ export function dedupeProducts(products: CatalogueProduct[]): CatalogueProduct[]
   return result;
 }
 
-function sortByHomepagePriority(products: CatalogueProduct[]): CatalogueProduct[] {
-  return [...products].sort((a, b) => {
-    const priorityA = a.homepagePriority ?? Number.MAX_SAFE_INTEGER;
-    const priorityB = b.homepagePriority ?? Number.MAX_SAFE_INTEGER;
-
-    if (priorityA !== priorityB) {
-      return priorityA - priorityB;
-    }
-
-    return a.name.localeCompare(b.name);
-  });
-}
-
-function resolveHomepageHeroSlides(featuredProducts: CatalogueProduct[]): HomepageHeroSlide[] {
-  const launchProduct = sortByHomepagePriority(featuredProducts).find((product) => product.heroFeatured);
-  const launchProductImageUrl = launchProduct?.heroImageUrl ?? launchProduct?.imageUrl;
+function resolveHomepageHeroSlides(featuredProducts: MerchandisingRecommendation[]): HomepageHeroSlide[] {
+  const launchProduct = featuredProducts[0];
+  const launchProductImageUrl = launchProduct?.imageUrl;
 
   if (!launchProduct || !launchProductImageUrl) {
     return homepageHeroSlides;
@@ -114,10 +103,10 @@ function resolveHomepageHeroSlides(featuredProducts: CatalogueProduct[]): Homepa
           ...slide,
           eyebrow: 'NOW AVAILABLE',
           headline: launchProduct.name,
-          body: launchProduct.description,
+          body: 'Discover curated launch products, collector essentials and new arrivals selected through TCG Hobby merchandising.',
           priceLabel: `£${(launchProduct.price.amountMinor / 100).toFixed(2)}`,
           badges: [
-            launchProduct.inStock ? 'LOW STOCK' : 'OUT OF STOCK',
+            launchProduct.publicStockState.replaceAll('_', ' '),
             ...(launchProduct.freeUkStandardShipping ? ['FREE UK STANDARD DELIVERY'] : []),
             ...(launchProduct.customerPurchaseLimit ? [`LIMIT ${launchProduct.customerPurchaseLimit} PER HOUSEHOLD`] : []),
           ],
@@ -132,46 +121,38 @@ function resolveHomepageHeroSlides(featuredProducts: CatalogueProduct[]): Homepa
 }
 
 export function selectHomepageFeaturedProducts(
-  featuredProducts: CatalogueProduct[],
-  newestProducts: CatalogueProduct[],
+  featuredProducts: MerchandisingRecommendation[],
   limit = 4,
-): CatalogueProduct[] {
-  const releasedFeatured = sortByHomepagePriority(featuredProducts.filter((product) => !product.releaseStatus || product.releaseStatus === 'RELEASED'));
-  const releasedNew = newestProducts.filter((product) => !product.releaseStatus || product.releaseStatus === 'RELEASED');
-  const upcoming = [...featuredProducts, ...newestProducts].find(
-    (product) => product.releaseStatus && product.releaseStatus !== 'RELEASED',
-  );
-
-  return dedupeProducts([
-    ...releasedFeatured,
-    ...releasedNew,
-    ...(upcoming ? [upcoming] : []),
-  ]).slice(0, limit);
+): MerchandisingRecommendation[] {
+  return dedupeProducts(featuredProducts).slice(0, limit);
 }
 
-export function selectHomepageNewReleaseProducts(
-  newestProducts: CatalogueProduct[],
-  featuredProducts: CatalogueProduct[],
+export function selectUniqueProducts(
+  products: MerchandisingRecommendation[],
+  excludedProducts: MerchandisingRecommendation[],
   limit = 4,
-): CatalogueProduct[] {
-  const featuredIds = new Set(featuredProducts.map((product) => product.id));
-  return dedupeProducts(newestProducts)
-    .filter((product) => !featuredIds.has(product.id))
+): MerchandisingRecommendation[] {
+  const excludedIds = new Set(excludedProducts.map((product) => product.id));
+  return dedupeProducts(products)
+    .filter((product) => !excludedIds.has(product.id))
     .slice(0, limit);
 }
 
 export async function getProductionHomepageData(): Promise<ProductionHomepageData> {
-  const [newestProductsResult, featuredProducts] = await Promise.all([
-    getCatalogueProducts({ search: '', category: '', sort: 'newest', page: 1, pageSize: 12 }),
-    getFeaturedCatalogueProducts(12),
+  const [featuredProducts, latestProducts, staffPickProducts] = await Promise.all([
+    getMerchandisingFeaturedProducts(8),
+    getMerchandisingLatestProducts(8),
+    getMerchandisingStaffPickProducts(8),
   ]);
 
-  const newestProducts = newestProductsResult.products;
-  const selectedFeaturedProducts = selectHomepageFeaturedProducts(featuredProducts, newestProducts, 4);
+  const selectedFeaturedProducts = selectHomepageFeaturedProducts(featuredProducts, 4);
+  const selectedLatestProducts = selectUniqueProducts(latestProducts, selectedFeaturedProducts, 4);
+  const selectedStaffPickProducts = selectUniqueProducts(staffPickProducts, [...selectedFeaturedProducts, ...selectedLatestProducts], 4);
 
   return {
     heroSlides: resolveHomepageHeroSlides(selectedFeaturedProducts),
     featuredProducts: selectedFeaturedProducts,
-    newReleaseProducts: selectHomepageNewReleaseProducts(newestProducts, selectedFeaturedProducts, 4),
+    latestProducts: selectedLatestProducts,
+    staffPickProducts: selectedStaffPickProducts,
   };
 }

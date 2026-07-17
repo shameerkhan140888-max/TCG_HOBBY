@@ -34,7 +34,7 @@ export const launchDescription =
   'TCG Hobby is preparing a premium trading card launch experience for sealed product drops, preorders, releases, and opening updates.';
 
 export type SiteSocialLink = {
-  label: 'Instagram' | 'TikTok' | 'X';
+  label: 'Facebook' | 'Instagram' | 'TikTok';
   href: string;
 };
 
@@ -52,13 +52,13 @@ function getConfiguredUrl(value: string | undefined): string | null {
 }
 
 export function getSiteSocialLinks(): SiteSocialLink[] {
+  const facebookUrl = getConfiguredUrl(process.env.NEXT_PUBLIC_FACEBOOK_URL);
   const instagramUrl = getConfiguredUrl(process.env.NEXT_PUBLIC_INSTAGRAM_URL);
   const tiktokUrl = getConfiguredUrl(process.env.NEXT_PUBLIC_TIKTOK_URL);
-  const xUrl = getConfiguredUrl(process.env.NEXT_PUBLIC_X_URL);
   const links: Array<SiteSocialLink | null> = [
+    facebookUrl ? { label: 'Facebook', href: facebookUrl } : null,
     instagramUrl ? { label: 'Instagram', href: instagramUrl } : null,
     tiktokUrl ? { label: 'TikTok', href: tiktokUrl } : null,
-    xUrl ? { label: 'X', href: xUrl } : null,
   ];
 
   return links.filter((link): link is SiteSocialLink => Boolean(link));
