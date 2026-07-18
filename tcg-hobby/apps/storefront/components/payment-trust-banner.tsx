@@ -21,12 +21,12 @@ function LockIcon() {
 function PaymentMark({ method }: { method: PaymentMethodConfig }) {
   return (
     <span
-      className="inline-flex min-h-8 min-w-14 items-center justify-center rounded-md bg-neutral-50 px-2.5 py-1 text-xs font-black tracking-[0.08em] text-neutral-950 shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
+      className="inline-flex h-9 min-w-16 items-center justify-center rounded-md bg-neutral-50 px-3 text-xs font-black tracking-[0.08em] text-neutral-950 shadow-[0_12px_28px_rgba(0,0,0,0.28)] ring-1 ring-white/70"
       aria-label={method.label}
       title={method.label}
     >
       {method.assetPath ? (
-        <Image src={method.assetPath} width={64} height={40} alt={method.label} className="h-6 w-auto object-contain" />
+        <Image src={method.assetPath} width={86} height={36} alt={method.label} className="max-h-6 w-auto object-contain" />
       ) : (
         method.displayLabel
       )}
@@ -38,10 +38,10 @@ export function PaymentTrustBanner({ methods = storefrontPaymentMethods }: Payme
   const enabledMethods = getEnabledPaymentMethods(methods);
 
   return (
-    <section className="border-t border-surface-line/60 bg-surface-ink text-neutral-50" aria-label="Payment and checkout reassurance">
-      <Container className="py-4">
-        <div className="flex flex-col gap-4 text-sm text-neutral-300 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2">
+    <section className="border-t border-accent/20 bg-surface-ink text-neutral-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]" aria-label="Payment and checkout reassurance">
+      <Container className="py-3">
+        <div className="flex flex-col gap-3 text-sm text-neutral-300 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-1.5">
             <span className="inline-flex items-center gap-2 font-semibold text-neutral-50">
               <LockIcon />
               Secure checkout

@@ -29,6 +29,16 @@ type ProductFormProps = {
   submitLabel: string;
 };
 
+const onboardingSections = [
+  { id: 'product-identity', label: 'Identity' },
+  { id: 'product-media', label: 'Media' },
+  { id: 'product-pricing', label: 'Pricing' },
+  { id: 'product-supplier', label: 'Supplier' },
+  { id: 'product-inventory', label: 'Inventory' },
+  { id: 'product-seo', label: 'SEO' },
+  { id: 'product-visibility', label: 'Visibility' },
+] as const;
+
 function parseMinor(value: string) {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -58,7 +68,29 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
       <input type="hidden" name="productId" value={formState.values.productId} />
       {formState.formError ? <ErrorMessage>{formState.formError}</ErrorMessage> : null}
 
-      <FormSection title="Core details" description="Identity, category, classification, and publish-safe URLs.">
+      <div className="grid gap-4 rounded-xl bg-surface-base p-4 shadow-[0_18px_60px_rgba(0,0,0,0.25)] lg:grid-cols-[1fr_280px]">
+        <nav aria-label="Product onboarding sections" className="flex flex-wrap gap-2">
+          {onboardingSections.map((section) => (
+            <a
+              key={section.id}
+              href={`#${section.id}`}
+              className="rounded-full bg-surface-ink px-3 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-300 transition-colors hover:bg-accent/15 hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent/40"
+            >
+              {section.label}
+            </a>
+          ))}
+        </nav>
+        <aside className="rounded-lg bg-surface-ink p-3 text-xs leading-5 text-neutral-400" aria-label="Product review summary">
+          <p className="font-semibold text-neutral-50">Review before saving</p>
+          <p>{formState.values.name || 'Unnamed product'}</p>
+          <p>{formState.values.sku || 'SKU required'}</p>
+          <p>{formState.values.priceMinor ? formatMoney(formState.values.priceMinor) : 'Price required'}</p>
+          <p>{formState.values.published ? 'Will be published' : 'Will be hidden'}</p>
+        </aside>
+      </div>
+
+      <section id="product-identity" className="scroll-mt-24">
+        <FormSection title="Product identity" description="Identity, category, classification, and publish-safe URLs.">
         <div className="grid gap-4 lg:grid-cols-2">
           <FormField label="Name" htmlFor="name" error={formState.fieldErrors.name} required>
             <Input id="name" name="name" defaultValue={formState.values.name} />
@@ -107,9 +139,11 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
             </select>
           </FormField>
         </div>
-      </FormSection>
+        </FormSection>
+      </section>
 
-      <FormSection title="Copy and media" description="Product copy and URL-managed image metadata. Binary upload is handled by the product media/import workflow.">
+      <section id="product-media" className="scroll-mt-24">
+        <FormSection title="Copy and media" description="Product copy and URL-managed image metadata. Binary upload is handled by the product media/import workflow.">
         <div className="grid gap-4">
           <FormField label="Short description" htmlFor="description" error={formState.fieldErrors.description} required>
             <Textarea id="description" name="description" defaultValue={formState.values.description} />
@@ -148,9 +182,11 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
             />
           </FormField>
         </div>
-      </FormSection>
+        </FormSection>
+      </section>
 
-      <FormSection title="Pricing" description="VAT-inclusive retail pricing, supplier cost, sale windows, and commercial margin preview.">
+      <section id="product-pricing" className="scroll-mt-24">
+        <FormSection title="Pricing" description="VAT-inclusive retail pricing, supplier cost, sale windows, and commercial margin preview.">
         <div className="grid gap-4 lg:grid-cols-3">
           <FormField label="Retail price (pence)" htmlFor="priceMinor" error={formState.fieldErrors.priceMinor} required>
             <Input id="priceMinor" name="priceMinor" type="number" min={0} defaultValue={formState.values.priceMinor} />
@@ -183,9 +219,11 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
             {lossWarning ? <p className="mt-2 text-amber-200">Warning: current selling price is below landed cost.</p> : null}
           </div>
         </div>
-      </FormSection>
+        </FormSection>
+      </section>
 
-      <FormSection title="Supplier information" description="Supplier-specific metadata. Supplier SKUs are separate from the public product SKU.">
+      <section id="product-supplier" className="scroll-mt-24">
+        <FormSection title="Supplier information" description="Supplier-specific metadata. Supplier SKUs are separate from the public product SKU.">
         <div className="grid gap-4 lg:grid-cols-3">
           <FormField label="Supplier" htmlFor="supplierId" error={formState.fieldErrors.supplierId} required>
             <select id="supplierId" name="supplierId" defaultValue={formState.values.supplierId} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
@@ -213,9 +251,11 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
             <Input id="supplierLeadTimeDays" name="supplierLeadTimeDays" type="number" min={0} defaultValue={formState.values.supplierLeadTimeDays} />
           </FormField>
         </div>
-      </FormSection>
+        </FormSection>
+      </section>
 
-      <FormSection title="Inventory" description="Physical stock is editable. Reserved and available stock are calculated operational values.">
+      <section id="product-inventory" className="scroll-mt-24">
+        <FormSection title="Inventory" description="Physical stock is editable. Reserved and available stock are calculated operational values.">
         <div className="grid gap-4 lg:grid-cols-3">
           <FormField label="Current stock" htmlFor="stockOnHand" error={formState.fieldErrors.stockOnHand} required>
             <Input id="stockOnHand" name="stockOnHand" type="number" min={0} defaultValue={formState.values.stockOnHand} />
@@ -249,9 +289,11 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
             />
           </FormField>
         </div>
-      </FormSection>
+        </FormSection>
+      </section>
 
-      <FormSection title="SEO" description="Generated defaults are used when these fields are left blank.">
+      <section id="product-seo" className="scroll-mt-24">
+        <FormSection title="SEO" description="Generated defaults are used when these fields are left blank.">
         <div className="grid gap-4 lg:grid-cols-2">
           <FormField label="SEO title" htmlFor="seoTitle" error={formState.fieldErrors.seoTitle}>
             <Input id="seoTitle" name="seoTitle" defaultValue={formState.values.seoTitle} />
@@ -270,9 +312,11 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
             </span>
           </label>
         </div>
-      </FormSection>
+        </FormSection>
+      </section>
 
-      <FormSection title="Publishing" description="Control storefront visibility and merchandising state.">
+      <section id="product-visibility" className="scroll-mt-24">
+        <FormSection title="Visibility" description="Control storefront visibility and merchandising state.">
         <div className="grid gap-4 md:grid-cols-3">
           <label className="flex items-center gap-3 text-sm text-neutral-300">
             <input name="featured" type="checkbox" value="true" defaultChecked={formState.values.featured} />
@@ -292,7 +336,8 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
             </span>
           </label>
         </div>
-      </FormSection>
+        </FormSection>
+      </section>
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" size="lg">

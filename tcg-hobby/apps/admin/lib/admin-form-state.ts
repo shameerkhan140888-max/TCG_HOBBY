@@ -1,4 +1,5 @@
 import type { ProductCondition } from '@tcg-hobby/types';
+import type { ProductCsvImportPlan, ProductCsvImportResult } from '@tcg-hobby/database';
 
 export type FieldErrors = Record<string, string>;
 
@@ -98,6 +99,15 @@ export type StockAdjustmentFormState = {
   values: StockAdjustmentFormValues;
 };
 
+export type ProductCsvImportFormState = {
+  fieldErrors: FieldErrors;
+  formError?: string;
+  formSuccess?: string;
+  csvText: string;
+  plan?: ProductCsvImportPlan;
+  result?: ProductCsvImportResult;
+};
+
 export const emptyProductFormValues: ProductFormValues = {
   productId: '',
   name: '',
@@ -174,6 +184,11 @@ export const emptyStockAdjustmentFormValues: StockAdjustmentFormValues = {
   delta: '0',
   reason: '',
   performedBy: 'Operations Desk',
+};
+
+export const emptyProductCsvImportFormState: ProductCsvImportFormState = {
+  fieldErrors: {},
+  csvText: '',
 };
 
 export function getString(formData: FormData, name: string, fallback = '') {

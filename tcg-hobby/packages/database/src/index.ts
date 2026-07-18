@@ -239,6 +239,22 @@ export type {
   ShippingPromotionType,
 } from './product-import';
 export {
+  PRODUCT_CSV_IMPORT_HEADERS,
+  buildProductCsvTemplate,
+  createProductCsvImportPlan,
+  executeProductCsvImport,
+  parseProductCsv,
+} from './product-csv-import';
+export type {
+  ProductCsvImportMatchType,
+  ProductCsvImportOptions,
+  ProductCsvImportPlan,
+  ProductCsvImportPlanRow,
+  ProductCsvImportResult,
+  ProductCsvImportRow,
+  ProductCsvImportRowStatus,
+} from './product-csv-import';
+export {
   assertProductImportLookupData,
   canonicalCategories,
   canonicalSuppliers,

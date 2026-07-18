@@ -47,9 +47,14 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
           title="Products"
           description="Search, sort, publish, archive, and review operational stock details."
           actions={
-            <Button asChild>
-              <a href="/admin/products/new">New product</a>
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild variant="outline">
+                <a href="/admin/products/import">Import CSV</a>
+              </Button>
+              <Button asChild>
+                <a href="/admin/products/new">New product</a>
+              </Button>
+            </div>
           }
         />
 

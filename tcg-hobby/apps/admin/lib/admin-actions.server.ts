@@ -8,7 +8,9 @@ import {
   createAdminProduct,
   createAdminProductRecommendation,
   createAdminSupplier,
+  createProductCsvImportPlan,
   deleteAdminProductRecommendation,
+  executeProductCsvImport,
   setProductPublication,
   updateAdminProduct,
   updateAdminProductRecommendation,
@@ -22,6 +24,7 @@ import {
   buildSupplierValues,
   type FieldErrors,
   type ProductFormState,
+  type ProductCsvImportFormState,
   type StockAdjustmentFormState,
   type SupplierFormState,
 } from './admin-form-state';
@@ -250,6 +253,82 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
       values,
     };
   }
+}
+
+export async function previewProductCsvImportAction(
+  _state: ProductCsvImportFormState,
+  formData: FormData,
+): Promise<ProductCsvImportFormState> {
+  const csvText = asString(formData.get('csvText'));
+  if (!csvText.trim()) {
+    return {
+      fieldErrors: { csvText: 'Paste a product CSV before previewing.' },
+      csvText,
+    };
+  }
+
+  try {
+    const plan = await createProductCsvImportPlan(csvText);
+    return {
+      fieldErrors: {},
+      csvText,
+      plan,
+      formSuccess: plan.summary.errorRows
+        ? `Preview complete. Fix ${plan.summary.errorRows} row error(s) before importing.`
+        : `Preview complete. ${plan.summary.readyRows} row(s) ready to import.`,
+    };
+  } catch (error) {
+    return {
+      fieldErrors: {},
+      formError: error instanceof Error ? error.message : 'Unable to preview CSV import.',
+      csvText,
+    };
+  }
+}
+
+export async function executeProductCsvImportAction(
+  _state: ProductCsvImportFormState,
+  formData: FormData,
+): Promise<ProductCsvImportFormState> {
+  const csvText = asString(formData.get('csvText'));
+  if (!csvText.trim()) {
+    return {
+      fieldErrors: { csvText: 'Paste a product CSV before importing.' },
+      csvText,
+    };
+  }
+
+  try {
+    const result = await executeProductCsvImport(csvText, { performedBy: 'Admin CSV Import' });
+    const plan = await createProductCsvImportPlan(csvText);
+    revalidatePath('/admin/products');
+    revalidatePath('/catalogue');
+    revalidatePath('/');
+    result.reportRows.forEach((row) => revalidatePath(`/catalogue/${row.slug}`));
+
+    return {
+      fieldErrors: {},
+      csvText,
+      plan,
+      result,
+      formSuccess: `Import complete. ${result.creates} product(s) created and ${result.updates} product(s) updated.`,
+    };
+  } catch (error) {
+    return {
+      fieldErrors: {},
+      formError: error instanceof Error ? error.message : 'Unable to import CSV.',
+      csvText,
+    };
+  }
+}
+
+export async function productCsvImportAction(
+  state: ProductCsvImportFormState,
+  formData: FormData,
+): Promise<ProductCsvImportFormState> {
+  return asString(formData.get('intent')) === 'import'
+    ? executeProductCsvImportAction(state, formData)
+    : previewProductCsvImportAction(state, formData);
 }
 
 export async function archiveProductAction(formData: FormData) {
