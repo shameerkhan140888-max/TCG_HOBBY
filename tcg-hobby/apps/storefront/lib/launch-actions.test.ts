@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  headers: vi.fn(async () => new Map([['x-forwarded-for', '203.0.113.10']])),
+  headers: vi.fn(async () => new Map([['x-forwarded-for', '203.0.113.10'], ['x-vercel-id', 'lhr1::request-123']])),
   redirect: vi.fn((url: string) => {
     throw new Error(`NEXT_REDIRECT:${url}`);
   }),
@@ -174,6 +174,7 @@ describe('captureLaunchEmailAction', () => {
   });
 
   it('returns the save failure path only when subscriber persistence fails', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     mocks.upsertMarketingSubscriberSignup.mockRejectedValueOnce(new Error('Database unavailable'));
 
     await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
@@ -181,5 +182,71 @@ describe('captureLaunchEmailAction', () => {
     );
 
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalledWith(
+      'launch_signup_persistence_failed',
+      expect.objectContaining({
+        event: 'launch_signup_persistence_failed',
+        request: { correlationId: 'lhr1::request-123' },
+        operation: expect.objectContaining({
+          name: 'upsertMarketingSubscriberSignup',
+          stage: 'before_persistence_confirmed',
+          model: 'MarketingSubscriber',
+        }),
+        error: expect.objectContaining({
+          name: 'Error',
+        }),
+      }),
+    );
+
+    const loggedPayload = JSON.stringify(consoleError.mock.calls);
+    expect(loggedPayload).not.toContain('Collector@Example.Test');
+    expect(loggedPayload).not.toContain('collector@example.test');
+    expect(loggedPayload).not.toContain('Mia');
+
+    consoleError.mockRestore();
+  });
+
+  it('logs safe Prisma diagnostics when subscriber persistence fails with a known request error', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const prismaError = Object.assign(new Error('Unique constraint failed'), {
+      name: 'PrismaClientKnownRequestError',
+      code: 'P2002',
+      clientVersion: '6.19.3',
+      meta: {
+        modelName: 'MarketingSubscriber',
+        target: ['email'],
+      },
+    });
+    mocks.upsertMarketingSubscriberSignup.mockRejectedValueOnce(prismaError);
+
+    await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
+      'NEXT_REDIRECT:/?subscriberSignup=save#join-launch-list',
+    );
+
+    expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalledWith(
+      'launch_signup_persistence_failed',
+      expect.objectContaining({
+        database: expect.objectContaining({
+          provider: expect.any(String),
+        }),
+        operation: expect.objectContaining({
+          model: 'MarketingSubscriber',
+        }),
+        error: {
+          name: 'PrismaClientKnownRequestError',
+          code: 'P2002',
+          clientVersion: '6.19.3',
+          target: ['email'],
+        },
+      }),
+    );
+
+    const loggedPayload = JSON.stringify(consoleError.mock.calls);
+    expect(loggedPayload).not.toContain('Collector@Example.Test');
+    expect(loggedPayload).not.toContain('collector@example.test');
+    expect(loggedPayload).not.toContain('Mia');
+
+    consoleError.mockRestore();
   });
 });
