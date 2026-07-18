@@ -2,8 +2,10 @@ import type { Metadata } from 'next';
 import React from 'react';
 import { Badge, Container, PageShell, Section } from '@tcg-hobby/ui';
 import { LaunchBrandCarousel } from '../../components/launch-brand-carousel';
+import { LaunchSignupConversionTracker } from '../../components/analytics/meta-analytics';
 import { LaunchEmailCapture } from '../../components/launch-email-capture';
 import { LaunchHeader } from '../../components/launch-header';
+import { getMetaPixelId } from '../../lib/analytics/meta';
 import { getSiteUrl, launchDescription, siteName } from '../../lib/site';
 
 export const dynamic = 'force-dynamic';
@@ -62,14 +64,24 @@ function FairPricingCommitment() {
   );
 }
 
+function getSafeMetaEventId(value: string | string[] | undefined) {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  return /^[a-zA-Z0-9_-]{8,120}$/.test(value) ? value : undefined;
+}
+
 export default async function ComingSoonPage({
   searchParams,
 }: {
-  searchParams: Promise<{ subscriberSignup?: string | string[] | undefined }>;
+  searchParams: Promise<{ subscriberSignup?: string | string[] | undefined; metaEventId?: string | string[] | undefined }>;
 }) {
   const siteUrl = getSiteUrl();
+  const metaPixelId = getMetaPixelId();
   const resolvedSearchParams = await searchParams;
   const signupSaved = resolvedSearchParams.subscriberSignup === 'saved';
+  const metaEventId = signupSaved ? getSafeMetaEventId(resolvedSearchParams.metaEventId) : undefined;
   const signupError =
     resolvedSearchParams.subscriberSignup === 'invalid'
       ? 'Enter a valid email address.'
@@ -98,6 +110,7 @@ export default async function ComingSoonPage({
 
   return (
     <PageShell>
+      <LaunchSignupConversionTracker {...(metaEventId ? { eventId: metaEventId } : {})} pixelId={metaPixelId} />
       <LaunchHeader />
       <main className="bg-surface-ink text-neutral-50">
         <script

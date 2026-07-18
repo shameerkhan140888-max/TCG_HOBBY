@@ -6,10 +6,14 @@ import { redirect } from 'next/navigation';
 import { LAUNCH_MARKETING_CONSENT_VALUE } from './launch-consent';
 import { sendSubscriberConfirmationEmail } from './marketing-email';
 import { isSignupRateLimited } from './signup-rate-limit';
+import { createMetaEventId } from './analytics/events';
+import { trackCompleteRegistrationServer } from './analytics/server';
+import { getSiteUrl } from './site';
 
 type RequestContext = {
   correlationId: string | null;
   ip: string | null;
+  userAgent: string | null;
 };
 
 type ErrorRecord = {
@@ -27,9 +31,14 @@ function getReturnTo(value: FormDataEntryValue | null) {
   return value;
 }
 
-function withSubscriberSignupParam(returnTo: string, value: 'saved' | 'invalid' | 'save' | 'limited' | 'consent' | 'spam') {
+function withSubscriberSignupParam(
+  returnTo: string,
+  value: 'saved' | 'invalid' | 'save' | 'limited' | 'consent' | 'spam',
+  options: { metaEventId?: string } = {},
+) {
   const separator = returnTo.includes('?') ? '&' : '?';
-  return `${returnTo}${separator}subscriberSignup=${value}#join-launch-list`;
+  const metaEventParam = options.metaEventId ? `&metaEventId=${encodeURIComponent(options.metaEventId)}` : '';
+  return `${returnTo}${separator}subscriberSignup=${value}${metaEventParam}#join-launch-list`;
 }
 
 async function getRequestContext(): Promise<RequestContext> {
@@ -46,6 +55,7 @@ async function getRequestContext(): Promise<RequestContext> {
       headerList.get('x-forwarded-for')?.split(',')[0]?.trim() ??
       headerList.get('x-real-ip') ??
       null,
+    userAgent: headerList.get('user-agent') ?? null,
   };
 }
 
@@ -206,5 +216,23 @@ export async function captureLaunchEmailAction(formData: FormData) {
     }
   }
 
-  redirect(withSubscriberSignupParam(returnTo, 'saved'));
+  const metaEventId = signup.created ? createMetaEventId('launch_signup') : undefined;
+
+  if (metaEventId) {
+    void trackCompleteRegistrationServer({
+      eventId: metaEventId,
+      email: signup.email,
+      userAgent: requestContext.userAgent,
+      eventSourceUrl: `${getSiteUrl()}${returnTo}`,
+    }).catch(() => {
+      console.error('launch_signup_meta_capi_failed', {
+        event: 'launch_signup_meta_capi_failed',
+        request: {
+          correlationId: requestContext.correlationId,
+        },
+      });
+    });
+  }
+
+  redirect(withSubscriberSignupParam(returnTo, 'saved', metaEventId ? { metaEventId } : {}));
 }

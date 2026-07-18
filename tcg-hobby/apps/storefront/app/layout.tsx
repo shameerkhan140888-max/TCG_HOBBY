@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { PageShell } from '@tcg-hobby/ui';
 import { SiteFooter } from '../components/site-footer';
 import { LaunchFooter } from '../components/launch-footer';
+import { CookieConsentBanner, MetaAnalyticsProvider } from '../components/analytics/meta-analytics';
 import { PaymentTrustBanner } from '../components/payment-trust-banner';
 import {
   getSiteSocialLinks,
@@ -16,12 +17,14 @@ import {
   siteDescription,
   siteName,
 } from '../lib/site';
+import { getMetaPixelId } from '../lib/analytics/meta';
 import './globals.css';
 
 const siteUrl = getSiteUrl();
 const comingSoonMode = isComingSoonMode();
 const activeDescription = comingSoonMode ? launchDescription : siteDescription;
 const activeTitle = comingSoonMode ? `Coming Soon | ${siteName}` : siteName;
+const metaPixelId = getMetaPixelId();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -101,6 +104,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="en">
       <body>
+        <Suspense fallback={null}>
+          <MetaAnalyticsProvider pixelId={metaPixelId} />
+        </Suspense>
         <PageShell>
           <script
             type="application/ld+json"
@@ -116,6 +122,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
             {comingSoonMode ? <LaunchFooter /> : <SiteFooter />}
           </div>
         </PageShell>
+        <CookieConsentBanner />
       </body>
     </html>
   );

@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
     throw new Error(`NEXT_REDIRECT:${url}`);
   }),
   sendSubscriberConfirmationEmail: vi.fn(),
+  createMetaEventId: vi.fn(() => 'launch_signup_event_123'),
+  trackCompleteRegistrationServer: vi.fn(),
   upsertMarketingSubscriberSignup: vi.fn(),
   validateSubscriberEmail: vi.fn((email: string) => {
     const normalized = email.trim().toLowerCase();
@@ -37,6 +39,18 @@ vi.mock('./signup-rate-limit', () => ({
   isSignupRateLimited: mocks.isSignupRateLimited,
 }));
 
+vi.mock('./analytics/events', () => ({
+  createMetaEventId: mocks.createMetaEventId,
+}));
+
+vi.mock('./analytics/server', () => ({
+  trackCompleteRegistrationServer: mocks.trackCompleteRegistrationServer,
+}));
+
+vi.mock('./site', () => ({
+  getSiteUrl: () => 'https://tcg-hobby.co.uk',
+}));
+
 import { LAUNCH_MARKETING_CONSENT_VALUE } from './launch-consent';
 import { captureLaunchEmailAction } from './launch-actions';
 
@@ -65,6 +79,7 @@ describe('captureLaunchEmailAction', () => {
       shouldSendConfirmation: true,
       unsubscribeToken: 'token-1',
     });
+    mocks.trackCompleteRegistrationServer.mockResolvedValue({ sent: true });
   });
 
   it('rejects missing marketing consent before persistence or confirmation email', async () => {
@@ -72,6 +87,7 @@ describe('captureLaunchEmailAction', () => {
 
     expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+    expect(mocks.trackCompleteRegistrationServer).not.toHaveBeenCalled();
   });
 
   it.each(['false', 'on', 'yes'])('rejects malformed marketing consent value %s', async (value) => {
@@ -79,11 +95,12 @@ describe('captureLaunchEmailAction', () => {
 
     expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+    expect(mocks.trackCompleteRegistrationServer).not.toHaveBeenCalled();
   });
 
-  it('creates an eligible consented subscriber and sends confirmation email', async () => {
+  it('creates an eligible consented subscriber and sends confirmation email with a deduplicated Meta conversion', async () => {
     await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
-      'NEXT_REDIRECT:/?subscriberSignup=saved#join-launch-list',
+      'NEXT_REDIRECT:/?subscriberSignup=saved&metaEventId=launch_signup_event_123#join-launch-list',
     );
 
     expect(mocks.upsertMarketingSubscriberSignup).toHaveBeenCalledWith({
@@ -99,6 +116,13 @@ describe('captureLaunchEmailAction', () => {
       email: 'collector@example.test',
       shouldSendConfirmation: true,
     }));
+    expect(mocks.createMetaEventId).toHaveBeenCalledWith('launch_signup');
+    expect(mocks.trackCompleteRegistrationServer).toHaveBeenCalledWith({
+      eventId: 'launch_signup_event_123',
+      email: 'collector@example.test',
+      userAgent: null,
+      eventSourceUrl: 'https://tcg-hobby.co.uk/',
+    });
   });
 
   it('returns the same generic success path for active duplicates without a second email', async () => {
@@ -117,6 +141,8 @@ describe('captureLaunchEmailAction', () => {
 
     expect(mocks.upsertMarketingSubscriberSignup).toHaveBeenCalledTimes(1);
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+    expect(mocks.createMetaEventId).not.toHaveBeenCalled();
+    expect(mocks.trackCompleteRegistrationServer).not.toHaveBeenCalled();
   });
 
   it.each(['unsubscribed', 'suppressed', 'bounced'])('returns generic success for %s duplicate records without email', async () => {
@@ -134,6 +160,8 @@ describe('captureLaunchEmailAction', () => {
     );
 
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+    expect(mocks.createMetaEventId).not.toHaveBeenCalled();
+    expect(mocks.trackCompleteRegistrationServer).not.toHaveBeenCalled();
   });
 
   it('keeps the honeypot path quiet without writing subscriber data', async () => {
@@ -144,6 +172,7 @@ describe('captureLaunchEmailAction', () => {
 
     expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+    expect(mocks.trackCompleteRegistrationServer).not.toHaveBeenCalled();
   });
 
   it('rejects invalid email safely without subscriber persistence or email', async () => {
@@ -154,6 +183,7 @@ describe('captureLaunchEmailAction', () => {
 
     expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+    expect(mocks.trackCompleteRegistrationServer).not.toHaveBeenCalled();
   });
 
   it('returns success when the subscriber is saved but the confirmation email fails', async () => {
@@ -161,11 +191,12 @@ describe('captureLaunchEmailAction', () => {
     mocks.sendSubscriberConfirmationEmail.mockRejectedValueOnce(new Error('Resend unavailable'));
 
     await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
-      'NEXT_REDIRECT:/?subscriberSignup=saved#join-launch-list',
+      'NEXT_REDIRECT:/?subscriberSignup=saved&metaEventId=launch_signup_event_123#join-launch-list',
     );
 
     expect(mocks.upsertMarketingSubscriberSignup).toHaveBeenCalledTimes(1);
     expect(mocks.sendSubscriberConfirmationEmail).toHaveBeenCalledTimes(1);
+    expect(mocks.trackCompleteRegistrationServer).toHaveBeenCalledTimes(1);
     expect(consoleError).toHaveBeenCalledWith('Launch confirmation email failed after subscriber persistence.', {
       subscriberId: 'subscriber-1',
     });
@@ -182,6 +213,7 @@ describe('captureLaunchEmailAction', () => {
     );
 
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+    expect(mocks.trackCompleteRegistrationServer).not.toHaveBeenCalled();
     expect(consoleError).toHaveBeenCalledWith(
       'launch_signup_persistence_failed',
       expect.objectContaining({
@@ -224,6 +256,7 @@ describe('captureLaunchEmailAction', () => {
     );
 
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+    expect(mocks.trackCompleteRegistrationServer).not.toHaveBeenCalled();
     expect(consoleError).toHaveBeenCalledWith(
       'launch_signup_persistence_failed',
       expect.objectContaining({
@@ -244,6 +277,31 @@ describe('captureLaunchEmailAction', () => {
 
     const loggedPayload = JSON.stringify(consoleError.mock.calls);
     expect(loggedPayload).not.toContain('Collector@Example.Test');
+    expect(loggedPayload).not.toContain('collector@example.test');
+    expect(loggedPayload).not.toContain('Mia');
+
+    consoleError.mockRestore();
+  });
+
+  it('does not fail signup when the Meta Conversions API call rejects after persistence', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mocks.trackCompleteRegistrationServer.mockRejectedValueOnce(new Error('Meta unavailable'));
+
+    await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
+      'NEXT_REDIRECT:/?subscriberSignup=saved&metaEventId=launch_signup_event_123#join-launch-list',
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(mocks.trackCompleteRegistrationServer).toHaveBeenCalledTimes(1);
+    expect(consoleError).toHaveBeenCalledWith('launch_signup_meta_capi_failed', {
+      event: 'launch_signup_meta_capi_failed',
+      request: {
+        correlationId: 'lhr1::request-123',
+      },
+    });
+
+    const loggedPayload = JSON.stringify(consoleError.mock.calls);
     expect(loggedPayload).not.toContain('collector@example.test');
     expect(loggedPayload).not.toContain('Mia');
 
