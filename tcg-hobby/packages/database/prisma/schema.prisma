@@ -253,6 +253,84 @@ model Category {
   releases    Release[]
 }
 
+model Game {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  active      Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  products    Product[]
+  sets        ProductSet[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([active, sortOrder])
+  @@index([name])
+}
+
+model Brand {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  website     String?
+  active      Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([active, sortOrder])
+  @@index([name])
+}
+
+model ProductType {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  group       String?
+  active      Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([active, sortOrder])
+  @@index([group])
+  @@index([name])
+}
+
+model ProductLanguage {
+  id          String    @id @default(cuid())
+  name        String
+  code        String    @unique
+  active      Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([active, sortOrder])
+  @@index([name])
+}
+
+model ProductSet {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String
+  gameId      String
+  releaseDate DateTime?
+  active      Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  game        Game      @relation(fields: [gameId], references: [id], onDelete: Restrict)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([gameId, slug])
+  @@index([gameId, active, sortOrder])
+  @@index([name])
+}
+
 model Supplier {
   id              String            @id @default(cuid())
   name            String
@@ -288,6 +366,11 @@ model Product {
   setName       String?
   productType   String?
   language      String?
+  gameId        String?
+  brandId       String?
+  productTypeId String?
+  languageId    String?
+  setId         String?
   description   String
   longDescription String
   condition     ProductCondition @default(SEALED)
@@ -327,6 +410,11 @@ model Product {
   comingSoonBadgeLabel String?
   categoryId    String
   category      Category         @relation(fields: [categoryId], references: [id])
+  gameRef       Game?            @relation(fields: [gameId], references: [id], onDelete: Restrict)
+  brandRef      Brand?           @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  productTypeRef ProductType?    @relation(fields: [productTypeId], references: [id], onDelete: Restrict)
+  languageRef   ProductLanguage? @relation(fields: [languageId], references: [id], onDelete: Restrict)
+  setRef        ProductSet?      @relation(fields: [setId], references: [id], onDelete: Restrict)
   inventory     InventoryItem?
   images        ProductImage[]
   wishlistItems WishlistItem[]
@@ -379,6 +467,11 @@ model Product {
   @@index([barcode])
   @@index([brand])
   @@index([productType])
+  @@index([gameId])
+  @@index([brandId])
+  @@index([productTypeId])
+  @@index([languageId])
+  @@index([setId])
   @@index([searchText])
 }
 

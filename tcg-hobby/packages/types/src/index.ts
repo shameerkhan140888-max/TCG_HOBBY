@@ -19,6 +19,10 @@ export type CatalogueSort = 'featured' | 'newest' | 'price-asc' | 'price-desc';
 export type CatalogueFilters = {
   search: string;
   category: string;
+  game?: string;
+  productType?: string;
+  set?: string;
+  language?: string;
   sort: CatalogueSort;
   page: number;
   pageSize: number;

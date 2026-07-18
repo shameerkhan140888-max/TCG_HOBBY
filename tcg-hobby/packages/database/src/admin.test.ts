@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { calculateAvailableStock, calculateGrossProfitMinor, calculateMarginPercentage, resolveAdminSellingPriceMinor } from './admin-math';
 import {
   adjustProductStock,
+  calculateVatExclusiveMinor,
   createAdminProduct,
   createAdminProductRecommendation,
   deleteAdminProductRecommendation,
@@ -10,6 +11,7 @@ import {
   getAdminProducts,
   getAdminSuppliers,
   searchAdminMerchandisingProducts,
+  setProductPublication,
   updateProductMerchandisingSettings,
 } from './admin';
 
@@ -52,6 +54,15 @@ function createDbMock() {
     category: {
       findMany: vi.fn(),
       count: vi.fn(),
+    },
+    game: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    brand: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    productType: {
+      findMany: vi.fn().mockResolvedValue([]),
     },
     supplier: {
       findMany: vi.fn(),
@@ -108,6 +119,12 @@ describe('admin math', () => {
     ).toBe(4999);
     expect(calculateGrossProfitMinor(3000, 4499)).toBe(1499);
   });
+
+  it('extracts VAT-exclusive supplier cost from a VAT-inclusive cost value', () => {
+    expect(calculateVatExclusiveMinor(419, 20)).toBe(349);
+    expect(calculateVatExclusiveMinor(3999, 20)).toBe(3333);
+    expect(calculateVatExclusiveMinor(3999, 0)).toBe(3999);
+  });
 });
 
 describe('admin repositories', () => {
@@ -162,9 +179,27 @@ describe('admin repositories', () => {
         longDescription: 'Long',
         condition: 'SEALED',
         priceMinor: 1299,
+        rrpMinor: null,
+        salePriceMinor: null,
+        saleStartsAt: null,
+        saleEndsAt: null,
+        vatRate: 20,
         currency: 'GBP',
         featured: true,
+        homepagePriority: null,
+        heroFeatured: false,
+        recommendationWeight: 0,
+        isAccessory: false,
+        isStaffPick: false,
+        isBestSeller: false,
+        isNewArrival: false,
+        freeUkStandardShipping: false,
+        shippingPromotionProductOnly: false,
+        lifecycleState: 'PUBLISHED',
         published: true,
+        hideWhenOutOfStock: false,
+        customerPurchaseLimit: null,
+        availabilityMessage: null,
         archivedAt: null,
         searchText: 'arcane booster box',
         imageLabel: 'Box',
@@ -200,6 +235,32 @@ describe('admin repositories', () => {
         ],
         createdAt: new Date('2026-01-01'),
         updatedAt: new Date('2026-01-01'),
+        pricing: null,
+        barcode: null,
+        gameId: null,
+        brand: null,
+        brandId: null,
+        setId: null,
+        productType: null,
+        productTypeId: null,
+        language: null,
+        languageId: null,
+        gameRef: null,
+        brandRef: null,
+        productTypeRef: null,
+        languageRef: null,
+        setRef: null,
+        importSourceType: null,
+        importSourceReference: null,
+        importedAt: null,
+        lastImportedAt: null,
+        importValidationWarnings: null,
+        seoTitle: null,
+        metaDescription: null,
+        canonicalUrl: null,
+        ogImageUrl: null,
+        noindex: false,
+        importAudits: [],
       },
     ]);
     db.category.findMany.mockResolvedValue([{ id: 'cat-1', name: 'Sealed Product', slug: 'sealed-product' }]);
@@ -210,7 +271,142 @@ describe('admin repositories', () => {
     expect(db.product.count).toHaveBeenCalled();
     expect(db.product.findMany).toHaveBeenCalled();
     expect(result.products[0]?.slug).toBe('arcane-booster-box');
+    expect(result.products[0]?.costExVatMinor).toBe(667);
     expect(result.pagination.page).toBe(1);
+  });
+
+  it('keeps supplier cost and pricing buy values distinct in admin products', async () => {
+    const db = createDbMock();
+    db.product.count.mockResolvedValue(1);
+    db.product.findMany.mockResolvedValue([
+      {
+        id: 'prod-1',
+        sku: 'SKU-1',
+        slug: 'mega-greninja',
+        name: 'Mega Greninja',
+        game: 'Pokemon TCG',
+        setName: null,
+        description: 'Desc',
+        longDescription: 'Long',
+        condition: 'SEALED',
+        priceMinor: 4999,
+        rrpMinor: null,
+        salePriceMinor: null,
+        saleStartsAt: null,
+        saleEndsAt: null,
+        vatRate: 20,
+        currency: 'GBP',
+        featured: true,
+        homepagePriority: 1,
+        heroFeatured: false,
+        recommendationWeight: 0,
+        isAccessory: false,
+        isStaffPick: false,
+        isBestSeller: false,
+        isNewArrival: false,
+        freeUkStandardShipping: true,
+        shippingPromotionProductOnly: true,
+        lifecycleState: 'PUBLISHED',
+        published: true,
+        hideWhenOutOfStock: false,
+        customerPurchaseLimit: 1,
+        availabilityMessage: null,
+        archivedAt: null,
+        searchText: 'mega greninja',
+        imageLabel: 'Mega Greninja',
+        category: { id: 'cat-1', name: 'Pokemon TCG', slug: 'pokemon-tcg', description: 'x', sortOrder: 1 },
+        inventory: { stockOnHand: 4, reservedStock: 0, reorderPoint: 1, reorderQuantity: 0, incomingQuantity: 0, locationCode: 'MAIN' },
+        images: [],
+        supplierProducts: [
+          {
+            id: 'sp-1',
+            supplierSku: 'PKM-1',
+            costMinor: 3999,
+            currency: 'GBP',
+            leadTimeDays: 7,
+            supplier: {
+              id: 'sup-1',
+              name: 'Card Citadel',
+              slug: 'card-citadel',
+              email: null,
+              phone: null,
+              website: null,
+              preferred: true,
+              active: true,
+              contactName: null,
+              addressLine1: null,
+              addressLine2: null,
+              city: null,
+              region: null,
+              postalCode: null,
+              country: 'GB',
+              internalNotes: null,
+            },
+          },
+        ],
+        pricing: {
+          costMinor: 3999,
+          buyMinor: 3499,
+          minimumMarginPercent: 30,
+          maximumDiscountPercent: 45,
+          priceSource: 'Manual',
+          priceStatus: 'FUTURE',
+          manualOverride: false,
+          updatedAt: new Date('2026-01-01'),
+        },
+        createdAt: new Date('2026-01-01'),
+        updatedAt: new Date('2026-01-01'),
+        barcode: null,
+        gameId: null,
+        brand: null,
+        brandId: null,
+        setId: null,
+        productType: null,
+        productTypeId: null,
+        language: null,
+        languageId: null,
+        gameRef: null,
+        brandRef: null,
+        productTypeRef: null,
+        languageRef: null,
+        setRef: null,
+        importSourceType: null,
+        importSourceReference: null,
+        importedAt: null,
+        lastImportedAt: null,
+        importValidationWarnings: null,
+        seoTitle: null,
+        metaDescription: null,
+        canonicalUrl: null,
+        ogImageUrl: null,
+        noindex: false,
+        importAudits: [],
+      },
+    ]);
+    db.category.findMany.mockResolvedValue([{ id: 'cat-1', name: 'Pokemon TCG', slug: 'pokemon-tcg' }]);
+    db.supplier.findMany.mockResolvedValue([{ id: 'sup-1', name: 'Card Citadel', slug: 'card-citadel' }]);
+
+    const result = await getAdminProducts({ page: 1, pageSize: 10 }, db);
+
+    expect(result.products[0]?.costMinor).toBe(3999);
+    expect(result.products[0]?.costExVatMinor).toBe(3333);
+    expect(result.products[0]?.buyMinor).toBe(3499);
+  });
+
+  it('keeps product publication and lifecycle state aligned', async () => {
+    const db = createDbMock();
+
+    await setProductPublication('prod-1', true, db);
+    expect(db.product.update).toHaveBeenLastCalledWith({
+      where: { id: 'prod-1' },
+      data: { published: true, lifecycleState: 'PUBLISHED', archivedAt: null },
+    });
+
+    await setProductPublication('prod-1', false, db);
+    expect(db.product.update).toHaveBeenLastCalledWith({
+      where: { id: 'prod-1' },
+      data: { published: false, lifecycleState: 'DRAFT' },
+    });
   });
 
   it('returns supplier rows with product counts', async () => {

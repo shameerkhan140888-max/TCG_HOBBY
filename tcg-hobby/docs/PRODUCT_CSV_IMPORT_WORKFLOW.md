@@ -6,7 +6,7 @@ This workflow lets TCG Hobby prepare launch inventory without direct database ed
 
 1. Open Admin > Products > Import CSV.
 2. Download the CSV template.
-3. Complete one row per product using canonical category and supplier slugs.
+3. Complete one row per product using canonical category, supplier and catalogue master-data values.
 4. Select **Preview import** and fix any row errors.
 5. Select **Import ready rows**, then review each product in Admin before publishing.
 
@@ -28,6 +28,20 @@ The required headers are:
 
 Prices are stored in minor units. For example, `4999` means GBP 49.99. Storefront product prices are VAT inclusive.
 
+## Controlled Catalogue Values
+
+CSV rows are resolved against Admin > Catalogue Settings. The importer does not create games, brands, product types, languages or sets from CSV data.
+
+Use existing active values for:
+
+- `game`: game name or slug, for example `Pokemon TCG` or `pokemon-tcg`
+- `brand`: brand name or slug, for example `Pokemon TCG` or `pokemon-tcg`
+- `productType`: product type name or slug, for example `Premium Collection`
+- `language`: language name or code, for example `English` or `en`
+- `setSlug`: optional set or expansion slug, for example `black-bolt`
+
+If a set is supplied, it must belong to the selected game. Unknown or inactive values are rejected during preview and no import is written.
+
 ## Duplicate Matching
 
 The CSV importer detects existing products in this order:
@@ -46,6 +60,8 @@ Preview checks:
 - whole-number pricing and stock
 - non-negative inventory values
 - valid category and supplier slugs
+- valid active game, brand, product type, language and set values
+- set/game compatibility
 - duplicate SKU, barcode and slug values inside the same CSV
 - managed image paths or HTTP(S) image URLs
 - supported product conditions
@@ -75,6 +91,7 @@ Recommended launch-stock defaults:
 
 - `condition`: `SEALED`
 - `currency`: handled automatically as GBP
+- `setSlug`: leave blank unless the set already exists in Catalogue Settings
 - `published`: `false` until reviewed
 - `locationCode`: `MAIN`
 - `minimumOrderQuantity`: `1`

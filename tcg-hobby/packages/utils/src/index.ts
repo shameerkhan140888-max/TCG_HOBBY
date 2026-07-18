@@ -24,6 +24,10 @@ export function slugify(input: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+export function buildStorefrontProductPath(slug: string): string {
+  return `/catalogue/${encodeURIComponent(slug.trim())}`;
+}
+
 export function clampMinorAmount(value: number) {
   if (!Number.isFinite(value)) {
     return 0;

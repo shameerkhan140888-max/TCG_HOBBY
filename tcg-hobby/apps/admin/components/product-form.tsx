@@ -1,7 +1,8 @@
 'use client';
 
-import { useActionState, type TextareaHTMLAttributes } from 'react';
-import { Button, ErrorMessage, FormField, FormSection, Input } from '@tcg-hobby/ui';
+import { useActionState, useEffect, useMemo, useRef, useState, type ChangeEvent, type TextareaHTMLAttributes } from 'react';
+import { useFormStatus } from 'react-dom';
+import { Button, FormField, FormSection, Input } from '@tcg-hobby/ui';
 import {
   emptyProductFormValues,
   type ProductFormState,
@@ -20,12 +21,19 @@ function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
 type Option = {
   id: string;
   label: string;
+  active?: boolean;
+  gameId?: string | null;
 };
 
 type ProductFormProps = {
   state?: ProductFormState;
   categories: Option[];
   suppliers: Option[];
+  games: Option[];
+  brands: Option[];
+  productTypes: Option[];
+  languages: Option[];
+  sets: Option[];
   submitLabel: string;
 };
 
@@ -57,16 +65,123 @@ function calculateMargin(costMinorValue: string, priceMinorValue: string) {
   return { profitMinor, marginPercent };
 }
 
-export function ProductForm({ state, categories, suppliers, submitLabel }: ProductFormProps) {
-  const [formState, formAction] = useActionState(saveProductAction, state ?? { fieldErrors: {}, values: emptyProductFormValues });
-  const pricing = calculateMargin(formState.values.landedCostMinor || formState.values.costMinor, formState.values.salePriceMinor || formState.values.priceMinor);
-  const lossWarning =
-    parseMinor(formState.values.landedCostMinor || formState.values.costMinor) > parseMinor(formState.values.salePriceMinor || formState.values.priceMinor);
+function calculateVatExclusiveMinor(grossMinorValue: string, vatRateValue: string) {
+  const grossMinor = parseMinor(grossMinorValue);
+  const vatRate = parseMinor(vatRateValue);
+  if (grossMinor <= 0) return 0;
+  if (vatRate <= 0) return grossMinor;
+  return Math.round((grossMinor * 100) / (100 + vatRate));
+}
+
+function getErrorFieldLabel(fieldName: string) {
+  const labels: Record<string, string> = {
+    name: 'Name',
+    sku: 'SKU',
+    gameId: 'Game',
+    productTypeId: 'Product type',
+    languageId: 'Language',
+    description: 'Short description',
+    longDescription: 'Long description',
+    categoryId: 'Category',
+    supplierId: 'Supplier',
+    priceMinor: 'Retail price',
+    vatRate: 'VAT rate',
+    costMinor: 'Cost price',
+    stockOnHand: 'Current stock',
+    reorderPoint: 'Reorder point',
+    primaryImageUrl: 'Primary image URL',
+    primaryImageAlt: 'Primary image alt text',
+    galleryImagesText: 'Gallery images',
+  };
+
+  return labels[fieldName] ?? fieldName;
+}
+
+function SubmitButton({ label }: { label: string }) {
+  const { pending } = useFormStatus();
+  const pendingLabel = label.toLowerCase().includes('create') ? 'Creating...' : 'Saving...';
 
   return (
-    <form key={JSON.stringify(formState.values)} action={formAction} className="space-y-6">
+    <Button type="submit" size="lg" disabled={pending} aria-disabled={pending}>
+      {pending ? pendingLabel : label}
+    </Button>
+  );
+}
+
+export function ProductForm({ state, categories, suppliers, games, brands, productTypes, languages, sets, submitLabel }: ProductFormProps) {
+  const [formState, formAction] = useActionState(saveProductAction, state ?? { fieldErrors: {}, values: emptyProductFormValues });
+  const errorSummaryRef = useRef<HTMLDivElement>(null);
+  const [selectedGameId, setSelectedGameId] = useState(formState.values.gameId);
+  const [selectedSetId, setSelectedSetId] = useState(formState.values.setId);
+  const costGrossMinorValue = formState.values.landedCostMinor || formState.values.costMinor;
+  const retailGrossMinorValue = formState.values.salePriceMinor || formState.values.priceMinor;
+  const costExVatMinor = calculateVatExclusiveMinor(costGrossMinorValue, formState.values.vatRate);
+  const retailVatMinor = parseMinor(retailGrossMinorValue) - calculateVatExclusiveMinor(retailGrossMinorValue, formState.values.vatRate);
+  const pricing = calculateMargin(String(costExVatMinor), retailGrossMinorValue);
+  const lossWarning =
+    parseMinor(formState.values.landedCostMinor || formState.values.costMinor) > parseMinor(formState.values.salePriceMinor || formState.values.priceMinor);
+  const selectedSet = sets.find((set) => set.id === selectedSetId);
+  const selectedSetIsCompatible = !selectedSet || !selectedGameId || !selectedSet.gameId || selectedSet.gameId === selectedGameId;
+  const filteredSets = sets.filter((set) => !set.gameId || !selectedGameId || set.gameId === selectedGameId || set.id === selectedSetId);
+  const errorEntries = useMemo(() => Object.entries(formState.fieldErrors), [formState.fieldErrors]);
+  const hasPrimaryImage = Boolean(formState.values.primaryImageUrl);
+
+  useEffect(() => {
+    setSelectedGameId(formState.values.gameId);
+    setSelectedSetId(formState.values.setId);
+  }, [formState.values.gameId, formState.values.setId]);
+
+  useEffect(() => {
+    if (errorEntries.length === 0 && !formState.formError) {
+      return;
+    }
+
+    errorSummaryRef.current?.focus();
+    const firstFieldName = errorEntries[0]?.[0];
+    if (!firstFieldName) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      document.getElementById(firstFieldName)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
+  }, [errorEntries, formState.formError]);
+
+  function handleGameChange(event: ChangeEvent<HTMLSelectElement>) {
+    const nextGameId = event.target.value;
+    setSelectedGameId(nextGameId);
+
+    const currentSet = sets.find((set) => set.id === selectedSetId);
+    if (currentSet?.gameId && currentSet.gameId !== nextGameId) {
+      setSelectedSetId('');
+    }
+  }
+
+  return (
+    <form key={JSON.stringify(formState.values)} action={formAction} className="space-y-6" noValidate>
       <input type="hidden" name="productId" value={formState.values.productId} />
-      {formState.formError ? <ErrorMessage>{formState.formError}</ErrorMessage> : null}
+      {errorEntries.length || formState.formError ? (
+        <div
+          ref={errorSummaryRef}
+          role="alert"
+          tabIndex={-1}
+          className="rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-100 outline-none focus:ring-2 focus:ring-red-300/60"
+        >
+          <p className="font-semibold">Product could not be saved. Review the highlighted fields below.</p>
+          {formState.formError ? <p className="mt-2">{formState.formError}</p> : null}
+          {errorEntries.length ? (
+            <ul className="mt-3 space-y-1">
+              {errorEntries.map(([fieldName, message]) => (
+                <li key={fieldName}>
+                  <a className="underline decoration-red-300 underline-offset-4" href={`#${fieldName}`}>
+                    {getErrorFieldLabel(fieldName)}: {message}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="grid gap-4 rounded-xl bg-surface-base p-4 shadow-[0_18px_60px_rgba(0,0,0,0.25)] lg:grid-cols-[1fr_280px]">
         <nav aria-label="Product onboarding sections" className="flex flex-wrap gap-2">
@@ -84,6 +199,8 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
           <p className="font-semibold text-neutral-50">Review before saving</p>
           <p>{formState.values.name || 'Unnamed product'}</p>
           <p>{formState.values.sku || 'SKU required'}</p>
+          <p>{games.find((game) => game.id === formState.values.gameId)?.label ?? 'Game required'}</p>
+          <p>{productTypes.find((type) => type.id === formState.values.productTypeId)?.label ?? 'Product type required'}</p>
           <p>{formState.values.priceMinor ? formatMoney(formState.values.priceMinor) : 'Price required'}</p>
           <p>{formState.values.published ? 'Will be published' : 'Will be hidden'}</p>
         </aside>
@@ -104,20 +221,69 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
           <FormField label="Barcode / EAN / UPC" htmlFor="barcode" error={formState.fieldErrors.barcode}>
             <Input id="barcode" name="barcode" defaultValue={formState.values.barcode} />
           </FormField>
-          <FormField label="Brand" htmlFor="brand">
-            <Input id="brand" name="brand" defaultValue={formState.values.brand} placeholder="Pokemon TCG, Magic: The Gathering..." />
+          <FormField label="Game" htmlFor="gameId" error={formState.fieldErrors.gameId} required>
+            <select
+              id="gameId"
+              name="gameId"
+              value={selectedGameId}
+              onChange={handleGameChange}
+              className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
+            >
+              <option value="">Select a game</option>
+              {games.map((game) => (
+                <option key={game.id} value={game.id}>
+                  {game.label}{game.active === false ? ' (inactive)' : ''}
+                </option>
+              ))}
+            </select>
           </FormField>
-          <FormField label="Game" htmlFor="game" error={formState.fieldErrors.game} required>
-            <Input id="game" name="game" defaultValue={formState.values.game} />
+          <FormField label="Brand" htmlFor="brandId" error={formState.fieldErrors.brandId}>
+            <select id="brandId" name="brandId" defaultValue={formState.values.brandId} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
+              <option value="">Select a brand</option>
+              {brands.map((brand) => (
+                <option key={brand.id} value={brand.id}>
+                  {brand.label}{brand.active === false ? ' (inactive)' : ''}
+                </option>
+              ))}
+            </select>
           </FormField>
-          <FormField label="Set name" htmlFor="setName">
-            <Input id="setName" name="setName" defaultValue={formState.values.setName} />
+          <FormField label="Product type / format" htmlFor="productTypeId" error={formState.fieldErrors.productTypeId} required>
+            <select id="productTypeId" name="productTypeId" defaultValue={formState.values.productTypeId} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
+              <option value="">Select a product type</option>
+              {productTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.label}{type.active === false ? ' (inactive)' : ''}
+                </option>
+              ))}
+            </select>
           </FormField>
-          <FormField label="Product type / format" htmlFor="productType">
-            <Input id="productType" name="productType" defaultValue={formState.values.productType} placeholder="Booster box, deck, accessory..." />
+          <FormField label="Language" htmlFor="languageId" error={formState.fieldErrors.languageId} required>
+            <select id="languageId" name="languageId" defaultValue={formState.values.languageId} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
+              <option value="">Select a language</option>
+              {languages.map((language) => (
+                <option key={language.id} value={language.id}>
+                  {language.label}{language.active === false ? ' (inactive)' : ''}
+                </option>
+              ))}
+            </select>
           </FormField>
-          <FormField label="Language" htmlFor="language">
-            <Input id="language" name="language" defaultValue={formState.values.language} placeholder="English" />
+          <FormField label="Set" htmlFor="setId" error={formState.fieldErrors.setId}>
+            <select
+              id="setId"
+              name="setId"
+              value={selectedSetId}
+              onChange={(event) => setSelectedSetId(event.target.value)}
+              className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
+            >
+              <option value="">No set</option>
+              {filteredSets.map((set) => (
+                <option key={set.id} value={set.id}>
+                  {set.label}{set.active === false ? ' (inactive)' : ''}
+                </option>
+              ))}
+            </select>
+            {selectedGameId ? <p className="mt-2 text-xs text-neutral-500">Set options are limited to the selected game.</p> : null}
+            {!selectedSetIsCompatible ? <p className="mt-2 text-xs text-amber-300">Select a set that belongs to the selected game.</p> : null}
           </FormField>
           <FormField label="Condition" htmlFor="condition" required>
             <select id="condition" name="condition" defaultValue={formState.values.condition} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
@@ -152,13 +318,13 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
             <Textarea id="longDescription" name="longDescription" defaultValue={formState.values.longDescription} />
           </FormField>
           <div className="grid gap-4 lg:grid-cols-2">
-            <FormField label="Image label" htmlFor="imageLabel" required>
+            <FormField label="Image label" htmlFor="imageLabel">
               <Input id="imageLabel" name="imageLabel" defaultValue={formState.values.imageLabel} />
             </FormField>
-            <FormField label="Primary image URL" htmlFor="primaryImageUrl">
+            <FormField label="Primary image URL" htmlFor="primaryImageUrl" error={formState.fieldErrors.primaryImageUrl}>
               <Input id="primaryImageUrl" name="primaryImageUrl" defaultValue={formState.values.primaryImageUrl} placeholder="/products/game/slug/primary.webp or https://..." />
             </FormField>
-            <FormField label="Primary image alt text" htmlFor="primaryImageAlt">
+            <FormField label="Primary image alt text" htmlFor="primaryImageAlt" error={formState.fieldErrors.primaryImageAlt} required={hasPrimaryImage}>
               <Input id="primaryImageAlt" name="primaryImageAlt" defaultValue={formState.values.primaryImageAlt} placeholder="Meaningful alt text" />
             </FormField>
             <FormField label="Open Graph image URL" htmlFor="ogImageUrl" error={formState.fieldErrors.ogImageUrl}>
@@ -173,6 +339,15 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
               placeholder={'One image per line. Use: URL | alt text | role\n/products/example/gallery-02.webp | Rear packaging | gallery'}
             />
           </FormField>
+          {!hasPrimaryImage ? (
+            <div className="rounded-lg bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              No product image configured. The storefront placeholder will be displayed.
+            </div>
+          ) : (
+            <div className="rounded-lg bg-surface-ink px-4 py-3 text-sm text-neutral-300">
+              Primary image configured. Make sure the alt text describes the product image for customers who cannot see it.
+            </div>
+          )}
           <FormField label="Availability / shipping promotion" htmlFor="availabilityMessage">
             <Textarea
               id="availabilityMessage"
@@ -214,8 +389,11 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
           </FormField>
           <div className="rounded-lg bg-surface-ink p-4 text-sm leading-6 text-neutral-300">
             <p className="font-semibold text-neutral-50">Commercial preview</p>
-            <p>Profit per unit: {formatMoney(String(pricing.profitMinor))}</p>
-            <p>Gross margin: {pricing.marginPercent}%</p>
+            <p>Cost: {formatMoney(String(costExVatMinor))} ex VAT</p>
+            <p>Retail: {formatMoney(retailGrossMinorValue)} VAT inclusive</p>
+            <p>VAT included in retail: {formatMoney(String(retailVatMinor))}</p>
+            <p>Gross profit: {formatMoney(String(pricing.profitMinor))} ex VAT cost basis</p>
+            <p>Gross margin: {pricing.marginPercent}% on VAT-inclusive retail</p>
             {lossWarning ? <p className="mt-2 text-amber-200">Warning: current selling price is below landed cost.</p> : null}
           </div>
         </div>
@@ -340,9 +518,7 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
       </section>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" size="lg">
-          {submitLabel}
-        </Button>
+        <SubmitButton label={submitLabel} />
         <Button asChild variant="outline" size="lg">
           <a href="/admin/products">Cancel</a>
         </Button>

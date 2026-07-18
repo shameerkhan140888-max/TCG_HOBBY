@@ -14,6 +14,11 @@ export type ProductFormValues = {
   setName: string;
   productType: string;
   language: string;
+  gameId: string;
+  brandId: string;
+  productTypeId: string;
+  languageId: string;
+  setId: string;
   description: string;
   longDescription: string;
   condition: string;
@@ -58,6 +63,7 @@ export type ProductFormValues = {
 export type ProductFormState = {
   fieldErrors: FieldErrors;
   formError?: string;
+  formSuccess?: string;
   values: ProductFormValues;
 };
 
@@ -119,6 +125,11 @@ export const emptyProductFormValues: ProductFormValues = {
   setName: '',
   productType: '',
   language: '',
+  gameId: '',
+  brandId: '',
+  productTypeId: '',
+  languageId: '',
+  setId: '',
   description: '',
   longDescription: '',
   condition: 'SEALED',
@@ -222,6 +233,11 @@ export function buildProductValues(formData: FormData): ProductFormValues {
     setName: getString(formData, 'setName'),
     productType: getString(formData, 'productType'),
     language: getString(formData, 'language'),
+    gameId: getString(formData, 'gameId'),
+    brandId: getString(formData, 'brandId'),
+    productTypeId: getString(formData, 'productTypeId'),
+    languageId: getString(formData, 'languageId'),
+    setId: getString(formData, 'setId'),
     description: getString(formData, 'description'),
     longDescription: getString(formData, 'longDescription'),
     condition: getString(formData, 'condition', 'SEALED'),

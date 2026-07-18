@@ -14,6 +14,7 @@ export const PRODUCT_CSV_IMPORT_HEADERS = [
   'supplierSlug',
   'productType',
   'language',
+  'setSlug',
   'condition',
   'priceMinor',
   'vatRate',
@@ -112,7 +113,33 @@ type ProductIdentityRow = {
 
 type LookupRow = {
   id: string;
+  name?: string;
+  slug?: string;
+  code?: string;
+  active?: boolean;
+  sortOrder?: number;
+  group?: string | null;
+  gameId?: string | null;
+  game?: { name: string } | null;
+  _count?: { products: number };
+};
+
+type ResolvedCsvMasterDataRow = {
+  id: string;
+  name: string;
   slug: string;
+  code: string | null;
+  active: boolean;
+  gameId: string | null;
+};
+
+type ResolvedCsvMasterData = {
+  game: ResolvedCsvMasterDataRow | null;
+  brand: ResolvedCsvMasterDataRow | null;
+  productType: ResolvedCsvMasterDataRow | null;
+  language: ResolvedCsvMasterDataRow | null;
+  set: ResolvedCsvMasterDataRow | null;
+  errors: string[];
 };
 
 type ProductCsvPlanningDatabase = {
@@ -124,6 +151,21 @@ type ProductCsvPlanningDatabase = {
   };
   supplier: {
     findMany(args: Prisma.SupplierFindManyArgs): Promise<LookupRow[]>;
+  };
+  game: {
+    findMany(args: Prisma.GameFindManyArgs): Promise<LookupRow[]>;
+  };
+  brand: {
+    findMany(args: Prisma.BrandFindManyArgs): Promise<LookupRow[]>;
+  };
+  productType: {
+    findMany(args: Prisma.ProductTypeFindManyArgs): Promise<LookupRow[]>;
+  };
+  productLanguage: {
+    findMany(args: Prisma.ProductLanguageFindManyArgs): Promise<LookupRow[]>;
+  };
+  productSet: {
+    findMany(args: Prisma.ProductSetFindManyArgs): Promise<LookupRow[]>;
   };
 };
 
@@ -150,6 +192,60 @@ const REQUIRED_HEADERS: ProductCsvHeader[] = [
 ];
 
 const PRODUCT_CONDITIONS = Object.values(ProductCondition);
+
+function normalizeLookupKey(value: string): string {
+  return slugify(value.normalize('NFD').replace(/[\u0300-\u036f]/g, '')).toLowerCase();
+}
+
+function toResolvedRow(row: LookupRow): ResolvedCsvMasterDataRow {
+  return {
+    id: row.id,
+    name: row.name ?? row.slug ?? row.code ?? row.id,
+    slug: row.slug ?? row.code ?? row.id,
+    code: row.code ?? null,
+    active: row.active ?? true,
+    gameId: row.gameId ?? null,
+  };
+}
+
+async function resolveCsvMasterDataByImportValues(
+  values: { game?: string; brand?: string; productType?: string; language?: string; set?: string },
+  db: ProductCsvPlanningDatabase,
+): Promise<ResolvedCsvMasterData> {
+  const [games, brands, productTypes, languages, sets] = await Promise.all([
+    db.game.findMany({ orderBy: [{ active: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }] }),
+    db.brand.findMany({ orderBy: [{ active: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }] }),
+    db.productType.findMany({ orderBy: [{ active: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }] }),
+    db.productLanguage.findMany({ orderBy: [{ active: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }] }),
+    db.productSet.findMany({ orderBy: [{ active: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }] }),
+  ]);
+  const findBySlugOrName = (records: LookupRow[], value?: string) => {
+    if (!value?.trim()) return null;
+    const normalized = normalizeLookupKey(value);
+    const row = records.find((record) => record.slug === value || record.code === value || normalizeLookupKey(record.name ?? '') === normalized);
+    return row ? toResolvedRow(row) : null;
+  };
+  const game = findBySlugOrName(games, values.game);
+  const brand = findBySlugOrName(brands, values.brand);
+  const productType = findBySlugOrName(productTypes, values.productType);
+  const language = findBySlugOrName(languages, values.language);
+  const set = findBySlugOrName(sets, values.set);
+  const errors: string[] = [];
+
+  if (values.game && !game) errors.push(`Unknown Game "${values.game}". Create it in Catalogue Settings before importing.`);
+  if (values.brand && !brand) errors.push(`Unknown Brand "${values.brand}". Create it in Catalogue Settings before importing.`);
+  if (values.productType && !productType) errors.push(`Unknown Product Type "${values.productType}". Create it in Catalogue Settings before importing.`);
+  if (values.language && !language) errors.push(`Unknown Language "${values.language}". Create it in Catalogue Settings before importing.`);
+  if (values.set && !set) errors.push(`Unknown Set "${values.set}". Create it in Catalogue Settings before importing.`);
+  if (game && !game.active) errors.push(`Game "${game.name}" is inactive and cannot be used for new imports.`);
+  if (brand && !brand.active) errors.push(`Brand "${brand.name}" is inactive and cannot be used for new imports.`);
+  if (productType && !productType.active) errors.push(`Product Type "${productType.name}" is inactive and cannot be used for new imports.`);
+  if (language && !language.active) errors.push(`Language "${language.name}" is inactive and cannot be used for new imports.`);
+  if (set && !set.active) errors.push(`Set "${set.name}" is inactive and cannot be used for new imports.`);
+  if (set && game && set.gameId !== game.id) errors.push(`Set "${set.name}" does not belong to Game "${game.name}".`);
+
+  return { game, brand, productType, language, set, errors };
+}
 
 function normalizeCell(value: string | undefined): string {
   return (value ?? '').trim();
@@ -327,6 +423,7 @@ export function buildProductCsvTemplate(): string {
       'tcg-hobby',
       'Premium Collection',
       'English',
+      '',
       'SEALED',
       '4999',
       '20',
@@ -401,6 +498,23 @@ export async function createProductCsvImportPlan(csvText: string, db: ProductCsv
   const seenSkus = new Set<string>();
   const seenSlugs = new Set<string>();
   const seenBarcodes = new Set<string>();
+  const masterDataByRow = new Map<number, ResolvedCsvMasterData>();
+
+  for (const row of rows) {
+    masterDataByRow.set(
+      row.rowNumber,
+      await resolveCsvMasterDataByImportValues(
+        {
+          game: row.game,
+          brand: row.brand,
+          productType: row.productType,
+          language: row.language,
+          set: row.setSlug,
+        },
+        db,
+      ),
+    );
+  }
 
   const planRows = rows.map((row): ProductCsvImportPlanRow => {
     const errors: string[] = [];
@@ -420,6 +534,7 @@ export async function createProductCsvImportPlan(csvText: string, db: ProductCsv
 
     if (row.categorySlug && !categorySet.has(row.categorySlug)) errors.push(`Category ${row.categorySlug} does not exist.`);
     if (row.supplierSlug && !supplierSet.has(row.supplierSlug)) errors.push(`Supplier ${row.supplierSlug} does not exist.`);
+    errors.push(...(masterDataByRow.get(row.rowNumber)?.errors ?? []));
 
     const condition = row.condition || ProductCondition.SEALED;
     if (!PRODUCT_CONDITIONS.includes(condition as ProductCondition)) {
@@ -502,16 +617,22 @@ function buildSearchText(row: ProductCsvImportRow, slug: string): string {
   return [row.name, row.sku, row.barcode, row.brand, row.game, row.productType, row.description, row.longDescription, slug].filter(Boolean).join(' ').toLowerCase();
 }
 
-function productDataFromRow(row: ProductCsvImportRow, categoryId: string, slug: string): Prisma.ProductCreateInput | Prisma.ProductUpdateInput {
-  return {
+function productDataFromRow(
+  row: ProductCsvImportRow,
+  categoryId: string,
+  slug: string,
+  masterData: ResolvedCsvMasterData,
+): Prisma.ProductCreateInput | Prisma.ProductUpdateInput {
+  const data: Prisma.ProductCreateInput | Prisma.ProductUpdateInput = {
     sku: row.sku,
     barcode: row.barcode || null,
     slug,
     name: row.name,
-    brand: row.brand || null,
-    game: row.game,
-    productType: row.productType || null,
-    language: row.language || null,
+    brand: (masterData.brand?.name ?? row.brand) || null,
+    game: masterData.game?.name ?? row.game,
+    setName: masterData.set?.name ?? null,
+    productType: (masterData.productType?.name ?? row.productType) || null,
+    language: (masterData.language?.name ?? row.language) || null,
     description: row.description,
     longDescription: row.longDescription,
     condition: (row.condition || ProductCondition.SEALED) as ProductCondition,
@@ -537,7 +658,16 @@ function productDataFromRow(row: ProductCsvImportRow, categoryId: string, slug: 
     lifecycleState: parseBooleanCell(row.published, false, 'published', []) ? 'PUBLISHED' : 'DRAFT',
     customerPurchaseLimit: row.customerPurchaseLimit ? Number.parseInt(row.customerPurchaseLimit, 10) : null,
     availabilityMessage: null,
-    searchText: buildSearchText(row, slug),
+    searchText: buildSearchText(
+      {
+        ...row,
+        game: masterData.game?.name ?? row.game,
+        brand: masterData.brand?.name ?? row.brand,
+        productType: masterData.productType?.name ?? row.productType,
+        language: masterData.language?.name ?? row.language,
+      },
+      slug,
+    ),
     imageLabel: row.imageLabel || row.name,
     category: { connect: { id: categoryId } },
     seoTitle: row.seoTitle || null,
@@ -550,6 +680,14 @@ function productDataFromRow(row: ProductCsvImportRow, categoryId: string, slug: 
     importedAt: new Date(),
     lastImportedAt: new Date(),
   };
+
+  if (masterData.game) data.gameRef = { connect: { id: masterData.game.id } };
+  if (masterData.brand) data.brandRef = { connect: { id: masterData.brand.id } };
+  if (masterData.productType) data.productTypeRef = { connect: { id: masterData.productType.id } };
+  if (masterData.language) data.languageRef = { connect: { id: masterData.language.id } };
+  if (masterData.set) data.setRef = { connect: { id: masterData.set.id } };
+
+  return data;
 }
 
 export async function executeProductCsvImport(
@@ -589,7 +727,14 @@ export async function executeProductCsvImport(
 
       const slug = planRow.slug;
       const costMinor = Number.parseInt(row.costMinor, 10);
-      const productData = productDataFromRow(row, categoryId, slug);
+      const masterData = await resolveCsvMasterDataByImportValues(
+        { game: row.game, brand: row.brand, productType: row.productType, language: row.language, set: row.setSlug },
+        tx,
+      );
+      if (masterData.errors.length) {
+        throw new Error(`Row ${row.rowNumber} master data is invalid: ${masterData.errors.join(' ')}`);
+      }
+      const productData = productDataFromRow(row, categoryId, slug, masterData);
       const now = new Date();
       const product = planRow.existingProductId
         ? await tx.product.update({
@@ -662,7 +807,18 @@ export async function executeProductCsvImport(
           lifecycleState: parseBooleanCell(row.published, false, 'published', []) ? 'PUBLISHED' : 'DRAFT',
           changedFields: ['csvImport'],
           previousValues: planRow.action === 'update' ? { matchedBy: planRow.match } : Prisma.JsonNull,
-          nextValues: { slug: product.slug, sku: row.sku, publicStockState: planRow.publicStockState },
+          nextValues: {
+            slug: product.slug,
+            sku: row.sku,
+            publicStockState: planRow.publicStockState,
+            masterData: {
+              gameId: masterData.game?.id ?? null,
+              brandId: masterData.brand?.id ?? null,
+              productTypeId: masterData.productType?.id ?? null,
+              languageId: masterData.language?.id ?? null,
+              setId: masterData.set?.id ?? null,
+            },
+          },
           warnings: planRow.warnings.join('\n') || null,
           performedBy: options.performedBy ?? 'Admin CSV Import',
         },

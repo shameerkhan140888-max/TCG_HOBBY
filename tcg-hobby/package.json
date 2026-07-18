@@ -10,9 +10,12 @@
   "scripts": {
     "build": "turbo run build",
     "predev": "node ./scripts/clean-dev.mjs",
-    "dev": "npm run db:generate && turbo run dev",
+    "dev": "npm run db:generate && turbo run dev --filter=@tcg-hobby/storefront --filter=@tcg-hobby/admin --filter=@tcg-hobby/api",
+    "dev:all": "npm run db:generate && turbo run dev",
+    "dev:mobile": "npm run dev -w @tcg-hobby/mobile",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "test:e2e": "playwright test",
     "typecheck": "turbo run typecheck",
     "db:generate": "npm run db:generate -w @tcg-hobby/database",
     "db:migrate": "npm run db:migrate -w @tcg-hobby/database",
@@ -26,6 +29,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml,css}\""
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "prettier": "^3.3.3",
     "turbo": "^2.5.4",
     "typescript": "~5.8.3"

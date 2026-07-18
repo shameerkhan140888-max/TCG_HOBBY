@@ -6,7 +6,7 @@ export default function ProductNotFound() {
       <Container className="py-16">
         <EmptyState
           title="Product not found"
-          description="This product is not available in the seeded catalogue. Head back to the catalogue or browse another category."
+          description="This product may no longer be available. Return to the catalogue to continue shopping."
           action={
             <Button asChild>
               <a href="/catalogue">Back to catalogue</a>

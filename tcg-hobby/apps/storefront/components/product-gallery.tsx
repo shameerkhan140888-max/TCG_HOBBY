@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CatalogueProductImage } from '@tcg-hobby/types';
+import { ProductImagePlaceholder } from '@tcg-hobby/ui';
 
 type Point = {
   x: number;
@@ -348,12 +349,7 @@ export function ProductGallery({ images, productName }: { images: CatalogueProdu
               </div>
             </>
           ) : (
-            <div className="flex h-full items-center justify-center p-8 text-center">
-              <div className="max-w-sm space-y-3">
-                <p className="text-2xl font-black text-neutral-50">Photography coming soon</p>
-                <p className="text-sm leading-6 text-neutral-400">Approved product photography will appear here once added.</p>
-              </div>
-            </div>
+            <ProductImagePlaceholder label="Product image unavailable" />
           )}
         </button>
       </div>

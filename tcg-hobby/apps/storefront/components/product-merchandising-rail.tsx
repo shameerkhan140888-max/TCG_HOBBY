@@ -2,8 +2,8 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { MerchandisingRecommendation } from '@tcg-hobby/database';
-import { Badge, Button, WishlistButton } from '@tcg-hobby/ui';
-import { formatMoney } from '@tcg-hobby/utils';
+import { Badge, Button, ProductImagePlaceholder, WishlistButton } from '@tcg-hobby/ui';
+import { buildStorefrontProductPath, formatMoney } from '@tcg-hobby/utils';
 import { toggleWishlistAction } from '../lib/wishlist';
 import { AddToCartButton } from './cart-actions';
 import { MerchandisingRailScroller } from './merchandising-rail-scroller';
@@ -96,13 +96,13 @@ function RecommendationCard({
   authenticated: boolean;
   wishlisted: boolean;
 }) {
-  const href = `/catalogue/${product.slug}`;
+  const href = buildStorefrontProductPath(product.slug);
   const stock = STOCK_LABELS[product.publicStockState];
 
   return (
     <article
       role="listitem"
-      className="group flex w-[82vw] max-w-[22rem] shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-surface-base/90 shadow-[0_18px_50px_rgba(0,0,0,0.28)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_56px_rgba(255,122,26,0.16)] focus-within:shadow-[0_22px_56px_rgba(255,122,26,0.16)] sm:w-[21rem] lg:w-[calc((100%_-_3rem)_/_4)]"
+      className="group flex w-[82vw] shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-surface-base/90 shadow-[0_18px_50px_rgba(0,0,0,0.28)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_56px_rgba(255,122,26,0.16)] focus-within:shadow-[0_22px_56px_rgba(255,122,26,0.16)] sm:w-[21rem] lg:w-[calc((100%_-_1.5rem)_/_2)] xl:w-[calc((100%_-_3rem)_/_4)] 2xl:w-[calc((100%_-_4rem)_/_5)]"
       data-recommended-product-id={product.id}
       data-recommendation-position={position}
       data-recommendation-strategy={product.strategyId}
@@ -119,7 +119,7 @@ function RecommendationCard({
               className="object-contain p-5 transition duration-300 group-hover:scale-[1.02]"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-center text-sm font-semibold text-neutral-400">Product image coming soon</div>
+            <ProductImagePlaceholder label="Product image unavailable" compact />
           )}
         </div>
       </Link>

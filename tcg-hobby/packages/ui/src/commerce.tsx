@@ -43,6 +43,35 @@ export type ProductCardProps = HTMLAttributes<HTMLDivElement> & {
   mediaSlot?: ReactNode;
 };
 
+export type ProductImagePlaceholderProps = HTMLAttributes<HTMLDivElement> & {
+  label?: string;
+  compact?: boolean;
+};
+
+export function ProductImagePlaceholder({ label = 'Product image unavailable', compact = false, className, ...props }: ProductImagePlaceholderProps) {
+  return (
+    <div
+      className={cn(
+        'flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_72%_18%,rgba(255,122,26,0.2),transparent_34%),linear-gradient(135deg,#171717,#08080a_58%,#24140d)] p-4 text-center',
+        className,
+      )}
+      role="img"
+      aria-label={label}
+      {...props}
+    >
+      <div className={cn('grid place-items-center rounded-2xl border border-accent/25 bg-black/22 text-accent-soft shadow-[0_16px_42px_rgba(0,0,0,0.28)]', compact ? 'h-14 w-14' : 'h-20 w-20')}>
+        <svg aria-hidden="true" viewBox="0 0 48 48" className={cn(compact ? 'h-8 w-8' : 'h-11 w-11')} fill="none">
+          <path d="M12 14h24v20H12V14Z" stroke="currentColor" strokeWidth="2.4" />
+          <path d="m17 30 6-7 5 5 3-3 5 5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.4" />
+          <circle cx="31" cy="20" r="2.4" fill="currentColor" />
+        </svg>
+      </div>
+      <p className={cn('mt-4 font-black uppercase tracking-[0.18em] text-neutral-200', compact ? 'text-[0.64rem]' : 'text-xs')}>{label}</p>
+      {!compact ? <p className="mt-2 max-w-52 text-xs leading-5 text-neutral-500">A product image will appear here once configured.</p> : null}
+    </div>
+  );
+}
+
 export function ProductCard({ product, href, actionSlot, mediaSlot, className, ...props }: ProductCardProps) {
   const availableQuantity = Math.max(product.stockOnHand - product.reservedStock, 0);
   const publicStockLabel =
@@ -74,30 +103,20 @@ export function ProductCard({ product, href, actionSlot, mediaSlot, className, .
     <Card className={cn('group h-full overflow-hidden transition-colors hover:border-accent/60', className)} {...props}>
       <CardContent className="flex h-full flex-col gap-4">
         <a className="flex h-full flex-col gap-4" href={href}>
-          <div className="relative aspect-[5/4] overflow-hidden rounded-md border border-surface-line bg-gradient-to-br from-surface-panel via-surface-ink to-accent/20 transition-transform group-hover:scale-[1.01]">
+          <div className="relative aspect-[5/4] overflow-hidden rounded-md bg-gradient-to-br from-surface-panel via-surface-ink to-accent/20 transition-transform group-hover:scale-[1.01]">
             {mediaSlot ? (
               mediaSlot
+            ) : product.imageUrl ? (
+              <img
+                src={product.imageUrl}
+                alt={product.imageAlt ?? product.name}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-contain p-4 transition duration-300 group-hover:scale-[1.02]"
+              />
             ) : (
-              <div className="flex h-full flex-col justify-between p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'warning' : product.featured ? 'accent' : 'neutral'}>
-                    {releaseBadge}
-                  </Badge>
-                <Badge variant={publicStockVariant}>{publicStockLabel}</Badge>
-                </div>
-                <div className="self-start rounded-md border border-white/10 bg-black/30 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300">
-                  {product.imageLabel}
-                </div>
-              </div>
+              <ProductImagePlaceholder label="Product image unavailable" compact />
             )}
-            {mediaSlot ? (
-              <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
-                <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'warning' : product.featured ? 'accent' : 'neutral'}>
-                  {releaseBadge}
-                </Badge>
-                  <Badge variant={publicStockVariant}>{publicStockLabel}</Badge>
-              </div>
-            ) : null}
           </div>
           <div className="space-y-1">
             <p className="text-sm text-neutral-400">{product.game}</p>
@@ -106,7 +125,13 @@ export function ProductCard({ product, href, actionSlot, mediaSlot, className, .
             {product.availabilityMessage ? <p className="text-xs leading-5 text-neutral-500">{product.availabilityMessage}</p> : null}
           </div>
         </a>
-        <div className="mt-auto flex items-end justify-between gap-3">
+        <div className="mt-auto flex flex-wrap items-center gap-2">
+          <Badge variant={product.releaseStatus && product.releaseStatus !== 'RELEASED' ? 'warning' : product.featured ? 'accent' : 'neutral'}>
+            {releaseBadge}
+          </Badge>
+          <Badge variant={publicStockVariant}>{publicStockLabel}</Badge>
+        </div>
+        <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-wide text-neutral-500">{product.categoryName}</p>
             <Price value={product.price} />

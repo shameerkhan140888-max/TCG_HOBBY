@@ -8,7 +8,6 @@ const workspaceRoot = path.resolve(scriptDir, '..', '..', '..');
 
 const env = {
   ...process.env,
-  TCG_HOBBY_CATALOGUE_DATA_SOURCE: process.env.TCG_HOBBY_CATALOGUE_DATA_SOURCE ?? 'seed',
 };
 
 try {

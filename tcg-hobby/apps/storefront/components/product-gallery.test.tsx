@@ -51,4 +51,12 @@ describe('ProductGallery', () => {
     expect(markup).toContain('Show Rear packaging of the Pokemon TCG Mega Greninja ex Premium Collection');
     expect(markup).toContain('object-contain');
   });
+
+  it('uses the shared product placeholder when no gallery images are configured', () => {
+    const markup = renderToStaticMarkup(<ProductGallery images={[]} productName="No Image Product" />);
+
+    expect(markup).toContain('aria-label="Product image unavailable"');
+    expect(markup).toContain('Product image unavailable');
+    expect(markup).not.toContain('Photography coming soon');
+  });
 });

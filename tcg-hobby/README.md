@@ -28,6 +28,20 @@ npm run build
 npm run lint
 ```
 
+## Local Development
+
+The default development command starts the browser-facing services only:
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:3000` for the storefront and `http://localhost:3001` for Admin. The Expo mobile app is native-only in this workspace; `localhost:8081` is Metro's manifest endpoint and will display JSON in a desktop browser. Start mobile separately when needed:
+
+```bash
+npm run dev:mobile
+```
+
 ## Sprint 3 Local Commerce Flow
 
 ```bash

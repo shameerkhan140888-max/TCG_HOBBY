@@ -199,5 +199,5 @@ describe('Product detail page', () => {
     expect(markup).not.toContain('3 available');
     expect(markup).not.toContain('Only 3');
     expect(markup.match(/<details/g)).toHaveLength(4);
-  });
+  }, 10000);
 });

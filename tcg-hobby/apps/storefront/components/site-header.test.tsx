@@ -39,6 +39,8 @@ describe('SiteHeader', () => {
     expect(markup).toContain('aria-label="Cart"');
     expect(markup).toContain('href="/cart"');
     expect(markup).toContain('href="/"');
+    expect(markup).toContain('max-w-[108rem]');
+    expect(markup).toContain('2xl:max-w-[112rem]');
     expect(markup.indexOf('aria-label="Search"')).toBeLessThan(markup.indexOf('aria-label="Log in"'));
     expect(markup.indexOf('aria-label="Log in"')).toBeLessThan(markup.indexOf('aria-label="Cart"'));
   });

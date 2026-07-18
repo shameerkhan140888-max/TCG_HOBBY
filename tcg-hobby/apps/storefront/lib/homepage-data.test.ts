@@ -145,6 +145,19 @@ describe('homepage data selection', () => {
     });
   });
 
+  it('falls back to static hero slides and empty product sections when merchandising queries are unavailable', async () => {
+    vi.mocked(getMerchandisingFeaturedProducts).mockRejectedValue(new Error('database unavailable'));
+    vi.mocked(getMerchandisingLatestProducts).mockRejectedValue(new Error('database unavailable'));
+    vi.mocked(getMerchandisingStaffPickProducts).mockRejectedValue(new Error('database unavailable'));
+
+    const data = await getProductionHomepageData();
+
+    expect(data.heroSlides).toEqual(homepageHeroSlides);
+    expect(data.featuredProducts).toEqual([]);
+    expect(data.latestProducts).toEqual([]);
+    expect(data.staffPickProducts).toEqual([]);
+  });
+
   it('deduplicates products by id while preserving first appearance', () => {
     const rows = [product({ id: 'a', name: 'First A' }), product({ id: 'b' }), product({ id: 'a', name: 'Second A' })];
 

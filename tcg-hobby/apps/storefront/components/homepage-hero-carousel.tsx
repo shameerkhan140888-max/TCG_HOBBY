@@ -92,7 +92,7 @@ export function HomepageHeroCarousel({ slides }: { slides: HomepageHeroSlide[] }
           </>
         )}
 
-        <div className="relative z-10 mx-auto flex min-h-[540px] w-full max-w-7xl flex-col justify-center px-4 py-12 sm:min-h-[600px] sm:px-6 lg:min-h-[680px] lg:px-8">
+        <div className="relative z-10 mx-auto flex min-h-[540px] w-full max-w-[108rem] flex-col justify-center px-4 py-12 sm:min-h-[600px] sm:px-6 lg:min-h-[680px] lg:px-8 2xl:max-w-[112rem]">
           <div className="space-y-7">
             <Badge variant="accent">{activeSlide.eyebrow}</Badge>
             <div className="space-y-5">

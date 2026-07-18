@@ -18,7 +18,7 @@ export default function LoadingCataloguePage() {
           <SkeletonBlock className="h-10" />
           <SkeletonBlock className="h-10" />
         </div>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 2xl:gap-6">
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="space-y-3 rounded-lg border border-surface-line bg-surface-base p-4">
               <SkeletonBlock className="aspect-[5/4] w-full" />

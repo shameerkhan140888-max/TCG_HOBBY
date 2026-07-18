@@ -7,6 +7,7 @@ import { calculateMarginPercentage, calculateAvailableStock } from './admin-math
 import { derivePublicStockState } from './product-import';
 import { getRelatedProducts, isMerchandisingProductEligible } from './merchandising';
 import { refreshProductPricing } from './pricing';
+import { resolveProductMasterDataInput } from './catalogue-master-data';
 import {
   seedCategories,
   seedInventory,
@@ -20,6 +21,11 @@ import {
 
 const adminProductInclude = {
   category: true,
+  gameRef: true,
+  brandRef: true,
+  productTypeRef: true,
+  languageRef: true,
+  setRef: { include: { game: true } },
   inventory: true,
   images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
   importAudits: { orderBy: { createdAt: 'desc' }, take: 10 },
@@ -124,6 +130,10 @@ type CatalogueFilters = {
   search?: string;
   category?: string;
   supplier?: string;
+  game?: string;
+  brand?: string;
+  productType?: string;
+  status?: string;
   sort?: 'newest' | 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
   page?: number;
   pageSize?: number;
@@ -166,6 +176,9 @@ export type AdminProductsResult = {
   pagination: PaginationMeta;
   categories: AdminProductFilterOption[];
   suppliers: AdminProductFilterOption[];
+  games: AdminProductFilterOption[];
+  brands: AdminProductFilterOption[];
+  productTypes: AdminProductFilterOption[];
 };
 
 export type AdminSuppliersResult = {
@@ -217,6 +230,11 @@ export type AdminOrderDetail = AdminOrderListItem & {
 export type AdminProductListItem = {
   id: string;
   categoryId: string;
+  gameId: string | null;
+  brandId: string | null;
+  productTypeId: string | null;
+  languageId: string | null;
+  setId: string | null;
   sku: string;
   barcode: string | null;
   slug: string;
@@ -228,6 +246,11 @@ export type AdminProductListItem = {
   language: string | null;
   categoryName: string;
   categorySlug: string;
+  gameName: string | null;
+  brandName: string | null;
+  productTypeName: string | null;
+  languageName: string | null;
+  setDisplayName: string | null;
   supplierName: string;
   supplierSlug: string;
   supplierId: string;
@@ -238,6 +261,7 @@ export type AdminProductListItem = {
   saleEndsAt: Date | null;
   vatRate: number;
   costMinor: number;
+  costExVatMinor: number;
   landedCostMinor: number | null;
   buyMinor: number;
   marginMinor: number;
@@ -452,6 +476,11 @@ type ProductFormInput = {
   setName?: string;
   productType?: string | null;
   language?: string | null;
+  gameId?: string | null;
+  brandId?: string | null;
+  productTypeId?: string | null;
+  languageId?: string | null;
+  setId?: string | null;
   description: string;
   longDescription: string;
   condition: string;
@@ -511,6 +540,12 @@ type SupplierFormInput = {
 
 function normalizeSearch(value?: string) {
   return value?.trim().toLowerCase() ?? '';
+}
+
+export function calculateVatExclusiveMinor(grossMinor: number, vatRate: number): number {
+  if (!Number.isFinite(grossMinor) || grossMinor <= 0) return 0;
+  if (!Number.isFinite(vatRate) || vatRate <= 0) return Math.round(grossMinor);
+  return Math.round((grossMinor * 100) / (100 + vatRate));
 }
 
 function resolvePagination(totalItems: number, page = 1, pageSize = 20): PaginationMeta {
@@ -620,6 +655,7 @@ function mapProductRow(product: ProductRow): AdminProductListItem {
 
   const availableStock = calculateAvailableStock(inventory.stockOnHand, inventory.reservedStock);
   const costMinor = supplierProduct?.costMinor ?? 0;
+  const costExVatMinor = calculateVatExclusiveMinor(costMinor, product.vatRate);
   const pricing = product.pricing;
   const buyMinor = pricing?.buyMinor ?? Math.max(0, product.priceMinor - Math.round(product.priceMinor * 0.3));
   const marginMinor = product.priceMinor - costMinor;
@@ -627,17 +663,27 @@ function mapProductRow(product: ProductRow): AdminProductListItem {
   return {
     id: product.id,
     categoryId: product.category.id,
+    gameId: product.gameId,
+    brandId: product.brandId,
+    productTypeId: product.productTypeId,
+    languageId: product.languageId,
+    setId: product.setId,
     sku: product.sku,
     barcode: product.barcode,
     slug: product.slug,
     name: product.name,
-    brand: product.brand,
-    game: product.game,
-    setName: product.setName,
-    productType: product.productType,
-    language: product.language,
+    brand: product.brandRef?.name ?? product.brand,
+    game: product.gameRef?.name ?? product.game,
+    setName: product.setRef?.name ?? product.setName,
+    productType: product.productTypeRef?.name ?? product.productType,
+    language: product.languageRef?.name ?? product.language,
     categoryName: product.category.name,
     categorySlug: product.category.slug,
+    gameName: product.gameRef?.name ?? null,
+    brandName: product.brandRef?.name ?? null,
+    productTypeName: product.productTypeRef?.name ?? null,
+    languageName: product.languageRef?.name ?? null,
+    setDisplayName: product.setRef?.name ?? null,
     supplierName: supplier.name,
     supplierSlug: supplier.slug,
     supplierId: supplier.id,
@@ -648,6 +694,7 @@ function mapProductRow(product: ProductRow): AdminProductListItem {
     saleEndsAt: product.saleEndsAt,
     vatRate: product.vatRate,
     costMinor,
+    costExVatMinor,
     landedCostMinor: product.pricing?.costMinor ?? supplierProduct?.costMinor ?? null,
     buyMinor,
     marginMinor,
@@ -918,6 +965,11 @@ function buildSeedProductListItem(product: (typeof seedProducts)[number], index:
   return {
     id: product.id,
     categoryId: category.id,
+    gameId: null,
+    brandId: null,
+    productTypeId: null,
+    languageId: null,
+    setId: null,
     sku: product.sku,
     barcode: null,
     slug: product.slug,
@@ -929,6 +981,11 @@ function buildSeedProductListItem(product: (typeof seedProducts)[number], index:
     language: null,
     categoryName: category.name,
     categorySlug: category.slug,
+    gameName: product.game,
+    brandName: product.game,
+    productTypeName: null,
+    languageName: null,
+    setDisplayName: product.setName,
     supplierName: supplier.name,
     supplierSlug: supplier.slug,
     supplierId: supplier.id,
@@ -939,6 +996,7 @@ function buildSeedProductListItem(product: (typeof seedProducts)[number], index:
     saleEndsAt: null,
     vatRate: 20,
     costMinor: pricing.costMinor,
+    costExVatMinor: calculateVatExclusiveMinor(pricing.costMinor, 20),
     landedCostMinor: pricing.costMinor,
     buyMinor: pricing.buyMinor,
     marginMinor: pricing.marginMinor,
@@ -1140,6 +1198,24 @@ export async function getAdminProducts(filters: CatalogueFilters, db = prisma): 
   if (filters.supplier) {
     where.supplierProducts = { some: { supplier: { slug: filters.supplier } } };
   }
+  if (filters.game) {
+    where.gameRef = { is: { slug: filters.game } };
+  }
+  if (filters.brand) {
+    where.brandRef = { is: { slug: filters.brand } };
+  }
+  if (filters.productType) {
+    where.productTypeRef = { is: { slug: filters.productType } };
+  }
+  if (filters.status === 'published') {
+    where.published = true;
+    where.archivedAt = null;
+  } else if (filters.status === 'hidden') {
+    where.published = false;
+    where.archivedAt = null;
+  } else if (filters.status === 'archived') {
+    where.archivedAt = { not: null };
+  }
 
   const orderBy: Prisma.ProductOrderByWithRelationInput[] =
     filters.sort === 'name-desc'
@@ -1152,7 +1228,7 @@ export async function getAdminProducts(filters: CatalogueFilters, db = prisma): 
 
   const totalItems = await db.product.count({ where });
   const pagination = resolvePagination(totalItems, page, pageSize);
-  const [rows, categories, suppliers] = await Promise.all([
+  const [rows, categories, suppliers, games, brands, productTypes] = await Promise.all([
     db.product.findMany({
       where,
       orderBy,
@@ -1168,6 +1244,9 @@ export async function getAdminProducts(filters: CatalogueFilters, db = prisma): 
       orderBy: [{ preferred: 'desc' }, { name: 'asc' }],
       select: { id: true, name: true, slug: true },
     }),
+    db.game.findMany({ orderBy: [{ active: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }], select: { id: true, name: true, slug: true } }),
+    db.brand.findMany({ orderBy: [{ active: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }], select: { id: true, name: true, slug: true } }),
+    db.productType.findMany({ orderBy: [{ active: 'desc' }, { sortOrder: 'asc' }, { name: 'asc' }], select: { id: true, name: true, slug: true } }),
   ]);
 
   return {
@@ -1175,6 +1254,9 @@ export async function getAdminProducts(filters: CatalogueFilters, db = prisma): 
     pagination,
     categories,
     suppliers,
+    games,
+    brands,
+    productTypes,
   };
 }
 
@@ -1195,6 +1277,12 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma): 
   await assertUniqueProductIdentity(input, db);
   const slug = await resolveUniqueProductSlug(input.name, db, input.slug);
   const costMinor = input.landedCostMinor ?? input.costMinor;
+  const masterData = await resolveProductMasterDataInput(input, db);
+  const resolvedGame = masterData.game?.name ?? input.game;
+  const resolvedBrand = masterData.brand?.name ?? input.brand ?? null;
+  const resolvedProductType = masterData.productType?.name ?? input.productType ?? null;
+  const resolvedLanguage = masterData.language?.name ?? input.language ?? null;
+  const resolvedSetName = masterData.set?.name ?? input.setName ?? null;
 
   const created = await db.$transaction(async (tx) => {
     const product = await tx.product.create({
@@ -1203,11 +1291,16 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma): 
         barcode: input.barcode || null,
         slug,
         name: input.name,
-        brand: input.brand || null,
-        game: input.game,
-        setName: input.setName || null,
-        productType: input.productType || null,
-        language: input.language || null,
+        brand: resolvedBrand,
+        game: resolvedGame,
+        setName: resolvedSetName,
+        productType: resolvedProductType,
+        language: resolvedLanguage,
+        gameId: masterData.game?.id ?? null,
+        brandId: masterData.brand?.id ?? null,
+        productTypeId: masterData.productType?.id ?? null,
+        languageId: masterData.language?.id ?? null,
+        setId: masterData.set?.id ?? null,
         description: input.description,
         longDescription: input.longDescription,
         condition: input.condition as ProductCondition,
@@ -1220,10 +1313,11 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma): 
         currency: 'GBP',
         featured: input.featured,
         published: input.published,
+        lifecycleState: input.published ? 'PUBLISHED' : 'DRAFT',
         hideWhenOutOfStock: input.hideWhenOutOfStock,
         customerPurchaseLimit: input.customerPurchaseLimit ?? null,
         availabilityMessage: input.availabilityMessage || null,
-        searchText: `${input.name} ${input.sku} ${input.barcode ?? ''} ${input.brand ?? ''} ${input.game} ${input.setName ?? ''} ${input.productType ?? ''} ${input.description} ${input.longDescription}`.toLowerCase(),
+        searchText: `${input.name} ${input.sku} ${input.barcode ?? ''} ${resolvedBrand ?? ''} ${resolvedGame} ${resolvedSetName ?? ''} ${resolvedProductType ?? ''} ${resolvedLanguage ?? ''} ${input.description} ${input.longDescription}`.toLowerCase(),
         imageLabel: input.imageLabel,
         categoryId: input.categoryId,
         seoTitle: input.seoTitle || null,
@@ -1292,6 +1386,12 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
   await assertUniqueProductIdentity(input, db, id);
   const slug = await resolveUniqueProductSlug(input.name, db, input.slug, id);
   const costMinor = input.landedCostMinor ?? input.costMinor;
+  const masterData = await resolveProductMasterDataInput(input, db);
+  const resolvedGame = masterData.game?.name ?? input.game;
+  const resolvedBrand = masterData.brand?.name ?? input.brand ?? null;
+  const resolvedProductType = masterData.productType?.name ?? input.productType ?? null;
+  const resolvedLanguage = masterData.language?.name ?? input.language ?? null;
+  const resolvedSetName = masterData.set?.name ?? input.setName ?? null;
 
   const product = await db.$transaction(async (tx) => {
     const updated = await tx.product.update({
@@ -1301,11 +1401,16 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
         barcode: input.barcode || null,
         slug,
         name: input.name,
-        brand: input.brand || null,
-        game: input.game,
-        setName: input.setName || null,
-        productType: input.productType || null,
-        language: input.language || null,
+        brand: resolvedBrand,
+        game: resolvedGame,
+        setName: resolvedSetName,
+        productType: resolvedProductType,
+        language: resolvedLanguage,
+        gameId: masterData.game?.id ?? null,
+        brandId: masterData.brand?.id ?? null,
+        productTypeId: masterData.productType?.id ?? null,
+        languageId: masterData.language?.id ?? null,
+        setId: masterData.set?.id ?? null,
         description: input.description,
         longDescription: input.longDescription,
         condition: input.condition as ProductCondition,
@@ -1318,10 +1423,11 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
         currency: 'GBP',
         featured: input.featured,
         published: input.published,
+        lifecycleState: input.published ? 'PUBLISHED' : 'DRAFT',
         hideWhenOutOfStock: input.hideWhenOutOfStock,
         customerPurchaseLimit: input.customerPurchaseLimit ?? null,
         availabilityMessage: input.availabilityMessage || null,
-        searchText: `${input.name} ${input.sku} ${input.barcode ?? ''} ${input.brand ?? ''} ${input.game} ${input.setName ?? ''} ${input.productType ?? ''} ${input.description} ${input.longDescription}`.toLowerCase(),
+        searchText: `${input.name} ${input.sku} ${input.barcode ?? ''} ${resolvedBrand ?? ''} ${resolvedGame} ${resolvedSetName ?? ''} ${resolvedProductType ?? ''} ${resolvedLanguage ?? ''} ${input.description} ${input.longDescription}`.toLowerCase(),
         imageLabel: input.imageLabel,
         categoryId: input.categoryId,
         seoTitle: input.seoTitle || null,
@@ -1618,7 +1724,10 @@ export async function archiveAdminProduct(id: string, db = prisma): Promise<void
 }
 
 export async function setProductPublication(id: string, published: boolean, db = prisma): Promise<void> {
-  const data: { published: boolean; archivedAt?: Date | null } = { published };
+  const data: { published: boolean; lifecycleState: 'PUBLISHED' | 'DRAFT'; archivedAt?: Date | null } = {
+    published,
+    lifecycleState: published ? 'PUBLISHED' : 'DRAFT',
+  };
 
   if (published) {
     data.archivedAt = null;

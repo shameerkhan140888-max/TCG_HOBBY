@@ -2,9 +2,10 @@ import { notFound } from 'next/navigation';
 import { Button, Card, CardContent, Container, Section } from '@tcg-hobby/ui';
 import { PageHeader, StatusBadge } from '@tcg-hobby/ui';
 import { EmptyPricingState, PricingCard } from '@tcg-hobby/ui';
-import { getAdminProductById, getAdminProductMerchandisingPanel, getAdminProducts } from '@tcg-hobby/database';
+import { getAdminProductById, getAdminProductMerchandisingPanel, getAdminProducts, getCatalogueMasterDataOptions } from '@tcg-hobby/database';
 import { emptyProductFormValues } from '../../../../lib/admin-form-state';
 import { archiveProductAction, toggleProductPublicationAction } from '../../../../lib/admin-actions.server';
+import { buildStorefrontProductPreviewUrl } from '../../../../lib/site';
 import { ProductForm } from '../../../../components/product-form';
 import { ProductMerchandisingPanel } from '../../../../components/product-merchandising-panel';
 
@@ -45,6 +46,11 @@ function productState(product: NonNullable<Awaited<ReturnType<typeof getAdminPro
       setName: product.setName ?? '',
       productType: product.productType ?? '',
       language: product.language ?? '',
+      gameId: product.gameId ?? '',
+      brandId: product.brandId ?? '',
+      productTypeId: product.productTypeId ?? '',
+      languageId: product.languageId ?? '',
+      setId: product.setId ?? '',
       description: product.description,
       longDescription: product.longDescription,
       condition: product.condition,
@@ -94,10 +100,12 @@ export default async function AdminProductDetailPage({ params, searchParams }: {
   const recommendationSearch = asString(query.recommendationSearch);
   const merchandisingStatus = asString(query.merchandisingStatus);
   const merchandisingMessage = asString(query.merchandisingMessage);
-  const [product, options, merchandising] = await Promise.all([
+  const productStatus = asString(query.productStatus);
+  const [product, options, merchandising, masterData] = await Promise.all([
     getAdminProductById(id),
     getAdminProducts({ page: 1, pageSize: 1 }),
     getAdminProductMerchandisingPanel(id, { search: recommendationSearch }),
+    getCatalogueMasterDataOptions(),
   ]);
 
   if (!product || !merchandising) {
@@ -261,7 +269,12 @@ export default async function AdminProductDetailPage({ params, searchParams }: {
               <div>
                 <dt className="text-sm text-neutral-400">Storefront preview</dt>
                 <dd className="mt-1">
-                  <a className="font-semibold text-accent underline underline-offset-4" href={`/catalogue/${product.slug}`}>
+                  <a
+                    className="font-semibold text-accent underline underline-offset-4"
+                    href={buildStorefrontProductPreviewUrl(product.slug)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Preview product
                   </a>
                 </dd>
@@ -294,10 +307,21 @@ export default async function AdminProductDetailPage({ params, searchParams }: {
           </CardContent>
         </Card>
 
+        {productStatus === 'created' || productStatus === 'updated' ? (
+          <div role="status" className="rounded-lg bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200">
+            {productStatus === 'created' ? 'Product created successfully.' : 'Product saved successfully.'}
+          </div>
+        ) : null}
+
         <ProductForm
           state={state}
           categories={options.categories.map((item) => ({ id: item.id, label: item.name }))}
           suppliers={options.suppliers.map((item) => ({ id: item.id, label: item.name }))}
+          games={masterData.games.map((item) => ({ id: item.id, label: item.name, active: item.active }))}
+          brands={masterData.brands.map((item) => ({ id: item.id, label: item.name, active: item.active }))}
+          productTypes={masterData.productTypes.map((item) => ({ id: item.id, label: item.name, active: item.active }))}
+          languages={masterData.languages.map((item) => ({ id: item.id, label: item.name, active: item.active }))}
+          sets={masterData.sets.map((item) => ({ id: item.id, label: item.name, active: item.active, gameId: item.gameId }))}
           submitLabel="Save product"
         />
 

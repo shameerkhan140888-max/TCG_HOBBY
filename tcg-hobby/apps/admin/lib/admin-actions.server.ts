@@ -8,15 +8,19 @@ import {
   createAdminProduct,
   createAdminProductRecommendation,
   createAdminSupplier,
+  createCatalogueMasterDataRecord,
   createProductCsvImportPlan,
   deleteAdminProductRecommendation,
   executeProductCsvImport,
   setProductPublication,
+  setCatalogueMasterDataActive,
   updateAdminProduct,
   updateAdminProductRecommendation,
+  updateCatalogueMasterDataRecord,
   updateAdminSupplier,
   updateProductMerchandisingSettings,
   ProductRecommendationType,
+  type CatalogueMasterDataKind,
 } from '@tcg-hobby/database';
 import {
   buildProductValues,
@@ -68,14 +72,21 @@ function validateManagedUrl(value: string) {
   }
 }
 
-function parseGalleryImages(value: string): Array<{ url: string; altText: string; imageType: string }> {
+type ParsedGalleryImage = {
+  url: string;
+  altText: string;
+  imageType: string;
+  lineNumber: number;
+};
+
+function parseGalleryImages(value: string): ParsedGalleryImage[] {
   return value
     .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
+    .map((line, index) => ({ line: line.trim(), lineNumber: index + 1 }))
+    .filter((item) => item.line)
+    .map(({ line, lineNumber }) => {
       const [url = '', altText = '', imageType = 'gallery'] = line.split('|').map((part) => part.trim());
-      return { url, altText, imageType: imageType || 'gallery' };
+      return { url, altText, imageType: imageType || 'gallery', lineNumber };
     });
 }
 
@@ -115,7 +126,9 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
 
   if (!values.name) fieldErrors.name = 'Enter a product name.';
   if (!values.sku) fieldErrors.sku = 'Enter a SKU.';
-  if (!values.game) fieldErrors.game = 'Enter the game or brand.';
+  if (!values.gameId) fieldErrors.gameId = 'Choose a game.';
+  if (!values.productTypeId) fieldErrors.productTypeId = 'Choose a product type.';
+  if (!values.languageId) fieldErrors.languageId = 'Choose a language.';
   if (!values.description) fieldErrors.description = 'Enter a short description.';
   if (!values.longDescription) fieldErrors.longDescription = 'Enter a detailed description.';
   if (!values.categoryId) fieldErrors.categoryId = 'Choose a category.';
@@ -162,11 +175,13 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
   if (values.saleEndsAt && !saleEndsAt) fieldErrors.saleEndsAt = 'Enter a valid sale end date.';
   if (saleStartsAt && saleEndsAt && saleStartsAt >= saleEndsAt) fieldErrors.saleEndsAt = 'Sale end must be after the start date.';
   if (values.primaryImageUrl && !validateManagedUrl(values.primaryImageUrl)) fieldErrors.primaryImageUrl = 'Enter a relative path or a valid image URL.';
+  if (values.primaryImageUrl && !values.primaryImageAlt) fieldErrors.primaryImageAlt = 'Enter meaningful alt text for the primary image.';
   if (values.ogImageUrl && !validateManagedUrl(values.ogImageUrl)) fieldErrors.ogImageUrl = 'Enter a relative path or a valid Open Graph image URL.';
   if (values.canonicalUrl && !validateManagedUrl(values.canonicalUrl)) fieldErrors.canonicalUrl = 'Enter a valid canonical URL.';
   if (values.supplierProductUrl && !validateManagedUrl(values.supplierProductUrl)) fieldErrors.supplierProductUrl = 'Enter a valid supplier product URL.';
-  if (galleryImages.some((image) => !image.url || !validateManagedUrl(image.url))) {
-    fieldErrors.galleryImagesText = 'Each gallery image must include a relative path or valid URL.';
+  const invalidGalleryImage = galleryImages.find((image) => !image.url || !validateManagedUrl(image.url) || !image.altText);
+  if (invalidGalleryImage) {
+    fieldErrors.galleryImagesText = `Gallery image line ${invalidGalleryImage.lineNumber} must include a valid image URL and meaningful alt text.`;
   }
 
   if (Object.keys(fieldErrors).length) {
@@ -178,9 +193,14 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
     sku: values.sku,
     barcode: values.barcode || null,
     brand: values.brand || null,
-    game: values.game,
+    game: values.gameId,
     productType: values.productType || null,
     language: values.language || null,
+    gameId: values.gameId || null,
+    brandId: values.brandId || null,
+    productTypeId: values.productTypeId || null,
+    languageId: values.languageId || null,
+    setId: values.setId || null,
     description: values.description,
     longDescription: values.longDescription,
     condition: values.condition,
@@ -211,7 +231,7 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
     customerPurchaseLimit,
     availabilityMessage: values.availabilityMessage,
     primaryImageAlt: values.primaryImageAlt || values.imageLabel || values.name,
-    galleryImages,
+    galleryImages: galleryImages.map(({ lineNumber: _lineNumber, ...image }) => image),
     seoTitle: values.seoTitle || null,
     metaDescription: values.metaDescription || null,
     canonicalUrl: values.canonicalUrl || null,
@@ -223,8 +243,10 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
   if (values.setName) input.setName = values.setName;
   if (values.primaryImageUrl) input.primaryImageUrl = values.primaryImageUrl;
 
+  let saved: Awaited<ReturnType<typeof createAdminProduct>>;
+
   try {
-    const saved = values.productId ? await updateAdminProduct(values.productId, input) : await createAdminProduct(input);
+    saved = values.productId ? await updateAdminProduct(values.productId, input) : await createAdminProduct(input);
 
     if (!saved) {
       return {
@@ -234,18 +256,16 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
       };
     }
 
-    revalidateProductVisibility(saved.id, saved.slug);
-    redirect(`/admin/products/${saved.id}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to save product.';
     if (message.includes('SKU')) {
-      return { fieldErrors: { sku: message }, values };
+      return { fieldErrors: { sku: message }, formError: 'Product could not be saved. Review the highlighted fields below.', values };
     }
     if (message.includes('slug')) {
-      return { fieldErrors: { slug: message }, values };
+      return { fieldErrors: { slug: message }, formError: 'Product could not be saved. Review the highlighted fields below.', values };
     }
     if (message.includes('barcode')) {
-      return { fieldErrors: { barcode: message }, values };
+      return { fieldErrors: { barcode: message }, formError: 'Product could not be saved. Review the highlighted fields below.', values };
     }
     return {
       fieldErrors: {},
@@ -253,6 +273,16 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
       values,
     };
   }
+
+  revalidateProductVisibility(saved.id, saved.slug);
+  redirect(`/admin/products/${saved.id}?productStatus=${values.productId ? 'updated' : 'created'}`);
+}
+
+function parseCatalogueKind(value: string): Exclude<CatalogueMasterDataKind, 'categories'> {
+  if (value === 'games' || value === 'brands' || value === 'product-types' || value === 'languages' || value === 'sets') {
+    return value;
+  }
+  throw new Error('Unsupported catalogue setting type.');
 }
 
 export async function previewProductCsvImportAction(
@@ -329,6 +359,50 @@ export async function productCsvImportAction(
   return asString(formData.get('intent')) === 'import'
     ? executeProductCsvImportAction(state, formData)
     : previewProductCsvImportAction(state, formData);
+}
+
+export async function saveCatalogueMasterDataAction(formData: FormData): Promise<void> {
+  const kind = parseCatalogueKind(asString(formData.get('kind')));
+  const id = asString(formData.get('id'));
+  const name = asString(formData.get('name'));
+  const slug = asString(formData.get('slug'));
+  const code = asString(formData.get('code'));
+  const group = asString(formData.get('group'));
+  const website = asString(formData.get('website'));
+  const gameId = asString(formData.get('gameId'));
+  const sortOrder = parseOptionalWholeNumber(asString(formData.get('sortOrder'))) ?? 0;
+  const active = asBoolean(formData.get('active'));
+  const input = {
+    name,
+    slug,
+    code,
+    group: group || null,
+    website: website || null,
+    gameId: gameId || null,
+    sortOrder,
+    active,
+  };
+
+  if (id) {
+    await updateCatalogueMasterDataRecord(kind, id, input);
+  } else {
+    await createCatalogueMasterDataRecord(kind, input);
+  }
+
+  revalidatePath('/admin/catalogue');
+  revalidatePath(`/admin/catalogue/${kind}`);
+  revalidatePath('/admin/products');
+}
+
+export async function toggleCatalogueMasterDataAction(formData: FormData): Promise<void> {
+  const kind = parseCatalogueKind(asString(formData.get('kind')));
+  const id = asString(formData.get('id'));
+  if (!id) throw new Error('Missing catalogue record ID.');
+
+  await setCatalogueMasterDataActive(kind, id, asBoolean(formData.get('active')));
+  revalidatePath('/admin/catalogue');
+  revalidatePath(`/admin/catalogue/${kind}`);
+  revalidatePath('/admin/products');
 }
 
 export async function archiveProductAction(formData: FormData) {

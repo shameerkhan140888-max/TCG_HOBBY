@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import { notFound } from 'next/navigation';
 import { Badge, Breadcrumbs, Button, Container, Section, WishlistButton, NotifyButton } from '@tcg-hobby/ui';
-import { formatMoney } from '@tcg-hobby/utils';
+import { buildStorefrontProductPath, formatMoney } from '@tcg-hobby/utils';
 import { getCatalogueProductBySlug, getCustomerNotificationSubscriptions, getRelatedProducts, getWishlistProductIds } from '@tcg-hobby/database';
 import { SiteHeader } from '../../../components/site-header';
 import { ProductGallery } from '../../../components/product-gallery';
@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: { params: Promise<ParamsValue
 
   const title = product.seoTitle || `${product.name} | TCG Hobby`;
   const description = product.metaDescription || product.description;
-  const canonical = product.canonicalUrl || new URL(`/catalogue/${product.slug}`, siteUrl).toString();
+  const canonical = product.canonicalUrl || new URL(buildStorefrontProductPath(product.slug), siteUrl).toString();
   const imageUrl = product.ogImageUrl
     ? new URL(product.ogImageUrl, siteUrl).toString()
     : product.imageUrl
@@ -106,7 +106,7 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
   ]);
   const notificationIds = notificationRows.map((item) => item.productId);
 
-  const currentHref = `/catalogue/${slug}`;
+  const currentHref = buildStorefrontProductPath(slug);
   const availableQuantity = Math.max(product.stockOnHand - product.reservedStock, 0);
   const maxPurchaseQuantity = Math.max(Math.min(availableQuantity, product.customerPurchaseLimit ?? availableQuantity), 0);
   const hasPurchaseLimit = Boolean(product.customerPurchaseLimit && product.customerPurchaseLimit > 0);
@@ -147,7 +147,7 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
       : {}),
     offers: {
       '@type': 'Offer',
-      url: new URL(`/catalogue/${product.slug}`, siteUrl).toString(),
+      url: new URL(buildStorefrontProductPath(product.slug), siteUrl).toString(),
       priceCurrency: product.price.currency,
       price: (product.price.amountMinor / 100).toFixed(2),
       availability: availableQuantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
@@ -278,8 +278,8 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
                   <span className="text-accent transition group-open:rotate-45" aria-hidden="true">+</span>
                 </summary>
                 <div className="mt-4 max-w-3xl space-y-4 text-base leading-8 text-neutral-200 sm:text-lg sm:leading-9">
-                  {product.longDescription.split('\n').filter(Boolean).map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
+                  {product.longDescription.split('\n').filter(Boolean).map((paragraph, index) => (
+                    <p key={`${index}-${paragraph.slice(0, 32)}`}>{paragraph}</p>
                   ))}
                 </div>
               </details>

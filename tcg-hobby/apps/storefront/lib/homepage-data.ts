@@ -4,6 +4,7 @@ import {
   getMerchandisingStaffPickProducts,
   type MerchandisingRecommendation,
 } from '@tcg-hobby/database';
+import { buildStorefrontProductPath } from '@tcg-hobby/utils';
 
 export type HomepageHeroSlide = {
   id: string;
@@ -110,7 +111,7 @@ function resolveHomepageHeroSlides(featuredProducts: MerchandisingRecommendation
             ...(launchProduct.freeUkStandardShipping ? ['FREE UK STANDARD DELIVERY'] : []),
             ...(launchProduct.customerPurchaseLimit ? [`LIMIT ${launchProduct.customerPurchaseLimit} PER HOUSEHOLD`] : []),
           ],
-          primaryCta: { label: 'Shop now', href: `/catalogue/${launchProduct.slug}` },
+          primaryCta: { label: 'Shop now', href: buildStorefrontProductPath(launchProduct.slug) },
           image: {
             src: launchProductImageUrl,
             alt: launchProduct.imageAlt ?? `${launchProduct.name} product image`,
@@ -140,9 +141,9 @@ export function selectUniqueProducts(
 
 export async function getProductionHomepageData(): Promise<ProductionHomepageData> {
   const [featuredProducts, latestProducts, staffPickProducts] = await Promise.all([
-    getMerchandisingFeaturedProducts(8),
-    getMerchandisingLatestProducts(8),
-    getMerchandisingStaffPickProducts(8),
+    getMerchandisingFeaturedProducts(8).catch(() => []),
+    getMerchandisingLatestProducts(8).catch(() => []),
+    getMerchandisingStaffPickProducts(8).catch(() => []),
   ]);
 
   const selectedFeaturedProducts = selectHomepageFeaturedProducts(featuredProducts, 4);

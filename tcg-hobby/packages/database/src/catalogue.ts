@@ -6,6 +6,7 @@ import type {
   CatalogueProductDetail,
   PaginationMeta,
 } from '@tcg-hobby/types';
+import { slugify } from '@tcg-hobby/utils';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Prisma } from '@prisma/client';
@@ -30,6 +31,11 @@ import {
 
 const catalogueProductInclude = {
   category: true,
+  gameRef: true,
+  brandRef: true,
+  productTypeRef: true,
+  languageRef: true,
+  setRef: true,
   inventory: true,
   images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
   supplierProducts: { include: { supplier: true }, take: 1 },
@@ -67,10 +73,6 @@ export type CatalogueHomeData = {
   featuredProducts: CatalogueProduct[];
 };
 
-function canUseSeedFallback() {
-  return process.env.NODE_ENV !== 'production';
-}
-
 function shouldBypassDatabase() {
   return process.env.TCG_HOBBY_CATALOGUE_DATA_SOURCE === 'seed';
 }
@@ -105,6 +107,10 @@ function normalizeSearch(value: string | null | undefined): string {
   return value?.trim().toLowerCase() ?? '';
 }
 
+function slugToLegacyLabel(value: string): string {
+  return value.replace(/-/g, ' ');
+}
+
 function resolvePagination(totalItems: number, page: number, pageSize: number): PaginationMeta {
   const totalPages = Math.max(Math.ceil(totalItems / pageSize), 1);
   const currentPage = Math.min(Math.max(page, 1), totalPages);
@@ -124,18 +130,16 @@ function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct 
   const inventory = product.inventory;
   const primaryImage = product.images.find((image) => image.isPrimary) ?? product.images[0] ?? null;
   const heroImage = product.images.find((image) => image.imageType === 'hero') ?? null;
-
-  if (!inventory || !supplier) {
-    throw new Error(`Database seed incomplete for product ${product.slug}`);
-  }
+  const stockOnHand = inventory?.stockOnHand ?? 0;
+  const reservedStock = inventory?.reservedStock ?? 0;
 
   return {
     id: product.id,
     slug: product.slug,
     name: product.name,
-    brand: product.brand,
-    game: product.game,
-    productType: product.productType,
+    brand: product.brandRef?.name ?? product.brand,
+    game: product.gameRef?.name ?? product.game,
+    productType: product.productTypeRef?.name ?? product.productType,
     description: product.description,
     categoryName: product.category.name,
     categorySlug: product.category.slug,
@@ -144,10 +148,10 @@ function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct 
     homepagePriority: product.homepagePriority,
     heroFeatured: product.heroFeatured,
     lifecycleState: product.lifecycleState,
-    inStock: inventory.stockOnHand - inventory.reservedStock > 0,
-    stockOnHand: inventory.stockOnHand,
-    reservedStock: inventory.reservedStock,
-    supplierName: supplier.name,
+    inStock: stockOnHand - reservedStock > 0,
+    stockOnHand,
+    reservedStock,
+    supplierName: supplier?.name ?? 'Unassigned',
     badge: product.featured ? 'Featured' : product.releaseStatus !== 'RELEASED' ? product.releaseStatus.replace('_', ' ') : product.category.name,
     imageLabel: product.imageLabel,
     imageUrl: resolveRenderableImageUrl(primaryImage?.url),
@@ -237,6 +241,10 @@ function getSeedProductById(id: string) {
 function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] {
   const query = normalizeSearch(filters.search);
   const selectedCategory = normalizeSearch(filters.category);
+  const selectedGame = normalizeSearch(filters.game);
+  const selectedProductType = normalizeSearch(filters.productType);
+  const selectedSet = normalizeSearch(filters.set);
+  const selectedLanguage = normalizeSearch(filters.language);
 
   const results = seedProducts
     .filter((product) => product.published && (product.lifecycleState ?? 'PUBLISHED') === 'PUBLISHED' && product.releaseStatus !== 'ARCHIVED')
@@ -254,6 +262,22 @@ function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] 
 
       const category = getSeedCategoryBySlug(product.categorySlug);
       return category?.slug === selectedCategory;
+    })
+    .filter((product) => {
+      if (!selectedGame) return true;
+      return normalizeSearch(product.game) === selectedGame || slugify(product.game) === selectedGame;
+    })
+    .filter((product) => {
+      if (!selectedProductType) return true;
+      return false;
+    })
+    .filter((product) => {
+      if (!selectedSet) return true;
+      return normalizeSearch(product.setName) === selectedSet || slugify(product.setName ?? '') === selectedSet;
+    })
+    .filter((product) => {
+      if (!selectedLanguage) return true;
+      return false;
     })
     .sort((a, b) => {
       if (filters.sort === 'price-desc') return b.priceMinor - a.priceMinor;
@@ -300,6 +324,40 @@ function buildCatalogueProductWhere(filters: CatalogueFilters): Prisma.ProductWh
 
   if (filters.category) {
     clauses.push({ category: { is: { slug: filters.category } } });
+  }
+
+  if (filters.game) {
+    clauses.push({
+      OR: [
+        { gameRef: { is: { slug: filters.game } } },
+        { game: { equals: filters.game, mode: 'insensitive' } },
+        { game: { contains: slugToLegacyLabel(filters.game), mode: 'insensitive' } },
+      ],
+    });
+  }
+
+  if (filters.productType) {
+    clauses.push({
+      OR: [
+        { productTypeRef: { is: { slug: filters.productType } } },
+        { productType: { equals: filters.productType, mode: 'insensitive' } },
+        { productType: { contains: slugToLegacyLabel(filters.productType), mode: 'insensitive' } },
+      ],
+    });
+  }
+
+  if (filters.set) {
+    clauses.push({
+      OR: [
+        { setRef: { is: { slug: filters.set } } },
+        { setName: { equals: filters.set, mode: 'insensitive' } },
+        { setName: { contains: slugToLegacyLabel(filters.set), mode: 'insensitive' } },
+      ],
+    });
+  }
+
+  if (filters.language) {
+    clauses.push({ OR: [{ languageRef: { is: { code: filters.language } } }, { language: { equals: filters.language, mode: 'insensitive' } }] });
   }
 
   return clauses.length === 1 ? clauses[0]! : { AND: clauses };
@@ -387,7 +445,7 @@ async function getProductDetailFromDatabase(slug: string): Promise<CatalogueProd
     include: catalogueProductInclude,
   });
 
-  if (!product || !product.inventory || !product.supplierProducts[0]?.supplier || !isProductPubliclyRouteable(product)) {
+  if (!product || !isProductPubliclyRouteable(product)) {
     return null;
   }
 
@@ -400,19 +458,19 @@ async function getProductDetailFromDatabase(slug: string): Promise<CatalogueProd
       pageSize: 4,
     },
     { take: 4 },
-  );
+  ).catch(() => []);
 
   return {
     ...mapCatalogueProductRow(product),
     longDescription: product.longDescription,
     sku: product.sku,
     barcode: product.barcode,
-    setName: product.setName,
-    language: product.language,
+    setName: product.setRef?.name ?? product.setName,
+    language: product.languageRef?.name ?? product.language,
     condition: product.condition as CatalogueProductDetail['condition'],
     searchText: product.searchText,
-    supplierSku: product.supplierProducts[0].supplierSku,
-    leadTimeDays: product.supplierProducts[0].leadTimeDays,
+    supplierSku: product.supplierProducts[0]?.supplierSku ?? '',
+    leadTimeDays: product.supplierProducts[0]?.leadTimeDays ?? 0,
     images: product.images.map(mapCatalogueProductImageRow).filter((image): image is CatalogueProductImage => image !== null),
     relatedProducts: related.filter((item) => item.slug !== slug).slice(0, 4),
   };
@@ -424,7 +482,7 @@ async function getProductDetailFromDatabaseById(id: string): Promise<CataloguePr
     include: catalogueProductInclude,
   });
 
-  if (!product || !product.inventory || !product.supplierProducts[0]?.supplier || !isProductPubliclyRouteable(product)) {
+  if (!product || !isProductPubliclyRouteable(product)) {
     return null;
   }
 
@@ -437,19 +495,19 @@ async function getProductDetailFromDatabaseById(id: string): Promise<CataloguePr
       pageSize: 4,
     },
     { take: 4 },
-  );
+  ).catch(() => []);
 
   return {
     ...mapCatalogueProductRow(product),
     longDescription: product.longDescription,
     sku: product.sku,
     barcode: product.barcode,
-    setName: product.setName,
-    language: product.language,
+    setName: product.setRef?.name ?? product.setName,
+    language: product.languageRef?.name ?? product.language,
     condition: product.condition as CatalogueProductDetail['condition'],
     searchText: product.searchText,
-    supplierSku: product.supplierProducts[0].supplierSku,
-    leadTimeDays: product.supplierProducts[0].leadTimeDays,
+    supplierSku: product.supplierProducts[0]?.supplierSku ?? '',
+    leadTimeDays: product.supplierProducts[0]?.leadTimeDays ?? 0,
     images: product.images.map(mapCatalogueProductImageRow).filter((image): image is CatalogueProductImage => image !== null),
     relatedProducts: related.filter((item) => item.slug !== product.slug).slice(0, 4),
   };
@@ -479,17 +537,8 @@ export async function getCatalogueCategories(): Promise<CatalogueCategory[]> {
       sortOrder: category.sortOrder,
       productCount: category.products.filter(isProductVisibleInStorefrontListings).length,
     }));
-  } catch {
-    if (!canUseSeedFallback()) {
-      throw createCatalogueDatabaseError('categories are unavailable');
-    }
-
-    return seedCategories
-      .map((category) => ({
-        ...toCatalogueCategory(category),
-        productCount: seedProducts.filter((product) => product.categorySlug === category.slug && product.published).length,
-      }))
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+  } catch (error) {
+    throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'categories are unavailable');
   }
 }
 
@@ -514,12 +563,8 @@ export async function getFeaturedCatalogueProducts(limit = 4): Promise<Catalogue
 
   try {
     return await getProductsFromDatabase(filters, { take: limit });
-  } catch {
-    if (!canUseSeedFallback()) {
-      throw createCatalogueDatabaseError('featured products are unavailable');
-    }
-
-    return seedProductsToCatalogue(filters).slice(0, limit);
+  } catch (error) {
+    throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'featured products are unavailable');
   }
 }
 
@@ -574,25 +619,7 @@ export async function getCatalogueProducts(filters: CatalogueFilters): Promise<C
       filters: { ...filters, page: pagination.page, pageSize },
     };
   } catch (error) {
-    if (!canUseSeedFallback()) {
-      throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'unknown error');
-    }
-
-    const rows = seedProductsToCatalogue(filters);
-    const totalItems = rows.length;
-    const pagination = resolvePagination(totalItems, page, pageSize);
-    const offset = (pagination.page - 1) * pageSize;
-    return {
-      products: rows.slice(offset, offset + pageSize),
-      pagination,
-      categories: seedCategories
-        .map((category) => ({
-          ...toCatalogueCategory(category),
-          productCount: seedProducts.filter((product) => product.categorySlug === category.slug && product.published).length,
-        }))
-        .sort((a, b) => a.sortOrder - b.sortOrder),
-      filters: { ...filters, page: pagination.page, pageSize },
-    };
+    throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'unknown error');
   }
 }
 
@@ -609,14 +636,10 @@ export async function getCatalogueProductBySlug(slug: string): Promise<Catalogue
 
     return null;
   } catch (error) {
-    if (!canUseSeedFallback()) {
-      throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'product lookup failed');
-    }
-
-    // Fall through to seeded data.
+    throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'product lookup failed');
   }
 
-  return seedProductsToDetail(slug);
+  return null;
 }
 
 export async function getCatalogueProductById(id: string): Promise<CatalogueProductDetail | null> {
@@ -632,12 +655,10 @@ export async function getCatalogueProductById(id: string): Promise<CatalogueProd
 
     return null;
   } catch (error) {
-    if (!canUseSeedFallback()) {
-      throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'product lookup failed');
-    }
+    throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'product lookup failed');
   }
 
-  return seedProductToDetailById(id);
+  return null;
 }
 
 export async function getCatalogueHomeData(): Promise<CatalogueHomeData> {

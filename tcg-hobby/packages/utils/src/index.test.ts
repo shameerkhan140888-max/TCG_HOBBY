@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculatePercentage, clampMinorAmount, formatBasketSummary, formatMoney, roundToMinor, slugify, sumMinorAmounts } from './index';
+import { buildStorefrontProductPath, calculatePercentage, clampMinorAmount, formatBasketSummary, formatMoney, roundToMinor, slugify, sumMinorAmounts } from './index';
 
 describe('utils', () => {
   it('formats money in minor units', () => {
@@ -13,6 +13,11 @@ describe('utils', () => {
 
   it('creates stable slugs', () => {
     expect(slugify('Premium Booster Box!')).toBe('premium-booster-box');
+  });
+
+  it('builds canonical storefront product paths', () => {
+    expect(buildStorefrontProductPath('pokemon-mega-evolution-pitch-black-booster-pack')).toBe('/catalogue/pokemon-mega-evolution-pitch-black-booster-pack');
+    expect(buildStorefrontProductPath(' product with spaces ')).toBe('/catalogue/product%20with%20spaces');
   });
 
   it('handles integer money helpers safely', () => {

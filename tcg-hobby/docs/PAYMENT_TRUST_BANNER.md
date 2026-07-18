@@ -42,6 +42,17 @@ Local payment mark assets live in:
 
 These are bundled locally and not hotlinked. The component renders official-supplied SVGs without recolouring, stretching or distortion. Disabled assets are kept for configuration readiness but are not displayed publicly.
 
+## Storefront Layout
+
+The active banner is one compact reassurance strip:
+
+- Secure checkout
+- Accepted payments: Visa and Mastercard
+- Card payments are securely processed by Stripe
+- VAT included in product prices
+
+Payment marks render directly on the dark storefront surface. Do not wrap them in large white tiles or split them away from the accepted-payment label; that made the strip look disconnected from the checkout reassurance.
+
 If future methods are added, use compliant official or approved local assets. If a compliant asset is unavailable, use a clear text fallback rather than recreating a brand mark.
 
 ## Accessibility
