@@ -42,6 +42,40 @@ function parseWholeNumber(value: string): number | null {
   return Number.isInteger(parsed) && String(parsed) === value.trim() ? parsed : null;
 }
 
+function parseOptionalWholeNumber(value: string): number | null {
+  if (!value.trim()) return null;
+  return parseWholeNumber(value);
+}
+
+function parseOptionalDate(value: string): Date | null {
+  if (!value.trim()) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function validateManagedUrl(value: string) {
+  if (!value.trim()) return true;
+  if (value.startsWith('/')) return true;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+function parseGalleryImages(value: string): Array<{ url: string; altText: string; imageType: string }> {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [url = '', altText = '', imageType = 'gallery'] = line.split('|').map((part) => part.trim());
+      return { url, altText, imageType: imageType || 'gallery' };
+    });
+}
+
 function parseRecommendationType(value: string): ProductRecommendationType | null {
   return RECOMMENDATION_TYPES.includes(value as ProductRecommendationType) ? (value as ProductRecommendationType) : null;
 }
@@ -83,17 +117,53 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
   if (!values.longDescription) fieldErrors.longDescription = 'Enter a detailed description.';
   if (!values.categoryId) fieldErrors.categoryId = 'Choose a category.';
   if (!values.supplierId) fieldErrors.supplierId = 'Choose a supplier.';
-  if (!values.priceMinor || Number.isNaN(Number.parseInt(values.priceMinor, 10)) || Number.parseInt(values.priceMinor, 10) < 0) {
+  const priceMinor = parseWholeNumber(values.priceMinor);
+  const rrpMinor = parseOptionalWholeNumber(values.rrpMinor);
+  const salePriceMinor = parseOptionalWholeNumber(values.salePriceMinor);
+  const vatRate = parseWholeNumber(values.vatRate);
+  const costMinor = parseWholeNumber(values.costMinor);
+  const landedCostMinor = parseOptionalWholeNumber(values.landedCostMinor);
+  const stockOnHand = parseWholeNumber(values.stockOnHand);
+  const reorderPoint = parseWholeNumber(values.reorderPoint);
+  const reorderQuantity = parseWholeNumber(values.reorderQuantity);
+  const incomingQuantity = parseWholeNumber(values.incomingQuantity);
+  const customerPurchaseLimit = parseOptionalWholeNumber(values.customerPurchaseLimit);
+  const minimumOrderQuantity = parseWholeNumber(values.minimumOrderQuantity);
+  const packQuantity = parseOptionalWholeNumber(values.packQuantity);
+  const supplierLeadTimeDays = parseWholeNumber(values.supplierLeadTimeDays);
+  const saleStartsAt = parseOptionalDate(values.saleStartsAt);
+  const saleEndsAt = parseOptionalDate(values.saleEndsAt);
+  const galleryImages = parseGalleryImages(values.galleryImagesText);
+
+  if (priceMinor === null || priceMinor < 0) {
     fieldErrors.priceMinor = 'Enter a valid price in pence.';
   }
-  if (!values.costMinor || Number.isNaN(Number.parseInt(values.costMinor, 10)) || Number.parseInt(values.costMinor, 10) < 0) {
+  if (rrpMinor !== null && rrpMinor < 0) fieldErrors.rrpMinor = 'Enter a valid RRP in pence, or leave it blank.';
+  if (salePriceMinor !== null && salePriceMinor < 0) fieldErrors.salePriceMinor = 'Enter a valid sale price in pence, or leave it blank.';
+  if (vatRate === null || vatRate < 0 || vatRate > 100) fieldErrors.vatRate = 'Enter a VAT rate between 0 and 100.';
+  if (costMinor === null || costMinor < 0) {
     fieldErrors.costMinor = 'Enter a valid cost in pence.';
   }
-  if (Number.isNaN(Number.parseInt(values.stockOnHand, 10)) || Number.parseInt(values.stockOnHand, 10) < 0) fieldErrors.stockOnHand = 'Enter current stock in whole units.';
-  if (Number.isNaN(Number.parseInt(values.reservedStock, 10)) || Number.parseInt(values.reservedStock, 10) < 0) fieldErrors.reservedStock = 'Enter reserved stock in whole units.';
-  if (Number.isNaN(Number.parseInt(values.reorderPoint, 10)) || Number.parseInt(values.reorderPoint, 10) < 0) fieldErrors.reorderPoint = 'Enter a reorder point.';
-  if (values.customerPurchaseLimit && (Number.isNaN(Number.parseInt(values.customerPurchaseLimit, 10)) || Number.parseInt(values.customerPurchaseLimit, 10) < 1)) {
+  if (landedCostMinor !== null && landedCostMinor < 0) fieldErrors.landedCostMinor = 'Enter a valid landed cost in pence, or leave it blank.';
+  if (stockOnHand === null || stockOnHand < 0) fieldErrors.stockOnHand = 'Enter current stock in whole units.';
+  if (reorderPoint === null || reorderPoint < 0) fieldErrors.reorderPoint = 'Enter a reorder point.';
+  if (reorderQuantity === null || reorderQuantity < 0) fieldErrors.reorderQuantity = 'Enter a reorder quantity.';
+  if (incomingQuantity === null || incomingQuantity < 0) fieldErrors.incomingQuantity = 'Enter incoming stock in whole units.';
+  if (customerPurchaseLimit !== null && customerPurchaseLimit < 1) {
     fieldErrors.customerPurchaseLimit = 'Enter a purchase limit of at least 1, or leave it blank.';
+  }
+  if (minimumOrderQuantity === null || minimumOrderQuantity < 1) fieldErrors.minimumOrderQuantity = 'Enter a minimum order quantity of at least 1.';
+  if (packQuantity !== null && packQuantity < 1) fieldErrors.packQuantity = 'Enter a pack quantity of at least 1, or leave it blank.';
+  if (supplierLeadTimeDays === null || supplierLeadTimeDays < 0) fieldErrors.supplierLeadTimeDays = 'Enter a supplier lead time of zero days or more.';
+  if (values.saleStartsAt && !saleStartsAt) fieldErrors.saleStartsAt = 'Enter a valid sale start date.';
+  if (values.saleEndsAt && !saleEndsAt) fieldErrors.saleEndsAt = 'Enter a valid sale end date.';
+  if (saleStartsAt && saleEndsAt && saleStartsAt >= saleEndsAt) fieldErrors.saleEndsAt = 'Sale end must be after the start date.';
+  if (values.primaryImageUrl && !validateManagedUrl(values.primaryImageUrl)) fieldErrors.primaryImageUrl = 'Enter a relative path or a valid image URL.';
+  if (values.ogImageUrl && !validateManagedUrl(values.ogImageUrl)) fieldErrors.ogImageUrl = 'Enter a relative path or a valid Open Graph image URL.';
+  if (values.canonicalUrl && !validateManagedUrl(values.canonicalUrl)) fieldErrors.canonicalUrl = 'Enter a valid canonical URL.';
+  if (values.supplierProductUrl && !validateManagedUrl(values.supplierProductUrl)) fieldErrors.supplierProductUrl = 'Enter a valid supplier product URL.';
+  if (galleryImages.some((image) => !image.url || !validateManagedUrl(image.url))) {
+    fieldErrors.galleryImagesText = 'Each gallery image must include a relative path or valid URL.';
   }
 
   if (Object.keys(fieldErrors).length) {
@@ -103,30 +173,52 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
   const input: Parameters<typeof createAdminProduct>[0] = {
     name: values.name,
     sku: values.sku,
+    barcode: values.barcode || null,
+    brand: values.brand || null,
     game: values.game,
+    productType: values.productType || null,
+    language: values.language || null,
     description: values.description,
     longDescription: values.longDescription,
     condition: values.condition,
     categoryId: values.categoryId,
     supplierId: values.supplierId,
-    priceMinor: Number.parseInt(values.priceMinor, 10),
-    costMinor: Number.parseInt(values.costMinor, 10),
-    stockOnHand: Number.parseInt(values.stockOnHand, 10),
-    reservedStock: Number.parseInt(values.reservedStock, 10),
-    reorderPoint: Number.parseInt(values.reorderPoint, 10),
+    priceMinor: priceMinor ?? 0,
+    rrpMinor,
+    salePriceMinor,
+    saleStartsAt,
+    saleEndsAt,
+    vatRate: vatRate ?? 20,
+    costMinor: costMinor ?? 0,
+    landedCostMinor,
+    supplierSku: values.supplierSku || values.sku,
+    supplierProductUrl: values.supplierProductUrl || null,
+    minimumOrderQuantity: minimumOrderQuantity ?? 1,
+    packQuantity,
+    supplierLeadTimeDays: supplierLeadTimeDays ?? 7,
+    stockOnHand: stockOnHand ?? 0,
+    reorderPoint: reorderPoint ?? 0,
+    reorderQuantity: reorderQuantity ?? 0,
+    incomingQuantity: incomingQuantity ?? 0,
     locationCode: values.locationCode || 'MAIN',
     imageLabel: values.imageLabel || values.name,
     featured: values.featured,
     published: values.published,
     hideWhenOutOfStock: values.hideWhenOutOfStock,
-    customerPurchaseLimit: values.customerPurchaseLimit ? Number.parseInt(values.customerPurchaseLimit, 10) : null,
+    customerPurchaseLimit,
     availabilityMessage: values.availabilityMessage,
+    primaryImageAlt: values.primaryImageAlt || values.imageLabel || values.name,
+    galleryImages,
+    seoTitle: values.seoTitle || null,
+    metaDescription: values.metaDescription || null,
+    canonicalUrl: values.canonicalUrl || null,
+    ogImageUrl: values.ogImageUrl || null,
+    noindex: values.noindex,
   };
 
   if (values.slug) input.slug = values.slug;
   if (values.setName) input.setName = values.setName;
   if (values.primaryImageUrl) input.primaryImageUrl = values.primaryImageUrl;
-  if (values.galleryImageUrl) input.galleryImageUrl = values.galleryImageUrl;
 
   try {
     const saved = values.productId ? await updateAdminProduct(values.productId, input) : await createAdminProduct(input);
@@ -142,9 +234,19 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
     revalidateProductVisibility(saved.id, saved.slug);
     redirect(`/admin/products/${saved.id}`);
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to save product.';
+    if (message.includes('SKU')) {
+      return { fieldErrors: { sku: message }, values };
+    }
+    if (message.includes('slug')) {
+      return { fieldErrors: { slug: message }, values };
+    }
+    if (message.includes('barcode')) {
+      return { fieldErrors: { barcode: message }, values };
+    }
     return {
       fieldErrors: {},
-      formError: error instanceof Error ? error.message : 'Unable to save product.',
+      formError: message,
       values,
     };
   }

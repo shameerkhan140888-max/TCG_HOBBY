@@ -280,14 +280,22 @@ model Product {
   id            String           @id @default(cuid())
   importId      String?          @unique
   sku           String           @unique
+  barcode       String?          @unique
   slug          String           @unique
   name          String
+  brand         String?
   game          String
   setName       String?
+  productType   String?
+  language      String?
   description   String
   longDescription String
   condition     ProductCondition @default(SEALED)
   priceMinor    Int
+  rrpMinor      Int?
+  salePriceMinor Int?
+  saleStartsAt  DateTime?
+  saleEndsAt    DateTime?
   vatRate       Int              @default(20)
   currency      String           @default("GBP")
   featured      Boolean          @default(false)
@@ -342,6 +350,11 @@ model Product {
   importedAt     DateTime?
   lastImportedAt DateTime?
   importValidationWarnings String?
+  seoTitle      String?
+  metaDescription String?
+  canonicalUrl  String?
+  ogImageUrl    String?
+  noindex       Boolean          @default(false)
   importAudits   ProductImportAudit[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
@@ -363,6 +376,9 @@ model Product {
   @@index([published, releaseStatus])
   @@index([published, hideWhenOutOfStock])
   @@index([name])
+  @@index([barcode])
+  @@index([brand])
+  @@index([productType])
   @@index([searchText])
 }
 
@@ -679,6 +695,8 @@ model InventoryItem {
   stockOnHand   Int      @default(0)
   reservedStock Int      @default(0)
   reorderPoint  Int      @default(0)
+  reorderQuantity Int    @default(0)
+  incomingQuantity Int   @default(0)
   locationCode  String   @default("MAIN")
   updatedAt     DateTime @updatedAt
   product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -686,6 +704,7 @@ model InventoryItem {
   @@index([stockOnHand])
   @@index([reservedStock])
   @@index([reorderPoint, locationCode])
+  @@index([incomingQuantity])
 }
 
 model Cart {
@@ -790,14 +809,21 @@ model SupplierProduct {
   supplierId     String
   productId      String
   supplierSku    String
+  supplierProductUrl String?
   costMinor      Int
+  minimumOrderQuantity Int @default(1)
+  packQuantity   Int?
   currency       String   @default("GBP")
   leadTimeDays   Int      @default(7)
+  lastPriceUpdatedAt DateTime?
+  preferred      Boolean  @default(true)
   active         Boolean  @default(true)
   supplier       Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([supplierId, supplierSku])
+  @@index([productId, preferred])
+  @@index([supplierId, active])
 }
 
 model PricingRule {

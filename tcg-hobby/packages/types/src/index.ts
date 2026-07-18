@@ -46,7 +46,9 @@ export type CatalogueProduct = {
   id: string;
   slug: string;
   name: string;
+  brand?: string | null;
   game: string;
+  productType?: string | null;
   description: string;
   categoryName: string;
   categorySlug: string;
@@ -78,6 +80,11 @@ export type CatalogueProduct = {
   availabilityMessage?: string | null;
   preorderBadgeLabel?: string | null;
   comingSoonBadgeLabel?: string | null;
+  seoTitle?: string | null;
+  metaDescription?: string | null;
+  canonicalUrl?: string | null;
+  ogImageUrl?: string | null;
+  noindex?: boolean;
 };
 
 export type CatalogueProductImage = {
@@ -91,7 +98,9 @@ export type CatalogueProductImage = {
 
 export type CatalogueProductDetail = CatalogueProduct & {
   sku: string;
+  barcode?: string | null;
   setName: string | null;
+  language?: string | null;
   condition: ProductCondition;
   longDescription: string;
   searchText: string;

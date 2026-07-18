@@ -52,14 +52,19 @@ export async function generateMetadata({ params }: { params: Promise<ParamsValue
     };
   }
 
-  const title = `${product.name} | TCG Hobby`;
-  const description = product.description;
-  const canonical = new URL(`/catalogue/${product.slug}`, siteUrl).toString();
-  const imageUrl = product.imageUrl ? new URL(product.imageUrl, siteUrl).toString() : undefined;
+  const title = product.seoTitle || `${product.name} | TCG Hobby`;
+  const description = product.metaDescription || product.description;
+  const canonical = product.canonicalUrl || new URL(`/catalogue/${product.slug}`, siteUrl).toString();
+  const imageUrl = product.ogImageUrl
+    ? new URL(product.ogImageUrl, siteUrl).toString()
+    : product.imageUrl
+      ? new URL(product.imageUrl, siteUrl).toString()
+      : undefined;
 
   return {
     title,
     description,
+    robots: product.noindex ? { index: false, follow: true } : { index: true, follow: true },
     alternates: {
       canonical,
     },
@@ -130,8 +135,10 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
     description: product.description,
     brand: {
       '@type': 'Brand',
-      name: product.game,
+      name: product.brand || product.game,
     },
+    ...(product.sku ? { sku: product.sku } : {}),
+    ...(product.barcode ? { gtin: product.barcode } : {}),
     category: product.categoryName,
     ...(displayImages.length
       ? {

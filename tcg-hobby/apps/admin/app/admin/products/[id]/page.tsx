@@ -17,6 +17,19 @@ function asString(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] ?? '' : value ?? '';
 }
 
+function toDateTimeLocal(value: Date | null) {
+  if (!value) return '';
+  return value.toISOString().slice(0, 16);
+}
+
+function toGalleryImagesText(product: NonNullable<Awaited<ReturnType<typeof getAdminProductById>>>) {
+  return product.images
+    .filter((image) => !image.isPrimary)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((image) => `${image.url} | ${image.altText} | ${image.imageType}`)
+    .join('\n');
+}
+
 function productState(product: NonNullable<Awaited<ReturnType<typeof getAdminProductById>>>) {
   return {
     fieldErrors: {},
@@ -26,24 +39,48 @@ function productState(product: NonNullable<Awaited<ReturnType<typeof getAdminPro
       name: product.name,
       slug: product.slug,
       sku: product.sku,
+      barcode: product.barcode ?? '',
+      brand: product.brand ?? '',
       game: product.game,
       setName: product.setName ?? '',
+      productType: product.productType ?? '',
+      language: product.language ?? '',
       description: product.description,
       longDescription: product.longDescription,
       condition: product.condition,
       categoryId: product.categoryId,
       supplierId: product.supplierId,
       priceMinor: String(product.priceMinor),
+      rrpMinor: product.rrpMinor != null ? String(product.rrpMinor) : '',
+      salePriceMinor: product.salePriceMinor != null ? String(product.salePriceMinor) : '',
+      saleStartsAt: toDateTimeLocal(product.saleStartsAt),
+      saleEndsAt: toDateTimeLocal(product.saleEndsAt),
+      vatRate: String(product.vatRate),
       costMinor: String(product.costMinor),
+      landedCostMinor: product.landedCostMinor != null ? String(product.landedCostMinor) : '',
+      supplierSku: product.supplierSku,
+      supplierProductUrl: product.supplierProductUrl ?? '',
+      minimumOrderQuantity: String(product.minimumOrderQuantity),
+      packQuantity: product.packQuantity != null ? String(product.packQuantity) : '',
+      supplierLeadTimeDays: String(product.leadTimeDays),
       stockOnHand: String(product.stockOnHand),
       reservedStock: String(product.reservedStock),
+      availableStock: String(product.availableStock),
       reorderPoint: String(product.reorderPoint),
+      reorderQuantity: String(product.reorderQuantity),
+      incomingQuantity: String(product.incomingQuantity),
       locationCode: product.locationCode,
       imageLabel: product.imageLabel,
       primaryImageUrl: product.primaryImageUrl ?? '',
-      galleryImageUrl: product.images[1]?.url ?? '',
+      primaryImageAlt: product.images.find((image) => image.isPrimary)?.altText ?? product.imageLabel,
+      galleryImagesText: toGalleryImagesText(product),
       customerPurchaseLimit: product.customerPurchaseLimit != null ? String(product.customerPurchaseLimit) : '',
       availabilityMessage: product.availabilityMessage ?? '',
+      seoTitle: product.seoTitle ?? '',
+      metaDescription: product.metaDescription ?? '',
+      canonicalUrl: product.canonicalUrl ?? '',
+      ogImageUrl: product.ogImageUrl ?? '',
+      noindex: product.noindex,
       featured: product.featured,
       published: product.published,
       hideWhenOutOfStock: product.hideWhenOutOfStock,
@@ -196,6 +233,30 @@ export default async function AdminProductDetailPage({ params, searchParams }: {
               <div>
                 <dt className="text-sm text-neutral-400">Gallery images</dt>
                 <dd className="mt-1 font-semibold text-neutral-50">{product.imageCount}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-neutral-400">Barcode</dt>
+                <dd className="mt-1 font-semibold text-neutral-50">{product.barcode ?? 'Not set'}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-neutral-400">Product type</dt>
+                <dd className="mt-1 font-semibold text-neutral-50">{product.productType ?? 'Not set'}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-neutral-400">Supplier SKU</dt>
+                <dd className="mt-1 font-semibold text-neutral-50">{product.supplierSku || 'Not set'}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-neutral-400">Supplier lead time</dt>
+                <dd className="mt-1 font-semibold text-neutral-50">{product.leadTimeDays} days</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-neutral-400">Incoming stock</dt>
+                <dd className="mt-1 font-semibold text-neutral-50">{product.incomingQuantity}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-neutral-400">SEO indexing</dt>
+                <dd className="mt-1 font-semibold text-neutral-50">{product.noindex ? 'Noindex' : 'Indexable'}</dd>
               </div>
               <div>
                 <dt className="text-sm text-neutral-400">Storefront preview</dt>

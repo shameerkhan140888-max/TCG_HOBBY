@@ -1,70 +1,58 @@
 # Payment Trust Banner
 
-Work Package 2B adds a compact payment reassurance banner to the storefront layout.
+The storefront payment trust banner is implemented by `apps/storefront/components/payment-trust-banner.tsx`.
 
-## Component Location
+Payment methods are configured in `apps/storefront/lib/payment-methods.ts`.
 
-The component lives at:
+## Current Public Methods
 
-`apps/storefront/components/payment-trust-banner.tsx`
+The checkout flow currently creates Stripe Checkout sessions with `payment_method_types[0] = card`.
 
-It is rendered once from:
-
-`apps/storefront/app/layout.tsx`
-
-This places it between main page content and the active storefront footer. It is not part of product cards, checkout forms, email templates or the Admin app.
-
-## Current Payment Methods
-
-The current checkout flow creates Stripe hosted checkout sessions with card payments. The banner therefore displays:
+Publicly displayed methods:
 
 - Visa
 - Mastercard
 
-PayPal is not displayed because there is no active PayPal checkout implementation in the storefront.
+Payment wording:
 
-## Wording
+> Card payments are securely processed by Stripe.
 
-The banner uses conservative wording:
+This avoids implying that Stripe processes PayPal.
 
-- `Secure checkout`
-- `Card payments are processed through Stripe.`
-- `VAT included in product prices.`
+## Supported But Disabled
 
-It does not claim:
+The configuration includes disabled entries for:
 
-- PayPal support
-- fake security certification
-- fake SSL certification
-- guaranteed 100% security
-- unsupported payment methods
+- PayPal
+- Klarna
+- Clearpay
+- Apple Pay
+- Google Pay
+- American Express
 
-## Official Marks
+Do not enable these publicly until checkout genuinely supports them.
 
-WP2B uses clean text labels rather than official card-network artwork. Do not download random payment logos from unofficial sources.
+## Assets
 
-If official marks are added later:
+Local payment mark assets live in:
 
-1. Use approved brand assets only.
-2. Preserve aspect ratio and clear space.
-3. Do not recolour or redraw marks.
-4. Provide accessible text labels or alt text.
-5. Keep the current compact layout.
+- `apps/storefront/public/payments/visa.svg`
+- `apps/storefront/public/payments/mastercard.svg`
+- `apps/storefront/public/payments/paypal.svg`
+
+These are bundled locally and not hotlinked. The component renders official-supplied SVGs without recolouring, stretching or distortion. Disabled assets are kept for configuration readiness but are not displayed publicly.
+
+If future methods are added, use compliant official or approved local assets. If a compliant asset is unavailable, use a clear text fallback rather than recreating a brand mark.
 
 ## Accessibility
 
-Payment method names are rendered as text in a semantic list with an accessible label. The banner does not rely on logo imagery alone.
+The banner includes visible payment wording, not logos alone. Payment marks have accessible labels and the lock icon is decorative because the visible text already says "Secure checkout".
 
-## Adding Future Methods
+## Extension
 
-Only add a payment method when the checkout flow genuinely supports it or the page copy clearly explains that it is not currently available.
+To add a future method:
 
-Future additions such as Apple Pay, Google Pay or PayPal should update:
-
-- checkout implementation
-- checkout copy
-- `PaymentTrustBanner`
-- component tests
-- this document
-
-Accuracy is more important than displaying a longer list of payment brands.
+1. Add an approved local asset under `apps/storefront/public/payments/`.
+2. Add or update the method in `storefrontPaymentMethods`.
+3. Enable it only after checkout support is verified.
+4. Update tests to prove enabled methods render and disabled methods remain hidden.

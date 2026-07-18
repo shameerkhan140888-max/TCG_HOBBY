@@ -98,7 +98,9 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
                   <td className="px-4 py-4">
                     <div className="font-semibold text-neutral-50">{product.name}</div>
                     <div className="text-xs text-neutral-500">{product.sku}</div>
+                    {product.barcode ? <div className="text-xs text-neutral-500">Barcode {product.barcode}</div> : null}
                     <div className="text-xs text-neutral-500">{product.slug}</div>
+                    <div className="text-xs text-neutral-500">{[product.brand, product.game, product.productType].filter(Boolean).join(' / ')}</div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {product.isAccessory ? <StatusBadge tone="neutral">Accessory</StatusBadge> : null}
                       {product.isStaffPick ? <StatusBadge tone="accent">Staff pick</StatusBadge> : null}

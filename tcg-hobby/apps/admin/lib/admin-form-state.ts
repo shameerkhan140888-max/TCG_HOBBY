@@ -7,24 +7,48 @@ export type ProductFormValues = {
   name: string;
   slug: string;
   sku: string;
+  barcode: string;
+  brand: string;
   game: string;
   setName: string;
+  productType: string;
+  language: string;
   description: string;
   longDescription: string;
   condition: string;
   categoryId: string;
   supplierId: string;
   priceMinor: string;
+  rrpMinor: string;
+  salePriceMinor: string;
+  saleStartsAt: string;
+  saleEndsAt: string;
+  vatRate: string;
   costMinor: string;
+  landedCostMinor: string;
+  supplierSku: string;
+  supplierProductUrl: string;
+  minimumOrderQuantity: string;
+  packQuantity: string;
+  supplierLeadTimeDays: string;
   stockOnHand: string;
   reservedStock: string;
+  availableStock: string;
   reorderPoint: string;
+  reorderQuantity: string;
+  incomingQuantity: string;
   locationCode: string;
   imageLabel: string;
   primaryImageUrl: string;
-  galleryImageUrl: string;
+  primaryImageAlt: string;
+  galleryImagesText: string;
   customerPurchaseLimit: string;
   availabilityMessage: string;
+  seoTitle: string;
+  metaDescription: string;
+  canonicalUrl: string;
+  ogImageUrl: string;
+  noindex: boolean;
   featured: boolean;
   published: boolean;
   hideWhenOutOfStock: boolean;
@@ -79,24 +103,48 @@ export const emptyProductFormValues: ProductFormValues = {
   name: '',
   slug: '',
   sku: '',
+  barcode: '',
+  brand: '',
   game: '',
   setName: '',
+  productType: '',
+  language: '',
   description: '',
   longDescription: '',
   condition: 'SEALED',
   categoryId: '',
   supplierId: '',
   priceMinor: '',
+  rrpMinor: '',
+  salePriceMinor: '',
+  saleStartsAt: '',
+  saleEndsAt: '',
+  vatRate: '20',
   costMinor: '',
+  landedCostMinor: '',
+  supplierSku: '',
+  supplierProductUrl: '',
+  minimumOrderQuantity: '1',
+  packQuantity: '',
+  supplierLeadTimeDays: '7',
   stockOnHand: '0',
   reservedStock: '0',
+  availableStock: '0',
   reorderPoint: '0',
+  reorderQuantity: '0',
+  incomingQuantity: '0',
   locationCode: 'MAIN',
   imageLabel: '',
   primaryImageUrl: '',
-  galleryImageUrl: '',
+  primaryImageAlt: '',
+  galleryImagesText: '',
   customerPurchaseLimit: '',
   availabilityMessage: '',
+  seoTitle: '',
+  metaDescription: '',
+  canonicalUrl: '',
+  ogImageUrl: '',
+  noindex: false,
   featured: false,
   published: true,
   hideWhenOutOfStock: false,
@@ -153,24 +201,48 @@ export function buildProductValues(formData: FormData): ProductFormValues {
     name: getString(formData, 'name'),
     slug: getString(formData, 'slug'),
     sku: getString(formData, 'sku'),
+    barcode: getString(formData, 'barcode'),
+    brand: getString(formData, 'brand'),
     game: getString(formData, 'game'),
     setName: getString(formData, 'setName'),
+    productType: getString(formData, 'productType'),
+    language: getString(formData, 'language'),
     description: getString(formData, 'description'),
     longDescription: getString(formData, 'longDescription'),
     condition: getString(formData, 'condition', 'SEALED'),
     categoryId: getString(formData, 'categoryId'),
     supplierId: getString(formData, 'supplierId'),
     priceMinor: getString(formData, 'priceMinor'),
+    rrpMinor: getString(formData, 'rrpMinor'),
+    salePriceMinor: getString(formData, 'salePriceMinor'),
+    saleStartsAt: getString(formData, 'saleStartsAt'),
+    saleEndsAt: getString(formData, 'saleEndsAt'),
+    vatRate: getString(formData, 'vatRate', '20'),
     costMinor: getString(formData, 'costMinor'),
+    landedCostMinor: getString(formData, 'landedCostMinor'),
+    supplierSku: getString(formData, 'supplierSku'),
+    supplierProductUrl: getString(formData, 'supplierProductUrl'),
+    minimumOrderQuantity: getString(formData, 'minimumOrderQuantity', '1'),
+    packQuantity: getString(formData, 'packQuantity'),
+    supplierLeadTimeDays: getString(formData, 'supplierLeadTimeDays', '7'),
     stockOnHand: getString(formData, 'stockOnHand', '0'),
     reservedStock: getString(formData, 'reservedStock', '0'),
+    availableStock: getString(formData, 'availableStock', '0'),
     reorderPoint: getString(formData, 'reorderPoint', '0'),
+    reorderQuantity: getString(formData, 'reorderQuantity', '0'),
+    incomingQuantity: getString(formData, 'incomingQuantity', '0'),
     locationCode: getString(formData, 'locationCode', 'MAIN'),
     imageLabel: getString(formData, 'imageLabel'),
     primaryImageUrl: getString(formData, 'primaryImageUrl'),
-    galleryImageUrl: getString(formData, 'galleryImageUrl'),
+    primaryImageAlt: getString(formData, 'primaryImageAlt'),
+    galleryImagesText: getString(formData, 'galleryImagesText'),
     customerPurchaseLimit: getString(formData, 'customerPurchaseLimit'),
     availabilityMessage: getString(formData, 'availabilityMessage'),
+    seoTitle: getString(formData, 'seoTitle'),
+    metaDescription: getString(formData, 'metaDescription'),
+    canonicalUrl: getString(formData, 'canonicalUrl'),
+    ogImageUrl: getString(formData, 'ogImageUrl'),
+    noindex: getBoolean(formData, 'noindex'),
     featured: getBoolean(formData, 'featured'),
     published: getBoolean(formData, 'published', true),
     hideWhenOutOfStock: getBoolean(formData, 'hideWhenOutOfStock'),

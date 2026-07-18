@@ -218,17 +218,27 @@ export type AdminProductListItem = {
   id: string;
   categoryId: string;
   sku: string;
+  barcode: string | null;
   slug: string;
   name: string;
+  brand: string | null;
   game: string;
   setName: string | null;
+  productType: string | null;
+  language: string | null;
   categoryName: string;
   categorySlug: string;
   supplierName: string;
   supplierSlug: string;
   supplierId: string;
   priceMinor: number;
+  rrpMinor: number | null;
+  salePriceMinor: number | null;
+  saleStartsAt: Date | null;
+  saleEndsAt: Date | null;
+  vatRate: number;
   costMinor: number;
+  landedCostMinor: number | null;
   buyMinor: number;
   marginMinor: number;
   marginPercent: number;
@@ -261,6 +271,8 @@ export type AdminProductListItem = {
   reservedStock: number;
   availableStock: number;
   reorderPoint: number;
+  reorderQuantity: number;
+  incomingQuantity: number;
   locationCode: string;
   imageCount: number;
   primaryImageUrl: string | null;
@@ -269,6 +281,11 @@ export type AdminProductListItem = {
   importedAt: Date | null;
   lastImportedAt: Date | null;
   importValidationWarnings: string | null;
+  seoTitle: string | null;
+  metaDescription: string | null;
+  canonicalUrl: string | null;
+  ogImageUrl: string | null;
+  noindex: boolean;
   createdAt: Date;
 };
 
@@ -279,7 +296,12 @@ export type AdminProductDetail = AdminProductListItem & {
   searchText: string;
   imageLabel: string;
   supplierSku: string;
+  supplierProductUrl: string | null;
   leadTimeDays: number;
+  minimumOrderQuantity: number;
+  packQuantity: number | null;
+  lastSupplierPriceUpdatedAt: Date | null;
+  preferredSupplierProduct: boolean;
   supplierEmail: string | null;
   supplierPhone: string | null;
   supplierWebsite: string | null;
@@ -424,18 +446,34 @@ type ProductFormInput = {
   name: string;
   slug?: string;
   sku: string;
+  barcode?: string | null;
+  brand?: string | null;
   game: string;
   setName?: string;
+  productType?: string | null;
+  language?: string | null;
   description: string;
   longDescription: string;
   condition: string;
   categoryId: string;
   supplierId: string;
   priceMinor: number;
+  rrpMinor?: number | null;
+  salePriceMinor?: number | null;
+  saleStartsAt?: Date | null;
+  saleEndsAt?: Date | null;
+  vatRate?: number;
   costMinor: number;
+  landedCostMinor?: number | null;
+  supplierSku?: string;
+  supplierProductUrl?: string | null;
+  minimumOrderQuantity?: number;
+  packQuantity?: number | null;
+  supplierLeadTimeDays?: number;
   stockOnHand: number;
-  reservedStock: number;
   reorderPoint: number;
+  reorderQuantity?: number;
+  incomingQuantity?: number;
   locationCode: string;
   imageLabel: string;
   featured: boolean;
@@ -444,7 +482,13 @@ type ProductFormInput = {
   customerPurchaseLimit?: number | null;
   availabilityMessage?: string | null;
   primaryImageUrl?: string;
-  galleryImageUrl?: string;
+  primaryImageAlt?: string;
+  galleryImages?: Array<{ url: string; altText: string; imageType?: string }>;
+  seoTitle?: string | null;
+  metaDescription?: string | null;
+  canonicalUrl?: string | null;
+  ogImageUrl?: string | null;
+  noindex?: boolean;
 };
 
 type SupplierFormInput = {
@@ -506,6 +550,34 @@ async function resolveUniqueProductSlug(name: string, db = prisma, providedSlug?
   return candidate;
 }
 
+async function assertUniqueProductIdentity(input: Pick<ProductFormInput, 'sku' | 'barcode' | 'slug' | 'name'>, db = prisma, excludeId?: string): Promise<void> {
+  const slug = toProductSlugCandidate(input.slug || input.name) || 'product';
+  const existing = await db.product.findFirst({
+    where: {
+      OR: [
+        { sku: input.sku },
+        { slug },
+        ...(input.barcode ? [{ barcode: input.barcode }] : []),
+      ],
+      ...(excludeId ? { NOT: { id: excludeId } } : {}),
+    },
+    select: { sku: true, slug: true, barcode: true },
+  });
+
+  if (!existing) {
+    return;
+  }
+  if (existing.sku === input.sku) {
+    throw new Error('A product with this SKU already exists.');
+  }
+  if (existing.slug === slug) {
+    throw new Error('A product with this slug already exists.');
+  }
+  if (input.barcode && existing.barcode === input.barcode) {
+    throw new Error('A product with this barcode already exists.');
+  }
+}
+
 async function resolveUniqueSupplierSlug(name: string, db = prisma, providedSlug?: string, excludeId?: string) {
   const baseSlug = toProductSlugCandidate(providedSlug || name) || 'supplier';
   let candidate = baseSlug;
@@ -525,7 +597,7 @@ async function resolveUniqueSupplierSlug(name: string, db = prisma, providedSlug
 }
 
 function mapProductRow(product: ProductRow): AdminProductListItem {
-  const inventory = product.inventory ?? { stockOnHand: 0, reservedStock: 0, reorderPoint: 0, locationCode: 'MAIN' };
+  const inventory = product.inventory ?? { stockOnHand: 0, reservedStock: 0, reorderPoint: 0, reorderQuantity: 0, incomingQuantity: 0, locationCode: 'MAIN' };
   const supplierProduct = product.supplierProducts[0];
   const supplier = supplierProduct?.supplier ?? {
     id: '',
@@ -556,17 +628,27 @@ function mapProductRow(product: ProductRow): AdminProductListItem {
     id: product.id,
     categoryId: product.category.id,
     sku: product.sku,
+    barcode: product.barcode,
     slug: product.slug,
     name: product.name,
+    brand: product.brand,
     game: product.game,
     setName: product.setName,
+    productType: product.productType,
+    language: product.language,
     categoryName: product.category.name,
     categorySlug: product.category.slug,
     supplierName: supplier.name,
     supplierSlug: supplier.slug,
     supplierId: supplier.id,
     priceMinor: product.priceMinor,
+    rrpMinor: product.rrpMinor,
+    salePriceMinor: product.salePriceMinor,
+    saleStartsAt: product.saleStartsAt,
+    saleEndsAt: product.saleEndsAt,
+    vatRate: product.vatRate,
     costMinor,
+    landedCostMinor: product.pricing?.costMinor ?? supplierProduct?.costMinor ?? null,
     buyMinor,
     marginMinor,
     marginPercent: calculateMarginPercentage(costMinor, product.priceMinor),
@@ -599,6 +681,8 @@ function mapProductRow(product: ProductRow): AdminProductListItem {
     reservedStock: inventory.reservedStock,
     availableStock,
     reorderPoint: inventory.reorderPoint,
+    reorderQuantity: inventory.reorderQuantity ?? 0,
+    incomingQuantity: inventory.incomingQuantity ?? 0,
     locationCode: inventory.locationCode,
     imageCount: product.images.length,
     primaryImageUrl: product.images.find((image) => image.isPrimary)?.url ?? product.images[0]?.url ?? null,
@@ -607,6 +691,11 @@ function mapProductRow(product: ProductRow): AdminProductListItem {
     importedAt: product.importedAt,
     lastImportedAt: product.lastImportedAt,
     importValidationWarnings: product.importValidationWarnings,
+    seoTitle: product.seoTitle,
+    metaDescription: product.metaDescription,
+    canonicalUrl: product.canonicalUrl,
+    ogImageUrl: product.ogImageUrl,
+    noindex: product.noindex,
     createdAt: product.createdAt,
   };
 }
@@ -623,7 +712,12 @@ function mapProductDetailRow(product: ProductRow): AdminProductDetail {
     searchText: product.searchText,
     imageLabel: product.imageLabel,
     supplierSku: supplierProduct?.supplierSku ?? '',
+    supplierProductUrl: supplierProduct?.supplierProductUrl ?? null,
     leadTimeDays: supplierProduct?.leadTimeDays ?? 0,
+    minimumOrderQuantity: supplierProduct?.minimumOrderQuantity ?? 1,
+    packQuantity: supplierProduct?.packQuantity ?? null,
+    lastSupplierPriceUpdatedAt: supplierProduct?.lastPriceUpdatedAt ?? null,
+    preferredSupplierProduct: supplierProduct?.preferred ?? false,
     supplierEmail: supplierProduct?.supplier.email ?? null,
     supplierPhone: supplierProduct?.supplier.phone ?? null,
     supplierWebsite: supplierProduct?.supplier.website ?? null,
@@ -825,17 +919,27 @@ function buildSeedProductListItem(product: (typeof seedProducts)[number], index:
     id: product.id,
     categoryId: category.id,
     sku: product.sku,
+    barcode: null,
     slug: product.slug,
     name: product.name,
+    brand: product.game,
     game: product.game,
     setName: product.setName,
+    productType: null,
+    language: null,
     categoryName: category.name,
     categorySlug: category.slug,
     supplierName: supplier.name,
     supplierSlug: supplier.slug,
     supplierId: supplier.id,
     priceMinor: product.priceMinor,
+    rrpMinor: null,
+    salePriceMinor: null,
+    saleStartsAt: null,
+    saleEndsAt: null,
+    vatRate: 20,
     costMinor: pricing.costMinor,
+    landedCostMinor: pricing.costMinor,
     buyMinor: pricing.buyMinor,
     marginMinor: pricing.marginMinor,
     marginPercent: calculateMarginPercentage(pricing.costMinor, product.priceMinor),
@@ -868,6 +972,8 @@ function buildSeedProductListItem(product: (typeof seedProducts)[number], index:
     reservedStock: inventory.reservedStock,
     availableStock,
     reorderPoint: inventory.reorderPoint,
+    reorderQuantity: 0,
+    incomingQuantity: 0,
     locationCode: inventory.locationCode,
     imageCount: 2,
     primaryImageUrl: `https://images.tcghobby.test/products/${product.slug}/primary.jpg`,
@@ -876,6 +982,11 @@ function buildSeedProductListItem(product: (typeof seedProducts)[number], index:
     importedAt: product.importSourceType ? new Date(Date.UTC(2026, 6, 5 - index, 12, 0, 0)) : null,
     lastImportedAt: product.importSourceType ? new Date(Date.UTC(2026, 6, 5 - index, 12, 0, 0)) : null,
     importValidationWarnings: product.importValidationWarnings ?? null,
+    seoTitle: null,
+    metaDescription: null,
+    canonicalUrl: null,
+    ogImageUrl: null,
+    noindex: false,
     createdAt: new Date(Date.UTC(2026, 6, 5 - index, 12, 0, 0)),
   };
 }
@@ -1081,29 +1192,45 @@ export async function getAdminProductById(id: string, db = prisma): Promise<Admi
 }
 
 export async function createAdminProduct(input: ProductFormInput, db = prisma): Promise<AdminProductDetail | null> {
+  await assertUniqueProductIdentity(input, db);
   const slug = await resolveUniqueProductSlug(input.name, db, input.slug);
+  const costMinor = input.landedCostMinor ?? input.costMinor;
 
   const created = await db.$transaction(async (tx) => {
     const product = await tx.product.create({
       data: {
         sku: input.sku,
+        barcode: input.barcode || null,
         slug,
         name: input.name,
+        brand: input.brand || null,
         game: input.game,
         setName: input.setName || null,
+        productType: input.productType || null,
+        language: input.language || null,
         description: input.description,
         longDescription: input.longDescription,
         condition: input.condition as ProductCondition,
         priceMinor: input.priceMinor,
+        rrpMinor: input.rrpMinor ?? null,
+        salePriceMinor: input.salePriceMinor ?? null,
+        saleStartsAt: input.saleStartsAt ?? null,
+        saleEndsAt: input.saleEndsAt ?? null,
+        vatRate: input.vatRate ?? 20,
         currency: 'GBP',
         featured: input.featured,
         published: input.published,
         hideWhenOutOfStock: input.hideWhenOutOfStock,
         customerPurchaseLimit: input.customerPurchaseLimit ?? null,
         availabilityMessage: input.availabilityMessage || null,
-        searchText: `${input.name} ${input.sku} ${input.game} ${input.description} ${input.longDescription}`.toLowerCase(),
+        searchText: `${input.name} ${input.sku} ${input.barcode ?? ''} ${input.brand ?? ''} ${input.game} ${input.setName ?? ''} ${input.productType ?? ''} ${input.description} ${input.longDescription}`.toLowerCase(),
         imageLabel: input.imageLabel,
         categoryId: input.categoryId,
+        seoTitle: input.seoTitle || null,
+        metaDescription: input.metaDescription || null,
+        canonicalUrl: input.canonicalUrl || null,
+        ogImageUrl: input.ogImageUrl || null,
+        noindex: input.noindex ?? false,
         archivedAt: null,
       },
     });
@@ -1112,8 +1239,10 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma): 
       data: {
         productId: product.id,
         stockOnHand: input.stockOnHand,
-        reservedStock: input.reservedStock,
+        reservedStock: 0,
         reorderPoint: input.reorderPoint,
+        reorderQuantity: input.reorderQuantity ?? 0,
+        incomingQuantity: input.incomingQuantity ?? 0,
         locationCode: input.locationCode,
       },
     });
@@ -1122,20 +1251,28 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma): 
       data: {
         productId: product.id,
         supplierId: input.supplierId,
-        supplierSku: input.sku,
-        costMinor: input.costMinor,
+        supplierSku: input.supplierSku || input.sku,
+        supplierProductUrl: input.supplierProductUrl || null,
+        costMinor,
+        minimumOrderQuantity: input.minimumOrderQuantity ?? 1,
+        packQuantity: input.packQuantity ?? null,
         currency: 'GBP',
-        leadTimeDays: 7,
+        leadTimeDays: input.supplierLeadTimeDays ?? 7,
+        lastPriceUpdatedAt: new Date(),
+        preferred: true,
       },
     });
 
-    const imageInputs = [input.primaryImageUrl, input.galleryImageUrl]
-      .filter((value): value is string => Boolean(value && value.trim()))
-      .map((url, index) => ({
+    const imageInputs = [
+      ...(input.primaryImageUrl
+        ? [{ url: input.primaryImageUrl, altText: input.primaryImageAlt || input.imageLabel || input.name, imageType: 'primary' }]
+        : []),
+      ...(input.galleryImages ?? []),
+    ].map((image, index) => ({
         productId: product.id,
-        url,
-        altText: `${input.name} image ${index + 1}`,
-        imageType: index === 0 ? 'primary' : 'gallery',
+        url: image.url,
+        altText: image.altText || `${input.name} image ${index + 1}`,
+        imageType: index === 0 ? 'primary' : image.imageType || 'gallery',
         sortOrder: index,
         isPrimary: index === 0,
       }));
@@ -1152,30 +1289,46 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma): 
 }
 
 export async function updateAdminProduct(id: string, input: ProductFormInput, db = prisma): Promise<AdminProductDetail | null> {
+  await assertUniqueProductIdentity(input, db, id);
   const slug = await resolveUniqueProductSlug(input.name, db, input.slug, id);
+  const costMinor = input.landedCostMinor ?? input.costMinor;
 
   const product = await db.$transaction(async (tx) => {
     const updated = await tx.product.update({
       where: { id },
       data: {
         sku: input.sku,
+        barcode: input.barcode || null,
         slug,
         name: input.name,
+        brand: input.brand || null,
         game: input.game,
         setName: input.setName || null,
+        productType: input.productType || null,
+        language: input.language || null,
         description: input.description,
         longDescription: input.longDescription,
         condition: input.condition as ProductCondition,
         priceMinor: input.priceMinor,
+        rrpMinor: input.rrpMinor ?? null,
+        salePriceMinor: input.salePriceMinor ?? null,
+        saleStartsAt: input.saleStartsAt ?? null,
+        saleEndsAt: input.saleEndsAt ?? null,
+        vatRate: input.vatRate ?? 20,
         currency: 'GBP',
         featured: input.featured,
         published: input.published,
         hideWhenOutOfStock: input.hideWhenOutOfStock,
         customerPurchaseLimit: input.customerPurchaseLimit ?? null,
         availabilityMessage: input.availabilityMessage || null,
-        searchText: `${input.name} ${input.sku} ${input.game} ${input.description} ${input.longDescription}`.toLowerCase(),
+        searchText: `${input.name} ${input.sku} ${input.barcode ?? ''} ${input.brand ?? ''} ${input.game} ${input.setName ?? ''} ${input.productType ?? ''} ${input.description} ${input.longDescription}`.toLowerCase(),
         imageLabel: input.imageLabel,
         categoryId: input.categoryId,
+        seoTitle: input.seoTitle || null,
+        metaDescription: input.metaDescription || null,
+        canonicalUrl: input.canonicalUrl || null,
+        ogImageUrl: input.ogImageUrl || null,
+        noindex: input.noindex ?? false,
       },
     });
 
@@ -1184,14 +1337,17 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
       create: {
         productId: id,
         stockOnHand: input.stockOnHand,
-        reservedStock: input.reservedStock,
+        reservedStock: 0,
         reorderPoint: input.reorderPoint,
+        reorderQuantity: input.reorderQuantity ?? 0,
+        incomingQuantity: input.incomingQuantity ?? 0,
         locationCode: input.locationCode,
       },
       update: {
         stockOnHand: input.stockOnHand,
-        reservedStock: input.reservedStock,
         reorderPoint: input.reorderPoint,
+        reorderQuantity: input.reorderQuantity ?? 0,
+        incomingQuantity: input.incomingQuantity ?? 0,
         locationCode: input.locationCode,
       },
     });
@@ -1201,22 +1357,30 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
       data: {
         productId: id,
         supplierId: input.supplierId,
-        supplierSku: input.sku,
-        costMinor: input.costMinor,
+        supplierSku: input.supplierSku || input.sku,
+        supplierProductUrl: input.supplierProductUrl || null,
+        costMinor,
+        minimumOrderQuantity: input.minimumOrderQuantity ?? 1,
+        packQuantity: input.packQuantity ?? null,
         currency: 'GBP',
-        leadTimeDays: 7,
+        leadTimeDays: input.supplierLeadTimeDays ?? 7,
+        lastPriceUpdatedAt: new Date(),
+        preferred: true,
       },
     });
 
     await tx.productImage.deleteMany({ where: { productId: id } });
 
-    const imageInputs = [input.primaryImageUrl, input.galleryImageUrl]
-      .filter((value): value is string => Boolean(value && value.trim()))
-      .map((url, index) => ({
+    const imageInputs = [
+      ...(input.primaryImageUrl
+        ? [{ url: input.primaryImageUrl, altText: input.primaryImageAlt || input.imageLabel || input.name, imageType: 'primary' }]
+        : []),
+      ...(input.galleryImages ?? []),
+    ].map((image, index) => ({
         productId: id,
-        url,
-        altText: `${input.name} image ${index + 1}`,
-        imageType: index === 0 ? 'primary' : 'gallery',
+        url: image.url,
+        altText: image.altText || `${input.name} image ${index + 1}`,
+        imageType: index === 0 ? 'primary' : image.imageType || 'gallery',
         sortOrder: index,
         isPrimary: index === 0,
       }));
@@ -1473,7 +1637,7 @@ export async function getAdminInventoryRows(db = prisma): Promise<AdminInventory
   });
 
   return rows.map((product) => {
-    const inventory = product.inventory ?? { stockOnHand: 0, reservedStock: 0, reorderPoint: 0, locationCode: 'MAIN' };
+    const inventory = product.inventory ?? { stockOnHand: 0, reservedStock: 0, reorderPoint: 0, reorderQuantity: 0, incomingQuantity: 0, locationCode: 'MAIN' };
     const supplierProduct = product.supplierProducts[0];
     const costMinor = supplierProduct?.costMinor ?? 0;
 

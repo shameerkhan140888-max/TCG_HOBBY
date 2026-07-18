@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { calculateAvailableStock, calculateMarginPercentage } from './admin-math';
+import { calculateAvailableStock, calculateGrossProfitMinor, calculateMarginPercentage, resolveAdminSellingPriceMinor } from './admin-math';
 import {
   adjustProductStock,
+  createAdminProduct,
   createAdminProductRecommendation,
   deleteAdminProductRecommendation,
   generateProductSlug,
@@ -83,11 +84,67 @@ describe('admin math', () => {
     expect(calculateMarginPercentage(600, 1000)).toBe(40);
     expect(calculateMarginPercentage(0, 0)).toBe(0);
   });
+
+  it('resolves active sale pricing and gross profit using minor units', () => {
+    const now = new Date('2026-07-18T12:00:00.000Z');
+
+    expect(
+      resolveAdminSellingPriceMinor({
+        regularPriceMinor: 4999,
+        salePriceMinor: 4499,
+        saleStartsAt: new Date('2026-07-17T12:00:00.000Z'),
+        saleEndsAt: new Date('2026-07-19T12:00:00.000Z'),
+        now,
+      }),
+    ).toBe(4499);
+    expect(
+      resolveAdminSellingPriceMinor({
+        regularPriceMinor: 4999,
+        salePriceMinor: 4499,
+        saleStartsAt: new Date('2026-07-19T12:00:00.000Z'),
+        saleEndsAt: null,
+        now,
+      }),
+    ).toBe(4999);
+    expect(calculateGrossProfitMinor(3000, 4499)).toBe(1499);
+  });
 });
 
 describe('admin repositories', () => {
   it('generates stable product slugs', () => {
     expect(generateProductSlug('Arcane Booster Box')).toBe('arcane-booster-box');
+  });
+
+  it('rejects duplicate product identity before creating product records', async () => {
+    const db = createDbMock();
+    db.product.findFirst.mockResolvedValue({ sku: 'SKU-1', slug: 'arcane-booster-box', barcode: null });
+
+    await expect(
+      createAdminProduct(
+        {
+          name: 'Arcane Booster Box',
+          sku: 'SKU-1',
+          game: 'Magic',
+          description: 'Short description',
+          longDescription: 'Long description',
+          condition: 'SEALED',
+          categoryId: 'cat-1',
+          supplierId: 'sup-1',
+          priceMinor: 4999,
+          costMinor: 3000,
+          stockOnHand: 4,
+          reorderPoint: 1,
+          locationCode: 'MAIN',
+          imageLabel: 'Arcane Booster Box',
+          featured: false,
+          published: false,
+          hideWhenOutOfStock: false,
+        },
+        db,
+      ),
+    ).rejects.toThrow('SKU');
+    expect(db.product.create).not.toHaveBeenCalled();
+    expect(db.$transaction).not.toHaveBeenCalled();
   });
 
   it('paginates and filters admin products', async () => {

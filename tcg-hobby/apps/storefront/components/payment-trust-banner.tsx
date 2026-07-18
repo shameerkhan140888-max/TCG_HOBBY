@@ -1,27 +1,64 @@
 import React from 'react';
+import Image from 'next/image';
 import { Container } from '@tcg-hobby/ui';
+import { getEnabledPaymentMethods, storefrontPaymentMethods, type PaymentMethodConfig } from '../lib/payment-methods';
 
-const SUPPORTED_PAYMENT_METHODS = ['Visa', 'Mastercard'] as const;
+type PaymentTrustBannerProps = {
+  methods?: readonly PaymentMethodConfig[];
+};
 
-export function PaymentTrustBanner() {
+function LockIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 text-accent">
+      <path
+        fill="currentColor"
+        d="M17 9V7a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1Zm-8 0V7a3 3 0 0 1 6 0v2H9Zm3 4a1.5 1.5 0 0 1 .75 2.8V18h-1.5v-2.2A1.5 1.5 0 0 1 12 13Z"
+      />
+    </svg>
+  );
+}
+
+function PaymentMark({ method }: { method: PaymentMethodConfig }) {
+  return (
+    <span
+      className="inline-flex min-h-8 min-w-14 items-center justify-center rounded-md bg-neutral-50 px-2.5 py-1 text-xs font-black tracking-[0.08em] text-neutral-950 shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
+      aria-label={method.label}
+      title={method.label}
+    >
+      {method.assetPath ? (
+        <Image src={method.assetPath} width={64} height={40} alt={method.label} className="h-6 w-auto object-contain" />
+      ) : (
+        method.displayLabel
+      )}
+    </span>
+  );
+}
+
+export function PaymentTrustBanner({ methods = storefrontPaymentMethods }: PaymentTrustBannerProps) {
+  const enabledMethods = getEnabledPaymentMethods(methods);
+
   return (
     <section className="border-t border-surface-line/60 bg-surface-ink text-neutral-50" aria-label="Payment and checkout reassurance">
       <Container className="py-4">
-        <div className="flex flex-col gap-3 text-sm text-neutral-300 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span className="font-semibold text-neutral-50">Secure checkout</span>
-            <span className="text-neutral-500" aria-hidden="true">/</span>
-            <span>Card payments are processed through Stripe.</span>
-            <span className="text-neutral-500" aria-hidden="true">/</span>
+        <div className="flex flex-col gap-4 text-sm text-neutral-300 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2">
+            <span className="inline-flex items-center gap-2 font-semibold text-neutral-50">
+              <LockIcon />
+              Secure checkout
+            </span>
+            <span>Card payments are securely processed by Stripe.</span>
             <span>VAT included in product prices.</span>
           </div>
-          <ul className="flex flex-wrap gap-2" aria-label="Supported payment methods">
-            {SUPPORTED_PAYMENT_METHODS.map((method) => (
-              <li key={method} className="rounded-md bg-surface-base px-3 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-neutral-100 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
-                {method}
-              </li>
-            ))}
-          </ul>
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Accepted payments</span>
+            <ul className="flex flex-wrap gap-2" aria-label="Accepted payment methods">
+              {enabledMethods.map((method) => (
+                <li key={method.id}>
+                  <PaymentMark method={method} />
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </Container>
     </section>
