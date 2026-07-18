@@ -204,6 +204,23 @@ export {
   isProductVisibleInStorefrontListings,
 } from './product-visibility';
 export {
+  createCatalogueMasterDataRecord,
+  getCatalogueMasterDataOptions,
+  getCatalogueMasterDataOverview,
+  getCatalogueMasterDataRecords,
+  resolveMasterDataByImportValues,
+  resolveProductMasterDataInput,
+  setCatalogueMasterDataActive,
+  updateCatalogueMasterDataRecord,
+} from './catalogue-master-data';
+export type {
+  CatalogueMasterDataInput,
+  CatalogueMasterDataKind,
+  CatalogueMasterDataOptions,
+  CatalogueMasterDataOverview,
+  CatalogueMasterDataRecord,
+} from './catalogue-master-data';
+export {
   createProductImportPlan,
   derivePublicStockState,
   discoverProductImportFolders,
@@ -256,12 +273,25 @@ export type {
 } from './product-csv-import';
 export {
   assertProductImportLookupData,
+  canonicalBrands,
   canonicalCategories,
+  canonicalGames,
+  canonicalProductLanguages,
+  canonicalProductSets,
+  canonicalProductTypes,
   canonicalSuppliers,
   seedCanonicalLookupData,
   verifyCanonicalLookupData,
 } from './canonical-seed';
-export type { CanonicalCategory, CanonicalSupplier } from './canonical-seed';
+export type {
+  CanonicalBrand,
+  CanonicalCategory,
+  CanonicalGame,
+  CanonicalProductLanguage,
+  CanonicalProductSet,
+  CanonicalProductType,
+  CanonicalSupplier,
+} from './canonical-seed';
 export {
   DEFAULT_MARKETING_TAGS,
   createMarketingCampaignDraft,

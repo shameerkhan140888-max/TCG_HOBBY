@@ -32,12 +32,16 @@ function formatMoney(amountMinor: number) {
 export default async function AdminProductsPage({ searchParams }: { searchParams: Promise<SearchParamsValue> }) {
   const params = (await searchParams) ?? {};
   const search = asString(params.search);
+  const game = asString(params.game);
+  const productType = asString(params.productType);
+  const brand = asString(params.brand);
   const category = asString(params.category);
   const supplier = asString(params.supplier);
+  const status = asString(params.status);
   const sort = asString(params.sort) as 'newest' | 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc' | '';
   const page = Number.parseInt(asString(params.page) || '1', 10);
-  const data = await getAdminProducts({ search, category, supplier, sort: sort || 'newest', page: Number.isFinite(page) ? page : 1, pageSize: 20 });
-  const current = { search, category, supplier, sort: sort || 'newest' };
+  const data = await getAdminProducts({ search, game, productType, brand, category, supplier, status, sort: sort || 'newest', page: Number.isFinite(page) ? page : 1, pageSize: 20 });
+  const current = { search, game, productType, brand, category, supplier, status, sort: sort || 'newest' };
 
   return (
     <Section className="py-8">
@@ -59,7 +63,40 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
         />
 
         <SearchToolbar searchValue={search} searchPlaceholder="Search SKU, name, or description">
-          <div className="grid gap-3 sm:grid-cols-3 lg:w-[520px]">
+          <div className="grid gap-3 sm:grid-cols-2 lg:w-[920px] lg:grid-cols-4">
+            <label className="space-y-2 text-xs uppercase tracking-wide text-neutral-500">
+              Game
+              <select name="game" defaultValue={game} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
+                <option value="">All games</option>
+                {data.games.map((item) => (
+                  <option key={item.id} value={item.slug}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="space-y-2 text-xs uppercase tracking-wide text-neutral-500">
+              Product type
+              <select name="productType" defaultValue={productType} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
+                <option value="">All types</option>
+                {data.productTypes.map((item) => (
+                  <option key={item.id} value={item.slug}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="space-y-2 text-xs uppercase tracking-wide text-neutral-500">
+              Brand
+              <select name="brand" defaultValue={brand} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
+                <option value="">All brands</option>
+                {data.brands.map((item) => (
+                  <option key={item.id} value={item.slug}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label className="space-y-2 text-xs uppercase tracking-wide text-neutral-500">
               Category
               <select name="category" defaultValue={category} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
@@ -80,6 +117,15 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
                     {item.name}
                   </option>
                 ))}
+              </select>
+            </label>
+            <label className="space-y-2 text-xs uppercase tracking-wide text-neutral-500">
+              Status
+              <select name="status" defaultValue={status} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
+                <option value="">All statuses</option>
+                <option value="published">Published</option>
+                <option value="hidden">Hidden</option>
+                <option value="archived">Archived</option>
               </select>
             </label>
             <label className="space-y-2 text-xs uppercase tracking-wide text-neutral-500">

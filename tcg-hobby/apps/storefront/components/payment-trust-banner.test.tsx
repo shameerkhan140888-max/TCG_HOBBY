@@ -18,6 +18,17 @@ describe('PaymentTrustBanner', () => {
     expect(markup).toContain('Mastercard');
     expect(markup).toContain('/payments/visa.svg');
     expect(markup).toContain('/payments/mastercard.svg');
+    expect(markup.indexOf('Accepted payments')).toBeLessThan(markup.indexOf('/payments/visa.svg'));
+    expect(markup.indexOf('/payments/visa.svg')).toBeLessThan(markup.indexOf('/payments/mastercard.svg'));
+    expect(markup).toContain('h-6 w-auto object-contain');
+    expect(markup).toContain('h-7 items-center justify-center');
+    expect(markup).toContain('flex flex-wrap items-center gap-2.5');
+    expect(markup).not.toContain('bg-white');
+    expect(markup).not.toContain('ring-white');
+    expect(markup).not.toContain('shadow-sm');
+    expect(markup).not.toContain('bg-neutral-50');
+    expect(markup).not.toContain('min-w-16');
+    expect(markup).not.toContain('>|</span>');
     expect(markup).not.toContain('/payments/paypal.svg');
     expect(markup).not.toContain('>PayPal</span>');
     expect(markup).not.toContain('>Amex</span>');

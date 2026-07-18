@@ -21,14 +21,14 @@ function LockIcon() {
 function PaymentMark({ method }: { method: PaymentMethodConfig }) {
   return (
     <span
-      className="inline-flex h-9 min-w-16 items-center justify-center rounded-md bg-neutral-50 px-3 text-xs font-black tracking-[0.08em] text-neutral-950 shadow-[0_12px_28px_rgba(0,0,0,0.28)] ring-1 ring-white/70"
+      className="inline-flex h-7 items-center justify-center"
       aria-label={method.label}
       title={method.label}
     >
       {method.assetPath ? (
-        <Image src={method.assetPath} width={86} height={36} alt={method.label} className="max-h-6 w-auto object-contain" />
+        <Image src={method.assetPath} width={72} height={28} alt={method.label} className="h-6 w-auto object-contain" />
       ) : (
-        method.displayLabel
+        <span className="text-xs font-black tracking-[0.08em] text-neutral-50">{method.displayLabel}</span>
       )}
     </span>
   );
@@ -39,25 +39,27 @@ export function PaymentTrustBanner({ methods = storefrontPaymentMethods }: Payme
 
   return (
     <section className="border-t border-accent/20 bg-surface-ink text-neutral-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]" aria-label="Payment and checkout reassurance">
-      <Container className="py-3">
-        <div className="flex flex-col gap-3 text-sm text-neutral-300 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-1.5">
-            <span className="inline-flex items-center gap-2 font-semibold text-neutral-50">
+      <Container className="py-4 sm:py-5">
+        <div className="flex flex-col gap-3 text-sm leading-6 text-neutral-300 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:gap-x-8 lg:gap-y-3">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            <span className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-50 sm:text-base">
               <LockIcon />
               Secure checkout
             </span>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <span className="font-semibold text-neutral-100">Accepted payments:</span>
+              <ul className="flex flex-wrap items-center gap-2.5" aria-label="Accepted payment methods">
+                {enabledMethods.map((method) => (
+                  <li key={method.id}>
+                    <PaymentMark method={method} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1 text-sm text-neutral-400 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4">
             <span>Card payments are securely processed by Stripe.</span>
             <span>VAT included in product prices.</span>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Accepted payments</span>
-            <ul className="flex flex-wrap gap-2" aria-label="Accepted payment methods">
-              {enabledMethods.map((method) => (
-                <li key={method.id}>
-                  <PaymentMark method={method} />
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </Container>

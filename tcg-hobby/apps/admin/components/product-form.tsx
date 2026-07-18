@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, type TextareaHTMLAttributes } from 'react';
+import { useActionState, useEffect, useState, type ChangeEvent, type TextareaHTMLAttributes } from 'react';
 import { Button, ErrorMessage, FormField, FormSection, Input } from '@tcg-hobby/ui';
 import {
   emptyProductFormValues,
@@ -20,12 +20,19 @@ function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
 type Option = {
   id: string;
   label: string;
+  active?: boolean;
+  gameId?: string | null;
 };
 
 type ProductFormProps = {
   state?: ProductFormState;
   categories: Option[];
   suppliers: Option[];
+  games: Option[];
+  brands: Option[];
+  productTypes: Option[];
+  languages: Option[];
+  sets: Option[];
   submitLabel: string;
 };
 
@@ -57,11 +64,31 @@ function calculateMargin(costMinorValue: string, priceMinorValue: string) {
   return { profitMinor, marginPercent };
 }
 
-export function ProductForm({ state, categories, suppliers, submitLabel }: ProductFormProps) {
+export function ProductForm({ state, categories, suppliers, games, brands, productTypes, languages, sets, submitLabel }: ProductFormProps) {
   const [formState, formAction] = useActionState(saveProductAction, state ?? { fieldErrors: {}, values: emptyProductFormValues });
+  const [selectedGameId, setSelectedGameId] = useState(formState.values.gameId);
+  const [selectedSetId, setSelectedSetId] = useState(formState.values.setId);
   const pricing = calculateMargin(formState.values.landedCostMinor || formState.values.costMinor, formState.values.salePriceMinor || formState.values.priceMinor);
   const lossWarning =
     parseMinor(formState.values.landedCostMinor || formState.values.costMinor) > parseMinor(formState.values.salePriceMinor || formState.values.priceMinor);
+  const selectedSet = sets.find((set) => set.id === selectedSetId);
+  const selectedSetIsCompatible = !selectedSet || !selectedGameId || !selectedSet.gameId || selectedSet.gameId === selectedGameId;
+  const filteredSets = sets.filter((set) => !set.gameId || !selectedGameId || set.gameId === selectedGameId || set.id === selectedSetId);
+
+  useEffect(() => {
+    setSelectedGameId(formState.values.gameId);
+    setSelectedSetId(formState.values.setId);
+  }, [formState.values.gameId, formState.values.setId]);
+
+  function handleGameChange(event: ChangeEvent<HTMLSelectElement>) {
+    const nextGameId = event.target.value;
+    setSelectedGameId(nextGameId);
+
+    const currentSet = sets.find((set) => set.id === selectedSetId);
+    if (currentSet?.gameId && currentSet.gameId !== nextGameId) {
+      setSelectedSetId('');
+    }
+  }
 
   return (
     <form key={JSON.stringify(formState.values)} action={formAction} className="space-y-6">
@@ -84,6 +111,8 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
           <p className="font-semibold text-neutral-50">Review before saving</p>
           <p>{formState.values.name || 'Unnamed product'}</p>
           <p>{formState.values.sku || 'SKU required'}</p>
+          <p>{games.find((game) => game.id === formState.values.gameId)?.label ?? 'Game required'}</p>
+          <p>{productTypes.find((type) => type.id === formState.values.productTypeId)?.label ?? 'Product type required'}</p>
           <p>{formState.values.priceMinor ? formatMoney(formState.values.priceMinor) : 'Price required'}</p>
           <p>{formState.values.published ? 'Will be published' : 'Will be hidden'}</p>
         </aside>
@@ -104,20 +133,69 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
           <FormField label="Barcode / EAN / UPC" htmlFor="barcode" error={formState.fieldErrors.barcode}>
             <Input id="barcode" name="barcode" defaultValue={formState.values.barcode} />
           </FormField>
-          <FormField label="Brand" htmlFor="brand">
-            <Input id="brand" name="brand" defaultValue={formState.values.brand} placeholder="Pokemon TCG, Magic: The Gathering..." />
+          <FormField label="Game" htmlFor="gameId" error={formState.fieldErrors.gameId} required>
+            <select
+              id="gameId"
+              name="gameId"
+              value={selectedGameId}
+              onChange={handleGameChange}
+              className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
+            >
+              <option value="">Select a game</option>
+              {games.map((game) => (
+                <option key={game.id} value={game.id}>
+                  {game.label}{game.active === false ? ' (inactive)' : ''}
+                </option>
+              ))}
+            </select>
           </FormField>
-          <FormField label="Game" htmlFor="game" error={formState.fieldErrors.game} required>
-            <Input id="game" name="game" defaultValue={formState.values.game} />
+          <FormField label="Brand" htmlFor="brandId" error={formState.fieldErrors.brandId}>
+            <select id="brandId" name="brandId" defaultValue={formState.values.brandId} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
+              <option value="">Select a brand</option>
+              {brands.map((brand) => (
+                <option key={brand.id} value={brand.id}>
+                  {brand.label}{brand.active === false ? ' (inactive)' : ''}
+                </option>
+              ))}
+            </select>
           </FormField>
-          <FormField label="Set name" htmlFor="setName">
-            <Input id="setName" name="setName" defaultValue={formState.values.setName} />
+          <FormField label="Product type / format" htmlFor="productTypeId" error={formState.fieldErrors.productTypeId} required>
+            <select id="productTypeId" name="productTypeId" defaultValue={formState.values.productTypeId} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
+              <option value="">Select a product type</option>
+              {productTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.label}{type.active === false ? ' (inactive)' : ''}
+                </option>
+              ))}
+            </select>
           </FormField>
-          <FormField label="Product type / format" htmlFor="productType">
-            <Input id="productType" name="productType" defaultValue={formState.values.productType} placeholder="Booster box, deck, accessory..." />
+          <FormField label="Language" htmlFor="languageId" error={formState.fieldErrors.languageId} required>
+            <select id="languageId" name="languageId" defaultValue={formState.values.languageId} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
+              <option value="">Select a language</option>
+              {languages.map((language) => (
+                <option key={language.id} value={language.id}>
+                  {language.label}{language.active === false ? ' (inactive)' : ''}
+                </option>
+              ))}
+            </select>
           </FormField>
-          <FormField label="Language" htmlFor="language">
-            <Input id="language" name="language" defaultValue={formState.values.language} placeholder="English" />
+          <FormField label="Set" htmlFor="setId" error={formState.fieldErrors.setId}>
+            <select
+              id="setId"
+              name="setId"
+              value={selectedSetId}
+              onChange={(event) => setSelectedSetId(event.target.value)}
+              className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
+            >
+              <option value="">No set</option>
+              {filteredSets.map((set) => (
+                <option key={set.id} value={set.id}>
+                  {set.label}{set.active === false ? ' (inactive)' : ''}
+                </option>
+              ))}
+            </select>
+            {selectedGameId ? <p className="mt-2 text-xs text-neutral-500">Set options are limited to the selected game.</p> : null}
+            {!selectedSetIsCompatible ? <p className="mt-2 text-xs text-amber-300">Select a set that belongs to the selected game.</p> : null}
           </FormField>
           <FormField label="Condition" htmlFor="condition" required>
             <select id="condition" name="condition" defaultValue={formState.values.condition} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">

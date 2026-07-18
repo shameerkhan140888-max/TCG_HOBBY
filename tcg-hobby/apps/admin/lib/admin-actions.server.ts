@@ -8,15 +8,19 @@ import {
   createAdminProduct,
   createAdminProductRecommendation,
   createAdminSupplier,
+  createCatalogueMasterDataRecord,
   createProductCsvImportPlan,
   deleteAdminProductRecommendation,
   executeProductCsvImport,
   setProductPublication,
+  setCatalogueMasterDataActive,
   updateAdminProduct,
   updateAdminProductRecommendation,
+  updateCatalogueMasterDataRecord,
   updateAdminSupplier,
   updateProductMerchandisingSettings,
   ProductRecommendationType,
+  type CatalogueMasterDataKind,
 } from '@tcg-hobby/database';
 import {
   buildProductValues,
@@ -115,7 +119,9 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
 
   if (!values.name) fieldErrors.name = 'Enter a product name.';
   if (!values.sku) fieldErrors.sku = 'Enter a SKU.';
-  if (!values.game) fieldErrors.game = 'Enter the game or brand.';
+  if (!values.gameId) fieldErrors.gameId = 'Choose a game.';
+  if (!values.productTypeId) fieldErrors.productTypeId = 'Choose a product type.';
+  if (!values.languageId) fieldErrors.languageId = 'Choose a language.';
   if (!values.description) fieldErrors.description = 'Enter a short description.';
   if (!values.longDescription) fieldErrors.longDescription = 'Enter a detailed description.';
   if (!values.categoryId) fieldErrors.categoryId = 'Choose a category.';
@@ -178,9 +184,14 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
     sku: values.sku,
     barcode: values.barcode || null,
     brand: values.brand || null,
-    game: values.game,
+    game: values.gameId,
     productType: values.productType || null,
     language: values.language || null,
+    gameId: values.gameId || null,
+    brandId: values.brandId || null,
+    productTypeId: values.productTypeId || null,
+    languageId: values.languageId || null,
+    setId: values.setId || null,
     description: values.description,
     longDescription: values.longDescription,
     condition: values.condition,
@@ -253,6 +264,13 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
       values,
     };
   }
+}
+
+function parseCatalogueKind(value: string): Exclude<CatalogueMasterDataKind, 'categories'> {
+  if (value === 'games' || value === 'brands' || value === 'product-types' || value === 'languages' || value === 'sets') {
+    return value;
+  }
+  throw new Error('Unsupported catalogue setting type.');
 }
 
 export async function previewProductCsvImportAction(
@@ -329,6 +347,50 @@ export async function productCsvImportAction(
   return asString(formData.get('intent')) === 'import'
     ? executeProductCsvImportAction(state, formData)
     : previewProductCsvImportAction(state, formData);
+}
+
+export async function saveCatalogueMasterDataAction(formData: FormData): Promise<void> {
+  const kind = parseCatalogueKind(asString(formData.get('kind')));
+  const id = asString(formData.get('id'));
+  const name = asString(formData.get('name'));
+  const slug = asString(formData.get('slug'));
+  const code = asString(formData.get('code'));
+  const group = asString(formData.get('group'));
+  const website = asString(formData.get('website'));
+  const gameId = asString(formData.get('gameId'));
+  const sortOrder = parseOptionalWholeNumber(asString(formData.get('sortOrder'))) ?? 0;
+  const active = asBoolean(formData.get('active'));
+  const input = {
+    name,
+    slug,
+    code,
+    group: group || null,
+    website: website || null,
+    gameId: gameId || null,
+    sortOrder,
+    active,
+  };
+
+  if (id) {
+    await updateCatalogueMasterDataRecord(kind, id, input);
+  } else {
+    await createCatalogueMasterDataRecord(kind, input);
+  }
+
+  revalidatePath('/admin/catalogue');
+  revalidatePath(`/admin/catalogue/${kind}`);
+  revalidatePath('/admin/products');
+}
+
+export async function toggleCatalogueMasterDataAction(formData: FormData): Promise<void> {
+  const kind = parseCatalogueKind(asString(formData.get('kind')));
+  const id = asString(formData.get('id'));
+  if (!id) throw new Error('Missing catalogue record ID.');
+
+  await setCatalogueMasterDataActive(kind, id, asBoolean(formData.get('active')));
+  revalidatePath('/admin/catalogue');
+  revalidatePath(`/admin/catalogue/${kind}`);
+  revalidatePath('/admin/products');
 }
 
 export async function archiveProductAction(formData: FormData) {

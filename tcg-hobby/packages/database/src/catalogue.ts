@@ -6,6 +6,7 @@ import type {
   CatalogueProductDetail,
   PaginationMeta,
 } from '@tcg-hobby/types';
+import { slugify } from '@tcg-hobby/utils';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Prisma } from '@prisma/client';
@@ -30,6 +31,11 @@ import {
 
 const catalogueProductInclude = {
   category: true,
+  gameRef: true,
+  brandRef: true,
+  productTypeRef: true,
+  languageRef: true,
+  setRef: true,
   inventory: true,
   images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
   supplierProducts: { include: { supplier: true }, take: 1 },
@@ -133,9 +139,9 @@ function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct 
     id: product.id,
     slug: product.slug,
     name: product.name,
-    brand: product.brand,
-    game: product.game,
-    productType: product.productType,
+    brand: product.brandRef?.name ?? product.brand,
+    game: product.gameRef?.name ?? product.game,
+    productType: product.productTypeRef?.name ?? product.productType,
     description: product.description,
     categoryName: product.category.name,
     categorySlug: product.category.slug,
@@ -237,6 +243,10 @@ function getSeedProductById(id: string) {
 function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] {
   const query = normalizeSearch(filters.search);
   const selectedCategory = normalizeSearch(filters.category);
+  const selectedGame = normalizeSearch(filters.game);
+  const selectedProductType = normalizeSearch(filters.productType);
+  const selectedSet = normalizeSearch(filters.set);
+  const selectedLanguage = normalizeSearch(filters.language);
 
   const results = seedProducts
     .filter((product) => product.published && (product.lifecycleState ?? 'PUBLISHED') === 'PUBLISHED' && product.releaseStatus !== 'ARCHIVED')
@@ -254,6 +264,22 @@ function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] 
 
       const category = getSeedCategoryBySlug(product.categorySlug);
       return category?.slug === selectedCategory;
+    })
+    .filter((product) => {
+      if (!selectedGame) return true;
+      return normalizeSearch(product.game) === selectedGame || slugify(product.game) === selectedGame;
+    })
+    .filter((product) => {
+      if (!selectedProductType) return true;
+      return false;
+    })
+    .filter((product) => {
+      if (!selectedSet) return true;
+      return normalizeSearch(product.setName) === selectedSet || slugify(product.setName ?? '') === selectedSet;
+    })
+    .filter((product) => {
+      if (!selectedLanguage) return true;
+      return false;
     })
     .sort((a, b) => {
       if (filters.sort === 'price-desc') return b.priceMinor - a.priceMinor;
@@ -300,6 +326,22 @@ function buildCatalogueProductWhere(filters: CatalogueFilters): Prisma.ProductWh
 
   if (filters.category) {
     clauses.push({ category: { is: { slug: filters.category } } });
+  }
+
+  if (filters.game) {
+    clauses.push({ OR: [{ gameRef: { is: { slug: filters.game } } }, { game: { equals: filters.game, mode: 'insensitive' } }] });
+  }
+
+  if (filters.productType) {
+    clauses.push({ OR: [{ productTypeRef: { is: { slug: filters.productType } } }, { productType: { equals: filters.productType, mode: 'insensitive' } }] });
+  }
+
+  if (filters.set) {
+    clauses.push({ OR: [{ setRef: { is: { slug: filters.set } } }, { setName: { equals: filters.set, mode: 'insensitive' } }] });
+  }
+
+  if (filters.language) {
+    clauses.push({ OR: [{ languageRef: { is: { code: filters.language } } }, { language: { equals: filters.language, mode: 'insensitive' } }] });
   }
 
   return clauses.length === 1 ? clauses[0]! : { AND: clauses };
@@ -407,8 +449,8 @@ async function getProductDetailFromDatabase(slug: string): Promise<CatalogueProd
     longDescription: product.longDescription,
     sku: product.sku,
     barcode: product.barcode,
-    setName: product.setName,
-    language: product.language,
+    setName: product.setRef?.name ?? product.setName,
+    language: product.languageRef?.name ?? product.language,
     condition: product.condition as CatalogueProductDetail['condition'],
     searchText: product.searchText,
     supplierSku: product.supplierProducts[0].supplierSku,
@@ -444,8 +486,8 @@ async function getProductDetailFromDatabaseById(id: string): Promise<CataloguePr
     longDescription: product.longDescription,
     sku: product.sku,
     barcode: product.barcode,
-    setName: product.setName,
-    language: product.language,
+    setName: product.setRef?.name ?? product.setName,
+    language: product.languageRef?.name ?? product.language,
     condition: product.condition as CatalogueProductDetail['condition'],
     searchText: product.searchText,
     supplierSku: product.supplierProducts[0].supplierSku,

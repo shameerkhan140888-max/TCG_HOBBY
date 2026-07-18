@@ -1,5 +1,5 @@
 import { Button, Container, EmptyState, Input, Pagination, ProductCard, WishlistButton, NotifyButton } from '@tcg-hobby/ui';
-import { getCatalogueProducts, getCustomerNotificationSubscriptions, getWishlistProductIds } from '@tcg-hobby/database';
+import { getCatalogueMasterDataOptions, getCatalogueProducts, getCustomerNotificationSubscriptions, getWishlistProductIds } from '@tcg-hobby/database';
 import type { CatalogueSort } from '@tcg-hobby/types';
 import { SiteHeader } from '../../components/site-header';
 import { AddToCartButton } from '../../components/cart-actions';
@@ -29,11 +29,24 @@ function asSort(value: string | undefined): CatalogueSort {
   return 'featured';
 }
 
-function createHref(params: { search: string; category: string; sort: CatalogueSort; page: number }) {
+function createHref(params: {
+  search: string;
+  category: string;
+  game: string;
+  productType: string;
+  set: string;
+  language: string;
+  sort: CatalogueSort;
+  page: number;
+}) {
   const query = new URLSearchParams();
 
   if (params.search) query.set('q', params.search);
   if (params.category) query.set('category', params.category);
+  if (params.game) query.set('game', params.game);
+  if (params.productType) query.set('productType', params.productType);
+  if (params.set) query.set('set', params.set);
+  if (params.language) query.set('language', params.language);
   if (params.sort !== 'featured') query.set('sort', params.sort);
   if (params.page > 1) query.set('page', String(params.page));
 
@@ -49,23 +62,33 @@ export default async function CataloguePage({
   const params = (await searchParams) ?? {};
   const search = asString(params.q);
   const category = asString(params.category);
+  const game = asString(params.game);
+  const productType = asString(params.productType);
+  const set = asString(params.set);
+  const language = asString(params.language);
   const sort = asSort(asString(params.sort));
   const page = Math.max(Number(asString(params.page) || '1') || 1, 1);
-  const currentHref = createHref({ search, category, sort, page });
+  const currentHref = createHref({ search, category, game, productType, set, language, sort, page });
 
-  const [data, session] = await Promise.all([
+  const [data, session, masterData] = await Promise.all([
     getCatalogueProducts({
       search,
       category,
+      game,
+      productType,
+      set,
+      language,
       sort,
       page,
       pageSize,
     }),
     getCurrentCustomerSession(),
+    getCatalogueMasterDataOptions(),
   ]);
   const wishlistIds = session?.user.role === 'CUSTOMER' ? await getWishlistProductIds(session.user.id) : [];
   const notificationIds =
     session?.user.role === 'CUSTOMER' ? (await getCustomerNotificationSubscriptions(session.user.id)).map((item) => item.productId) : [];
+  const selectedGameRecord = masterData.games.find((item) => item.slug === game);
 
   return (
     <>
@@ -84,8 +107,52 @@ export default async function CataloguePage({
       </section>
 
       <Container className="py-8">
-        <form className="grid gap-3 rounded-lg border border-surface-line bg-surface-base p-4 lg:grid-cols-[1fr_220px_140px]">
+        <form className="grid gap-3 rounded-lg border border-surface-line bg-surface-base p-4 lg:grid-cols-[1fr_repeat(5,160px)_140px]">
           <Input name="q" defaultValue={search} placeholder="Search cards, sealed product, accessories, or events" />
+          <select
+            name="game"
+            defaultValue={game}
+            className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent"
+            aria-label="Filter by game"
+          >
+            <option value="">All games</option>
+            {masterData.games.filter((item) => item.active).map((item) => (
+              <option key={item.id} value={item.slug}>{item.name}</option>
+            ))}
+          </select>
+          <select
+            name="productType"
+            defaultValue={productType}
+            className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent"
+            aria-label="Filter by product type"
+          >
+            <option value="">All types</option>
+            {masterData.productTypes.filter((item) => item.active).map((item) => (
+              <option key={item.id} value={item.slug}>{item.name}</option>
+            ))}
+          </select>
+          <select
+            name="set"
+            defaultValue={set}
+            className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent"
+            aria-label="Filter by set"
+          >
+            <option value="">All sets</option>
+            {masterData.sets.filter((item) => item.active && (!selectedGameRecord || item.gameId === selectedGameRecord.id)).map((item) => (
+              <option key={item.id} value={item.slug}>{item.name}</option>
+            ))}
+          </select>
+          <select
+            name="language"
+            defaultValue={language}
+            className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent"
+            aria-label="Filter by language"
+          >
+            <option value="">All languages</option>
+            {masterData.languages.filter((item) => item.active).map((item) => (
+              <option key={item.id} value={item.code ?? item.slug}>{item.name}</option>
+            ))}
+          </select>
           <select
             name="sort"
             defaultValue={sort}
@@ -105,7 +172,9 @@ export default async function CataloguePage({
             <p className="text-sm text-neutral-400">
               {data.pagination.totalItems} products found{search ? ` for "${search}"` : ''}
             </p>
-            {category ? <p className="mt-1 text-sm text-neutral-500">Filtered by category: {category}</p> : null}
+            {[category, game, productType, set, language].some(Boolean) ? (
+              <p className="mt-1 text-sm text-neutral-500">Filters applied. Use reset to browse everything.</p>
+            ) : null}
           </div>
           <Button asChild variant="ghost">
             <a href="/catalogue">Reset filters</a>
@@ -159,7 +228,7 @@ export default async function CataloguePage({
               ))}
             </div>
             <div className="mt-8">
-              <Pagination meta={data.pagination} hrefForPage={(nextPage) => createHref({ search, category, sort, page: nextPage })} />
+              <Pagination meta={data.pagination} hrefForPage={(nextPage) => createHref({ search, category, game, productType, set, language, sort, page: nextPage })} />
             </div>
           </>
         ) : (

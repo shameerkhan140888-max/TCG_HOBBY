@@ -53,6 +53,15 @@ function createDbMock() {
       findMany: vi.fn(),
       count: vi.fn(),
     },
+    game: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    brand: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    productType: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
     supplier: {
       findMany: vi.fn(),
       count: vi.fn(),
