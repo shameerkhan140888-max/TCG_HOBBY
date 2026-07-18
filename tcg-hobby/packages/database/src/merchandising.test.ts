@@ -65,6 +65,7 @@ function product(overrides: Partial<{
     shippingPromotionProductOnly: true,
     lifecycleState: overrides.lifecycleState ?? 'PUBLISHED',
     published: overrides.published ?? true,
+    hideWhenOutOfStock: false,
     archivedAt: overrides.archivedAt ?? null,
     searchText: 'test product',
     imageLabel: 'Test product image',

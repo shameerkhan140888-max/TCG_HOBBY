@@ -8,6 +8,7 @@ import {
   validateQuantityAgainstAvailability,
   validateQuantityAgainstPurchaseLimit,
 } from './commerce';
+import { getStorefrontPublicProductWhere } from './product-visibility';
 
 const cartRecordInclude = {
   items: {
@@ -92,8 +93,11 @@ export async function getCartSnapshot(userId: string, db = prisma): Promise<Cart
 }
 
 async function loadProductForCart(db = prisma, productId: string) {
-  const product = await db.product.findUnique({
-    where: { id: productId },
+  const product = await db.product.findFirst({
+    where: getStorefrontPublicProductWhere({
+      id: productId,
+      releaseStatus: 'RELEASED',
+    }),
     include: cartProductInclude,
   });
 

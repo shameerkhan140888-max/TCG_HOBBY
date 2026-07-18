@@ -59,6 +59,7 @@ export type ProductImportManifest = {
   status?: ProductImportStatus;
   lifecycleState?: ProductLifecycleState;
   visible?: boolean;
+  hideWhenOutOfStock?: boolean;
   featured?: boolean;
   homepagePriority?: number | null;
   heroFeatured?: boolean;
@@ -110,6 +111,8 @@ export type NormalisedProductImportInput = ProductImportManifest & {
   status: ProductLifecycleState;
   lifecycleState: ProductLifecycleState;
   visible: boolean;
+  hideWhenOutOfStock: boolean;
+  hideWhenOutOfStockWasProvided: boolean;
   featured: boolean;
   recommendationWeight: number;
   isAccessory: boolean;
@@ -455,6 +458,8 @@ export function validateProductImportManifest(
   const lifecycleState = normalizeLifecycleState(rawLifecycle);
   const featured = readBoolean(rawManifest, 'featured') ?? false;
   const visible = readBoolean(rawManifest, 'visible') ?? isPublishedLifecycleState(lifecycleState);
+  const hideWhenOutOfStockWasProvided = Object.prototype.hasOwnProperty.call(rawManifest, 'hideWhenOutOfStock');
+  const hideWhenOutOfStock = readBoolean(rawManifest, 'hideWhenOutOfStock') ?? false;
   const recommendationWeight = readInteger(rawManifest, 'recommendationWeight') ?? 0;
   const isAccessory = readBoolean(rawManifest, 'isAccessory') ?? false;
   const isStaffPick = readBoolean(rawManifest, 'isStaffPick') ?? false;
@@ -476,6 +481,9 @@ export function validateProductImportManifest(
   if (!shortDescription) errors.push('shortDescription is required.');
   if (rawLifecycle && lifecycleState === 'DRAFT' && !['DRAFT', 'ACTIVE'].includes(rawLifecycle)) {
     errors.push(`lifecycleState/status must be one of: ${PRODUCT_LIFECYCLE_STATES.join(', ')}.`);
+  }
+  if (hideWhenOutOfStockWasProvided && readBoolean(rawManifest, 'hideWhenOutOfStock') === undefined) {
+    errors.push('hideWhenOutOfStock must be true or false when provided.');
   }
 
   const purchaseLimitRaw = rawManifest.purchaseLimit;
@@ -581,6 +589,8 @@ export function validateProductImportManifest(
     status: lifecycleState,
     lifecycleState,
     visible,
+    hideWhenOutOfStock,
+    hideWhenOutOfStockWasProvided,
     featured,
     recommendationWeight,
     isAccessory,
@@ -889,6 +899,7 @@ function toProductData(input: NormalisedProductImportInput, categoryId: string, 
     shippingPromotionProductOnly: input.shippingPromotion.productOnly,
     lifecycleState: input.lifecycleState,
     published: input.visible && isPublishedLifecycleState(input.lifecycleState),
+    hideWhenOutOfStock: input.hideWhenOutOfStock,
     archivedAt: input.lifecycleState === 'ARCHIVED' ? new Date() : null,
     searchText: [input.name, input.shortDescription, input.fullDescription, input.contents.join(' ')].join(' ').toLowerCase(),
     imageLabel: input.images.find((image) => image.role === 'PRIMARY')?.alt ?? input.name,
@@ -928,6 +939,7 @@ function pickAuditSnapshot(product: {
   shippingPromotionProductOnly: boolean;
   lifecycleState: string;
   published: boolean;
+  hideWhenOutOfStock: boolean;
   customerPurchaseLimit: number | null;
   categoryId: string;
   importId: string | null;
@@ -951,6 +963,7 @@ function pickAuditSnapshot(product: {
     shippingPromotionProductOnly: product.shippingPromotionProductOnly,
     lifecycleState: product.lifecycleState,
     published: product.published,
+    hideWhenOutOfStock: product.hideWhenOutOfStock,
     customerPurchaseLimit: product.customerPurchaseLimit,
     categoryId: product.categoryId,
   };
@@ -1024,14 +1037,19 @@ export async function importProductFromFolder(
             shippingPromotionProductOnly: true,
             lifecycleState: true,
             published: true,
+            hideWhenOutOfStock: true,
             customerPurchaseLimit: true,
             categoryId: true,
           },
         })
       : null;
     const previousSnapshot = previousProduct ? pickAuditSnapshot(previousProduct) : null;
+    const writeData =
+      plan.productId && !plan.input.hideWhenOutOfStockWasProvided
+        ? (({ hideWhenOutOfStock: _hideWhenOutOfStock, ...dataWithoutOwnedVisibility }) => dataWithoutOwnedVisibility)(data)
+        : data;
     const product = plan.productId
-      ? await tx.product.update({ where: { id: plan.productId }, data })
+      ? await tx.product.update({ where: { id: plan.productId }, data: writeData })
       : await tx.product.create({ data });
 
     await tx.inventoryItem.upsert({

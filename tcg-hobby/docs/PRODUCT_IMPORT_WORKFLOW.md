@@ -106,6 +106,7 @@ product-imports/{game}/{product-slug}/
 - identity: name, slug, SKU and optional barcode
 - brand/game/category/product type
 - lifecycle state and visibility
+- optional out-of-stock listing visibility control (`hideWhenOutOfStock`)
 - VAT-inclusive price and VAT rate
 - exact internal stock quantity
 - purchase limits
@@ -117,6 +118,8 @@ product-imports/{game}/{product-slug}/
 - import source and internal reference notes
 
 The importer may derive slug, internal SKU and SEO defaults. It must not invent contents, release dates, barcodes, reviews, rarity, RRPs, stock levels or supplier claims.
+
+`hideWhenOutOfStock` is optional. New imports default to `false`, which means products remain visible in catalogue/search when stock reaches zero and show `Out of stock`. When omitted on an existing product, the importer preserves the current Admin value. Include an explicit `true` or `false` only when the manifest should own that setting.
 
 ## Media Schema
 

@@ -137,7 +137,13 @@ export default async function CataloguePage({
                           </Button>
                         )
                       ) : (
-                        <AddToCartButton productId={product.id} returnTo={currentHref} />
+                        product.inStock ? (
+                          <AddToCartButton productId={product.id} returnTo={currentHref} />
+                        ) : (
+                          <Button disabled size="sm">
+                            Out of stock
+                          </Button>
+                        )
                       )}
                       <WishlistButton
                         productId={product.id}

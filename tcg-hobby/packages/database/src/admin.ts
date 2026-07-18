@@ -253,6 +253,7 @@ export type AdminProductListItem = {
   shippingPromotionProductOnly: boolean;
   lifecycleState: string;
   published: boolean;
+  hideWhenOutOfStock: boolean;
   customerPurchaseLimit: number | null;
   availabilityMessage: string | null;
   archivedAt: Date | null;
@@ -439,6 +440,7 @@ type ProductFormInput = {
   imageLabel: string;
   featured: boolean;
   published: boolean;
+  hideWhenOutOfStock: boolean;
   customerPurchaseLimit?: number | null;
   availabilityMessage?: string | null;
   primaryImageUrl?: string;
@@ -589,6 +591,7 @@ function mapProductRow(product: ProductRow): AdminProductListItem {
     shippingPromotionProductOnly: product.shippingPromotionProductOnly,
     lifecycleState: product.lifecycleState,
     published: product.published,
+    hideWhenOutOfStock: product.hideWhenOutOfStock,
     customerPurchaseLimit: product.customerPurchaseLimit,
     availabilityMessage: product.availabilityMessage,
     archivedAt: product.archivedAt,
@@ -857,6 +860,7 @@ function buildSeedProductListItem(product: (typeof seedProducts)[number], index:
     shippingPromotionProductOnly: product.shippingPromotionProductOnly ?? true,
     lifecycleState: product.lifecycleState ?? (product.published ? 'PUBLISHED' : 'DRAFT'),
     published: product.published,
+    hideWhenOutOfStock: false,
     customerPurchaseLimit: product.customerPurchaseLimit ?? null,
     availabilityMessage: product.availabilityMessage ?? null,
     archivedAt: null,
@@ -1094,6 +1098,7 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma): 
         currency: 'GBP',
         featured: input.featured,
         published: input.published,
+        hideWhenOutOfStock: input.hideWhenOutOfStock,
         customerPurchaseLimit: input.customerPurchaseLimit ?? null,
         availabilityMessage: input.availabilityMessage || null,
         searchText: `${input.name} ${input.sku} ${input.game} ${input.description} ${input.longDescription}`.toLowerCase(),
@@ -1165,6 +1170,7 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
         currency: 'GBP',
         featured: input.featured,
         published: input.published,
+        hideWhenOutOfStock: input.hideWhenOutOfStock,
         customerPurchaseLimit: input.customerPurchaseLimit ?? null,
         availabilityMessage: input.availabilityMessage || null,
         searchText: `${input.name} ${input.sku} ${input.game} ${input.description} ${input.longDescription}`.toLowerCase(),

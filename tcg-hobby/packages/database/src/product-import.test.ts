@@ -94,6 +94,8 @@ describe('product import validation', () => {
     expect(result.input?.seo.title).toBe('Test Product | TCG Hobby');
     expect(result.input?.recommendationWeight).toBe(0);
     expect(result.input?.isAccessory).toBe(false);
+    expect(result.input?.hideWhenOutOfStock).toBe(false);
+    expect(result.input?.hideWhenOutOfStockWasProvided).toBe(false);
   });
 
   it('accepts optional merchandising metadata without making it required', async () => {
@@ -118,6 +120,15 @@ describe('product import validation', () => {
     });
   });
 
+  it('accepts explicit out-of-stock listing visibility ownership', async () => {
+    const folder = await createImportFolder(validManifest({ hideWhenOutOfStock: true }));
+    const result = await validateProductImportFolder(folder);
+
+    expect(result.valid).toBe(true);
+    expect(result.input?.hideWhenOutOfStock).toBe(true);
+    expect(result.input?.hideWhenOutOfStockWasProvided).toBe(true);
+  });
+
   it('rejects invalid price, negative stock and bad slugs', async () => {
     const folder = await createImportFolder(
       validManifest({
@@ -134,6 +145,14 @@ describe('product import validation', () => {
     expect(result.errors).toContain('priceMinor must be a non-negative integer minor-unit amount.');
     expect(result.errors).toContain('stockQuantity must be a non-negative integer.');
     expect(result.errors).toContain('recommendationWeight must be a non-negative integer.');
+  });
+
+  it('rejects malformed out-of-stock visibility settings', async () => {
+    const folder = await createImportFolder(validManifest({ hideWhenOutOfStock: 'yes' }));
+    const result = await validateProductImportFolder(folder);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain('hideWhenOutOfStock must be true or false when provided.');
   });
 
   it('rejects unsupported categories and missing published supplier data', async () => {

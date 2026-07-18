@@ -8,7 +8,7 @@ function createDbMock() {
       create: vi.fn(),
     },
     product: {
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
     cartItem: {
       upsert: vi.fn(),
@@ -62,7 +62,7 @@ describe('cart repository', () => {
 
   it('prevents adding more units than are available in stock', async () => {
     const db = createDbMock();
-    db.product.findUnique.mockResolvedValue({
+    db.product.findFirst.mockResolvedValue({
       id: 'prod-1',
       slug: 'alpha',
       name: 'Alpha',
@@ -79,11 +79,27 @@ describe('cart repository', () => {
     db.cart.create.mockResolvedValue({ id: 'cart-1' });
 
     await expect(addProductToCart('user-1', 'prod-1', 3, db)).rejects.toThrow('Only 2 in stock for this item.');
+    expect(db.product.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: {
+        AND: [
+          {
+            published: true,
+            lifecycleState: 'PUBLISHED',
+            archivedAt: null,
+            releaseStatus: { not: 'ARCHIVED' },
+          },
+          {
+            id: 'prod-1',
+            releaseStatus: 'RELEASED',
+          },
+        ],
+      },
+    }));
   });
 
   it('prevents adding more units than the customer purchase limit', async () => {
     const db = createDbMock();
-    db.product.findUnique.mockResolvedValue({
+    db.product.findFirst.mockResolvedValue({
       id: 'prod-1',
       slug: 'pokemon-tcg-mega-greninja-ex-premium-collection',
       name: 'Pokemon TCG: Mega Greninja ex Premium Collection',
@@ -104,7 +120,7 @@ describe('cart repository', () => {
 
   it('removes an item when the requested quantity drops to zero', async () => {
     const db = createDbMock();
-    db.product.findUnique.mockResolvedValue({
+    db.product.findFirst.mockResolvedValue({
       id: 'prod-1',
       slug: 'alpha',
       name: 'Alpha',
@@ -128,6 +144,15 @@ describe('cart repository', () => {
         productId: 'prod-1',
       },
     });
+  });
+
+  it('rejects hidden or unpublished products before cart mutation', async () => {
+    const db = createDbMock();
+    db.product.findFirst.mockResolvedValue(null);
+
+    await expect(addProductToCart('user-1', 'prod-hidden', 1, db)).rejects.toThrow('The selected product is unavailable.');
+    expect(db.cart.create).not.toHaveBeenCalled();
+    expect(db.cartItem.upsert).not.toHaveBeenCalled();
   });
 
   it('clears all cart items for the user', async () => {

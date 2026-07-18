@@ -12,6 +12,12 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from './client';
 import { hasFreeUkStandardShipping } from './commerce';
 import {
+  getStorefrontListingProductWhere,
+  getStorefrontPublicProductWhere,
+  isProductPubliclyRouteable,
+  isProductVisibleInStorefrontListings,
+} from './product-visibility';
+import {
   seedCategories,
   seedInventory,
   seedProductImages,
@@ -33,7 +39,18 @@ type CatalogueProductRow = Prisma.ProductGetPayload<{ include: typeof catalogueP
 type CatalogueProductImageRow = CatalogueProductRow['images'][number];
 
 const catalogueCategoryInclude = {
-  products: { where: { published: true }, select: { id: true } },
+  products: {
+    where: getStorefrontListingProductWhere(),
+    select: {
+      id: true,
+      published: true,
+      lifecycleState: true,
+      archivedAt: true,
+      releaseStatus: true,
+      hideWhenOutOfStock: true,
+      inventory: { select: { stockOnHand: true, reservedStock: true } },
+    },
+  },
 } as const satisfies Prisma.CategoryInclude;
 
 type CatalogueCategoryRow = Prisma.CategoryGetPayload<{ include: typeof catalogueCategoryInclude }>;
@@ -215,7 +232,7 @@ function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] 
   const selectedCategory = normalizeSearch(filters.category);
 
   const results = seedProducts
-    .filter((product) => product.published)
+    .filter((product) => product.published && (product.lifecycleState ?? 'PUBLISHED') === 'PUBLISHED' && product.releaseStatus !== 'ARCHIVED')
     .filter((product) => {
       if (!query) {
         return true;
@@ -257,6 +274,32 @@ function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] 
       heroImageUrl: resolveRenderableImageUrl(heroImage?.url),
     };
   });
+}
+
+function buildCatalogueProductWhere(filters: CatalogueFilters): Prisma.ProductWhereInput {
+  const clauses: Prisma.ProductWhereInput[] = [getStorefrontListingProductWhere()];
+
+  if (filters.search) {
+    clauses.push({
+      OR: [
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { description: { contains: filters.search, mode: 'insensitive' } },
+        { longDescription: { contains: filters.search, mode: 'insensitive' } },
+        { searchText: { contains: filters.search, mode: 'insensitive' } },
+        { game: { contains: filters.search, mode: 'insensitive' } },
+      ],
+    });
+  }
+
+  if (filters.category) {
+    clauses.push({ category: { is: { slug: filters.category } } });
+  }
+
+  return clauses.length === 1 ? clauses[0]! : { AND: clauses };
+}
+
+function filterVisibleCatalogueRows(rows: CatalogueProductRow[]): CatalogueProductRow[] {
+  return rows.filter(isProductVisibleInStorefrontListings);
 }
 
 function seedProductsToDetail(slug: string): CatalogueProductDetail | null {
@@ -305,23 +348,7 @@ async function getProductsFromDatabase(
   filters: CatalogueFilters,
   options: { take?: number; skip?: number } = {},
 ): Promise<CatalogueProduct[]> {
-  const where: Prisma.ProductWhereInput = {
-    published: true,
-  };
-
-  if (filters.search) {
-    where.OR = [
-      { name: { contains: filters.search, mode: 'insensitive' } },
-      { description: { contains: filters.search, mode: 'insensitive' } },
-      { longDescription: { contains: filters.search, mode: 'insensitive' } },
-      { searchText: { contains: filters.search, mode: 'insensitive' } },
-      { game: { contains: filters.search, mode: 'insensitive' } },
-    ];
-  }
-
-  if (filters.category) {
-    where.category = { is: { slug: filters.category } };
-  }
+  const where = buildCatalogueProductWhere(filters);
 
   const orderBy: Prisma.ProductOrderByWithRelationInput[] =
     filters.sort === 'price-desc'
@@ -338,11 +365,13 @@ async function getProductsFromDatabase(
     where,
     orderBy,
     include: catalogueProductInclude,
-    ...(options.take !== undefined ? { take: options.take } : {}),
-    ...(options.skip !== undefined ? { skip: options.skip } : {}),
   });
 
-  return rows.map(mapCatalogueProductRow);
+  const visibleRows = filterVisibleCatalogueRows(rows);
+  const start = options.skip ?? 0;
+  const end = options.take !== undefined ? start + options.take : undefined;
+
+  return visibleRows.slice(start, end).map(mapCatalogueProductRow);
 }
 
 async function getProductDetailFromDatabase(slug: string): Promise<CatalogueProductDetail | null> {
@@ -351,7 +380,7 @@ async function getProductDetailFromDatabase(slug: string): Promise<CatalogueProd
     include: catalogueProductInclude,
   });
 
-  if (!product || !product.inventory || !product.supplierProducts[0]?.supplier) {
+  if (!product || !product.inventory || !product.supplierProducts[0]?.supplier || !isProductPubliclyRouteable(product)) {
     return null;
   }
 
@@ -386,7 +415,7 @@ async function getProductDetailFromDatabaseById(id: string): Promise<CataloguePr
     include: catalogueProductInclude,
   });
 
-  if (!product || !product.inventory || !product.supplierProducts[0]?.supplier) {
+  if (!product || !product.inventory || !product.supplierProducts[0]?.supplier || !isProductPubliclyRouteable(product)) {
     return null;
   }
 
@@ -437,7 +466,7 @@ export async function getCatalogueCategories(): Promise<CatalogueCategory[]> {
       slug: category.slug,
       description: category.description,
       sortOrder: category.sortOrder,
-      productCount: category.products.length,
+      productCount: category.products.filter(isProductVisibleInStorefrontListings).length,
     }));
   } catch {
     if (!canUseSeedFallback()) {
@@ -506,23 +535,7 @@ export async function getCatalogueProducts(filters: CatalogueFilters): Promise<C
   }
 
   try {
-    const where: Prisma.ProductWhereInput = {
-      published: true,
-    };
-
-    if (filters.search) {
-      where.OR = [
-        { name: { contains: filters.search, mode: 'insensitive' } },
-        { description: { contains: filters.search, mode: 'insensitive' } },
-        { longDescription: { contains: filters.search, mode: 'insensitive' } },
-        { searchText: { contains: filters.search, mode: 'insensitive' } },
-        { game: { contains: filters.search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (filters.category) {
-      where.category = { is: { slug: filters.category } };
-    }
+    const where = buildCatalogueProductWhere(filters);
 
     const orderBy: Prisma.ProductOrderByWithRelationInput[] =
       filters.sort === 'price-desc'
@@ -533,18 +546,18 @@ export async function getCatalogueProducts(filters: CatalogueFilters): Promise<C
             ? [{ featured: 'desc' }, { createdAt: 'desc' }]
             : [{ featured: 'desc' }, { name: 'asc' }, { createdAt: 'desc' }];
 
-    const totalItems = await prisma.product.count({ where });
-    const pagination = resolvePagination(totalItems, page, pageSize);
     const rows = await prisma.product.findMany({
       where,
       orderBy,
-      take: pageSize,
-      skip: (pagination.page - 1) * pageSize,
       include: catalogueProductInclude,
     });
+    const visibleRows = filterVisibleCatalogueRows(rows);
+    const totalItems = visibleRows.length;
+    const pagination = resolvePagination(totalItems, page, pageSize);
+    const offset = (pagination.page - 1) * pageSize;
 
     return {
-      products: rows.map(mapCatalogueProductRow),
+      products: visibleRows.slice(offset, offset + pageSize).map(mapCatalogueProductRow),
       pagination,
       categories: await getCatalogueCategories(),
       filters: { ...filters, page: pagination.page, pageSize },

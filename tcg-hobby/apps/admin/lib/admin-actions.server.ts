@@ -62,6 +62,16 @@ function revalidateMerchandising(productId: string, productSlug?: string): void 
   }
 }
 
+function revalidateProductVisibility(productId: string, productSlug?: string): void {
+  revalidatePath('/catalogue');
+  revalidatePath('/admin/products');
+  revalidatePath(`/admin/products/${productId}`);
+  revalidatePath('/');
+  if (productSlug) {
+    revalidatePath(`/catalogue/${productSlug}`);
+  }
+}
+
 export async function saveProductAction(_state: ProductFormState, formData: FormData): Promise<ProductFormState> {
   const values = buildProductValues(formData);
   const fieldErrors: FieldErrors = {};
@@ -108,6 +118,7 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
     imageLabel: values.imageLabel || values.name,
     featured: values.featured,
     published: values.published,
+    hideWhenOutOfStock: values.hideWhenOutOfStock,
     customerPurchaseLimit: values.customerPurchaseLimit ? Number.parseInt(values.customerPurchaseLimit, 10) : null,
     availabilityMessage: values.availabilityMessage,
   };
@@ -128,6 +139,7 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
       };
     }
 
+    revalidateProductVisibility(saved.id, saved.slug);
     redirect(`/admin/products/${saved.id}`);
   } catch (error) {
     return {
@@ -158,6 +170,7 @@ export async function toggleProductPublicationAction(formData: FormData) {
   }
 
   await setProductPublication(productId, published);
+  revalidateProductVisibility(productId);
   redirect(`/admin/products/${productId}`);
 }
 

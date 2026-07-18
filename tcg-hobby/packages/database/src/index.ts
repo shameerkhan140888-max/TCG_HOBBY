@@ -197,6 +197,13 @@ export type {
   StorefrontSafeMerchandisingProduct,
 } from './merchandising';
 export {
+  calculateAvailableStockForVisibility,
+  getStorefrontListingProductWhere,
+  getStorefrontPublicProductWhere,
+  isProductPubliclyRouteable,
+  isProductVisibleInStorefrontListings,
+} from './product-visibility';
+export {
   createProductImportPlan,
   derivePublicStockState,
   discoverProductImportFolders,

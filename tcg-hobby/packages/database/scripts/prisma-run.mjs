@@ -23,7 +23,10 @@ try {
   process.exit(1);
 }
 
-if (process.platform === 'win32' && existsSync(generatedClientDir)) {
+const prismaArgs = process.argv.slice(2);
+const commandArgs = prismaArgs.length ? prismaArgs : ['generate'];
+
+if (process.platform === 'win32' && commandArgs[0] === 'generate' && existsSync(generatedClientDir)) {
   try {
     if (existsSync(generatedEnginePath)) {
       rmSync(generatedEnginePath, { force: true });
@@ -39,8 +42,6 @@ if (process.platform === 'win32' && existsSync(generatedClientDir)) {
   }
 }
 
-const prismaArgs = process.argv.slice(2);
-const commandArgs = prismaArgs.length ? prismaArgs : ['generate'];
 if (process.platform === 'win32' && commandArgs[0] === 'generate' && env.TCG_HOBBY_PRISMA_NO_ENGINE === '1') {
   commandArgs.push('--no-engine');
 }

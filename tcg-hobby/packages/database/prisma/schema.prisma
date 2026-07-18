@@ -302,6 +302,7 @@ model Product {
   shippingPromotionProductOnly Boolean @default(true)
   lifecycleState String          @default("DRAFT")
   published     Boolean          @default(true)
+  hideWhenOutOfStock Boolean     @default(false)
   archivedAt    DateTime?
   searchText    String
   imageLabel    String
@@ -360,6 +361,7 @@ model Product {
   @@index([lifecycleState, published])
   @@index([releaseStatus, releaseDate])
   @@index([published, releaseStatus])
+  @@index([published, hideWhenOutOfStock])
   @@index([name])
   @@index([searchText])
 }

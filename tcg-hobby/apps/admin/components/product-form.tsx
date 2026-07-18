@@ -150,7 +150,7 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
       </FormSection>
 
       <FormSection title="Publishing" description="Control storefront visibility and merchandising state.">
-        <div className="flex flex-wrap gap-6">
+        <div className="grid gap-4 md:grid-cols-3">
           <label className="flex items-center gap-3 text-sm text-neutral-300">
             <input name="featured" type="checkbox" value="true" defaultChecked={formState.values.featured} />
             Featured product
@@ -158,6 +158,15 @@ export function ProductForm({ state, categories, suppliers, submitLabel }: Produ
           <label className="flex items-center gap-3 text-sm text-neutral-300">
             <input name="published" type="checkbox" value="true" defaultChecked={formState.values.published} />
             Published in storefront
+          </label>
+          <label className="flex items-start gap-3 text-sm text-neutral-300">
+            <input name="hideWhenOutOfStock" type="checkbox" value="true" defaultChecked={formState.values.hideWhenOutOfStock} className="mt-1" />
+            <span>
+              <span className="block font-semibold text-neutral-100">Hide when out of stock</span>
+              <span className="mt-1 block text-xs leading-5 text-neutral-500">
+                When enabled, this product is removed from catalogue and search when available stock reaches zero. Its direct product page remains accessible.
+              </span>
+            </span>
           </label>
         </div>
       </FormSection>

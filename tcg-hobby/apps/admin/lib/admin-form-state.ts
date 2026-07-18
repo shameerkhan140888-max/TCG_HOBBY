@@ -27,6 +27,7 @@ export type ProductFormValues = {
   availabilityMessage: string;
   featured: boolean;
   published: boolean;
+  hideWhenOutOfStock: boolean;
 };
 
 export type ProductFormState = {
@@ -98,6 +99,7 @@ export const emptyProductFormValues: ProductFormValues = {
   availabilityMessage: '',
   featured: false,
   published: true,
+  hideWhenOutOfStock: false,
 };
 
 export const emptySupplierFormValues: SupplierFormValues = {
@@ -171,6 +173,7 @@ export function buildProductValues(formData: FormData): ProductFormValues {
     availabilityMessage: getString(formData, 'availabilityMessage'),
     featured: getBoolean(formData, 'featured'),
     published: getBoolean(formData, 'published', true),
+    hideWhenOutOfStock: getBoolean(formData, 'hideWhenOutOfStock'),
   };
 }
 

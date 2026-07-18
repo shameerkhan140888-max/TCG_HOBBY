@@ -12,6 +12,7 @@
   "stockQuantity": 3,
   "lifecycleState": "DRAFT",
   "visible": false,
+  "hideWhenOutOfStock": false,
   "featured": false,
   "homepagePriority": null,
   "heroFeatured": false,

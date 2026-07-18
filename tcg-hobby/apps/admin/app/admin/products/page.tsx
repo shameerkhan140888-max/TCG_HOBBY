@@ -104,6 +104,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
                       {product.isStaffPick ? <StatusBadge tone="accent">Staff pick</StatusBadge> : null}
                       {product.isBestSeller ? <StatusBadge tone="warning">Best seller</StatusBadge> : null}
                       {product.isNewArrival ? <StatusBadge tone="success">New arrival</StatusBadge> : null}
+                      {product.hideWhenOutOfStock ? <StatusBadge tone="neutral">Hide at zero stock</StatusBadge> : null}
                     </div>
                   </td>
                   <td className="px-4 py-4 text-neutral-300">{product.categoryName}</td>

@@ -46,6 +46,7 @@ function productState(product: NonNullable<Awaited<ReturnType<typeof getAdminPro
       availabilityMessage: product.availabilityMessage ?? '',
       featured: product.featured,
       published: product.published,
+      hideWhenOutOfStock: product.hideWhenOutOfStock,
     },
   };
 }
@@ -183,6 +184,10 @@ export default async function AdminProductDetailPage({ params, searchParams }: {
               <div>
                 <dt className="text-sm text-neutral-400">Shipping promotion</dt>
                 <dd className="mt-1 font-semibold text-neutral-50">{product.freeUkStandardShipping ? 'Free UK standard delivery' : 'None'}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-neutral-400">Out-of-stock visibility</dt>
+                <dd className="mt-1 font-semibold text-neutral-50">{product.hideWhenOutOfStock ? 'Hide from listings at zero stock' : 'Remain visible at zero stock'}</dd>
               </div>
               <div>
                 <dt className="text-sm text-neutral-400">Product-only shipping</dt>
