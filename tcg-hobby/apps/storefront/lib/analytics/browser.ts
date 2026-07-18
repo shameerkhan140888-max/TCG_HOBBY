@@ -14,6 +14,7 @@ declare global {
 
 let initializedPixelId: string | null = null;
 let scriptPromise: Promise<void> | null = null;
+const trackedCompleteRegistrationEventIds = new Set<string>();
 
 function loadMetaPixelScript() {
   if (typeof window === 'undefined') {
@@ -86,6 +87,21 @@ export function trackPageView() {
 
 export function trackCompleteRegistration(event: Pick<CompleteRegistrationEvent, 'eventId'>) {
   window.fbq?.('track', META_STANDARD_EVENTS.completeRegistration, {}, { eventID: event.eventId });
+}
+
+export function trackCompleteRegistrationOnce(event: Pick<CompleteRegistrationEvent, 'eventId'>) {
+  if (trackedCompleteRegistrationEventIds.has(event.eventId)) {
+    return false;
+  }
+
+  trackedCompleteRegistrationEventIds.add(event.eventId);
+  trackCompleteRegistration(event);
+  console.info('meta_complete_registration_browser_handoff_created', {
+    event: 'meta_complete_registration_browser_handoff_created',
+    eventName: META_STANDARD_EVENTS.completeRegistration,
+    eventId: event.eventId,
+  });
+  return true;
 }
 
 export function trackViewContent() {

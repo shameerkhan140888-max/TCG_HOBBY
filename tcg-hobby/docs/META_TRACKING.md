@@ -60,15 +60,27 @@ The launch signup action creates a Meta event ID only after subscriber persisten
 For a new launch signup:
 
 1. The subscriber is persisted.
-2. A server-side `CompleteRegistration` event is sent through Conversions API.
+2. A server-side `CompleteRegistration` event is sent through Conversions API with a short timeout before the redirect is returned.
 3. The same safe event ID is returned in the redirect URL.
-4. If the browser has marketing cookie consent, the Pixel fires `CompleteRegistration` with the same event ID.
+4. If the browser has marketing cookie consent, the global analytics provider reads the redirect URL and the Pixel fires `CompleteRegistration` with the same event ID.
 
 Meta deduplicates the browser `eventID` and server `event_id`.
 
 Duplicates, validation failures, missing consent, honeypot submissions, database failures and rate-limited submissions do not create conversion events.
 
 Meta outages are non-blocking. They must never fail the signup.
+
+## Production Diagnostics
+
+The signup conversion path emits safe structured logs:
+
+- `meta_complete_registration_created`
+- `meta_complete_registration_browser_handoff_created`
+- `meta_capi_request_attempted`
+- `meta_capi_request_succeeded`
+- `meta_capi_request_failed`
+
+These logs may include the correlation ID, Meta event name, shared event ID, enabled/configured booleans, HTTP status and sanitized Meta error details. They must never include access tokens, raw email addresses, first names, IP addresses, cookies or full request bodies.
 
 ## Customer Data
 
@@ -136,7 +148,8 @@ If CAPI is not sending:
 - confirm `META_CONVERSIONS_API_ENABLED=true`
 - confirm `META_CONVERSIONS_API_ACCESS_TOKEN` is present in Vercel Production
 - confirm the Pixel ID matches the Events Manager data source
-- check server logs for `launch_signup_meta_capi_failed`
+- check server logs for `meta_capi_request_attempted` and either `meta_capi_request_succeeded` or `meta_capi_request_failed`
+- if no CAPI attempt log appears, confirm the signup was a genuinely new eligible subscriber and not a privacy-safe duplicate
 
 If conversions duplicate:
 

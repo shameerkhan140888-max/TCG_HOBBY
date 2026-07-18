@@ -296,6 +296,8 @@ describe('captureLaunchEmailAction', () => {
     expect(mocks.trackCompleteRegistrationServer).toHaveBeenCalledTimes(1);
     expect(consoleError).toHaveBeenCalledWith('launch_signup_meta_capi_failed', {
       event: 'launch_signup_meta_capi_failed',
+      eventName: 'CompleteRegistration',
+      eventId: 'launch_signup_event_123',
       request: {
         correlationId: 'lhr1::request-123',
       },

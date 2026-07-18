@@ -219,18 +219,40 @@ export async function captureLaunchEmailAction(formData: FormData) {
   const metaEventId = signup.created ? createMetaEventId('launch_signup') : undefined;
 
   if (metaEventId) {
-    void trackCompleteRegistrationServer({
+    console.info('meta_complete_registration_created', {
+      event: 'meta_complete_registration_created',
+      eventName: 'CompleteRegistration',
       eventId: metaEventId,
-      email: signup.email,
-      userAgent: requestContext.userAgent,
-      eventSourceUrl: `${getSiteUrl()}${returnTo}`,
-    }).catch(() => {
+      request: {
+        correlationId: requestContext.correlationId,
+      },
+    });
+
+    try {
+      await trackCompleteRegistrationServer({
+        eventId: metaEventId,
+        email: signup.email,
+        userAgent: requestContext.userAgent,
+        eventSourceUrl: `${getSiteUrl()}${returnTo}`,
+      });
+    } catch {
       console.error('launch_signup_meta_capi_failed', {
         event: 'launch_signup_meta_capi_failed',
+        eventName: 'CompleteRegistration',
+        eventId: metaEventId,
         request: {
           correlationId: requestContext.correlationId,
         },
       });
+    }
+
+    console.info('meta_complete_registration_browser_handoff_created', {
+      event: 'meta_complete_registration_browser_handoff_created',
+      eventName: 'CompleteRegistration',
+      eventId: metaEventId,
+      request: {
+        correlationId: requestContext.correlationId,
+      },
     });
   }
 

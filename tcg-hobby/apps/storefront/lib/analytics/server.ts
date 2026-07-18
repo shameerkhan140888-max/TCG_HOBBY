@@ -16,6 +16,91 @@ type MetaConversionsApiPayload = {
   test_event_code?: string;
 };
 
+type SafeMetaError = {
+  code?: string;
+  type?: string;
+  message?: string;
+};
+
+function getPrimaryEvent(payload: MetaConversionsApiPayload) {
+  return payload.data[0];
+}
+
+async function getSafeMetaError(response: Response): Promise<SafeMetaError | undefined> {
+  try {
+    const body = (await response.json()) as unknown;
+
+    if (typeof body !== 'object' || body === null || !('error' in body)) {
+      return undefined;
+    }
+
+    const error = (body as { error?: unknown }).error;
+
+    if (typeof error !== 'object' || error === null) {
+      return undefined;
+    }
+
+    const record = error as Record<string, unknown>;
+    return {
+      ...(typeof record.code === 'number' || typeof record.code === 'string' ? { code: String(record.code) } : {}),
+      ...(typeof record.type === 'string' ? { type: record.type.slice(0, 120) } : {}),
+      ...(typeof record.message === 'string' ? { message: record.message.slice(0, 240) } : {}),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+function logMetaCapiAttempt(payload: MetaConversionsApiPayload, config: ReturnType<typeof getMetaConversionsApiConfig>) {
+  const primaryEvent = getPrimaryEvent(payload);
+
+  console.info('meta_capi_request_attempted', {
+    event: 'meta_capi_request_attempted',
+    eventName: primaryEvent?.event_name,
+    eventId: primaryEvent?.event_id,
+    configured: {
+      enabled: config.enabled,
+      pixelId: Boolean(config.pixelId),
+      accessToken: Boolean(config.accessToken),
+      testEventCode: Boolean(config.testEventCode),
+    },
+  });
+}
+
+function logMetaCapiSucceeded(payload: MetaConversionsApiPayload, config: ReturnType<typeof getMetaConversionsApiConfig>) {
+  const primaryEvent = getPrimaryEvent(payload);
+
+  console.info('meta_capi_request_succeeded', {
+    event: 'meta_capi_request_succeeded',
+    eventName: primaryEvent?.event_name,
+    eventId: primaryEvent?.event_id,
+    configured: {
+      testEventCode: Boolean(config.testEventCode),
+    },
+  });
+}
+
+function logMetaCapiFailed(
+  payload: MetaConversionsApiPayload,
+  config: ReturnType<typeof getMetaConversionsApiConfig>,
+  failure: { reason: string; status?: number; metaError?: SafeMetaError },
+) {
+  const primaryEvent = getPrimaryEvent(payload);
+
+  console.error('meta_capi_request_failed', {
+    event: 'meta_capi_request_failed',
+    eventName: primaryEvent?.event_name,
+    eventId: primaryEvent?.event_id,
+    configured: {
+      enabled: config.enabled,
+      pixelId: Boolean(config.pixelId),
+      accessToken: Boolean(config.accessToken),
+      testEventCode: Boolean(config.testEventCode),
+    },
+    error: failure,
+  });
+}
+
 function sanitizeEventSourceUrl(value: string | undefined) {
   if (!value) {
     return undefined;
@@ -31,8 +116,10 @@ function sanitizeEventSourceUrl(value: string | undefined) {
 
 export async function sendMetaConversionsApiEvent(payload: MetaConversionsApiPayload, timeoutMs = 1800) {
   const config = getMetaConversionsApiConfig();
+  logMetaCapiAttempt(payload, config);
 
   if (!config.enabled || !config.pixelId || !config.accessToken) {
+    logMetaCapiFailed(payload, config, { reason: 'not_configured' });
     return { sent: false as const, reason: 'not_configured' as const };
   }
 
@@ -54,11 +141,15 @@ export async function sendMetaConversionsApiEvent(payload: MetaConversionsApiPay
     });
 
     if (!response.ok) {
+      const metaError = await getSafeMetaError(response);
+      logMetaCapiFailed(payload, config, { reason: 'meta_error', status: response.status, ...(metaError ? { metaError } : {}) });
       return { sent: false as const, reason: 'meta_error' as const, status: response.status };
     }
 
+    logMetaCapiSucceeded(payload, config);
     return { sent: true as const };
   } catch {
+    logMetaCapiFailed(payload, config, { reason: 'network_error' });
     return { sent: false as const, reason: 'network_error' as const };
   } finally {
     clearTimeout(timeout);

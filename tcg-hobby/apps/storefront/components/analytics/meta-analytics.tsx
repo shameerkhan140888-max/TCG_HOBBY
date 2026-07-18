@@ -8,7 +8,15 @@ import {
   setAnalyticsConsent,
   type AnalyticsConsentState,
 } from '../../lib/analytics/consent';
-import { initializeMetaPixel, trackCompleteRegistration, trackPageView } from '../../lib/analytics/browser';
+import { initializeMetaPixel, trackCompleteRegistrationOnce, trackPageView } from '../../lib/analytics/browser';
+
+function getSafeMetaEventId(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  return /^[a-zA-Z0-9_-]{8,120}$/.test(value) ? value : null;
+}
 
 export function MetaAnalyticsProvider({ pixelId }: { pixelId: string | null }) {
   const pathname = usePathname();
@@ -51,6 +59,24 @@ export function MetaAnalyticsProvider({ pixelId }: { pixelId: string | null }) {
       }
     });
   }, [consent, pathname, pixelId, searchParams]);
+
+  useEffect(() => {
+    if (!pixelId || consent !== 'marketing' || searchParams.get('subscriberSignup') !== 'saved') {
+      return;
+    }
+
+    const eventId = getSafeMetaEventId(searchParams.get('metaEventId'));
+
+    if (!eventId) {
+      return;
+    }
+
+    void initializeMetaPixel(pixelId).then((loaded) => {
+      if (loaded && getAnalyticsConsent() === 'marketing') {
+        trackCompleteRegistrationOnce({ eventId });
+      }
+    });
+  }, [consent, pixelId, searchParams]);
 
   return null;
 }
@@ -132,7 +158,7 @@ export function LaunchSignupConversionTracker({ eventId, pixelId }: { eventId?: 
 
     void initializeMetaPixel(pixelId).then((loaded) => {
       if (loaded && getAnalyticsConsent() === 'marketing') {
-        trackCompleteRegistration({ eventId });
+        trackCompleteRegistrationOnce({ eventId });
       }
     });
   }, [eventId, pixelId]);
