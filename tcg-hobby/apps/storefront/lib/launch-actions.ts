@@ -17,7 +17,7 @@ function getReturnTo(value: FormDataEntryValue | null) {
 
 function withSubscriberSignupParam(returnTo: string, value: 'saved' | 'invalid' | 'save' | 'limited' | 'consent' | 'spam') {
   const separator = returnTo.includes('?') ? '&' : '?';
-  return `${returnTo}${separator}subscriberSignup=${value}#launch-list`;
+  return `${returnTo}${separator}subscriberSignup=${value}#join-launch-list`;
 }
 
 async function getRequestIp() {
@@ -54,8 +54,10 @@ export async function captureLaunchEmailAction(formData: FormData) {
     redirect(withSubscriberSignupParam(returnTo, 'limited'));
   }
 
+  let signup: Awaited<ReturnType<typeof upsertMarketingSubscriberSignup>>;
+
   try {
-    const signup = await upsertMarketingSubscriberSignup({
+    signup = await upsertMarketingSubscriberSignup({
       email: result.email,
       firstName,
       marketingConsent: consent,
@@ -63,12 +65,18 @@ export async function captureLaunchEmailAction(formData: FormData) {
       consentSource: source || 'coming-soon-page',
       consentIp: await getRequestIp(),
     });
-
-    if (signup.shouldSendConfirmation) {
-      await sendSubscriberConfirmationEmail(signup);
-    }
   } catch {
     redirect(withSubscriberSignupParam(returnTo, 'save'));
+  }
+
+  if (signup.shouldSendConfirmation) {
+    try {
+      await sendSubscriberConfirmationEmail(signup);
+    } catch {
+      console.error('Launch confirmation email failed after subscriber persistence.', {
+        subscriberId: signup.subscriberId,
+      });
+    }
   }
 
   redirect(withSubscriberSignupParam(returnTo, 'saved'));

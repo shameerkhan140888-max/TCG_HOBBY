@@ -37,4 +37,11 @@ describe('LaunchEmailCapture', () => {
     expect(markup).toContain('Thanks! If this email address is eligible');
     expect(markup).not.toContain('Please check your inbox for confirmation');
   });
+
+  it('does not render internal save error codes as field messages', () => {
+    const markup = renderToStaticMarkup(<LaunchEmailCapture source="coming-soon-page" error="save" />);
+
+    expect(markup).toContain("We couldn&#x27;t complete your signup. Please try again.");
+    expect(markup).not.toContain('>save<');
+  });
 });

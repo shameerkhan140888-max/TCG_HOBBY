@@ -68,14 +68,14 @@ describe('captureLaunchEmailAction', () => {
   });
 
   it('rejects missing marketing consent before persistence or confirmation email', async () => {
-    await expect(captureLaunchEmailAction(createSignupForm())).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=consent#launch-list');
+    await expect(captureLaunchEmailAction(createSignupForm())).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=consent#join-launch-list');
 
     expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
   });
 
   it.each(['false', 'on', 'yes'])('rejects malformed marketing consent value %s', async (value) => {
-    await expect(captureLaunchEmailAction(createSignupForm(value))).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=consent#launch-list');
+    await expect(captureLaunchEmailAction(createSignupForm(value))).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=consent#join-launch-list');
 
     expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
@@ -83,7 +83,7 @@ describe('captureLaunchEmailAction', () => {
 
   it('creates an eligible consented subscriber and sends confirmation email', async () => {
     await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
-      'NEXT_REDIRECT:/?subscriberSignup=saved#launch-list',
+      'NEXT_REDIRECT:/?subscriberSignup=saved#join-launch-list',
     );
 
     expect(mocks.upsertMarketingSubscriberSignup).toHaveBeenCalledWith({
@@ -112,7 +112,7 @@ describe('captureLaunchEmailAction', () => {
     });
 
     await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
-      'NEXT_REDIRECT:/?subscriberSignup=saved#launch-list',
+      'NEXT_REDIRECT:/?subscriberSignup=saved#join-launch-list',
     );
 
     expect(mocks.upsertMarketingSubscriberSignup).toHaveBeenCalledTimes(1);
@@ -130,7 +130,7 @@ describe('captureLaunchEmailAction', () => {
     });
 
     await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
-      'NEXT_REDIRECT:/?subscriberSignup=saved#launch-list',
+      'NEXT_REDIRECT:/?subscriberSignup=saved#join-launch-list',
     );
 
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
@@ -140,7 +140,7 @@ describe('captureLaunchEmailAction', () => {
     const formData = createSignupForm();
     formData.set('company', 'bot company');
 
-    await expect(captureLaunchEmailAction(formData)).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=spam#launch-list');
+    await expect(captureLaunchEmailAction(formData)).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=spam#join-launch-list');
 
     expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
@@ -150,9 +150,36 @@ describe('captureLaunchEmailAction', () => {
     const formData = createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE);
     formData.set('email', 'not-an-email');
 
-    await expect(captureLaunchEmailAction(formData)).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=invalid#launch-list');
+    await expect(captureLaunchEmailAction(formData)).rejects.toThrow('NEXT_REDIRECT:/?subscriberSignup=invalid#join-launch-list');
 
     expect(mocks.upsertMarketingSubscriberSignup).not.toHaveBeenCalled();
+    expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
+  });
+
+  it('returns success when the subscriber is saved but the confirmation email fails', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mocks.sendSubscriberConfirmationEmail.mockRejectedValueOnce(new Error('Resend unavailable'));
+
+    await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
+      'NEXT_REDIRECT:/?subscriberSignup=saved#join-launch-list',
+    );
+
+    expect(mocks.upsertMarketingSubscriberSignup).toHaveBeenCalledTimes(1);
+    expect(mocks.sendSubscriberConfirmationEmail).toHaveBeenCalledTimes(1);
+    expect(consoleError).toHaveBeenCalledWith('Launch confirmation email failed after subscriber persistence.', {
+      subscriberId: 'subscriber-1',
+    });
+
+    consoleError.mockRestore();
+  });
+
+  it('returns the save failure path only when subscriber persistence fails', async () => {
+    mocks.upsertMarketingSubscriberSignup.mockRejectedValueOnce(new Error('Database unavailable'));
+
+    await expect(captureLaunchEmailAction(createSignupForm(LAUNCH_MARKETING_CONSENT_VALUE))).rejects.toThrow(
+      'NEXT_REDIRECT:/?subscriberSignup=save#join-launch-list',
+    );
+
     expect(mocks.sendSubscriberConfirmationEmail).not.toHaveBeenCalled();
   });
 });

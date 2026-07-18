@@ -26,7 +26,7 @@ export function LaunchEmailCapture({
   const serverConsentError = error === 'consent' ? LAUNCH_MARKETING_CONSENT_ERROR : undefined;
   const [clientConsentError, setClientConsentError] = useState<string | undefined>(undefined);
   const consentError = clientConsentError ?? serverConsentError;
-  const emailError = error === 'consent' ? undefined : error;
+  const emailError = error === 'Enter a valid email address.' ? error : undefined;
 
   function focusConsentCheckbox() {
     window.requestAnimationFrame(() => consentRef.current?.focus());
