@@ -15,8 +15,9 @@ test.describe('WP12 operational storefront checks', () => {
 
     await productLink.click();
     await expect(page).toHaveURL(new RegExp(`${pitchBlackSlug}$`));
-    await expect(page.locator('[aria-label*="Pitch Black Booster Pack image gallery"]').first()).toBeVisible();
-    await expect(page.getByText('Product image unavailable')).toBeVisible();
+    const productGallery = page.locator('[aria-label*="Pitch Black Booster Pack image gallery"]').first();
+    await expect(productGallery).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Product image unavailable', exact: true })).toBeVisible();
     await expect(page.getByText(/4\.99/).first()).toBeVisible();
     await page.getByRole('complementary').getByRole('button', { name: /add to basket/i }).click();
     await expect
