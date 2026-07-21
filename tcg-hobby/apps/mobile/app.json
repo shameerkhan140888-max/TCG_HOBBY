@@ -18,6 +18,13 @@
         "backgroundColor": "#050505"
       }
     },
-    "platforms": ["ios", "android"]
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "plugins": [
+      "expo-secure-store",
+      "expo-web-browser"
+    ]
   }
 }

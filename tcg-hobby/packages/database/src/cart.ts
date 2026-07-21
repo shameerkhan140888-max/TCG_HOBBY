@@ -1,4 +1,4 @@
-import type { CartLineItem, CartSummary } from '@tcg-hobby/types';
+import type { CartLineItem, CartSummary, PublicBasketInputItem } from '@tcg-hobby/types';
 import type { Prisma } from '@prisma/client';
 import { prisma } from './client';
 import {
@@ -35,6 +35,65 @@ export type CartProductRow = Prisma.ProductGetPayload<{ include: typeof cartProd
 export type CartSnapshot = CartSummary & {
   cartId: string | null;
 };
+
+export async function getAvailableStockByProductIds(productIds: string[], db = prisma): Promise<Map<string, number>> {
+  if (productIds.length === 0) return new Map();
+  const rows = await db.inventoryItem.findMany({
+    where: { productId: { in: Array.from(new Set(productIds)) } },
+    select: { productId: true, stockOnHand: true, reservedStock: true },
+  });
+  return new Map(rows.map((row) => [row.productId, Math.max(row.stockOnHand - row.reservedStock, 0)]));
+}
+
+export async function resolveGuestCart(items: PublicBasketInputItem[], db = prisma): Promise<CartSnapshot> {
+  const quantities = new Map<string, number>();
+
+  for (const item of items.slice(0, 50)) {
+    if (!item.productId || !Number.isInteger(item.quantity) || item.quantity < 1) {
+      throw new Error('Basket items must include a valid product and quantity.');
+    }
+    quantities.set(item.productId, (quantities.get(item.productId) ?? 0) + item.quantity);
+  }
+
+  if (quantities.size === 0) {
+    return { cartId: null, items: [], subtotalMinor: 0, currency: 'GBP', totalItems: 0 };
+  }
+
+  const products = await db.product.findMany({
+    where: getStorefrontPublicProductWhere({
+      id: { in: Array.from(quantities.keys()) },
+      releaseStatus: 'RELEASED',
+    }),
+    include: cartProductInclude,
+  });
+  const productsById = new Map(products.map((product) => [product.id, product]));
+  const resolvedItems: CartLineItem[] = [];
+
+  for (const [productId, quantity] of quantities) {
+    const product = productsById.get(productId);
+    if (!product?.inventory) {
+      throw new Error('A selected product is unavailable.');
+    }
+
+    const available = product.inventory.stockOnHand - product.inventory.reservedStock;
+    assertAvailableQuantity(quantity, available);
+    assertPurchaseLimit(quantity, product.customerPurchaseLimit);
+    resolvedItems.push({
+      id: `${product.id}-guest`,
+      productId: product.id,
+      productName: product.name,
+      productSlug: product.slug,
+      quantity,
+      unitPriceMinor: product.priceMinor,
+      totalMinor: calculateLineTotal(product.priceMinor, quantity),
+      inStock: available > 0,
+      customerPurchaseLimit: product.customerPurchaseLimit,
+      freeUkStandardShipping: product.freeUkStandardShipping || hasFreeUkStandardShipping(product.slug),
+    });
+  }
+
+  return { cartId: null, ...calculateCartSummary(resolvedItems, 'GBP') };
+}
 
 function mapCartItemRow(item: CartItemRow): CartLineItem {
   const inventory = item.product.inventory;

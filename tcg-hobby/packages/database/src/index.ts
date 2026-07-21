@@ -129,16 +129,19 @@ export {
 export {
   addProductToCart,
   clearCart,
+  getAvailableStockByProductIds,
   getCartItemQuantity,
   getCartSnapshot,
   getCustomerCart,
   getCustomerCartDetails,
+  resolveGuestCart,
   removeCartItem,
   updateCartItemQuantity,
 } from './cart';
 export {
   attachStripeSessionToOrder,
   createPendingCheckoutOrder,
+  createHostedCheckoutSession,
   createStripeCheckoutSession,
   finalizePaidCheckoutOrder,
   getAvailableShippingMethods,

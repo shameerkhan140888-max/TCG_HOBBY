@@ -130,6 +130,145 @@ export type ApiHealth = {
   service: 'tcg-hobby-api';
 };
 
+export type PublicStockState = 'OUT_OF_STOCK' | 'LOW_STOCK' | 'IN_STOCK';
+
+export type PublicProductImage = {
+  id: string;
+  url: string;
+  altText: string;
+  sortOrder: number;
+  isPrimary: boolean;
+};
+
+export type PublicProductSummary = {
+  id: string;
+  slug: string;
+  name: string;
+  brand: string | null;
+  game: string;
+  category: { name: string; slug: string };
+  productType: string | null;
+  price: Money;
+  stockState: PublicStockState;
+  purchasable: boolean;
+  featured: boolean;
+  releaseStatus: ProductReleaseStatus;
+  releaseDate: string | null;
+  image: PublicProductImage | null;
+  purchaseLimit: number | null;
+  freeUkStandardShipping: boolean;
+  availabilityMessage: string | null;
+};
+
+export type PublicProductDetail = PublicProductSummary & {
+  setName: string | null;
+  language: string | null;
+  condition: ProductCondition;
+  shortDescription: string;
+  longDescription: string;
+  images: PublicProductImage[];
+  relatedProducts: PublicProductSummary[];
+};
+
+export type PublicCatalogueOption = {
+  id: string;
+  name: string;
+  value: string;
+  gameId: string | null;
+};
+
+export type PublicCatalogueFilterOptions = {
+  games: PublicCatalogueOption[];
+  productTypes: PublicCatalogueOption[];
+  sets: PublicCatalogueOption[];
+  languages: PublicCatalogueOption[];
+  categories: PublicCatalogueOption[];
+  sorts: Array<{ value: CatalogueSort; label: string }>;
+};
+
+export type PublicCatalogueResponse = {
+  products: PublicProductSummary[];
+  pagination: PaginationMeta;
+  filters: CatalogueFilters;
+};
+
+export type PublicHomeResponse = {
+  featuredProducts: PublicProductSummary[];
+  latestProducts: PublicProductSummary[];
+  categories: PublicCatalogueOption[];
+};
+
+export type PublicBasketInputItem = {
+  productId: string;
+  quantity: number;
+};
+
+export type PublicBasketItem = CartLineItem & {
+  image: PublicProductImage | null;
+  stockState: PublicStockState;
+};
+
+export type PublicBasket = {
+  items: PublicBasketItem[];
+  subtotalMinor: number;
+  currency: CurrencyCode;
+  totalItems: number;
+};
+
+export type PublicSessionUser = {
+  id: string;
+  email: string;
+  name: string | null;
+};
+
+export type PublicSession = {
+  token: string;
+  expiresAt: string;
+  user: PublicSessionUser;
+};
+
+export type PublicAccount = {
+  user: PublicSessionUser;
+};
+
+export type PublicOrderSummary = {
+  orderNumber: string;
+  paymentStatus: PaymentStatus;
+  fulfilmentStatus: FulfilmentStatus;
+  currency: CurrencyCode;
+  totalMinor: number;
+  itemCount: number;
+  createdAt: string;
+};
+
+export type PublicOrderDetail = PublicOrderSummary & {
+  subtotalMinor: number;
+  shippingMinor: number;
+  taxMinor: number;
+  shippingMethodName: string;
+  items: OrderLineItem[];
+};
+
+export type PublicCheckoutRequest = {
+  guestItems?: PublicBasketInputItem[];
+  shippingAddress: CheckoutAddress;
+  shippingMethodCode: ShippingMethodCode;
+  returnUrl?: string;
+};
+
+export type PublicCheckoutResponse = {
+  orderNumber: string;
+  checkoutUrl: string;
+};
+
+export type PublicApiErrorCode = 'NETWORK' | 'TIMEOUT' | 'UNAUTHORISED' | 'VALIDATION' | 'NOT_FOUND' | 'CONFLICT' | 'SERVER';
+
+export type PublicApiError = {
+  code: PublicApiErrorCode;
+  message: string;
+  fieldErrors?: Record<string, string>;
+};
+
 export type PaymentStatus = 'REQUIRES_PAYMENT' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED' | 'CANCELED' | 'REFUNDED';
 
 export type FulfilmentStatus = 'PENDING' | 'PICKING' | 'PACKED' | 'SHIPPED' | 'CANCELLED';

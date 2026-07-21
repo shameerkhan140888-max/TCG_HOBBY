@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { addProductToCart, clearCart, getCustomerCartDetails, updateCartItemQuantity } from './cart';
+import { addProductToCart, clearCart, getCustomerCartDetails, resolveGuestCart, updateCartItemQuantity } from './cart';
 
 function createDbMock() {
   return {
@@ -9,7 +9,9 @@ function createDbMock() {
     },
     product: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
+    inventoryItem: { findMany: vi.fn() },
     cartItem: {
       upsert: vi.fn(),
       deleteMany: vi.fn(),
@@ -174,5 +176,28 @@ describe('cart repository', () => {
         cartId: 'cart-1',
       },
     });
+  });
+
+  it('reconciles a guest basket with canonical prices and purchase limits', async () => {
+    const db = createDbMock();
+    db.product.findMany.mockResolvedValue([{
+      id: 'prod-1', slug: 'alpha', name: 'Alpha', priceMinor: 4999, customerPurchaseLimit: 1,
+      freeUkStandardShipping: true, inventory: { stockOnHand: 3, reservedStock: 0 },
+    }]);
+
+    const basket = await resolveGuestCart([{ productId: 'prod-1', quantity: 1 }], db);
+
+    expect(basket.subtotalMinor).toBe(4999);
+    expect(basket.items[0]).toMatchObject({ productId: 'prod-1', quantity: 1, unitPriceMinor: 4999 });
+    expect(db.product.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects a guest basket that exceeds the canonical purchase limit', async () => {
+    const db = createDbMock();
+    db.product.findMany.mockResolvedValue([{
+      id: 'prod-1', slug: 'alpha', name: 'Alpha', priceMinor: 4999, customerPurchaseLimit: 1,
+      inventory: { stockOnHand: 3, reservedStock: 0 },
+    }]);
+    await expect(resolveGuestCart([{ productId: 'prod-1', quantity: 2 }], db)).rejects.toThrow('Limited to one collection');
   });
 });

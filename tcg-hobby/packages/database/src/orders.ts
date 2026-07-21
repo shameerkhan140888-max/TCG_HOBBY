@@ -915,3 +915,66 @@ export async function getOrderByStripeCheckoutSessionId(stripeCheckoutSessionId:
 export async function getAvailableShippingMethods(country: string): Promise<ShippingMethod[]> {
   return getShippingMethodsForCountry(country);
 }
+
+export async function createHostedCheckoutSession(params: {
+  userId: string | null;
+  cart: CartSnapshot;
+  shippingAddress: CheckoutAddress;
+  shippingMethodCode: ShippingMethodCode;
+  successUrl: string;
+  cancelUrl: string;
+}) {
+  const shippingMethods = await getAvailableShippingMethods(params.shippingAddress.country);
+  const shippingMethod = shippingMethods.find((method) => method.code === params.shippingMethodCode);
+
+  if (!shippingMethod) {
+    throw new Error('Choose a valid shipping method for the selected country.');
+  }
+
+  const reservation = await createPendingCheckoutOrder(params.userId, params.cart, {
+    shippingAddress: params.shippingAddress,
+    shippingMethodCode: shippingMethod.code,
+  });
+
+  try {
+    const checkoutSession = await createStripeCheckoutSession({
+      orderNumber: reservation.order.orderNumber,
+      customerEmail: params.shippingAddress.email,
+      lineItems: [
+        ...reservation.items.map((item) => ({
+          name: item.productName,
+          description: `${item.quantity} x ${item.productSlug}`,
+          amountMinor: item.unitPriceMinor,
+          quantity: item.quantity,
+        })),
+        {
+          name: shippingMethod.name,
+          description: reservation.shippingMinor === 0 ? `${shippingMethod.etaLabel} - free for this basket` : shippingMethod.etaLabel,
+          amountMinor: reservation.shippingMinor,
+          quantity: 1,
+        },
+      ],
+      successUrl: params.successUrl,
+      cancelUrl: params.cancelUrl,
+    });
+
+    if (!checkoutSession.url) {
+      throw new Error('The secure checkout destination is unavailable.');
+    }
+
+    await attachStripeSessionToOrder({
+      orderId: reservation.order.id,
+      stripeCheckoutSessionId: checkoutSession.id,
+      stripeCheckoutUrl: checkoutSession.url,
+      paymentIntentId: checkoutSession.payment_intent,
+    });
+
+    return {
+      orderNumber: reservation.order.orderNumber,
+      checkoutUrl: checkoutSession.url,
+    };
+  } catch (error) {
+    await releaseCheckoutOrderReservation(reservation.order.id);
+    throw error;
+  }
+}
