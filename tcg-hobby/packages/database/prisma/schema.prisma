@@ -13,6 +13,10 @@ enum UserRole {
   ADMIN
 }
 
+enum UserSecurityTokenType {
+  PASSWORD_RESET
+}
+
 enum ProductCondition {
   MINT
   NEAR_MINT
@@ -186,6 +190,38 @@ model User {
   collectionInsightSnapshot CollectionInsightSnapshot?
   marketingSubscribers MarketingSubscriber[]
   marketingCampaigns MarketingCampaign[]
+  securityTokens UserSecurityToken[]
+  roleChangesReceived AdminRoleChange[] @relation("RoleChangesForUser")
+  roleChangesMade AdminRoleChange[] @relation("RoleChangesByUser")
+}
+
+model UserSecurityToken {
+  id        String                @id @default(cuid())
+  userId    String
+  type      UserSecurityTokenType
+  tokenHash String                @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime              @default(now())
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, createdAt])
+  @@index([expiresAt, usedAt])
+}
+
+model AdminRoleChange {
+  id              String   @id @default(cuid())
+  userId          String
+  previousRole    UserRole
+  newRole         UserRole
+  changedByUserId String?
+  source          String
+  createdAt       DateTime @default(now())
+  user            User     @relation("RoleChangesForUser", fields: [userId], references: [id], onDelete: Restrict)
+  changedBy       User?    @relation("RoleChangesByUser", fields: [changedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([changedByUserId, createdAt])
 }
 
 model Address {
@@ -396,6 +432,10 @@ model Product {
   hideWhenOutOfStock Boolean     @default(false)
   archivedAt    DateTime?
   searchText    String
+  searchTags    String[]         @default([])
+  productHighlights String[]     @default([])
+  specificationSummary String?
+  verifiedContents String[]      @default([])
   imageLabel    String
   releaseStatus ProductReleaseStatus @default(RELEASED)
   releaseDate   DateTime?
@@ -417,6 +457,9 @@ model Product {
   setRef        ProductSet?      @relation(fields: [setId], references: [id], onDelete: Restrict)
   inventory     InventoryItem?
   images        ProductImage[]
+  facts         ProductFact[]
+  contentGenerations ProductContentGeneration[]
+  imageCleanupTasks ProductImageCleanup[]
   wishlistItems WishlistItem[]
   cartItems     CartItem[]
   orderItems    OrderItem[]
@@ -517,16 +560,85 @@ model ProductImage {
   id         String   @id @default(cuid())
   productId  String
   url        String
+  thumbnailUrl String?
+  storageKey String? @unique
+  storageProvider String?
   altText    String
   imageType  String   @default("gallery")
   sortOrder  Int      @default(0)
   isPrimary  Boolean  @default(false)
+  width      Int?
+  height     Int?
+  mimeType   String?
+  byteSize   Int?
+  uploadedById String?
+  deletionState String @default("ACTIVE")
+  deletedAt  DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@index([productId, deletionState, isPrimary, sortOrder])
   @@index([productId, isPrimary])
   @@index([productId, sortOrder])
+}
+
+model ProductFact {
+  id                String    @id @default(cuid())
+  productId         String
+  key               String
+  value             String
+  valueType         String    @default("TEXT")
+  verificationState String    @default("UNVERIFIED")
+  sourceReference   String?
+  notes             String?
+  sortOrder         Int       @default(0)
+  verifiedAt        DateTime?
+  verifiedById      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  product           Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, key])
+  @@index([productId, verificationState, sortOrder])
+}
+
+model ProductContentGeneration {
+  id               String    @id @default(cuid())
+  productId        String
+  requestedById    String
+  provider         String
+  model            String
+  status           String    @default("DRAFT")
+  requestedFields  Json
+  generatedContent Json
+  warnings         Json
+  appliedFields    Json?
+  previousValues   Json?
+  appliedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  product          Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, createdAt])
+  @@index([requestedById, createdAt])
+}
+
+model ProductImageCleanup {
+  id          String    @id @default(cuid())
+  productId   String
+  imageId     String?
+  objectKey   String
+  status      String    @default("PENDING")
+  attempts    Int       @default(0)
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([productId, status])
 }
 
 model Release {

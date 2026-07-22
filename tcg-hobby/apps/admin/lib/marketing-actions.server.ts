@@ -8,6 +8,7 @@ import {
 } from '@tcg-hobby/database';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { requireAdminRole } from './auth.server';
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -21,6 +22,7 @@ function parseStatus(value: string) {
 }
 
 export async function updateSubscriberStatusAction(formData: FormData) {
+  await requireAdminRole();
   const id = getString(formData, 'subscriberId');
   const status = parseStatus(getString(formData, 'status'));
 
@@ -32,6 +34,7 @@ export async function updateSubscriberStatusAction(formData: FormData) {
 }
 
 export async function updateSubscriberTagsAction(formData: FormData) {
+  await requireAdminRole();
   const id = getString(formData, 'subscriberId');
   const tags = getString(formData, 'tags')
     .split(',')
@@ -46,6 +49,7 @@ export async function updateSubscriberTagsAction(formData: FormData) {
 }
 
 export async function createCampaignDraftAction(formData: FormData) {
+  await requireAdminRole();
   const name = getString(formData, 'name');
   const subject = getString(formData, 'subject');
   const previewText = getString(formData, 'previewText');

@@ -7,11 +7,13 @@ import type {
   PaginationMeta,
 } from '@tcg-hobby/types';
 import { slugify } from '@tcg-hobby/utils';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import type { Prisma } from '@prisma/client';
 import { prisma } from './client';
 import { hasFreeUkStandardShipping } from './commerce';
+import {
+  resolveProductCardImage,
+  resolveProductImageUrl,
+} from './product-image-resolution';
 import {
   getStorefrontListingProductWhere,
   getStorefrontPublicProductWhere,
@@ -37,11 +39,16 @@ const catalogueProductInclude = {
   languageRef: true,
   setRef: true,
   inventory: true,
-  images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
+  images: {
+    where: { deletionState: 'ACTIVE' },
+    orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }, { id: 'asc' }],
+  },
   supplierProducts: { include: { supplier: true }, take: 1 },
 } as const satisfies Prisma.ProductInclude;
 
-type CatalogueProductRow = Prisma.ProductGetPayload<{ include: typeof catalogueProductInclude }>;
+type CatalogueProductRow = Prisma.ProductGetPayload<{
+  include: typeof catalogueProductInclude;
+}>;
 type CatalogueProductImageRow = CatalogueProductRow['images'][number];
 
 const catalogueCategoryInclude = {
@@ -59,7 +66,9 @@ const catalogueCategoryInclude = {
   },
 } as const satisfies Prisma.CategoryInclude;
 
-type CatalogueCategoryRow = Prisma.CategoryGetPayload<{ include: typeof catalogueCategoryInclude }>;
+type CatalogueCategoryRow = Prisma.CategoryGetPayload<{
+  include: typeof catalogueCategoryInclude;
+}>;
 
 export type CatalogueProductsResult = {
   products: CatalogueProduct[];
@@ -81,28 +90,6 @@ function createCatalogueDatabaseError(reason: string) {
   return new Error(`Catalogue database query failed in production: ${reason}`);
 }
 
-function localPublicImageExists(url: string): boolean {
-  if (!url.startsWith('/')) {
-    return true;
-  }
-
-  const relativePath = url.replace(/^\/+/, '');
-  const candidates = [
-    join(process.cwd(), 'public', relativePath),
-    join(process.cwd(), 'apps', 'storefront', 'public', relativePath),
-  ];
-
-  return candidates.some((path) => existsSync(path));
-}
-
-function resolveRenderableImageUrl(url: string | null | undefined): string | null {
-  if (!url) {
-    return null;
-  }
-
-  return localPublicImageExists(url) ? url : null;
-}
-
 function normalizeSearch(value: string | null | undefined): string {
   return value?.trim().toLowerCase() ?? '';
 }
@@ -111,7 +98,11 @@ function slugToLegacyLabel(value: string): string {
   return value.replace(/-/g, ' ');
 }
 
-function resolvePagination(totalItems: number, page: number, pageSize: number): PaginationMeta {
+function resolvePagination(
+  totalItems: number,
+  page: number,
+  pageSize: number,
+): PaginationMeta {
   const totalPages = Math.max(Math.ceil(totalItems / pageSize), 1);
   const currentPage = Math.min(Math.max(page, 1), totalPages);
 
@@ -125,11 +116,16 @@ function resolvePagination(totalItems: number, page: number, pageSize: number): 
   };
 }
 
-function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct {
+function mapCatalogueProductRow(
+  product: CatalogueProductRow,
+): CatalogueProduct {
   const supplier = product.supplierProducts[0]?.supplier;
   const inventory = product.inventory;
-  const primaryImage = product.images.find((image) => image.isPrimary) ?? product.images[0] ?? null;
-  const heroImage = product.images.find((image) => image.imageType === 'hero') ?? null;
+  const { image: primaryImage, url: cardImageUrl } = resolveProductCardImage(
+    product.images,
+  );
+  const heroImage =
+    product.images.find((image) => image.imageType === 'hero') ?? null;
   const stockOnHand = inventory?.stockOnHand ?? 0;
   const reservedStock = inventory?.reservedStock ?? 0;
 
@@ -143,7 +139,10 @@ function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct 
     description: product.description,
     categoryName: product.category.name,
     categorySlug: product.category.slug,
-    price: { amountMinor: product.priceMinor, currency: product.currency as CatalogueProduct['price']['currency'] },
+    price: {
+      amountMinor: product.priceMinor,
+      currency: product.currency as CatalogueProduct['price']['currency'],
+    },
     featured: product.featured,
     homepagePriority: product.homepagePriority,
     heroFeatured: product.heroFeatured,
@@ -152,13 +151,18 @@ function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct 
     stockOnHand,
     reservedStock,
     supplierName: supplier?.name ?? 'Unassigned',
-    badge: product.featured ? 'Featured' : product.releaseStatus !== 'RELEASED' ? product.releaseStatus.replace('_', ' ') : product.category.name,
+    badge: product.featured
+      ? 'Featured'
+      : product.releaseStatus !== 'RELEASED'
+        ? product.releaseStatus.replace('_', ' ')
+        : product.category.name,
     imageLabel: product.imageLabel,
-    imageUrl: resolveRenderableImageUrl(primaryImage?.url),
+    imageUrl: cardImageUrl,
     imageAlt: primaryImage?.altText ?? null,
-    heroImageUrl: resolveRenderableImageUrl(heroImage?.url),
+    heroImageUrl: resolveProductImageUrl(heroImage?.url),
     vatRate: product.vatRate,
-    freeUkStandardShipping: product.freeUkStandardShipping || hasFreeUkStandardShipping(product.slug),
+    freeUkStandardShipping:
+      product.freeUkStandardShipping || hasFreeUkStandardShipping(product.slug),
     shippingPromotionProductOnly: product.shippingPromotionProductOnly,
     releaseStatus: product.releaseStatus,
     releaseDate: product.releaseDate?.toISOString() ?? null,
@@ -179,8 +183,10 @@ function mapCatalogueProductRow(product: CatalogueProductRow): CatalogueProduct 
   };
 }
 
-function mapCatalogueProductImageRow(image: CatalogueProductImageRow): CatalogueProductImage | null {
-  const url = resolveRenderableImageUrl(image.url);
+function mapCatalogueProductImageRow(
+  image: CatalogueProductImageRow,
+): CatalogueProductImage | null {
+  const url = resolveProductImageUrl(image.url);
 
   if (!url) {
     return null;
@@ -200,7 +206,7 @@ function mapSeedProductImages(productSlug: string): CatalogueProductImage[] {
   return seedProductImages
     .filter((image) => image.productSlug === productSlug)
     .map((image) => {
-      const url = resolveRenderableImageUrl(image.url);
+      const url = resolveProductImageUrl(image.url);
 
       if (!url) {
         return null;
@@ -227,7 +233,10 @@ function getSeedSupplierBySlug(slug: string) {
 }
 
 function getSeedInventoryByProductSlug(productSlug: string) {
-  return seedInventory.find((inventory) => inventory.productSlug === productSlug) ?? null;
+  return (
+    seedInventory.find((inventory) => inventory.productSlug === productSlug) ??
+    null
+  );
 }
 
 function getSeedProductBySlug(slug: string) {
@@ -238,7 +247,9 @@ function getSeedProductById(id: string) {
   return seedProducts.find((product) => product.id === id) ?? null;
 }
 
-function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] {
+function seedProductsToCatalogue(
+  filters: CatalogueFilters,
+): CatalogueProduct[] {
   const query = normalizeSearch(filters.search);
   const selectedCategory = normalizeSearch(filters.category);
   const selectedGame = normalizeSearch(filters.game);
@@ -247,13 +258,22 @@ function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] 
   const selectedLanguage = normalizeSearch(filters.language);
 
   const results = seedProducts
-    .filter((product) => product.published && (product.lifecycleState ?? 'PUBLISHED') === 'PUBLISHED' && product.releaseStatus !== 'ARCHIVED')
+    .filter(
+      (product) =>
+        product.published &&
+        (product.lifecycleState ?? 'PUBLISHED') === 'PUBLISHED' &&
+        product.releaseStatus !== 'ARCHIVED',
+    )
     .filter((product) => {
       if (!query) {
         return true;
       }
 
-      return product.searchText.includes(query) || product.name.toLowerCase().includes(query) || product.description.toLowerCase().includes(query);
+      return (
+        product.searchText.includes(query) ||
+        product.name.toLowerCase().includes(query) ||
+        product.description.toLowerCase().includes(query)
+      );
     })
     .filter((product) => {
       if (!selectedCategory) {
@@ -265,7 +285,10 @@ function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] 
     })
     .filter((product) => {
       if (!selectedGame) return true;
-      return normalizeSearch(product.game) === selectedGame || slugify(product.game) === selectedGame;
+      return (
+        normalizeSearch(product.game) === selectedGame ||
+        slugify(product.game) === selectedGame
+      );
     })
     .filter((product) => {
       if (!selectedProductType) return true;
@@ -273,7 +296,10 @@ function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] 
     })
     .filter((product) => {
       if (!selectedSet) return true;
-      return normalizeSearch(product.setName) === selectedSet || slugify(product.setName ?? '') === selectedSet;
+      return (
+        normalizeSearch(product.setName) === selectedSet ||
+        slugify(product.setName ?? '') === selectedSet
+      );
     })
     .filter((product) => {
       if (!selectedLanguage) return true;
@@ -291,8 +317,17 @@ function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] 
     const inventory = getSeedInventoryByProductSlug(product.slug);
     const category = getSeedCategoryBySlug(product.categorySlug);
     const supplier = getSeedSupplierBySlug(product.supplierSlug);
-    const primaryImage = seedProductImages.find((image) => image.productSlug === product.slug && image.isPrimary) ?? seedProductImages.find((image) => image.productSlug === product.slug) ?? null;
-    const heroImage = seedProductImages.find((image) => image.productSlug === product.slug && image.imageType === 'hero') ?? null;
+    const primaryImage =
+      seedProductImages.find(
+        (image) => image.productSlug === product.slug && image.isPrimary,
+      ) ??
+      seedProductImages.find((image) => image.productSlug === product.slug) ??
+      null;
+    const heroImage =
+      seedProductImages.find(
+        (image) =>
+          image.productSlug === product.slug && image.imageType === 'hero',
+      ) ?? null;
 
     if (!inventory || !category || !supplier) {
       throw new Error(`Incomplete seed data for product ${product.slug}`);
@@ -300,15 +335,19 @@ function seedProductsToCatalogue(filters: CatalogueFilters): CatalogueProduct[] 
 
     return {
       ...toCatalogueProduct(product, inventory, category, supplier),
-      imageUrl: resolveRenderableImageUrl(primaryImage?.url),
+      imageUrl: resolveProductImageUrl(primaryImage?.url),
       imageAlt: primaryImage?.altText ?? null,
-      heroImageUrl: resolveRenderableImageUrl(heroImage?.url),
+      heroImageUrl: resolveProductImageUrl(heroImage?.url),
     };
   });
 }
 
-function buildCatalogueProductWhere(filters: CatalogueFilters): Prisma.ProductWhereInput {
-  const clauses: Prisma.ProductWhereInput[] = [getStorefrontListingProductWhere()];
+function buildCatalogueProductWhere(
+  filters: CatalogueFilters,
+): Prisma.ProductWhereInput {
+  const clauses: Prisma.ProductWhereInput[] = [
+    getStorefrontListingProductWhere(),
+  ];
 
   if (filters.search) {
     clauses.push({
@@ -331,7 +370,12 @@ function buildCatalogueProductWhere(filters: CatalogueFilters): Prisma.ProductWh
       OR: [
         { gameRef: { is: { slug: filters.game } } },
         { game: { equals: filters.game, mode: 'insensitive' } },
-        { game: { contains: slugToLegacyLabel(filters.game), mode: 'insensitive' } },
+        {
+          game: {
+            contains: slugToLegacyLabel(filters.game),
+            mode: 'insensitive',
+          },
+        },
       ],
     });
   }
@@ -341,7 +385,12 @@ function buildCatalogueProductWhere(filters: CatalogueFilters): Prisma.ProductWh
       OR: [
         { productTypeRef: { is: { slug: filters.productType } } },
         { productType: { equals: filters.productType, mode: 'insensitive' } },
-        { productType: { contains: slugToLegacyLabel(filters.productType), mode: 'insensitive' } },
+        {
+          productType: {
+            contains: slugToLegacyLabel(filters.productType),
+            mode: 'insensitive',
+          },
+        },
       ],
     });
   }
@@ -351,19 +400,31 @@ function buildCatalogueProductWhere(filters: CatalogueFilters): Prisma.ProductWh
       OR: [
         { setRef: { is: { slug: filters.set } } },
         { setName: { equals: filters.set, mode: 'insensitive' } },
-        { setName: { contains: slugToLegacyLabel(filters.set), mode: 'insensitive' } },
+        {
+          setName: {
+            contains: slugToLegacyLabel(filters.set),
+            mode: 'insensitive',
+          },
+        },
       ],
     });
   }
 
   if (filters.language) {
-    clauses.push({ OR: [{ languageRef: { is: { code: filters.language } } }, { language: { equals: filters.language, mode: 'insensitive' } }] });
+    clauses.push({
+      OR: [
+        { languageRef: { is: { code: filters.language } } },
+        { language: { equals: filters.language, mode: 'insensitive' } },
+      ],
+    });
   }
 
   return clauses.length === 1 ? clauses[0]! : { AND: clauses };
 }
 
-function filterVisibleCatalogueRows(rows: CatalogueProductRow[]): CatalogueProductRow[] {
+function filterVisibleCatalogueRows(
+  rows: CatalogueProductRow[],
+): CatalogueProductRow[] {
   return rows.filter(isProductVisibleInStorefrontListings);
 }
 
@@ -393,8 +454,17 @@ function seedProductsToDetail(slug: string): CatalogueProductDetail | null {
 
   return {
     ...toCatalogueProductDetail(product, inventory, category, supplier),
-    imageUrl: resolveRenderableImageUrl(seedProductImages.find((image) => image.productSlug === product.slug && image.isPrimary)?.url),
-    heroImageUrl: resolveRenderableImageUrl(seedProductImages.find((image) => image.productSlug === product.slug && image.imageType === 'hero')?.url),
+    imageUrl: resolveProductImageUrl(
+      seedProductImages.find(
+        (image) => image.productSlug === product.slug && image.isPrimary,
+      )?.url,
+    ),
+    heroImageUrl: resolveProductImageUrl(
+      seedProductImages.find(
+        (image) =>
+          image.productSlug === product.slug && image.imageType === 'hero',
+      )?.url,
+    ),
     images: mapSeedProductImages(product.slug),
     relatedProducts,
   };
@@ -423,7 +493,12 @@ async function getProductsFromDatabase(
         : filters.sort === 'newest'
           ? [{ featured: 'desc' }, { createdAt: 'desc' }]
           : filters.sort === 'featured'
-            ? [{ featured: 'desc' }, { homepagePriority: 'asc' }, { name: 'asc' }, { createdAt: 'desc' }]
+            ? [
+                { featured: 'desc' },
+                { homepagePriority: 'asc' },
+                { name: 'asc' },
+                { createdAt: 'desc' },
+              ]
             : [{ featured: 'desc' }, { name: 'asc' }, { createdAt: 'desc' }];
 
   const rows = await prisma.product.findMany({
@@ -439,7 +514,9 @@ async function getProductsFromDatabase(
   return visibleRows.slice(start, end).map(mapCatalogueProductRow);
 }
 
-async function getProductDetailFromDatabase(slug: string): Promise<CatalogueProductDetail | null> {
+async function getProductDetailFromDatabase(
+  slug: string,
+): Promise<CatalogueProductDetail | null> {
   const product = await prisma.product.findUnique({
     where: { slug },
     include: catalogueProductInclude,
@@ -471,12 +548,16 @@ async function getProductDetailFromDatabase(slug: string): Promise<CatalogueProd
     searchText: product.searchText,
     supplierSku: product.supplierProducts[0]?.supplierSku ?? '',
     leadTimeDays: product.supplierProducts[0]?.leadTimeDays ?? 0,
-    images: product.images.map(mapCatalogueProductImageRow).filter((image): image is CatalogueProductImage => image !== null),
+    images: product.images
+      .map(mapCatalogueProductImageRow)
+      .filter((image): image is CatalogueProductImage => image !== null),
     relatedProducts: related.filter((item) => item.slug !== slug).slice(0, 4),
   };
 }
 
-async function getProductDetailFromDatabaseById(id: string): Promise<CatalogueProductDetail | null> {
+async function getProductDetailFromDatabaseById(
+  id: string,
+): Promise<CatalogueProductDetail | null> {
   const product = await prisma.product.findUnique({
     where: { id },
     include: catalogueProductInclude,
@@ -508,8 +589,12 @@ async function getProductDetailFromDatabaseById(id: string): Promise<CataloguePr
     searchText: product.searchText,
     supplierSku: product.supplierProducts[0]?.supplierSku ?? '',
     leadTimeDays: product.supplierProducts[0]?.leadTimeDays ?? 0,
-    images: product.images.map(mapCatalogueProductImageRow).filter((image): image is CatalogueProductImage => image !== null),
-    relatedProducts: related.filter((item) => item.slug !== product.slug).slice(0, 4),
+    images: product.images
+      .map(mapCatalogueProductImageRow)
+      .filter((image): image is CatalogueProductImage => image !== null),
+    relatedProducts: related
+      .filter((item) => item.slug !== product.slug)
+      .slice(0, 4),
   };
 }
 
@@ -518,7 +603,10 @@ export async function getCatalogueCategories(): Promise<CatalogueCategory[]> {
     return seedCategories
       .map((category) => ({
         ...toCatalogueCategory(category),
-        productCount: seedProducts.filter((product) => product.categorySlug === category.slug && product.published).length,
+        productCount: seedProducts.filter(
+          (product) =>
+            product.categorySlug === category.slug && product.published,
+        ).length,
       }))
       .sort((a, b) => a.sortOrder - b.sortOrder);
   }
@@ -535,14 +623,20 @@ export async function getCatalogueCategories(): Promise<CatalogueCategory[]> {
       slug: category.slug,
       description: category.description,
       sortOrder: category.sortOrder,
-      productCount: category.products.filter(isProductVisibleInStorefrontListings).length,
+      productCount: category.products.filter(
+        isProductVisibleInStorefrontListings,
+      ).length,
     }));
   } catch (error) {
-    throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'categories are unavailable');
+    throw createCatalogueDatabaseError(
+      error instanceof Error ? error.message : 'categories are unavailable',
+    );
   }
 }
 
-export async function getFeaturedCatalogueProducts(limit = 4): Promise<CatalogueProduct[]> {
+export async function getFeaturedCatalogueProducts(
+  limit = 4,
+): Promise<CatalogueProduct[]> {
   if (shouldBypassDatabase()) {
     return seedProductsToCatalogue({
       search: '',
@@ -564,11 +658,17 @@ export async function getFeaturedCatalogueProducts(limit = 4): Promise<Catalogue
   try {
     return await getProductsFromDatabase(filters, { take: limit });
   } catch (error) {
-    throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'featured products are unavailable');
+    throw createCatalogueDatabaseError(
+      error instanceof Error
+        ? error.message
+        : 'featured products are unavailable',
+    );
   }
 }
 
-export async function getCatalogueProducts(filters: CatalogueFilters): Promise<CatalogueProductsResult> {
+export async function getCatalogueProducts(
+  filters: CatalogueFilters,
+): Promise<CatalogueProductsResult> {
   const page = Math.max(filters.page, 1);
   const pageSize = Math.max(filters.pageSize, 1);
 
@@ -583,7 +683,10 @@ export async function getCatalogueProducts(filters: CatalogueFilters): Promise<C
       categories: seedCategories
         .map((category) => ({
           ...toCatalogueCategory(category),
-          productCount: seedProducts.filter((product) => product.categorySlug === category.slug && product.published).length,
+          productCount: seedProducts.filter(
+            (product) =>
+              product.categorySlug === category.slug && product.published,
+          ).length,
         }))
         .sort((a, b) => a.sortOrder - b.sortOrder),
       filters: { ...filters, page: pagination.page, pageSize },
@@ -613,17 +716,23 @@ export async function getCatalogueProducts(filters: CatalogueFilters): Promise<C
     const offset = (pagination.page - 1) * pageSize;
 
     return {
-      products: visibleRows.slice(offset, offset + pageSize).map(mapCatalogueProductRow),
+      products: visibleRows
+        .slice(offset, offset + pageSize)
+        .map(mapCatalogueProductRow),
       pagination,
       categories: await getCatalogueCategories(),
       filters: { ...filters, page: pagination.page, pageSize },
     };
   } catch (error) {
-    throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'unknown error');
+    throw createCatalogueDatabaseError(
+      error instanceof Error ? error.message : 'unknown error',
+    );
   }
 }
 
-export async function getCatalogueProductBySlug(slug: string): Promise<CatalogueProductDetail | null> {
+export async function getCatalogueProductBySlug(
+  slug: string,
+): Promise<CatalogueProductDetail | null> {
   if (shouldBypassDatabase()) {
     return seedProductsToDetail(slug);
   }
@@ -636,13 +745,17 @@ export async function getCatalogueProductBySlug(slug: string): Promise<Catalogue
 
     return null;
   } catch (error) {
-    throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'product lookup failed');
+    throw createCatalogueDatabaseError(
+      error instanceof Error ? error.message : 'product lookup failed',
+    );
   }
 
   return null;
 }
 
-export async function getCatalogueProductById(id: string): Promise<CatalogueProductDetail | null> {
+export async function getCatalogueProductById(
+  id: string,
+): Promise<CatalogueProductDetail | null> {
   if (shouldBypassDatabase()) {
     return seedProductToDetailById(id);
   }
@@ -655,14 +768,19 @@ export async function getCatalogueProductById(id: string): Promise<CatalogueProd
 
     return null;
   } catch (error) {
-    throw createCatalogueDatabaseError(error instanceof Error ? error.message : 'product lookup failed');
+    throw createCatalogueDatabaseError(
+      error instanceof Error ? error.message : 'product lookup failed',
+    );
   }
 
   return null;
 }
 
 export async function getCatalogueHomeData(): Promise<CatalogueHomeData> {
-  const [categories, featuredProducts] = await Promise.all([getCatalogueCategories(), getFeaturedCatalogueProducts(4)]);
+  const [categories, featuredProducts] = await Promise.all([
+    getCatalogueCategories(),
+    getFeaturedCatalogueProducts(4),
+  ]);
 
   return {
     categories,

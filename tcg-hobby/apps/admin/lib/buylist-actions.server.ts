@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { updateAdminBuylist } from '@tcg-hobby/database';
 import type { BuylistStatus } from '@tcg-hobby/types';
+import { requireAdminSession } from './auth.server';
 
 function asString(value: FormDataEntryValue | null) {
   return typeof value === 'string' ? value.trim() : '';
@@ -45,6 +46,7 @@ function asStatus(value: FormDataEntryValue | null): BuylistStatus | undefined {
 }
 
 export async function updateAdminBuylistAction(formData: FormData) {
+  await requireAdminSession();
   const buylistId = asString(formData.get('buylistId'));
   const redirectTo = asString(formData.get('redirectTo')) || '/admin/buylist';
 

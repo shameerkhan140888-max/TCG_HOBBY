@@ -2,6 +2,7 @@ import 'server-only';
 
 import { createAdminRelease, getAdminReleaseById, getAdminReleases, updateAdminRelease } from '@tcg-hobby/database';
 import { redirect } from 'next/navigation';
+import { requireAdminSession } from './auth.server';
 
 function getString(formData: FormData, name: string) {
   return String(formData.get(name) ?? '').trim();
@@ -72,15 +73,19 @@ function buildReleaseInput(formData: FormData) {
 }
 
 export async function getCurrentAdminReleases(filters: { search?: string; game?: string; brand?: string; category?: string; month?: string; page?: number; pageSize?: number }) {
+  await requireAdminSession();
   return getAdminReleases(filters);
 }
 
 export async function getCurrentAdminRelease(id: string) {
+  await requireAdminSession();
   return getAdminReleaseById(id);
 }
 
 export async function createReleaseAction(formData: FormData) {
   'use server';
+
+  await requireAdminSession();
 
   const release = await createAdminRelease(buildReleaseInput(formData));
 
@@ -93,6 +98,8 @@ export async function createReleaseAction(formData: FormData) {
 
 export async function updateReleaseAction(formData: FormData) {
   'use server';
+
+  await requireAdminSession();
 
   const id = getString(formData, 'id');
   const release = await updateAdminRelease(id, buildReleaseInput(formData));

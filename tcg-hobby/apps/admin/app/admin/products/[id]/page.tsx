@@ -2,12 +2,14 @@ import { notFound } from 'next/navigation';
 import { Button, Card, CardContent, Container, Section } from '@tcg-hobby/ui';
 import { PageHeader, StatusBadge } from '@tcg-hobby/ui';
 import { EmptyPricingState, PricingCard } from '@tcg-hobby/ui';
-import { getAdminProductById, getAdminProductMerchandisingPanel, getAdminProducts, getCatalogueMasterDataOptions } from '@tcg-hobby/database';
+import { getAdminProductById, getAdminProductMerchandisingPanel, getAdminProducts, getCatalogueMasterDataOptions, getProductContentWorkspace, type GeneratedContentField, type GeneratedProductContent, type ProductFactInput } from '@tcg-hobby/database';
 import { emptyProductFormValues } from '../../../../lib/admin-form-state';
 import { archiveProductAction, toggleProductPublicationAction } from '../../../../lib/admin-actions.server';
 import { buildStorefrontProductPreviewUrl } from '../../../../lib/site';
 import { ProductForm } from '../../../../components/product-form';
 import { ProductMerchandisingPanel } from '../../../../components/product-merchandising-panel';
+import { ProductMediaManager } from '../../../../components/product-media-manager';
+import { ProductContentAssistant } from '../../../../components/product-content-assistant';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,13 +27,14 @@ function toDateTimeLocal(value: Date | null) {
 
 function toGalleryImagesText(product: NonNullable<Awaited<ReturnType<typeof getAdminProductById>>>) {
   return product.images
-    .filter((image) => !image.isPrimary)
+    .filter((image) => !image.isPrimary && !image.storageKey)
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((image) => `${image.url} | ${image.altText} | ${image.imageType}`)
     .join('\n');
 }
 
 function productState(product: NonNullable<Awaited<ReturnType<typeof getAdminProductById>>>) {
+  const legacyPrimary = product.images.find((image) => image.isPrimary && !image.storageKey) ?? product.images.find((image) => !image.storageKey);
   return {
     fieldErrors: {},
     values: {
@@ -77,8 +80,8 @@ function productState(product: NonNullable<Awaited<ReturnType<typeof getAdminPro
       incomingQuantity: String(product.incomingQuantity),
       locationCode: product.locationCode,
       imageLabel: product.imageLabel,
-      primaryImageUrl: product.primaryImageUrl ?? '',
-      primaryImageAlt: product.images.find((image) => image.isPrimary)?.altText ?? product.imageLabel,
+      primaryImageUrl: legacyPrimary?.url ?? '',
+      primaryImageAlt: legacyPrimary?.altText ?? product.imageLabel,
       galleryImagesText: toGalleryImagesText(product),
       customerPurchaseLimit: product.customerPurchaseLimit != null ? String(product.customerPurchaseLimit) : '',
       availabilityMessage: product.availabilityMessage ?? '',
@@ -101,14 +104,15 @@ export default async function AdminProductDetailPage({ params, searchParams }: {
   const merchandisingStatus = asString(query.merchandisingStatus);
   const merchandisingMessage = asString(query.merchandisingMessage);
   const productStatus = asString(query.productStatus);
-  const [product, options, merchandising, masterData] = await Promise.all([
+  const [product, options, merchandising, masterData, contentWorkspace] = await Promise.all([
     getAdminProductById(id),
     getAdminProducts({ page: 1, pageSize: 1 }),
     getAdminProductMerchandisingPanel(id, { search: recommendationSearch }),
     getCatalogueMasterDataOptions(),
+    getProductContentWorkspace(id),
   ]);
 
-  if (!product || !merchandising) {
+  if (!product || !merchandising || !contentWorkspace) {
     notFound();
   }
 
@@ -313,6 +317,43 @@ export default async function AdminProductDetailPage({ params, searchParams }: {
           </div>
         ) : null}
 
+
+        <ProductMediaManager
+          productId={product.id}
+          initialImages={product.images.map((image) => ({
+            id: image.id,
+            url: image.url,
+            thumbnailUrl: image.thumbnailUrl,
+            storageKey: image.storageKey,
+            altText: image.altText,
+            sortOrder: image.sortOrder,
+            isPrimary: image.isPrimary,
+            width: image.width,
+            height: image.height,
+            byteSize: image.byteSize,
+          }))}
+        />
+
+        <ProductContentAssistant
+          productId={product.id}
+          lifecycleState={product.lifecycleState}
+          initialFacts={contentWorkspace.facts.map((fact) => ({
+            key: fact.key as ProductFactInput['key'],
+            value: fact.value,
+            verificationState: fact.verificationState as ProductFactInput['verificationState'],
+            sourceReference: fact.sourceReference,
+            notes: fact.notes,
+          }))}
+          generations={contentWorkspace.contentGenerations.map((generation) => ({
+            id: generation.id,
+            status: generation.status,
+            provider: generation.provider,
+            model: generation.model,
+            createdAt: generation.createdAt.toISOString(),
+            generatedContent: generation.generatedContent as unknown as GeneratedProductContent,
+            requestedFields: generation.requestedFields as unknown as GeneratedContentField[],
+          }))}
+        />
         <ProductForm
           state={state}
           categories={options.categories.map((item) => ({ id: item.id, label: item.name }))}

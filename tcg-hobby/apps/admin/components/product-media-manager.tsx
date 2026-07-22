@@ -1,0 +1,28 @@
+'use client';
+import { useRef, useState, useTransition } from 'react';
+import { deleteProductImageAction, reorderProductImagesAction, setPrimaryProductImageAction, updateProductImageAltTextAction } from '../lib/product-media-actions.server';
+
+type ProductImageItem = { id: string; url: string; thumbnailUrl: string | null; storageKey: string | null; altText: string; sortOrder: number; isPrimary: boolean; width: number | null; height: number | null; byteSize: number | null };
+export function ProductMediaManager({ productId, initialImages }: { productId: string; initialImages: ProductImageItem[] }) {
+  const [images, setImages] = useState([...initialImages].sort((a, b) => a.sortOrder - b.sortOrder)); const [message, setMessage] = useState(''); const [pending, startTransition] = useTransition(); const fileRef = useRef<HTMLInputElement>(null); const [dragging, setDragging] = useState(false);
+  const run = (work: () => Promise<{ ok: boolean; message: string }>) => startTransition(async () => { const result = await work(); setMessage(result.message); if (result.ok) window.location.reload(); });
+  const move = (index: number, delta: number) => { const next = [...images]; const target = index + delta; if (target < 0 || target >= next.length) return; [next[index], next[target]] = [next[target]!, next[index]!]; setImages(next); run(() => reorderProductImagesAction(productId, next.map((item) => item.id))); };
+  const upload = async (files: FileList | File[]) => {
+    for (const file of Array.from(files)) { const altText = window.prompt(`Describe ${file.name} for customers who cannot see it:`)?.trim(); if (!altText) { setMessage('Upload cancelled: meaningful alt text is required.'); continue; } const body = new FormData(); body.set('image', file); body.set('altText', altText); setMessage(`Uploading ${file.name}...`); const response = await fetch(`/admin/products/${productId}/images/upload`, { method: 'POST', body }); const result = await response.json() as { error?: string }; if (!response.ok) { setMessage(result.error ?? 'Upload failed.'); return; } } setMessage('Upload complete.'); window.location.reload();
+  };
+  return <section aria-labelledby="product-media-title" className="space-y-5 rounded-lg bg-neutral-900 p-5">
+    <div><p className="text-sm font-semibold uppercase text-accent">Managed media</p><h2 id="product-media-title" className="mt-1 text-xl font-black text-neutral-50">Product images</h2><p className="mt-1 text-sm text-neutral-400">Upload JPEG, PNG or WebP files up to 10 MB. Images are optimised without cropping.</p></div>
+    <div role="button" tabIndex={0} onClick={() => fileRef.current?.click()} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') fileRef.current?.click(); }} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); void upload(event.dataTransfer.files); }} className={`flex min-h-32 cursor-pointer items-center justify-center rounded-md border border-dashed px-5 text-center text-sm focus:outline-none focus:ring-2 focus:ring-accent ${dragging ? 'border-accent bg-accent/10 text-neutral-50' : 'border-neutral-700 text-neutral-300'}`}>
+      Drop product images here or choose files<input ref={fileRef} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => event.target.files && void upload(event.target.files)} />
+    </div>
+    {message ? <p role="status" className="text-sm text-neutral-200">{message}</p> : null}{pending ? <p aria-live="polite" className="text-sm text-accent">Saving image changes...</p> : null}
+    {!images.length ? <p className="rounded-md bg-amber-500/10 p-3 text-sm text-amber-100">No product image configured. The storefront placeholder will be displayed.</p> : <ul className="grid gap-4 lg:grid-cols-2">
+      {images.map((image, index) => <li key={image.id} className="grid gap-4 rounded-md bg-neutral-950/60 p-4 sm:grid-cols-[140px_1fr]">
+        <img src={image.thumbnailUrl ?? image.url} alt={image.altText} className="aspect-square w-full rounded bg-white object-contain" />
+        <div className="space-y-3"><div className="flex flex-wrap gap-2"><span className="text-xs font-bold uppercase text-accent">{image.isPrimary ? 'Primary' : `Image ${index + 1}`}</span><span className="text-xs text-neutral-500">{image.storageKey ? 'Managed upload' : 'Legacy URL'}</span></div>
+          <label className="block text-sm font-semibold text-neutral-200">Alt text<input defaultValue={image.altText} maxLength={240} className="mt-1 w-full rounded border border-neutral-700 bg-neutral-950 px-3 py-2" onBlur={(event) => { if (event.currentTarget.value.trim() !== image.altText) run(() => updateProductImageAltTextAction(productId, image.id, event.currentTarget.value)); }} /></label>
+          <div className="flex flex-wrap gap-2"><button disabled={pending || index === 0} onClick={() => move(index, -1)} className="rounded bg-neutral-800 px-3 py-2 text-sm disabled:opacity-40">Move left</button><button disabled={pending || index === images.length - 1} onClick={() => move(index, 1)} className="rounded bg-neutral-800 px-3 py-2 text-sm disabled:opacity-40">Move right</button>{!image.isPrimary ? <button disabled={pending} onClick={() => run(() => setPrimaryProductImageAction(productId, image.id))} className="rounded bg-neutral-800 px-3 py-2 text-sm">Make primary</button> : null}<button disabled={pending} onClick={() => { if (window.confirm('Delete this product image?')) run(() => deleteProductImageAction(productId, image.id)); }} className="rounded bg-red-950 px-3 py-2 text-sm text-red-100">Delete</button></div>
+        </div></li>)}
+    </ul>}
+  </section>;
+}

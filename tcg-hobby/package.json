@@ -30,6 +30,7 @@
     "product:dry-run": "tsx scripts/product-import.ts dry-run",
     "product:import": "tsx scripts/product-import.ts import",
     "product:import:all": "tsx scripts/product-import.ts import-all",
+    "admin:promote": "tsx scripts/admin-promote.ts",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml,css}\""
   },
   "devDependencies": {

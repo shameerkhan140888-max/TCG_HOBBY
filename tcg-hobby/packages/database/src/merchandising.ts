@@ -1,6 +1,11 @@
-import type { Prisma, PrismaClient, ProductRecommendationType } from '@prisma/client';
+import type {
+  Prisma,
+  PrismaClient,
+  ProductRecommendationType,
+} from '@prisma/client';
 import { prisma } from './client';
 import { derivePublicStockState } from './product-import';
+import { resolveProductCardImage } from './product-image-resolution';
 
 export type MerchandisingPlacement =
   | 'PRODUCT_RELATED'
@@ -59,10 +64,17 @@ export type RecommendationAnalyticsEventContext = {
 };
 
 export type RecommendationAnalyticsEvent =
-  | ({ type: 'RECOMMENDATION_IMPRESSION' } & RecommendationAnalyticsEventContext)
+  | ({
+      type: 'RECOMMENDATION_IMPRESSION';
+    } & RecommendationAnalyticsEventContext)
   | ({ type: 'RECOMMENDATION_CLICK' } & RecommendationAnalyticsEventContext)
-  | ({ type: 'RECOMMENDATION_ADD_TO_BASKET' } & RecommendationAnalyticsEventContext)
-  | ({ type: 'RECOMMENDATION_PURCHASE_ATTRIBUTION'; orderId?: string } & RecommendationAnalyticsEventContext);
+  | ({
+      type: 'RECOMMENDATION_ADD_TO_BASKET';
+    } & RecommendationAnalyticsEventContext)
+  | ({
+      type: 'RECOMMENDATION_PURCHASE_ATTRIBUTION';
+      orderId?: string;
+    } & RecommendationAnalyticsEventContext);
 
 export type MerchandisingContext = {
   sourceProductId?: string;
@@ -86,7 +98,9 @@ type SourceProductContext = {
   categorySlug: string;
 };
 
-type MerchandisingCandidateProduct = Prisma.ProductGetPayload<{ include: typeof merchandisingProductInclude }>;
+type MerchandisingCandidateProduct = Prisma.ProductGetPayload<{
+  include: typeof merchandisingProductInclude;
+}>;
 
 type MerchandisingCandidate = {
   product: MerchandisingCandidateProduct;
@@ -123,23 +137,41 @@ type MerchandisingStrategyHelpers = {
   sourceProduct: SourceProductContext | null;
   take: number;
   buildProductWhere(input?: Prisma.ProductWhereInput): Prisma.ProductWhereInput;
-  findProducts(where: Prisma.ProductWhereInput, orderBy?: Prisma.ProductOrderByWithRelationInput[]): Promise<MerchandisingCandidateProduct[]>;
+  findProducts(
+    where: Prisma.ProductWhereInput,
+    orderBy?: Prisma.ProductOrderByWithRelationInput[],
+  ): Promise<MerchandisingCandidateProduct[]>;
 };
 
 const merchandisingProductInclude = {
   category: true,
   inventory: true,
-  images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }], take: 2 },
+  images: {
+    where: { deletionState: 'ACTIVE' },
+    orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }, { id: 'asc' }],
+    take: 2,
+  },
 } as const satisfies Prisma.ProductInclude;
 
 const DEFAULT_LIMIT = 4;
 const MAX_STRATEGY_CANDIDATES = 24;
-const DEFAULT_RELATIONSHIP_TYPES: ProductRecommendationType[] = ['MANUAL', 'RELATED', 'ACCESSORY', 'UPSELL', 'CROSS_SELL'];
+const DEFAULT_RELATIONSHIP_TYPES: ProductRecommendationType[] = [
+  'MANUAL',
+  'RELATED',
+  'ACCESSORY',
+  'UPSELL',
+  'CROSS_SELL',
+];
 
-function normalizeContext(context: MerchandisingContext): RequiredMerchandisingContext {
+function normalizeContext(
+  context: MerchandisingContext,
+): RequiredMerchandisingContext {
   return {
     ...context,
-    resultLimit: Math.max(0, Math.min(context.resultLimit ?? DEFAULT_LIMIT, 24)),
+    resultLimit: Math.max(
+      0,
+      Math.min(context.resultLimit ?? DEFAULT_LIMIT, 24),
+    ),
     placement: context.placement ?? 'PRODUCT_RELATED',
     excludedProductIds: context.excludedProductIds ?? [],
     requireInStock: context.requireInStock ?? true,
@@ -148,62 +180,106 @@ function normalizeContext(context: MerchandisingContext): RequiredMerchandisingC
   };
 }
 
-function calculateAvailableStock(product: { inventory: { stockOnHand: number; reservedStock: number } | null }): number {
+function calculateAvailableStock(product: {
+  inventory: { stockOnHand: number; reservedStock: number } | null;
+}): number {
   if (!product.inventory) {
     return 0;
   }
 
-  return Math.max(product.inventory.stockOnHand - product.inventory.reservedStock, 0);
+  return Math.max(
+    product.inventory.stockOnHand - product.inventory.reservedStock,
+    0,
+  );
 }
 
 export function isMerchandisingProductEligible(
-  product: Pick<MerchandisingCandidateProduct, 'id' | 'published' | 'lifecycleState' | 'archivedAt' | 'releaseStatus' | 'slug'> & {
+  product: Pick<
+    MerchandisingCandidateProduct,
+    | 'id'
+    | 'published'
+    | 'lifecycleState'
+    | 'archivedAt'
+    | 'releaseStatus'
+    | 'slug'
+  > & {
     inventory: { stockOnHand: number; reservedStock: number } | null;
   },
-  context: Pick<RequiredMerchandisingContext, 'sourceProductId' | 'excludedProductIds' | 'requireInStock'>,
+  context: Pick<
+    RequiredMerchandisingContext,
+    'sourceProductId' | 'excludedProductIds' | 'requireInStock'
+  >,
   alreadySelected = new Set<string>(),
 ): boolean {
-  if (!product.slug || product.id === context.sourceProductId || context.excludedProductIds.includes(product.id) || alreadySelected.has(product.id)) {
+  if (
+    !product.slug ||
+    product.id === context.sourceProductId ||
+    context.excludedProductIds.includes(product.id) ||
+    alreadySelected.has(product.id)
+  ) {
     return false;
   }
 
-  if (!product.published || product.lifecycleState !== 'PUBLISHED' || product.archivedAt || product.releaseStatus === 'ARCHIVED') {
+  if (
+    !product.published ||
+    product.lifecycleState !== 'PUBLISHED' ||
+    product.archivedAt ||
+    product.releaseStatus === 'ARCHIVED'
+  ) {
     return false;
   }
 
   return !context.requireInStock || calculateAvailableStock(product) > 0;
 }
 
-function sortCandidates(a: MerchandisingCandidate, b: MerchandisingCandidate): number {
-  if ((a.campaignPriority ?? Number.MAX_SAFE_INTEGER) !== (b.campaignPriority ?? Number.MAX_SAFE_INTEGER)) {
-    return (a.campaignPriority ?? Number.MAX_SAFE_INTEGER) - (b.campaignPriority ?? Number.MAX_SAFE_INTEGER);
+function sortCandidates(
+  a: MerchandisingCandidate,
+  b: MerchandisingCandidate,
+): number {
+  if (
+    (a.campaignPriority ?? Number.MAX_SAFE_INTEGER) !==
+    (b.campaignPriority ?? Number.MAX_SAFE_INTEGER)
+  ) {
+    return (
+      (a.campaignPriority ?? Number.MAX_SAFE_INTEGER) -
+      (b.campaignPriority ?? Number.MAX_SAFE_INTEGER)
+    );
   }
 
-  if (a.strategyPriority !== b.strategyPriority) return a.strategyPriority - b.strategyPriority;
+  if (a.strategyPriority !== b.strategyPriority)
+    return a.strategyPriority - b.strategyPriority;
   if (a.rank !== b.rank) return a.rank - b.rank;
-  if (a.product.recommendationWeight !== b.product.recommendationWeight) return b.product.recommendationWeight - a.product.recommendationWeight;
+  if (a.product.recommendationWeight !== b.product.recommendationWeight)
+    return b.product.recommendationWeight - a.product.recommendationWeight;
 
   const priorityA = a.product.homepagePriority ?? Number.MAX_SAFE_INTEGER;
   const priorityB = b.product.homepagePriority ?? Number.MAX_SAFE_INTEGER;
   if (priorityA !== priorityB) return priorityA - priorityB;
-  if (a.product.featured !== b.product.featured) return a.product.featured ? -1 : 1;
-  if (a.product.createdAt.getTime() !== b.product.createdAt.getTime()) return b.product.createdAt.getTime() - a.product.createdAt.getTime();
+  if (a.product.featured !== b.product.featured)
+    return a.product.featured ? -1 : 1;
+  if (a.product.createdAt.getTime() !== b.product.createdAt.getTime())
+    return b.product.createdAt.getTime() - a.product.createdAt.getTime();
   return a.product.id.localeCompare(b.product.id);
 }
 
-function productToStorefrontSafeCard(product: MerchandisingCandidateProduct): StorefrontSafeMerchandisingProduct {
-  const primaryImage = product.images.find((image) => image.isPrimary) ?? product.images[0] ?? null;
+function productToStorefrontSafeCard(
+  product: MerchandisingCandidateProduct,
+): StorefrontSafeMerchandisingProduct {
+  const { image: primaryImage, url: cardImageUrl } = resolveProductCardImage(
+    product.images,
+  );
   const availableStock = calculateAvailableStock(product);
 
   return {
     id: product.id,
     slug: product.slug,
     name: product.name,
-    imageUrl: primaryImage?.url ?? null,
+    imageUrl: cardImageUrl,
     imageAlt: primaryImage?.altText ?? null,
     price: {
       amountMinor: product.priceMinor,
-      currency: product.currency as StorefrontSafeMerchandisingProduct['price']['currency'],
+      currency:
+        product.currency as StorefrontSafeMerchandisingProduct['price']['currency'],
     },
     publicStockState: derivePublicStockState(availableStock),
     gameLabel: product.game,
@@ -216,16 +292,29 @@ function productToStorefrontSafeCard(product: MerchandisingCandidateProduct): St
   };
 }
 
-function isCampaignActive(campaign: MerchandisingCampaignInfluence, now: Date): boolean {
-  return campaign.active && (!campaign.startsAt || campaign.startsAt <= now) && (!campaign.endsAt || campaign.endsAt >= now);
+function isCampaignActive(
+  campaign: MerchandisingCampaignInfluence,
+  now: Date,
+): boolean {
+  return (
+    campaign.active &&
+    (!campaign.startsAt || campaign.startsAt <= now) &&
+    (!campaign.endsAt || campaign.endsAt >= now)
+  );
 }
 
-function applyCampaignInfluence(candidate: MerchandisingCandidate, context: RequiredMerchandisingContext): MerchandisingCandidate {
+function applyCampaignInfluence(
+  candidate: MerchandisingCandidate,
+  context: RequiredMerchandisingContext,
+): MerchandisingCandidate {
   const campaignRanks = (context.campaignInfluences ?? [])
     .filter((campaign) => isCampaignActive(campaign, context.now))
     .flatMap((campaign) =>
       campaign.products
-        .filter((product) => product.active && product.productId === candidate.product.id)
+        .filter(
+          (product) =>
+            product.active && product.productId === candidate.product.id,
+        )
         .map((product) => campaign.priority * 10_000 + product.priority),
     );
 
@@ -254,7 +343,14 @@ async function resolveSourceProduct(
     },
   });
 
-  return product ? { id: product.id, game: product.game, setName: product.setName, categorySlug: product.category.slug } : null;
+  return product
+    ? {
+        id: product.id,
+        game: product.game,
+        setName: product.setName,
+        categorySlug: product.category.slug,
+      }
+    : null;
 }
 
 function createStrategyHelpers(
@@ -262,24 +358,39 @@ function createStrategyHelpers(
   context: RequiredMerchandisingContext,
   sourceProduct: SourceProductContext | null,
 ): MerchandisingStrategyHelpers {
-  const take = Math.min(MAX_STRATEGY_CANDIDATES, Math.max(context.resultLimit * 4, context.resultLimit + context.excludedProductIds.length + 4));
+  const take = Math.min(
+    MAX_STRATEGY_CANDIDATES,
+    Math.max(
+      context.resultLimit * 4,
+      context.resultLimit + context.excludedProductIds.length + 4,
+    ),
+  );
 
-  function buildProductWhere(input: Prisma.ProductWhereInput = {}): Prisma.ProductWhereInput {
+  function buildProductWhere(
+    input: Prisma.ProductWhereInput = {},
+  ): Prisma.ProductWhereInput {
     return {
       published: true,
       lifecycleState: 'PUBLISHED',
       archivedAt: null,
       releaseStatus: { not: 'ARCHIVED' },
-      ...(context.categorySlugs?.length ? { category: { slug: { in: context.categorySlugs } } } : {}),
+      ...(context.categorySlugs?.length
+        ? { category: { slug: { in: context.categorySlugs } } }
+        : {}),
       ...(context.games?.length ? { game: { in: context.games } } : {}),
-      ...(context.productTypes?.length ? { setName: { in: context.productTypes } } : {}),
+      ...(context.productTypes?.length
+        ? { setName: { in: context.productTypes } }
+        : {}),
       ...input,
     };
   }
 
   async function findProducts(
     where: Prisma.ProductWhereInput,
-    orderBy: Prisma.ProductOrderByWithRelationInput[] = [{ createdAt: 'desc' }, { id: 'asc' }],
+    orderBy: Prisma.ProductOrderByWithRelationInput[] = [
+      { createdAt: 'desc' },
+      { id: 'asc' },
+    ],
   ): Promise<MerchandisingCandidateProduct[]> {
     return db.product.findMany({
       where,
@@ -292,7 +403,10 @@ function createStrategyHelpers(
   return { db, sourceProduct, take, buildProductWhere, findProducts };
 }
 
-function rankRows(strategy: MerchandisingStrategy, products: MerchandisingCandidateProduct[]): MerchandisingCandidate[] {
+function rankRows(
+  strategy: MerchandisingStrategy,
+  products: MerchandisingCandidateProduct[],
+): MerchandisingCandidate[] {
   return products.map((product, index) => ({
     product,
     strategyId: strategy.id,
@@ -313,7 +427,9 @@ export const ManualRelationshipStrategy: MerchandisingStrategy = {
       where: {
         sourceProductId: context.sourceProductId,
         active: true,
-        relationshipType: { in: context.manualRelationshipTypes ?? DEFAULT_RELATIONSHIP_TYPES },
+        relationshipType: {
+          in: context.manualRelationshipTypes ?? DEFAULT_RELATIONSHIP_TYPES,
+        },
       },
       include: { recommendedProduct: { include: merchandisingProductInclude } },
       orderBy: [{ priority: 'asc' }, { updatedAt: 'desc' }, { id: 'asc' }],
@@ -364,7 +480,9 @@ export const SameGameStrategy: MerchandisingStrategy = {
   priority: 40,
   async getCandidates(_context, helpers) {
     if (!helpers.sourceProduct) return [];
-    const products = await helpers.findProducts(helpers.buildProductWhere({ game: helpers.sourceProduct.game }));
+    const products = await helpers.findProducts(
+      helpers.buildProductWhere({ game: helpers.sourceProduct.game }),
+    );
     return rankRows(SameGameStrategy, products);
   },
 };
@@ -373,7 +491,11 @@ export const AccessoryStrategy: MerchandisingStrategy = {
   id: 'accessories',
   priority: 50,
   async getCandidates(_context, helpers) {
-    const products = await helpers.findProducts(helpers.buildProductWhere({ OR: [{ isAccessory: true }, { category: { slug: 'accessories' } }] }));
+    const products = await helpers.findProducts(
+      helpers.buildProductWhere({
+        OR: [{ isAccessory: true }, { category: { slug: 'accessories' } }],
+      }),
+    );
     return rankRows(AccessoryStrategy, products);
   },
 };
@@ -382,12 +504,17 @@ export const FeaturedStrategy: MerchandisingStrategy = {
   id: 'featured',
   priority: 60,
   async getCandidates(_context, helpers) {
-    const products = await helpers.findProducts(helpers.buildProductWhere({ OR: [{ featured: true }, { isStaffPick: true }] }), [
-      { homepagePriority: 'asc' },
-      { recommendationWeight: 'desc' },
-      { createdAt: 'desc' },
-      { id: 'asc' },
-    ]);
+    const products = await helpers.findProducts(
+      helpers.buildProductWhere({
+        OR: [{ featured: true }, { isStaffPick: true }],
+      }),
+      [
+        { homepagePriority: 'asc' },
+        { recommendationWeight: 'desc' },
+        { createdAt: 'desc' },
+        { id: 'asc' },
+      ],
+    );
     return rankRows(FeaturedStrategy, products);
   },
 };
@@ -396,12 +523,15 @@ export const StaffPickStrategy: MerchandisingStrategy = {
   id: 'staff-picks',
   priority: 65,
   async getCandidates(_context, helpers) {
-    const products = await helpers.findProducts(helpers.buildProductWhere({ isStaffPick: true }), [
-      { recommendationWeight: 'desc' },
-      { homepagePriority: 'asc' },
-      { createdAt: 'desc' },
-      { id: 'asc' },
-    ]);
+    const products = await helpers.findProducts(
+      helpers.buildProductWhere({ isStaffPick: true }),
+      [
+        { recommendationWeight: 'desc' },
+        { homepagePriority: 'asc' },
+        { createdAt: 'desc' },
+        { id: 'asc' },
+      ],
+    );
     return rankRows(StaffPickStrategy, products);
   },
 };
@@ -410,11 +540,12 @@ export const NewArrivalStrategy: MerchandisingStrategy = {
   id: 'new-arrivals',
   priority: 70,
   async getCandidates(_context, helpers) {
-    const products = await helpers.findProducts(helpers.buildProductWhere({ OR: [{ isNewArrival: true }, { releaseStatus: 'RELEASED' }] }), [
-      { isNewArrival: 'desc' },
-      { createdAt: 'desc' },
-      { id: 'asc' },
-    ]);
+    const products = await helpers.findProducts(
+      helpers.buildProductWhere({
+        OR: [{ isNewArrival: true }, { releaseStatus: 'RELEASED' }],
+      }),
+      [{ isNewArrival: 'desc' }, { createdAt: 'desc' }, { id: 'asc' }],
+    );
     return rankRows(NewArrivalStrategy, products);
   },
 };
@@ -423,7 +554,10 @@ export const LatestProductStrategy: MerchandisingStrategy = {
   id: 'latest-products',
   priority: 80,
   async getCandidates(_context, helpers) {
-    const products = await helpers.findProducts(helpers.buildProductWhere(), [{ createdAt: 'desc' }, { id: 'asc' }]);
+    const products = await helpers.findProducts(helpers.buildProductWhere(), [
+      { createdAt: 'desc' },
+      { id: 'asc' },
+    ]);
     return rankRows(LatestProductStrategy, products);
   },
 };
@@ -450,18 +584,34 @@ export async function getRecommendedProducts(
     return [];
   }
 
-  const sourceProduct = await resolveSourceProduct(db, resolvedContext.sourceProductId);
+  const sourceProduct = await resolveSourceProduct(
+    db,
+    resolvedContext.sourceProductId,
+  );
   const helpers = createStrategyHelpers(db, resolvedContext, sourceProduct);
   const selected = new Map<string, MerchandisingCandidate>();
 
-  for (const strategy of [...strategies].sort((a, b) => a.priority - b.priority || a.id.localeCompare(b.id))) {
-    if (!resolvedContext.enabledStrategyIds.includes('*') && !resolvedContext.enabledStrategyIds.includes(strategy.id)) {
+  for (const strategy of [...strategies].sort(
+    (a, b) => a.priority - b.priority || a.id.localeCompare(b.id),
+  )) {
+    if (
+      !resolvedContext.enabledStrategyIds.includes('*') &&
+      !resolvedContext.enabledStrategyIds.includes(strategy.id)
+    ) {
       continue;
     }
 
-    const candidates = (await strategy.getCandidates(resolvedContext, helpers)).map((candidate) => applyCampaignInfluence(candidate, resolvedContext));
+    const candidates = (
+      await strategy.getCandidates(resolvedContext, helpers)
+    ).map((candidate) => applyCampaignInfluence(candidate, resolvedContext));
     for (const candidate of candidates.sort(sortCandidates)) {
-      if (!isMerchandisingProductEligible(candidate.product, resolvedContext, new Set(selected.keys()))) {
+      if (
+        !isMerchandisingProductEligible(
+          candidate.product,
+          resolvedContext,
+          new Set(selected.keys()),
+        )
+      ) {
         continue;
       }
 
@@ -481,24 +631,74 @@ export async function getRecommendedProducts(
   }));
 }
 
-export function getRelatedProducts(context: Omit<MerchandisingContext, 'placement'>, db: PrismaClient | Prisma.TransactionClient = prisma) {
-  return getRecommendedProducts({ ...context, placement: 'PRODUCT_RELATED' }, db);
+export function getRelatedProducts(
+  context: Omit<MerchandisingContext, 'placement'>,
+  db: PrismaClient | Prisma.TransactionClient = prisma,
+) {
+  return getRecommendedProducts(
+    { ...context, placement: 'PRODUCT_RELATED' },
+    db,
+  );
 }
 
-export function getAccessoryRecommendations(context: Omit<MerchandisingContext, 'placement'>, db: PrismaClient | Prisma.TransactionClient = prisma) {
-  return getRecommendedProducts({ ...context, placement: 'PRODUCT_ACCESSORIES', enabledStrategyIds: ['manual-relationships', 'accessories', 'latest-products'] }, db);
+export function getAccessoryRecommendations(
+  context: Omit<MerchandisingContext, 'placement'>,
+  db: PrismaClient | Prisma.TransactionClient = prisma,
+) {
+  return getRecommendedProducts(
+    {
+      ...context,
+      placement: 'PRODUCT_ACCESSORIES',
+      enabledStrategyIds: [
+        'manual-relationships',
+        'accessories',
+        'latest-products',
+      ],
+    },
+    db,
+  );
 }
 
-export function getFeaturedProducts(limit = DEFAULT_LIMIT, db: PrismaClient | Prisma.TransactionClient = prisma) {
-  return getRecommendedProducts({ resultLimit: limit, placement: 'HOMEPAGE_FEATURED', enabledStrategyIds: ['featured', 'latest-products'] }, db);
+export function getFeaturedProducts(
+  limit = DEFAULT_LIMIT,
+  db: PrismaClient | Prisma.TransactionClient = prisma,
+) {
+  return getRecommendedProducts(
+    {
+      resultLimit: limit,
+      placement: 'HOMEPAGE_FEATURED',
+      enabledStrategyIds: ['featured', 'latest-products'],
+    },
+    db,
+  );
 }
 
-export function getLatestProducts(limit = DEFAULT_LIMIT, db: PrismaClient | Prisma.TransactionClient = prisma) {
-  return getRecommendedProducts({ resultLimit: limit, placement: 'HOMEPAGE_NEW_ARRIVALS', enabledStrategyIds: ['new-arrivals', 'latest-products'] }, db);
+export function getLatestProducts(
+  limit = DEFAULT_LIMIT,
+  db: PrismaClient | Prisma.TransactionClient = prisma,
+) {
+  return getRecommendedProducts(
+    {
+      resultLimit: limit,
+      placement: 'HOMEPAGE_NEW_ARRIVALS',
+      enabledStrategyIds: ['new-arrivals', 'latest-products'],
+    },
+    db,
+  );
 }
 
-export function getStaffPickProducts(limit = DEFAULT_LIMIT, db: PrismaClient | Prisma.TransactionClient = prisma) {
-  return getRecommendedProducts({ resultLimit: limit, placement: 'HOMEPAGE_FEATURED', enabledStrategyIds: ['staff-picks'] }, db);
+export function getStaffPickProducts(
+  limit = DEFAULT_LIMIT,
+  db: PrismaClient | Prisma.TransactionClient = prisma,
+) {
+  return getRecommendedProducts(
+    {
+      resultLimit: limit,
+      placement: 'HOMEPAGE_FEATURED',
+      enabledStrategyIds: ['staff-picks'],
+    },
+    db,
+  );
 }
 
 export async function createProductRecommendation(
@@ -512,7 +712,9 @@ export async function createProductRecommendation(
   db: PrismaClient | Prisma.TransactionClient = prisma,
 ): Promise<{ id: string }> {
   if (input.sourceProductId === input.recommendedProductId) {
-    throw new Error('Product recommendations cannot point to the source product.');
+    throw new Error(
+      'Product recommendations cannot point to the source product.',
+    );
   }
 
   return db.productRecommendation.create({

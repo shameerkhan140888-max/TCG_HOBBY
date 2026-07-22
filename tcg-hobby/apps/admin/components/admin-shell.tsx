@@ -3,6 +3,8 @@
 import { usePathname } from 'next/navigation';
 import { BrandMark, Button } from '@tcg-hobby/ui';
 import type { ReactNode } from 'react';
+import type { SessionUser } from '@tcg-hobby/auth';
+import { logoutAdminAction } from '../lib/auth-actions.server';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard' },
@@ -17,7 +19,7 @@ const navItems = [
   { href: '/admin/orders', label: 'Orders' },
 ];
 
-export function AdminShell({ children }: { children: ReactNode }) {
+export function AdminShell({ children, user }: { children: ReactNode; user: SessionUser }) {
   const pathname = usePathname();
 
   return (
@@ -46,11 +48,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="mt-8 rounded-lg border border-surface-line bg-surface-ink p-4">
-          <p className="text-sm font-semibold text-neutral-50">Operations first</p>
-          <p className="mt-2 text-sm leading-6 text-neutral-400">Products, inventory, suppliers, and orders now have a single control surface.</p>
-          <Button asChild className="mt-4 w-full" variant="outline" size="sm">
-            <a href="/admin/products">Open catalogue</a>
-          </Button>
+          <p className="truncate text-sm font-semibold text-neutral-50">{user.name ?? user.email}</p>
+          <p className="mt-1 text-xs uppercase text-neutral-500">{user.role}</p>
+          <form action={logoutAdminAction}>
+            <Button className="mt-4 w-full" type="submit" variant="outline" size="sm">Sign out</Button>
+          </form>
         </div>
       </aside>
 

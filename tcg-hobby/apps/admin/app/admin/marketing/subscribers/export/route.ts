@@ -1,8 +1,10 @@
+import { requireAdminRole } from '../../../../../lib/auth.server';
 import { MarketingSubscriberStatus, exportMarketingSubscribersCsv } from '@tcg-hobby/database';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  await requireAdminRole('/admin/marketing/subscribers');
   const url = new URL(request.url);
   const statusParam = url.searchParams.get('status') ?? 'ALL';
   const status = Object.values(MarketingSubscriberStatus).includes(statusParam as MarketingSubscriberStatus)

@@ -27,7 +27,7 @@ const adminProductInclude = {
   languageRef: true,
   setRef: { include: { game: true } },
   inventory: true,
-  images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
+  images: { where: { deletionState: 'ACTIVE' }, orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
   importAudits: { orderBy: { createdAt: 'desc' }, take: 10 },
   supplierProducts: { include: { supplier: true }, orderBy: { leadTimeDays: 'asc' }, take: 1 },
   pricing: { include: { pricingRule: true } },
@@ -50,7 +50,7 @@ const adminMerchandisingProductSelect = {
   releaseStatus: true,
   category: { select: { name: true, slug: true } },
   inventory: { select: { stockOnHand: true, reservedStock: true } },
-  images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }], take: 1 },
+  images: { where: { deletionState: 'ACTIVE' }, orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }], take: 1 },
 } as const satisfies Prisma.ProductSelect;
 
 type AdminMerchandisingProductRow = Prisma.ProductGetPayload<{ select: typeof adminMerchandisingProductSelect }>;
@@ -1475,7 +1475,12 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
       },
     });
 
-    await tx.productImage.deleteMany({ where: { productId: id } });
+    // Legacy URL records are replaced here; managed R2 records have their own lifecycle.
+    await tx.productImage.deleteMany({ where: { productId: id, storageKey: null } });
+
+    const managedImageCount = await tx.productImage.count({
+      where: { productId: id, storageKey: { not: null }, deletionState: 'ACTIVE' },
+    });
 
     const imageInputs = [
       ...(input.primaryImageUrl
@@ -1487,8 +1492,8 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
         url: image.url,
         altText: image.altText || `${input.name} image ${index + 1}`,
         imageType: index === 0 ? 'primary' : image.imageType || 'gallery',
-        sortOrder: index,
-        isPrimary: index === 0,
+        sortOrder: managedImageCount + index,
+        isPrimary: managedImageCount === 0 && index === 0,
       }));
 
     if (imageInputs.length) {

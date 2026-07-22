@@ -6,17 +6,20 @@
     "build": "node ../../scripts/with-database-env.mjs next build",
     "dev": "node ../../scripts/with-database-env.mjs next dev --port 3001",
     "lint": "tsc -p tsconfig.check.json --noEmit",
-    "test": "tsc -p tsconfig.check.json --noEmit",
+    "test": "vitest run",
     "typecheck": "tsc -p tsconfig.check.json --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1092.0",
+    "@tcg-hobby/auth": "*",
     "@tcg-hobby/database": "*",
     "@tcg-hobby/types": "*",
     "@tcg-hobby/ui": "*",
     "@tcg-hobby/utils": "*",
     "next": "^15.3.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@tcg-hobby/config": "*",
@@ -26,6 +29,7 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   }
 }

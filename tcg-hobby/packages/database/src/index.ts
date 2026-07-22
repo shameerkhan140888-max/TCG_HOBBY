@@ -1,4 +1,9 @@
-export { MarketingCampaignStatus, MarketingSubscriberStatus, PrismaClient, ProductRecommendationType } from '@prisma/client';
+export {
+  MarketingCampaignStatus,
+  MarketingSubscriberStatus,
+  PrismaClient,
+  ProductRecommendationType,
+} from '@prisma/client';
 export type { Prisma } from '@prisma/client';
 export { prisma } from './client';
 export {
@@ -327,3 +332,40 @@ export {
   toggleWishlistItem,
 } from './wishlist';
 export type { WishlistItem } from './wishlist';
+
+export {
+  completeProductImageDeletion,
+  createManagedProductImage,
+  listAdminProductImages,
+  markProductImageForDeletion,
+  recordProductImageCleanupFailure,
+  reorderProductImages,
+  setPrimaryProductImage,
+  updateProductImageAltText,
+} from './product-media';
+export type { ManagedProductImageInput } from './product-media';
+export {
+  applyContentGeneration,
+  countRecentContentGenerations,
+  createContentGenerationDraft,
+  discardContentGeneration,
+  GENERATED_CONTENT_FIELDS,
+  getProductContentWorkspace,
+  PRODUCT_FACT_KEYS,
+  replaceProductFacts,
+  restoreContentGeneration,
+  setProductReviewLifecycle,
+  validateProductFacts,
+} from './product-content';
+export type {
+  FactVerificationState,
+  GeneratedContentField,
+  GeneratedProductContent,
+  ProductFactInput,
+  ProductFactKey,
+} from './product-content';
+
+export * from './product-image-resolution';
+
+export * from './admin-identity';
+export * from './account-recovery';

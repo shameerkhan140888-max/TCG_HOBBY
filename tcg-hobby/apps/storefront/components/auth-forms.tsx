@@ -2,9 +2,23 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { AuthCard, Button, ErrorMessage, FormField, Input } from '@tcg-hobby/ui';
-import type { LoginFormState, ProfileFormState, RegisterFormState } from '../lib/auth-actions';
-import { loginCustomerAction, registerCustomerAction, updateProfileAction } from '../lib/auth-actions';
+import {
+  AuthCard,
+  Button,
+  ErrorMessage,
+  FormField,
+  Input,
+} from '@tcg-hobby/ui';
+import type {
+  LoginFormState,
+  ProfileFormState,
+  RegisterFormState,
+} from '../lib/auth-actions';
+import {
+  loginCustomerAction,
+  registerCustomerAction,
+  updateProfileAction,
+} from '../lib/auth-actions';
 
 const emptyLoginState: LoginFormState = {
   fieldErrors: {},
@@ -27,7 +41,13 @@ const emptyProfileState: ProfileFormState = {
   },
 };
 
-function SubmitButton({ label, pendingLabel = 'Working...' }: { label: string; pendingLabel?: string }) {
+function SubmitButton({
+  label,
+  pendingLabel = 'Working...',
+}: {
+  label: string;
+  pendingLabel?: string;
+}) {
   const { pending } = useFormStatus();
 
   return (
@@ -37,8 +57,15 @@ function SubmitButton({ label, pendingLabel = 'Working...' }: { label: string; p
   );
 }
 
-export function LoginForm({ callbackUrl = '/account' }: { callbackUrl?: string }) {
-  const [state, formAction] = useActionState(loginCustomerAction, emptyLoginState);
+export function LoginForm({
+  callbackUrl = '/account',
+}: {
+  callbackUrl?: string;
+}) {
+  const [state, formAction] = useActionState(
+    loginCustomerAction,
+    emptyLoginState,
+  );
 
   return (
     <AuthCard
@@ -56,7 +83,12 @@ export function LoginForm({ callbackUrl = '/account' }: { callbackUrl?: string }
     >
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="callbackUrl" value={callbackUrl} />
-        <FormField label="Email" htmlFor="login-email" error={state.fieldErrors.email} required>
+        <FormField
+          label="Email"
+          htmlFor="login-email"
+          error={state.fieldErrors.email}
+          required
+        >
           <Input
             id="login-email"
             name="email"
@@ -66,18 +98,44 @@ export function LoginForm({ callbackUrl = '/account' }: { callbackUrl?: string }
             placeholder="sam.customer@tcghobby.test"
           />
         </FormField>
-        <FormField label="Password" htmlFor="login-password" error={state.fieldErrors.password} required>
-          <Input id="login-password" name="password" type="password" autoComplete="current-password" placeholder="••••••••••" />
+        <FormField
+          label="Password"
+          htmlFor="login-password"
+          error={state.fieldErrors.password}
+          required
+        >
+          <Input
+            id="login-password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            placeholder="••••••••••"
+          />
         </FormField>
         <ErrorMessage>{state.formError}</ErrorMessage>
+        <div className="text-right">
+          <a
+            className="text-sm text-accent-soft hover:text-accent"
+            href="/forgot-password"
+          >
+            Forgot password?
+          </a>
+        </div>
         <SubmitButton label="Sign in" />
       </form>
     </AuthCard>
   );
 }
 
-export function RegisterForm({ callbackUrl = '/account' }: { callbackUrl?: string }) {
-  const [state, formAction] = useActionState(registerCustomerAction, emptyRegisterState);
+export function RegisterForm({
+  callbackUrl = '/account',
+}: {
+  callbackUrl?: string;
+}) {
+  const [state, formAction] = useActionState(
+    registerCustomerAction,
+    emptyRegisterState,
+  );
 
   return (
     <AuthCard
@@ -95,7 +153,12 @@ export function RegisterForm({ callbackUrl = '/account' }: { callbackUrl?: strin
     >
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="callbackUrl" value={callbackUrl} />
-        <FormField label="Email" htmlFor="register-email" error={state.fieldErrors.email} required>
+        <FormField
+          label="Email"
+          htmlFor="register-email"
+          error={state.fieldErrors.email}
+          required
+        >
           <Input
             id="register-email"
             name="email"
@@ -112,19 +175,45 @@ export function RegisterForm({ callbackUrl = '/account' }: { callbackUrl?: strin
           required
           hint="Use at least 10 characters with letters and numbers."
         >
-          <Input id="register-password" name="password" type="password" autoComplete="new-password" placeholder="Create a secure password" />
+          <Input
+            id="register-password"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            placeholder="Create a secure password"
+          />
         </FormField>
-        <FormField label="Confirm password" htmlFor="register-confirm-password" error={state.fieldErrors.confirmPassword} required>
-          <Input id="register-confirm-password" name="confirmPassword" type="password" autoComplete="new-password" placeholder="Confirm your password" />
+        <FormField
+          label="Confirm password"
+          htmlFor="register-confirm-password"
+          error={state.fieldErrors.confirmPassword}
+          required
+        >
+          <Input
+            id="register-confirm-password"
+            name="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            placeholder="Confirm your password"
+          />
         </FormField>
         <ErrorMessage>{state.formError}</ErrorMessage>
-        <SubmitButton label="Create account" pendingLabel="Creating account..." />
+        <SubmitButton
+          label="Create account"
+          pendingLabel="Creating account..."
+        />
       </form>
     </AuthCard>
   );
 }
 
-export function ProfileForm({ email, initialName }: { email: string; initialName: string }) {
+export function ProfileForm({
+  email,
+  initialName,
+}: {
+  email: string;
+  initialName: string;
+}) {
   const [state, formAction] = useActionState(updateProfileAction, {
     ...emptyProfileState,
     values: {
@@ -133,20 +222,33 @@ export function ProfileForm({ email, initialName }: { email: string; initialName
   });
 
   return (
-    <AuthCard title="Profile" description="Update the basic details attached to your customer account.">
+    <AuthCard
+      title="Profile"
+      description="Update the basic details attached to your customer account."
+    >
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">
           <p className="text-sm font-medium text-neutral-300">Email</p>
           <Input value={email} readOnly aria-readonly="true" />
         </div>
-        <FormField label="Name" htmlFor="profile-name" error={state.fieldErrors.name}>
-          <Input id="profile-name" name="name" defaultValue={state.values.name} placeholder="Sam Collector" />
+        <FormField
+          label="Name"
+          htmlFor="profile-name"
+          error={state.fieldErrors.name}
+        >
+          <Input
+            id="profile-name"
+            name="name"
+            defaultValue={state.values.name}
+            placeholder="Sam Collector"
+          />
         </FormField>
         <ErrorMessage>{state.formError}</ErrorMessage>
-        {state.success ? <p className="text-sm text-emerald-300">{state.success}</p> : null}
+        {state.success ? (
+          <p className="text-sm text-emerald-300">{state.success}</p>
+        ) : null}
         <SubmitButton label="Save changes" pendingLabel="Saving..." />
       </form>
     </AuthCard>
   );
 }
-

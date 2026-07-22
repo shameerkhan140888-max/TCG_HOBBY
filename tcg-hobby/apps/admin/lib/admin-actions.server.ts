@@ -32,6 +32,7 @@ import {
   type StockAdjustmentFormState,
   type SupplierFormState,
 } from './admin-form-state';
+import { requireAdminRole, requireAdminSession } from './auth.server';
 
 const RECOMMENDATION_TYPES = Object.values(ProductRecommendationType);
 
@@ -121,6 +122,7 @@ function revalidateProductVisibility(productId: string, productSlug?: string): v
 }
 
 export async function saveProductAction(_state: ProductFormState, formData: FormData): Promise<ProductFormState> {
+  await requireAdminSession();
   const values = buildProductValues(formData);
   const fieldErrors: FieldErrors = {};
 
@@ -289,6 +291,7 @@ export async function previewProductCsvImportAction(
   _state: ProductCsvImportFormState,
   formData: FormData,
 ): Promise<ProductCsvImportFormState> {
+  await requireAdminSession();
   const csvText = asString(formData.get('csvText'));
   if (!csvText.trim()) {
     return {
@@ -320,6 +323,7 @@ export async function executeProductCsvImportAction(
   _state: ProductCsvImportFormState,
   formData: FormData,
 ): Promise<ProductCsvImportFormState> {
+  await requireAdminSession();
   const csvText = asString(formData.get('csvText'));
   if (!csvText.trim()) {
     return {
@@ -356,12 +360,14 @@ export async function productCsvImportAction(
   state: ProductCsvImportFormState,
   formData: FormData,
 ): Promise<ProductCsvImportFormState> {
+  await requireAdminSession();
   return asString(formData.get('intent')) === 'import'
     ? executeProductCsvImportAction(state, formData)
     : previewProductCsvImportAction(state, formData);
 }
 
 export async function saveCatalogueMasterDataAction(formData: FormData): Promise<void> {
+  await requireAdminRole();
   const kind = parseCatalogueKind(asString(formData.get('kind')));
   const id = asString(formData.get('id'));
   const name = asString(formData.get('name'));
@@ -395,6 +401,7 @@ export async function saveCatalogueMasterDataAction(formData: FormData): Promise
 }
 
 export async function toggleCatalogueMasterDataAction(formData: FormData): Promise<void> {
+  await requireAdminRole();
   const kind = parseCatalogueKind(asString(formData.get('kind')));
   const id = asString(formData.get('id'));
   if (!id) throw new Error('Missing catalogue record ID.');
@@ -406,6 +413,7 @@ export async function toggleCatalogueMasterDataAction(formData: FormData): Promi
 }
 
 export async function archiveProductAction(formData: FormData) {
+  await requireAdminRole();
   const productId = formData.get('productId');
   if (typeof productId !== 'string' || !productId) {
     redirect('/admin/products');
@@ -416,6 +424,7 @@ export async function archiveProductAction(formData: FormData) {
 }
 
 export async function toggleProductPublicationAction(formData: FormData) {
+  await requireAdminRole();
   const productId = formData.get('productId');
   const publishedValue = formData.get('published');
   const published = typeof publishedValue === 'string' ? publishedValue === 'true' || publishedValue === 'on' || publishedValue === '1' : true;
@@ -430,6 +439,7 @@ export async function toggleProductPublicationAction(formData: FormData) {
 }
 
 export async function saveProductMerchandisingSettingsAction(formData: FormData) {
+  await requireAdminSession();
   const productId = asString(formData.get('productId'));
   const productSlug = asString(formData.get('productSlug'));
   const recommendationWeight = parseWholeNumber(asString(formData.get('recommendationWeight')));
@@ -457,6 +467,7 @@ export async function saveProductMerchandisingSettingsAction(formData: FormData)
 }
 
 export async function addProductRecommendationAction(formData: FormData) {
+  await requireAdminSession();
   const sourceProductId = asString(formData.get('sourceProductId'));
   const sourceProductSlug = asString(formData.get('sourceProductSlug'));
   const recommendedProductId = asString(formData.get('recommendedProductId'));
@@ -492,6 +503,7 @@ export async function addProductRecommendationAction(formData: FormData) {
 }
 
 export async function updateProductRecommendationAction(formData: FormData) {
+  await requireAdminSession();
   const productId = asString(formData.get('productId'));
   const productSlug = asString(formData.get('productSlug'));
   const recommendationId = asString(formData.get('recommendationId'));
@@ -525,6 +537,7 @@ export async function updateProductRecommendationAction(formData: FormData) {
 }
 
 export async function deleteProductRecommendationAction(formData: FormData) {
+  await requireAdminSession();
   const productId = asString(formData.get('productId'));
   const productSlug = asString(formData.get('productSlug'));
   const recommendationId = asString(formData.get('recommendationId'));
@@ -546,6 +559,7 @@ export async function deleteProductRecommendationAction(formData: FormData) {
 }
 
 export async function saveSupplierAction(_state: SupplierFormState, formData: FormData): Promise<SupplierFormState> {
+  await requireAdminRole();
   const values = buildSupplierValues(formData);
   const fieldErrors: FieldErrors = {};
 
@@ -596,6 +610,7 @@ export async function saveSupplierAction(_state: SupplierFormState, formData: Fo
 }
 
 export async function adjustStockAction(_state: StockAdjustmentFormState, formData: FormData): Promise<StockAdjustmentFormState> {
+  await requireAdminSession();
   const values = buildStockAdjustmentValues(formData);
   const fieldErrors: FieldErrors = {};
 
