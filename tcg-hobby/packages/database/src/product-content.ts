@@ -76,7 +76,7 @@ export async function getProductContentWorkspace(productId: string, db = prisma)
       published: true, lifecycleState: true,
       images: { where: { deletionState: 'ACTIVE' }, orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }], take: 1 },
       facts: { orderBy: [{ sortOrder: 'asc' }, { key: 'asc' }] },
-      contentGenerations: { orderBy: { createdAt: 'desc' }, take: 10 },
+      contentGenerations: { orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 10 },
     },
   });
 }

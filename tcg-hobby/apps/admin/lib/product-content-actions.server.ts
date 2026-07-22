@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { applyContentGeneration, countRecentContentGenerations, createContentGenerationDraft, discardContentGeneration, GENERATED_CONTENT_FIELDS, getProductContentWorkspace, replaceProductFacts, restoreContentGeneration, setProductReviewLifecycle, type GeneratedContentField, type ProductFactInput } from '@tcg-hobby/database';
 import { requireAdminSession } from './auth.server';
 import { createOpenAiContentProvider } from './product-content-provider.server';
+import { generateProductReviewDraft } from './product-content-generation';
 export type ProductContentActionResult = { ok: boolean; message: string };
 function refresh(productId: string) { revalidatePath(`/admin/products/${productId}`); revalidatePath('/catalogue'); revalidatePath('/'); }
 export async function saveProductFactsAction(productId: string, facts: ProductFactInput[]): Promise<ProductContentActionResult> { const session = await requireAdminSession(`/admin/products/${productId}`); try { await replaceProductFacts(productId, facts, session.user.id); refresh(productId); return { ok: true, message: 'Structured facts saved.' }; } catch (error) { return { ok: false, message: error instanceof Error ? error.message : 'Facts could not be saved.' }; } }
@@ -11,11 +12,11 @@ export async function generateProductContentAction(productId: string, requestedF
   try {
     const validFields = requestedFields.filter((field) => GENERATED_CONTENT_FIELDS.includes(field)); if (!validFields.length) throw new Error('Choose at least one field to generate.');
     const recent = await countRecentContentGenerations(session.user.id, new Date(Date.now() - 10 * 60_000)); if (recent >= 5) throw new Error('Generation limit reached. Try again in a few minutes.');
-    const workspace = await getProductContentWorkspace(productId); if (!workspace) throw new Error('Product not found.');
-    const verifiedFacts = workspace.facts.filter((fact) => fact.verificationState === 'VERIFIED').map((fact) => ({ key: fact.key, value: fact.value, sourceReference: fact.sourceReference }));
-    if (!verifiedFacts.length) throw new Error('Add and verify at least one sourced product fact before generating content.');
-    const provider = createOpenAiContentProvider(); const generated = await provider.generate({ product: { name: workspace.name, slug: workspace.slug, brand: workspace.brand, game: workspace.game, setName: workspace.setName, productType: workspace.productType, language: workspace.language }, verifiedFacts, requestedFields: validFields });
-    await createContentGenerationDraft({ productId, requestedById: session.user.id, provider: 'openai', model: generated.model, requestedFields: validFields, content: generated.content, warnings: generated.content.missingFactWarnings });
+    await generateProductReviewDraft(productId, session.user.id, validFields, {
+      getWorkspace: getProductContentWorkspace,
+      createProvider: createOpenAiContentProvider,
+      createDraft: createContentGenerationDraft,
+    });
     refresh(productId); return { ok: true, message: 'Draft content generated for review. Nothing has been published.' };
   } catch (error) { return { ok: false, message: error instanceof Error ? error.message : 'Content generation failed.' }; }
 }

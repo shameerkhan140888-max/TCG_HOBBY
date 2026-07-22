@@ -177,4 +177,43 @@ test.describe('WP12 operational admin checks', () => {
       `http://localhost:3000${pitchBlackPath}`,
     );
   });
+
+  test('assisted content controls are readable and unsaved facts block generation', async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name.includes('mobile'),
+      'Admin product editing is validated in the desktop admin viewport.',
+    );
+    const staffFixture = await prisma.user.findUnique({
+      where: { email: E2E_STAFF_EMAIL },
+      select: { id: true },
+    });
+    test.skip(
+      !staffFixture,
+      'The canonical STAFF E2E fixture is not present in the configured database.',
+    );
+
+    await page.goto(
+      `http://127.0.0.1:3001/login?callbackUrl=${encodeURIComponent(`/admin/products/${pitchBlackId}`)}`,
+    );
+    await page.getByRole('textbox', { name: 'Email', exact: true }).fill(E2E_STAFF_EMAIL);
+    await page.getByLabel('Password').fill(E2E_STAFF_PASSWORD);
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/admin/products/${pitchBlackId}`), { timeout: 30_000 });
+
+    const factGroup = page.getByRole('group', { name: 'Booster pack count', exact: true });
+    const valueInput = factGroup.getByLabel('Value', { exact: true });
+    const sourceInput = factGroup.getByLabel('Source reference', { exact: true });
+    const verification = factGroup.getByLabel('Verification', { exact: true });
+    await expect(valueInput).toHaveClass(/text-neutral-50/);
+    await expect(sourceInput).toHaveClass(/placeholder:text-neutral-500/);
+    await expect(verification).toHaveClass(/bg-surface-ink/);
+
+    await valueInput.fill('Unsaved E2E value');
+    await verification.selectOption('VERIFIED');
+    await sourceInput.fill('Product packaging');
+    await page.getByRole('button', { name: 'Generate review draft', exact: true }).click();
+    await expect(page.getByRole('alert')).toHaveText('Save your verified product facts before generating content.');
+  });
 });

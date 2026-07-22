@@ -9,7 +9,7 @@ import { buildStorefrontProductPreviewUrl } from '../../../../lib/site';
 import { ProductForm } from '../../../../components/product-form';
 import { ProductMerchandisingPanel } from '../../../../components/product-merchandising-panel';
 import { ProductMediaManager } from '../../../../components/product-media-manager';
-import { ProductContentAssistant } from '../../../../components/product-content-assistant';
+import { ProductContentAssistant, type CurrentProductContent } from '../../../../components/product-content-assistant';
 
 export const dynamic = 'force-dynamic';
 
@@ -337,6 +337,18 @@ export default async function AdminProductDetailPage({ params, searchParams }: {
         <ProductContentAssistant
           productId={product.id}
           lifecycleState={product.lifecycleState}
+          currentContent={{
+            shortDescription: contentWorkspace.description,
+            fullDescription: contentWorkspace.longDescription,
+            contents: contentWorkspace.verifiedContents,
+            highlights: contentWorkspace.productHighlights,
+            specificationSummary: contentWorkspace.specificationSummary ?? '',
+            seoTitle: contentWorkspace.seoTitle ?? '',
+            metaDescription: contentWorkspace.metaDescription ?? '',
+            searchTags: contentWorkspace.searchTags,
+            suggestedSlug: contentWorkspace.slug,
+            imageAltText: contentWorkspace.images[0]?.altText ?? '',
+          } satisfies CurrentProductContent}
           initialFacts={contentWorkspace.facts.map((fact) => ({
             key: fact.key as ProductFactInput['key'],
             value: fact.value,

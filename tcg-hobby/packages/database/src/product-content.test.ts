@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { applyContentGeneration, validateProductFacts, type GeneratedProductContent } from './product-content';
+import { applyContentGeneration, getProductContentWorkspace, validateProductFacts, type GeneratedProductContent } from './product-content';
 
 const generated: GeneratedProductContent = { shortDescription: 'New short copy', fullDescription: 'New full copy', contents: ['One verified item'], highlights: ['Verified highlight'], specificationSummary: 'Verified summary', seoTitle: 'SEO title', metaDescription: 'Meta description', searchTags: ['pokemon'], suggestedSlug: 'suggested-only', imageAltText: 'Front of the verified product box', missingFactWarnings: [] };
 
@@ -21,5 +21,14 @@ describe('product content safety', () => {
     const tx = { productContentGeneration: { findUnique: vi.fn().mockResolvedValue({ requestedById: 'owner', status: 'DRAFT', generatedContent: generated, product: {} }) } };
     const db = { $transaction: (callback: (client: typeof tx) => unknown) => callback(tx) };
     await expect(applyContentGeneration('gen', ['seoTitle'], 'other', db as never)).rejects.toThrow('Only the requesting staff member');
+  });
+  it('loads generation history using deterministic newest-first ordering', async () => {
+    const findUnique = vi.fn().mockResolvedValue(null);
+    await getProductContentWorkspace('product', { product: { findUnique } } as never);
+    expect(findUnique).toHaveBeenCalledWith(expect.objectContaining({
+      select: expect.objectContaining({
+        contentGenerations: { orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 10 },
+      }),
+    }));
   });
 });
