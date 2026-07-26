@@ -21,6 +21,7 @@ export type ProductFormValues = {
   setId: string;
   description: string;
   longDescription: string;
+  contents: string;
   condition: string;
   categoryId: string;
   supplierId: string;
@@ -132,6 +133,7 @@ export const emptyProductFormValues: ProductFormValues = {
   setId: '',
   description: '',
   longDescription: '',
+  contents: '',
   condition: 'SEALED',
   categoryId: '',
   supplierId: '',
@@ -221,6 +223,13 @@ export function parseInteger(value: string) {
   return Number.isFinite(parsed) ? parsed : NaN;
 }
 
+export function parseProductContents(value: string): string[] {
+  return value
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 export function buildProductValues(formData: FormData): ProductFormValues {
   return {
     productId: getString(formData, 'productId'),
@@ -240,6 +249,7 @@ export function buildProductValues(formData: FormData): ProductFormValues {
     setId: getString(formData, 'setId'),
     description: getString(formData, 'description'),
     longDescription: getString(formData, 'longDescription'),
+    contents: getString(formData, 'contents'),
     condition: getString(formData, 'condition', 'SEALED'),
     categoryId: getString(formData, 'categoryId'),
     supplierId: getString(formData, 'supplierId'),

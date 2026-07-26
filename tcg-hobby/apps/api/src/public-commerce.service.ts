@@ -110,6 +110,7 @@ export function toPublicProductDetail(product: CatalogueProductDetail): PublicPr
     condition: product.condition,
     shortDescription: product.description,
     longDescription: product.longDescription,
+    contents: product.contents,
     images,
     relatedProducts: product.relatedProducts.map(toPublicProductSummary),
   };

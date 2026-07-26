@@ -317,6 +317,17 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
           <FormField label="Long description" htmlFor="longDescription" error={formState.fieldErrors.longDescription} required>
             <Textarea id="longDescription" name="longDescription" defaultValue={formState.values.longDescription} />
           </FormField>
+          <FormField label="Product contents" htmlFor="contents" error={formState.fieldErrors.contents}>
+            <Textarea
+              id="contents"
+              name="contents"
+              defaultValue={formState.values.contents}
+              placeholder={'1 promotional card\n8 booster packs\n1 reusable sticker'}
+            />
+            <p className="mt-2 text-xs leading-5 text-neutral-400">
+              List the items included with the sealed product. One item per line is recommended.
+            </p>
+          </FormField>
           <div className="grid gap-4 lg:grid-cols-2">
             <FormField label="Image label" htmlFor="imageLabel">
               <Input id="imageLabel" name="imageLabel" defaultValue={formState.values.imageLabel} />

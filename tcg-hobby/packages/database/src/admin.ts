@@ -316,6 +316,7 @@ export type AdminProductListItem = {
 export type AdminProductDetail = AdminProductListItem & {
   description: string;
   longDescription: string;
+  verifiedContents: string[];
   condition: string;
   searchText: string;
   imageLabel: string;
@@ -483,6 +484,7 @@ type ProductFormInput = {
   setId?: string | null;
   description: string;
   longDescription: string;
+  contents?: string[];
   condition: string;
   categoryId: string;
   supplierId: string;
@@ -755,6 +757,7 @@ function mapProductDetailRow(product: ProductRow): AdminProductDetail {
     ...listItem,
     description: product.description,
     longDescription: product.longDescription,
+    verifiedContents: product.verifiedContents,
     condition: product.condition,
     searchText: product.searchText,
     imageLabel: product.imageLabel,
@@ -1303,6 +1306,7 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma): 
         setId: masterData.set?.id ?? null,
         description: input.description,
         longDescription: input.longDescription,
+        verifiedContents: input.contents ?? [],
         condition: input.condition as ProductCondition,
         priceMinor: input.priceMinor,
         rrpMinor: input.rrpMinor ?? null,
@@ -1317,7 +1321,7 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma): 
         hideWhenOutOfStock: input.hideWhenOutOfStock,
         customerPurchaseLimit: input.customerPurchaseLimit ?? null,
         availabilityMessage: input.availabilityMessage || null,
-        searchText: `${input.name} ${input.sku} ${input.barcode ?? ''} ${resolvedBrand ?? ''} ${resolvedGame} ${resolvedSetName ?? ''} ${resolvedProductType ?? ''} ${resolvedLanguage ?? ''} ${input.description} ${input.longDescription}`.toLowerCase(),
+        searchText: `${input.name} ${input.sku} ${input.barcode ?? ''} ${resolvedBrand ?? ''} ${resolvedGame} ${resolvedSetName ?? ''} ${resolvedProductType ?? ''} ${resolvedLanguage ?? ''} ${input.description} ${input.longDescription} ${(input.contents ?? []).join(' ')}`.toLowerCase(),
         imageLabel: input.imageLabel,
         categoryId: input.categoryId,
         seoTitle: input.seoTitle || null,
@@ -1413,6 +1417,7 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
         setId: masterData.set?.id ?? null,
         description: input.description,
         longDescription: input.longDescription,
+        verifiedContents: input.contents ?? [],
         condition: input.condition as ProductCondition,
         priceMinor: input.priceMinor,
         rrpMinor: input.rrpMinor ?? null,
@@ -1427,7 +1432,7 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
         hideWhenOutOfStock: input.hideWhenOutOfStock,
         customerPurchaseLimit: input.customerPurchaseLimit ?? null,
         availabilityMessage: input.availabilityMessage || null,
-        searchText: `${input.name} ${input.sku} ${input.barcode ?? ''} ${resolvedBrand ?? ''} ${resolvedGame} ${resolvedSetName ?? ''} ${resolvedProductType ?? ''} ${resolvedLanguage ?? ''} ${input.description} ${input.longDescription}`.toLowerCase(),
+        searchText: `${input.name} ${input.sku} ${input.barcode ?? ''} ${resolvedBrand ?? ''} ${resolvedGame} ${resolvedSetName ?? ''} ${resolvedProductType ?? ''} ${resolvedLanguage ?? ''} ${input.description} ${input.longDescription} ${(input.contents ?? []).join(' ')}`.toLowerCase(),
         imageLabel: input.imageLabel,
         categoryId: input.categoryId,
         seoTitle: input.seoTitle || null,

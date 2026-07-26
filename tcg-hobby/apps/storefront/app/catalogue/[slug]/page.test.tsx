@@ -105,6 +105,12 @@ function megaGreninjaProduct(overrides: Partial<CatalogueProductDetail> = {}): C
     condition: 'SEALED',
     longDescription:
       'Mega Greninja ex flips the battle upside down in this premium Pokemon TCG collection.\n\nTake Mega Greninja ex into battle with an exclusive promotional card, an oversized lenticular card, a reusable tech sticker and eight Pokemon TCG booster packs.\n\nThe collection includes Mega Greninja ex in both playable and oversized display formats, making it a strong choice for collectors, players and Mega Greninja fans looking for a premium Pokemon TCG release.',
+    contents: [
+      '1 foil promo card featuring Mega Greninja ex',
+      '1 oversized lenticular promo card featuring Mega Greninja ex',
+      '1 tech sticker featuring Mega Greninja',
+      '8 Pok\u00e9mon TCG booster packs',
+    ],
     searchText: 'pokemon mega greninja',
     supplierSku: 'SUPPLIER-ONLY',
     leadTimeDays: 1,
@@ -200,4 +206,18 @@ describe('Product detail page', () => {
     expect(markup).not.toContain('Only 3');
     expect(markup.match(/<details/g)).toHaveLength(4);
   }, 10000);
+
+  it('does not render an empty contents section', async () => {
+    mocks.product = megaGreninjaProduct({ slug: 'product-without-contents', contents: [] });
+    const ProductPage = (await import('./page')).default;
+    const markup = renderToStaticMarkup(
+      await ProductPage({
+        params: Promise.resolve({ slug: 'product-without-contents' }),
+      }),
+    );
+
+    expect(markup).not.toContain('What???s Included');
+    expect(markup).not.toContain('Detailed contents will be added');
+    expect(markup.match(/<details/g)).toHaveLength(3);
+  });
 });

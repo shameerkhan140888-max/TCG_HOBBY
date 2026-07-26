@@ -26,6 +26,7 @@ import {
   buildProductValues,
   buildStockAdjustmentValues,
   buildSupplierValues,
+  parseProductContents,
   type FieldErrors,
   type ProductFormState,
   type ProductCsvImportFormState,
@@ -152,6 +153,7 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
   const saleStartsAt = parseOptionalDate(values.saleStartsAt);
   const saleEndsAt = parseOptionalDate(values.saleEndsAt);
   const galleryImages = parseGalleryImages(values.galleryImagesText);
+  const contents = parseProductContents(values.contents);
 
   if (priceMinor === null || priceMinor < 0) {
     fieldErrors.priceMinor = 'Enter a valid price in pence.';
@@ -205,6 +207,7 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
     setId: values.setId || null,
     description: values.description,
     longDescription: values.longDescription,
+    contents,
     condition: values.condition,
     categoryId: values.categoryId,
     supplierId: values.supplierId,

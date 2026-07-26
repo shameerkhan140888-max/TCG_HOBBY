@@ -56,6 +56,7 @@ function productState(product: NonNullable<Awaited<ReturnType<typeof getAdminPro
       setId: product.setId ?? '',
       description: product.description,
       longDescription: product.longDescription,
+      contents: product.verifiedContents.join('\n'),
       condition: product.condition,
       categoryId: product.categoryId,
       supplierId: product.supplierId,

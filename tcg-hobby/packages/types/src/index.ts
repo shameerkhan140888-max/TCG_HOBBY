@@ -107,6 +107,7 @@ export type CatalogueProductDetail = CatalogueProduct & {
   language?: string | null;
   condition: ProductCondition;
   longDescription: string;
+  contents: string[];
   searchText: string;
   supplierSku: string;
   leadTimeDays: number;
@@ -166,6 +167,7 @@ export type PublicProductDetail = PublicProductSummary & {
   condition: ProductCondition;
   shortDescription: string;
   longDescription: string;
+  contents: string[];
   images: PublicProductImage[];
   relatedProducts: PublicProductSummary[];
 };

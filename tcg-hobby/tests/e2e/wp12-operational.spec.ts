@@ -169,6 +169,9 @@ test.describe('WP12 operational admin checks', () => {
       new RegExp(`/admin/products/${pitchBlackId}`),
       { timeout: 30_000 },
     );
+    await expect(
+      page.getByRole('textbox', { name: 'Product contents', exact: true }),
+    ).toBeVisible();
 
     const preview = page.getByRole('link', { name: /preview product/i });
     await expect(preview).toBeVisible();

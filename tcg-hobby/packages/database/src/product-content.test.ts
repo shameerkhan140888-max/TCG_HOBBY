@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { applyContentGeneration, getProductContentWorkspace, validateProductFacts, type GeneratedProductContent } from './product-content';
+import { applyContentGeneration, getProductContentWorkspace, restoreContentGeneration, validateProductFacts, type GeneratedProductContent } from './product-content';
 
 const generated: GeneratedProductContent = { shortDescription: 'New short copy', fullDescription: 'New full copy', contents: ['One verified item'], highlights: ['Verified highlight'], specificationSummary: 'Verified summary', seoTitle: 'SEO title', metaDescription: 'Meta description', searchTags: ['pokemon'], suggestedSlug: 'suggested-only', imageAltText: 'Front of the verified product box', missingFactWarnings: [] };
 
@@ -16,6 +16,33 @@ describe('product content safety', () => {
     await applyContentGeneration('gen', ['shortDescription'], 'staff', db as never);
     expect(tx.product.update).toHaveBeenCalledWith({ where: { id: 'product' }, data: { description: 'New short copy' } });
     expect(tx.productContentGeneration.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: 'APPLIED', appliedFields: ['shortDescription'], previousValues: { shortDescription: 'Existing' } }) }));
+  });
+  it('applies generated contents only when explicitly selected without publishing', async () => {
+    const tx = { productContentGeneration: { findUnique: vi.fn().mockResolvedValue({ id: 'gen', productId: 'product', requestedById: 'staff', status: 'DRAFT', generatedContent: generated, product: { description: 'Existing', longDescription: 'Existing full', verifiedContents: ['Manual item'], productHighlights: [], specificationSummary: null, seoTitle: null, metaDescription: null, searchTags: [] } }), update: vi.fn() }, product: { update: vi.fn() }, productImage: { findFirst: vi.fn(), update: vi.fn() } };
+    const db = { $transaction: (callback: (client: typeof tx) => unknown) => callback(tx) };
+
+    await applyContentGeneration('gen', ['contents'], 'staff', db as never);
+
+    expect(tx.product.update).toHaveBeenCalledWith({ where: { id: 'product' }, data: { verifiedContents: ['One verified item'] } });
+    expect(tx.product.update.mock.calls[0]?.[0].data).not.toHaveProperty('published');
+    expect(tx.productContentGeneration.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ previousValues: { contents: ['Manual item'] } }),
+    }));
+  });
+  it('restores the prior manual contents from the generation revision', async () => {
+    const tx = {
+      productContentGeneration: {
+        findUnique: vi.fn().mockResolvedValue({ id: 'gen', productId: 'product', status: 'APPLIED', previousValues: { contents: ['Manual item'] } }),
+        update: vi.fn(),
+      },
+      product: { update: vi.fn() },
+      productImage: { findFirst: vi.fn(), update: vi.fn() },
+    };
+    const db = { $transaction: (callback: (client: typeof tx) => unknown) => callback(tx) };
+
+    await restoreContentGeneration('gen', 'staff', db as never);
+
+    expect(tx.product.update).toHaveBeenCalledWith({ where: { id: 'product' }, data: { verifiedContents: ['Manual item'] } });
   });
   it('does not let another staff member apply a draft', async () => {
     const tx = { productContentGeneration: { findUnique: vi.fn().mockResolvedValue({ requestedById: 'owner', status: 'DRAFT', generatedContent: generated, product: {} }) } };

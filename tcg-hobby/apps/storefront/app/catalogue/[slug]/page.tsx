@@ -112,7 +112,13 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
   const hasPurchaseLimit = Boolean(product.customerPurchaseLimit && product.customerPurchaseLimit > 0);
   const hasFreeDelivery = Boolean(product.freeUkStandardShipping);
   const stockState = resolveStockState(availableQuantity);
-  const productContents = getProductContents(product.slug);
+  const legacyProductContents = getProductContents(product.slug);
+  const productContents = product.contents.length
+    ? {
+        items: product.contents,
+        ...(legacyProductContents?.notice ? { notice: legacyProductContents.notice } : {}),
+      }
+    : legacyProductContents;
   const siteUrl = getSiteUrl();
   const displayImages = product.images.length
     ? product.images
@@ -284,16 +290,16 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
                 </div>
               </details>
 
-              <details name="product-information" className="group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-black text-neutral-50 focus:outline-none focus:ring-2 focus:ring-accent">
-                  What&rsquo;s Included
-                  <span className="text-accent transition group-open:rotate-45" aria-hidden="true">+</span>
-                </summary>
-                {productContents ? (
+              {productContents ? (
+                <details name="product-information" className="group py-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-black text-neutral-50 focus:outline-none focus:ring-2 focus:ring-accent">
+                    What&rsquo;s Included
+                    <span className="text-accent transition group-open:rotate-45" aria-hidden="true">+</span>
+                  </summary>
                   <div className="mt-4 space-y-4 text-sm leading-7 text-neutral-300">
                     <ul className="space-y-2">
-                      {productContents.items.map((item) => (
-                        <li key={item} className="flex gap-3">
+                      {productContents.items.map((item, index) => (
+                        <li key={`${index}-${item}`} className="flex gap-3">
                           <span className="mt-3 h-1.5 w-1.5 flex-none rounded-full bg-accent" aria-hidden="true" />
                           <span>{item}</span>
                         </li>
@@ -301,10 +307,8 @@ export default async function ProductPage({ params }: { params: Promise<ParamsVa
                     </ul>
                     {productContents.notice ? <p className="text-neutral-400">{productContents.notice}</p> : null}
                   </div>
-                ) : (
-                  <p className="mt-4 text-sm leading-7 text-neutral-300">Detailed contents will be added after checking the packaging or authorised product data.</p>
-                )}
-              </details>
+                </details>
+              ) : null}
 
               <details name="product-information" className="group py-5">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-black text-neutral-50 focus:outline-none focus:ring-2 focus:ring-accent">

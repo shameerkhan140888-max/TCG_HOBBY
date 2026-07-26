@@ -1934,6 +1934,7 @@ export function toCatalogueProductDetail(
     setName: seed.setName,
     condition: seed.condition,
     longDescription: seed.longDescription,
+    contents: [],
     searchText: seed.searchText,
     supplierSku: supplierProduct?.supplierSku ?? `${seed.sku}-SEED`,
     leadTimeDays: supplierProduct?.leadTimeDays ?? 5,
