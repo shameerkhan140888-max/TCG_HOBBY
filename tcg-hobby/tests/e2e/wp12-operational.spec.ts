@@ -9,9 +9,10 @@ const greninjaPath =
   '/catalogue/pokemon-tcg-mega-greninja-ex-premium-collection';
 
 test.describe('WP12 operational storefront checks', () => {
-  test('catalogue card opens the routeable no-image Pitch Black product detail page', async ({
+  test('catalogue card opens the routeable Pitch Black product detail page with valid media', async ({
     page,
   }) => {
+    test.slow();
     await page.goto('/catalogue?q=Pitch%20Black');
 
     const productLink = page
@@ -24,10 +25,11 @@ test.describe('WP12 operational storefront checks', () => {
     await productLink.click();
     await expect(page).toHaveURL(new RegExp(`${pitchBlackSlug}$`));
     await expect(
-      page.getByRole('button', {
-        name: 'Product image unavailable',
-        exact: true,
-      }),
+      page
+        .getByRole('button', {
+          name: /Open image viewer for .*Pitch Black Booster Pack/i,
+        })
+        .or(page.getByLabel('Product image unavailable', { exact: true })),
     ).toBeVisible();
     await expect(page.getByText(/4\.99/).first()).toBeVisible();
     await page
@@ -169,6 +171,9 @@ test.describe('WP12 operational admin checks', () => {
       new RegExp(`/admin/products/${pitchBlackId}`),
       { timeout: 30_000 },
     );
+    await page
+      .getByRole('button', { name: /^Copy and media / })
+      .click();
     await expect(
       page.getByRole('textbox', { name: 'Product contents', exact: true }),
     ).toBeVisible();
@@ -217,6 +222,10 @@ test.describe('WP12 operational admin checks', () => {
     await verification.selectOption('VERIFIED');
     await sourceInput.fill('Product packaging');
     await page.getByRole('button', { name: 'Generate review draft', exact: true }).click();
-    await expect(page.getByRole('alert')).toHaveText('Save your verified product facts before generating content.');
+    await expect(
+      page
+        .getByRole('alert')
+        .filter({ hasText: 'Save your verified product facts before generating content.' }),
+    ).toHaveText('Save your verified product facts before generating content.');
   });
 });

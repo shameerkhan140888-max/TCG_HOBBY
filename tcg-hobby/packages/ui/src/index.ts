@@ -80,6 +80,8 @@ export type {
   QuantitySelectorProps,
   ShippingMethodCardProps,
 } from './commerce';
+export { ProductImageMedia, ProductImageStage } from './product-image-media';
+export type { ProductImageMediaProps, ProductImageStageProps } from './product-image-media';
 export {
   CardQuantity,
   CollectionCard,

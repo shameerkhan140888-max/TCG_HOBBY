@@ -14,6 +14,7 @@ import { Button, buttonVariants } from './button';
 import { Badge } from './badge';
 import { Card, CardContent } from './card';
 import { cn } from './lib/cn';
+import { ProductImageMedia, ProductImageStage } from './product-image-media';
 
 function formatMoney(value: Money, locale = 'en-GB'): string {
   return new Intl.NumberFormat(locale, {
@@ -103,21 +104,22 @@ export function ProductCard({ product, href, actionSlot, mediaSlot, className, .
     <Card className={cn('group h-full overflow-hidden transition-colors hover:border-accent/60', className)} {...props}>
       <CardContent className="flex h-full flex-col gap-4">
         <a className="flex h-full flex-col gap-4" href={href}>
-          <div className="relative aspect-[5/4] overflow-hidden rounded-md bg-gradient-to-br from-surface-panel via-surface-ink to-accent/20 transition-transform group-hover:scale-[1.01]">
+          <ProductImageStage className="aspect-[5/4] transition-transform group-hover:scale-[1.01]">
             {mediaSlot ? (
               mediaSlot
             ) : product.imageUrl ? (
-              <img
+              <ProductImageMedia
                 src={product.imageUrl}
                 alt={product.imageAlt ?? product.name}
                 loading="lazy"
                 decoding="async"
                 className="h-full w-full object-contain p-4 transition duration-300 group-hover:scale-[1.02]"
+                fallback={<ProductImagePlaceholder label="Product image unavailable" compact />}
               />
             ) : (
               <ProductImagePlaceholder label="Product image unavailable" compact />
             )}
-          </div>
+          </ProductImageStage>
           <div className="space-y-1">
             <p className="text-sm text-neutral-400">{product.game}</p>
             <h3 className="min-h-14 text-lg font-bold leading-7 text-neutral-50">{product.name}</h3>
@@ -345,7 +347,15 @@ export function CartLineItem({ item, actionSlot, className, ...props }: CartLine
   return (
     <Card className={cn(className)} {...props}>
       <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-2">
+        <div className="flex min-w-0 items-center gap-4">
+          <ProductImageStage className="flex h-24 w-24 flex-none items-center justify-center p-2">
+            {item.imageUrl ? (
+              <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} className="h-full w-full object-contain" />
+            ) : (
+              <span className="px-2 text-center text-xs font-semibold text-neutral-600">Image unavailable</span>
+            )}
+          </ProductImageStage>
+          <div className="min-w-0 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-semibold text-neutral-50">{item.productName}</h3>
             <Badge variant={item.inStock ? 'success' : 'warning'}>{item.inStock ? 'In stock' : 'Limited'}</Badge>
@@ -354,6 +364,7 @@ export function CartLineItem({ item, actionSlot, className, ...props }: CartLine
           <p className="text-sm text-neutral-400">
             {item.quantity} x {formatMoney({ amountMinor: item.unitPriceMinor, currency: 'GBP' })}
           </p>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">

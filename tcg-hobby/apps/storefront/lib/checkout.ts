@@ -9,6 +9,7 @@ export type CheckoutFieldErrors = Record<string, string>;
 
 export type CheckoutFormState = {
   formError?: string;
+  checkoutUrl?: string;
   fieldErrors: CheckoutFieldErrors;
   values: CheckoutAddress & {
     shippingMethodCode: ShippingMethodCode | '';
@@ -53,7 +54,7 @@ export async function getCheckoutPageData(): Promise<CheckoutPageData> {
       })
     : null;
   const defaultAddress = userRecord?.addresses[0] ?? null;
-  const shippingMethods = await getAvailableShippingMethods(defaultAddress?.country ?? 'GB');
+  const shippingMethods = await getAvailableShippingMethods(defaultAddress?.country ?? 'GB', cart.subtotalMinor, cart.items);
   const defaults: CheckoutFormState['values'] = {
     ...emptyCheckoutValues,
     fullName: user?.name ?? '',

@@ -1,6 +1,7 @@
 import { BrandMark, Container, PageShell, Section } from '@tcg-hobby/ui';
 import { SiteHeader } from '../../components/site-header';
 import { LoginForm } from '../../components/auth-forms';
+import { resolveInternalReturnTo } from '../../lib/internal-return';
 
 type SearchParamsValue = Record<string, string | string[] | undefined>;
 
@@ -10,7 +11,7 @@ function asString(value: string | string[] | undefined) {
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<SearchParamsValue> }) {
   const params = (await searchParams) ?? {};
-  const callbackUrl = asString(params.callbackUrl) || '/account';
+  const callbackUrl = resolveInternalReturnTo(asString(params.callbackUrl), '/');
 
   return (
     <PageShell>

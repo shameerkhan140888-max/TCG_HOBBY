@@ -508,6 +508,8 @@ type ProductFormInput = {
   locationCode: string;
   imageLabel: string;
   featured: boolean;
+  heroFeatured?: boolean;
+  homepagePriority?: number | null;
   published: boolean;
   hideWhenOutOfStock: boolean;
   customerPurchaseLimit?: number | null;
@@ -1316,6 +1318,8 @@ export async function createAdminProduct(input: ProductFormInput, db = prisma): 
         vatRate: input.vatRate ?? 20,
         currency: 'GBP',
         featured: input.featured,
+        heroFeatured: input.heroFeatured ?? false,
+        homepagePriority: input.homepagePriority ?? null,
         published: input.published,
         lifecycleState: input.published ? 'PUBLISHED' : 'DRAFT',
         hideWhenOutOfStock: input.hideWhenOutOfStock,
@@ -1427,6 +1431,8 @@ export async function updateAdminProduct(id: string, input: ProductFormInput, db
         vatRate: input.vatRate ?? 20,
         currency: 'GBP',
         featured: input.featured,
+        heroFeatured: input.heroFeatured ?? false,
+        homepagePriority: input.homepagePriority ?? null,
         published: input.published,
         lifecycleState: input.published ? 'PUBLISHED' : 'DRAFT',
         hideWhenOutOfStock: input.hideWhenOutOfStock,

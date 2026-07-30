@@ -12,12 +12,12 @@ type ShopLink = {
 };
 
 const shopLinks: ShopLink[] = [
-  { label: 'Pokémon', href: '/catalogue?q=Pokemon', description: 'Sealed products, singles and collector essentials.' },
-  { label: 'Magic: The Gathering', href: '/catalogue?q=Magic', description: 'New releases, sealed products and play-ready picks.' },
-  { label: 'Yu-Gi-Oh!', href: '/catalogue?q=Yu-Gi-Oh', description: 'Core sets, sealed products and player essentials.' },
-  { label: 'One Piece', href: '/catalogue?q=One+Piece', description: 'Upcoming releases and sealed products.' },
-  { label: 'Sealed Products', href: '/catalogue?category=sealed-product', description: 'Booster boxes, tins and collections.' },
-  { label: 'Accessories', href: '/catalogue?category=accessories', description: 'Sleeves, binders, cases and protection.' },
+  { label: 'Pokémon', href: '/shop/pokemon', description: 'Sealed products, singles and collector essentials.' },
+  { label: 'Magic: The Gathering', href: '/shop/magic-the-gathering', description: 'New releases, sealed products and play-ready picks.' },
+  { label: 'Yu-Gi-Oh!', href: '/shop/yugioh', description: 'Core sets, sealed products and player essentials.' },
+  { label: 'One Piece', href: '/shop/one-piece', description: 'Upcoming releases and sealed products.' },
+  { label: 'Sealed Products', href: '/shop?category=sealed-product', description: 'Booster boxes, tins and collections.' },
+  { label: 'Accessories', href: '/shop/accessories', description: 'Sleeves, binders, cases and protection.' },
   { label: 'Pre-orders', href: '/releases', description: 'Reserve upcoming launches early.' },
   { label: 'Coming Soon', href: '/coming-soon', description: 'What is next for the store.' },
 ];
@@ -200,7 +200,7 @@ export function ShopMenu() {
               </div>
               <div className="mt-4 pt-4">
                 <Link
-                  href="/catalogue"
+                  href="/shop"
                   onClick={close}
                   className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent/10 hover:text-accent-soft focus:outline-none focus:ring-2 focus:ring-accent"
                 >

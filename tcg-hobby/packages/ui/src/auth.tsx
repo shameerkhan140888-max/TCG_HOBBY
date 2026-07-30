@@ -55,7 +55,7 @@ export function FormField({ label, htmlFor, hint, error, required, className, ch
       </label>
       {children}
       {hint ? <p className="text-xs leading-5 text-neutral-500">{hint}</p> : null}
-      {error ? <p className="text-sm text-red-300">{error}</p> : null}
+      {error ? <p id={`${htmlFor}-error`} className="text-sm text-red-300">{error}</p> : null}
     </div>
   );
 }
@@ -203,7 +203,13 @@ export function AccountShell({ sidebarTitle, sidebarSubtitle, sidebar, className
     <div className={cn('grid min-h-screen bg-surface-ink text-neutral-50 lg:grid-cols-[280px_1fr]', className)} {...props}>
       <aside className="border-r border-surface-line bg-surface-base p-5">
         <div className="mb-8">
-          <BrandMark width={160} height={56} className="w-[150px] object-contain" />
+          <a
+            href="/"
+            aria-label="TCG Hobby home"
+            className="inline-flex rounded-sm focus:outline-none focus:ring-2 focus:ring-accent"
+          >
+            <BrandMark width={160} height={56} className="w-[150px] object-contain" />
+          </a>
           <p className="mt-4 text-lg font-bold">{sidebarTitle}</p>
           {sidebarSubtitle ? <p className="text-sm text-neutral-500">{sidebarSubtitle}</p> : null}
         </div>

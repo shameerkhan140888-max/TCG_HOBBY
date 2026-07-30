@@ -255,6 +255,7 @@ export type PublicCheckoutRequest = {
   guestItems?: PublicBasketInputItem[];
   shippingAddress: CheckoutAddress;
   shippingMethodCode: ShippingMethodCode;
+  checkoutAttemptId?: string;
   returnUrl?: string;
 };
 
@@ -298,6 +299,8 @@ export type CartLineItem = {
   inStock: boolean;
   customerPurchaseLimit?: number | null;
   freeUkStandardShipping?: boolean;
+  imageUrl?: string | null;
+  imageAlt?: string | null;
 };
 
 export type CartSummary = {
@@ -326,6 +329,8 @@ export type OrderLineItem = {
   quantity: number;
   unitPriceMinor: number;
   totalMinor: number;
+  imageUrl?: string | null;
+  imageAlt?: string | null;
 };
 
 export type OrderSummary = {

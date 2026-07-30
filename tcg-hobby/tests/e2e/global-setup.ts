@@ -3,6 +3,8 @@ import { prisma } from '@tcg-hobby/database';
 
 export const E2E_STAFF_EMAIL = 'e2e-admin@tcghobby.invalid';
 export const E2E_STAFF_PASSWORD = 'E2eAdminOnly123!';
+export const E2E_ADMIN_EMAIL = 'e2e-owner@tcghobby.invalid';
+export const E2E_ADMIN_PASSWORD = 'E2eOwnerOnly123!';
 
 function enabled() {
   return process.env.TCG_HOBBY_E2E_ADMIN_FIXTURE === '1';
@@ -37,6 +39,21 @@ export default async function setup() {
       email: E2E_STAFF_EMAIL,
       passwordHash: hashPassword(E2E_STAFF_PASSWORD),
       role: 'STAFF',
+      emailVerified: new Date(),
+      wishlist: { create: {} },
+    },
+  });
+  await prisma.user.upsert({
+    where: { email: E2E_ADMIN_EMAIL },
+    update: {
+      passwordHash: hashPassword(E2E_ADMIN_PASSWORD),
+      role: 'ADMIN',
+      emailVerified: new Date(),
+    },
+    create: {
+      email: E2E_ADMIN_EMAIL,
+      passwordHash: hashPassword(E2E_ADMIN_PASSWORD),
+      role: 'ADMIN',
       emailVerified: new Date(),
       wishlist: { create: {} },
     },

@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, resolve, sep } from 'node:path';
 
 export type ProductImageSource = {
   id: string;
@@ -13,8 +13,20 @@ export type ProductImageSource = {
 
 function localPublicImageExists(url: string): boolean {
   if (!url.startsWith('/')) return false;
-  const relativePath = url.replace(/^\/+/, '').replace(/\//g, join('/'));
-  return [join(process.cwd(), 'public', relativePath), join(process.cwd(), 'apps', 'storefront', 'public', relativePath)].some((path) => existsSync(path));
+  const relativePath = url.replace(/^\/+/, '').split('/').filter(Boolean);
+  let current = resolve(process.cwd());
+
+  while (true) {
+    for (const publicRoot of [join(current, 'public'), join(current, 'apps', 'storefront', 'public')]) {
+      const target = resolve(publicRoot, ...relativePath);
+      if ((target === publicRoot || target.startsWith(`${publicRoot}${sep}`)) && existsSync(target)) {
+        return true;
+      }
+    }
+    const parent = dirname(current);
+    if (parent === current) return false;
+    current = parent;
+  }
 }
 
 export function resolveProductImageUrl(url: string | null | undefined): string | null {
@@ -23,7 +35,7 @@ export function resolveProductImageUrl(url: string | null | undefined): string |
   return localPublicImageExists(url) ? url : null;
 }
 
-export function orderActiveProductImages<T extends ProductImageSource>(images: readonly T[]): T[] {
+export function orderActiveProductImages<T extends ProductImageSource>(images: readonly T[] = []): T[] {
   return images
     .filter((image) => !image.deletionState || image.deletionState === 'ACTIVE')
     .slice()

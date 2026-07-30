@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
-import { Button, Container, EmptyState, OrderStatusBadge, OrderSummary, PaymentStatusBadge, Section } from '@tcg-hobby/ui';
+import { Button, Container, EmptyState, OrderStatusBadge, OrderSummary, PaymentStatusBadge, ProductImageStage, Section } from '@tcg-hobby/ui';
 import { CommerceProgress } from '../../../components/commerce-progress';
 import { GuestCartClearer } from '../../../components/guest-cart-clearer';
+import { PaymentStatusRefresher } from '../../../components/payment-status-refresher';
 import { SiteHeader } from '../../../components/site-header';
-import { finalizeOrderFromStripeSession } from '../../../lib/orders';
+import { getOrderForStripeReturn } from '../../../lib/orders';
 
 type SearchParamsValue = Record<string, string | string[] | undefined>;
 
@@ -23,8 +24,9 @@ export default async function CheckoutSuccessPage({
     notFound();
   }
 
-  const order = await finalizeOrderFromStripeSession(sessionId);
+  const order = await getOrderForStripeReturn(sessionId);
   const linkedToAccount = Boolean(order?.userId);
+  const paid = order?.paymentStatus === 'SUCCEEDED';
 
   return (
     <>
@@ -34,8 +36,12 @@ export default async function CheckoutSuccessPage({
           <Container className="py-8 sm:py-10">
             <div className="space-y-3">
               <p className="text-sm font-semibold uppercase tracking-wide text-accent">Order confirmation</p>
-              <h1 className="text-3xl font-black sm:text-4xl">{order ? `Order ${order.orderNumber} confirmed` : 'Confirming your payment'}</h1>
-              <p className="max-w-3xl text-sm leading-6 text-neutral-400">We verify the Stripe payment before showing your final order receipt.</p>
+              <h1 className="text-3xl font-black sm:text-4xl">
+                {paid && order ? `Order ${order.orderNumber} confirmed` : 'Confirming your payment'}
+              </h1>
+              <p className="max-w-3xl text-sm leading-6 text-neutral-400">
+                {paid ? 'Your signed Stripe payment confirmation has been received.' : 'Stripe is securely confirming your payment. This page will update automatically.'}
+              </p>
             </div>
             <CommerceProgress currentStep="confirmation" className="mt-6" />
           </Container>
@@ -44,7 +50,8 @@ export default async function CheckoutSuccessPage({
         <Container className="py-8">
           {order ? (
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
-              <GuestCartClearer enabled={!linkedToAccount} />
+              <PaymentStatusRefresher enabled={!paid} />
+              <GuestCartClearer enabled={paid && !linkedToAccount} />
               <div className="space-y-4">
                 <div className="rounded-2xl border border-surface-line bg-surface-base p-5 shadow-sm">
                   <div className="flex flex-wrap items-center gap-3">
@@ -53,16 +60,24 @@ export default async function CheckoutSuccessPage({
                     <span className="text-sm text-neutral-400">Stripe session {order.stripeCheckoutSessionId}</span>
                   </div>
                   <p className="mt-4 text-sm leading-6 text-neutral-400">
-                    Your order is secure and ready for fulfilment. A confirmation email should land shortly.
-                    {!linkedToAccount ? ' Guest orders are stored against the email address you entered at checkout.' : ''}
+                    {paid
+                      ? `Your order is secure and ready for fulfilment.${!linkedToAccount ? ' Guest orders are stored against the email address you entered at checkout.' : ''}`
+                      : 'Your order remains reserved while the signed payment confirmation is processed. Do not submit another payment.'}
                   </p>
                 </div>
 
                 <div className="space-y-3">
                   {order.items.map((item) => (
                     <div key={item.id} className="rounded-xl border border-surface-line bg-surface-base p-4">
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
+                      <div className="flex items-center gap-4">
+                        <ProductImageStage className="flex h-20 w-20 flex-none items-center justify-center p-2">
+                          {item.imageUrl ? (
+                            <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} className="h-full w-full object-contain" />
+                          ) : (
+                            <span className="text-center text-xs text-neutral-600">Image unavailable</span>
+                          )}
+                        </ProductImageStage>
+                        <div className="min-w-0 flex-1">
                           <h2 className="font-semibold text-neutral-50">{item.productName}</h2>
                           <p className="text-sm text-neutral-400">{item.quantity} x {item.productSlug}</p>
                         </div>
@@ -84,7 +99,7 @@ export default async function CheckoutSuccessPage({
                   }}
                   actionSlot={
                     <div className="space-y-3">
-                      {linkedToAccount ? (
+                      {paid && linkedToAccount ? (
                         <Button asChild className="w-full">
                           <a href={`/account/orders/${order.orderNumber}`}>View order details</a>
                         </Button>
@@ -99,8 +114,8 @@ export default async function CheckoutSuccessPage({
             </div>
           ) : (
           <EmptyState
-            title="We could not confirm the payment yet"
-            description="If you just completed Stripe checkout, refresh this page in a moment or browse the catalogue while the confirmation settles."
+            title="We could not find this payment session"
+            description="Return to your basket or contact support if Stripe has already charged you."
             action={
               <Button asChild>
                 <a href="/catalogue">Browse catalogue</a>

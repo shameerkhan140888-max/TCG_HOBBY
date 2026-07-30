@@ -17,8 +17,10 @@
     "typecheck": "node ./scripts/prisma-run.mjs validate && tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@prisma/client": "^6.10.1",
     "@tcg-hobby/auth": "*",
-    "@prisma/client": "^6.10.1"
+    "@tcg-hobby/utils": "*",
+    "stripe": "^22.3.2"
   },
   "devDependencies": {
     "@tcg-hobby/config": "*",

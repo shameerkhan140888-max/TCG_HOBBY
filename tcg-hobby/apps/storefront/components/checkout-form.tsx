@@ -1,9 +1,10 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import {
   Button,
+  CartLineItem as CartLineItemView,
   CheckoutStep,
   ErrorMessage,
   FormField,
@@ -15,25 +16,6 @@ import {
 import type { CartLineItem } from '@tcg-hobby/types';
 import type { CheckoutFormState } from '../lib/checkout';
 import { placeCheckoutOrderAction } from '../lib/checkout-actions';
-
-const FREE_UK_STANDARD_PRODUCT_SLUG = 'pokemon-tcg-mega-greninja-ex-premium-collection';
-
-function calculateCheckoutShippingMinor(
-  method: NonNullable<CheckoutFormState['shippingMethods'][number]>,
-  items: CartLineItem[],
-  country: string,
-) {
-  const normalizedCountry = country.trim().toUpperCase();
-  const allItemsEligible =
-    items.length > 0 &&
-    items.every((item) => item.freeUkStandardShipping || item.productSlug === FREE_UK_STANDARD_PRODUCT_SLUG);
-
-  if (method.code === 'UK_STANDARD' && (normalizedCountry === 'GB' || normalizedCountry === 'UK') && allItemsEligible) {
-    return 0;
-  }
-
-  return method.amountMinor;
-}
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -50,18 +32,25 @@ export function CheckoutForm({
   cartSubtotalMinor,
   cartItems,
   taxEstimateMinor,
+  checkoutAttemptId,
 }: {
   state: CheckoutFormState;
   cartSubtotalMinor: number;
   cartItems: CartLineItem[];
   taxEstimateMinor: number;
+  checkoutAttemptId: string;
 }) {
   const [formState, formAction] = useActionState(placeCheckoutOrderAction, state);
+  useEffect(() => {
+    if (formState.checkoutUrl) {
+      window.location.assign(formState.checkoutUrl);
+    }
+  }, [formState.checkoutUrl]);
   const selectedMethod =
     formState.shippingMethods.find((method) => method.code === formState.values.shippingMethodCode) ??
     formState.shippingMethods[0];
 
-  const chargedShippingMinor = selectedMethod ? calculateCheckoutShippingMinor(selectedMethod, cartItems, formState.values.country) : 0;
+  const chargedShippingMinor = selectedMethod?.amountMinor ?? 0;
 
   const summary = {
     currency: 'GBP' as const,
@@ -74,6 +63,7 @@ export function CheckoutForm({
   return (
     <form action={formAction} className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_360px]">
       <input type="hidden" name="returnTo" value="/checkout" />
+      <input type="hidden" name="checkoutAttemptId" value={checkoutAttemptId} />
 
       <div className="space-y-6">
         <div className="space-y-4 rounded-lg border border-surface-line bg-surface-base p-5">
@@ -134,12 +124,16 @@ export function CheckoutForm({
         <div className="space-y-4 rounded-lg border border-surface-line bg-surface-base p-5">
           <CheckoutStep number="3" title="Payment" description="Stripe test mode handles the card step in a secure hosted checkout." />
           <SecureCheckoutNotice />
-          {formState.formError ? <ErrorMessage>{formState.formError}</ErrorMessage> : null}
+          {formState.formError ? <ErrorMessage role="alert">{formState.formError}</ErrorMessage> : null}
+          {formState.checkoutUrl ? <p role="status" className="text-sm text-neutral-300">Opening secure payment...</p> : null}
           <SubmitButton />
         </div>
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+        <div className="space-y-3" aria-label="Order review">
+          {cartItems.map((item) => <CartLineItemView key={item.id} item={item} />)}
+        </div>
         <OrderSummary
           summary={summary}
           actionSlot={

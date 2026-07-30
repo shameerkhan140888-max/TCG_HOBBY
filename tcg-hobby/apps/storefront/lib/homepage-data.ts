@@ -2,9 +2,9 @@ import {
   getMerchandisingFeaturedProducts,
   getMerchandisingLatestProducts,
   getMerchandisingStaffPickProducts,
+  getActiveHomepageHeroPlacements,
   type MerchandisingRecommendation,
 } from '@tcg-hobby/database';
-import { buildStorefrontProductPath } from '@tcg-hobby/utils';
 
 export type HomepageHeroSlide = {
   id: string;
@@ -14,6 +14,9 @@ export type HomepageHeroSlide = {
   primaryCta: { label: string; href: string };
   priceLabel?: string;
   badges?: string[];
+  displayMode?: 'FULL_BLEED' | 'CONTAINED';
+  focalPoint?: 'LEFT' | 'CENTER' | 'RIGHT';
+  overlayStrength?: 'LIGHT' | 'BALANCED' | 'STRONG';
   image: {
     src: string;
     alt: string;
@@ -33,7 +36,7 @@ export const homepageHeroSlides: HomepageHeroSlide[] = [
     eyebrow: 'New releases',
     headline: 'Fresh sealed products for collectors and players.',
     body: 'Explore new trading card releases, sealed products and essentials from a UK hobby store built around clarity and care.',
-    primaryCta: { label: 'Shop new releases', href: '/catalogue?sort=newest' },
+    primaryCta: { label: 'Shop new releases', href: '/shop?sort=newest' },
     image: {
       src: '/launch/tcg-hobby-production-hero.png',
       alt: 'Original trading card collector artwork for TCG Hobby',
@@ -55,7 +58,7 @@ export const homepageHeroSlides: HomepageHeroSlide[] = [
     eyebrow: 'Accessories',
     headline: 'Protect, store and enjoy your collection.',
     body: 'Sleeves, binders, storage and player essentials curated for everyday collecting and organised play.',
-    primaryCta: { label: 'Shop accessories', href: '/catalogue?category=accessories' },
+    primaryCta: { label: 'Shop accessories', href: '/shop/accessories' },
     image: {
       src: '/launch/tcg-hobby-production-hero.png',
       alt: 'Premium hobby store shelves with trading card accessories and warm orange lighting',
@@ -90,35 +93,33 @@ export function dedupeProducts<T extends { id: string }>(products: T[]): T[] {
   return result;
 }
 
-function resolveHomepageHeroSlides(featuredProducts: MerchandisingRecommendation[]): HomepageHeroSlide[] {
-  const launchProduct = featuredProducts[0];
-  const launchProductImageUrl = launchProduct?.imageUrl;
-
-  if (!launchProduct || !launchProductImageUrl) {
+function resolveHomepageHeroSlides(placements: Awaited<ReturnType<typeof getActiveHomepageHeroPlacements>>): HomepageHeroSlide[] {
+  if (!placements.length) {
     return homepageHeroSlides;
   }
 
-  return homepageHeroSlides.map((slide) =>
-    slide.id === 'new-releases'
-      ? {
-          ...slide,
-          eyebrow: 'NOW AVAILABLE',
-          headline: launchProduct.name,
-          body: 'Discover curated launch products, collector essentials and new arrivals selected through TCG Hobby merchandising.',
-          priceLabel: `£${(launchProduct.price.amountMinor / 100).toFixed(2)}`,
-          badges: [
-            launchProduct.publicStockState.replaceAll('_', ' '),
-            ...(launchProduct.freeUkStandardShipping ? ['FREE UK STANDARD DELIVERY'] : []),
-            ...(launchProduct.customerPurchaseLimit ? [`LIMIT ${launchProduct.customerPurchaseLimit} PER HOUSEHOLD`] : []),
-          ],
-          primaryCta: { label: 'Shop now', href: buildStorefrontProductPath(launchProduct.slug) },
-          image: {
-            src: launchProductImageUrl,
-            alt: launchProduct.imageAlt ?? `${launchProduct.name} product image`,
-          },
-        }
-      : slide,
-  );
+  const slides = placements.flatMap((placement) => {
+    if (!placement.imageUrl) return [];
+    const availableStock = placement.product.stockOnHand - placement.product.reservedStock;
+    return [{
+      id: placement.id,
+      eyebrow: 'NOW AVAILABLE',
+      headline: placement.headline,
+      body: placement.supportingText,
+      priceLabel: `£${(placement.product.priceMinor / 100).toFixed(2)}`,
+      badges: [
+        availableStock <= 3 ? 'LOW STOCK' : 'IN STOCK',
+        ...(placement.product.freeUkStandardShipping ? ['FREE UK STANDARD DELIVERY'] : []),
+        ...(placement.product.customerPurchaseLimit ? [`LIMIT ${placement.product.customerPurchaseLimit} PER HOUSEHOLD`] : []),
+      ],
+      primaryCta: { label: placement.ctaLabel, href: placement.ctaHref },
+      displayMode: placement.displayMode,
+      focalPoint: placement.focalPoint,
+      overlayStrength: placement.overlayStrength,
+      image: { src: placement.imageUrl, alt: placement.imageAlt },
+    }];
+  });
+  return slides.length ? slides : homepageHeroSlides;
 }
 
 export function selectHomepageFeaturedProducts(
@@ -140,10 +141,11 @@ export function selectUniqueProducts(
 }
 
 export async function getProductionHomepageData(): Promise<ProductionHomepageData> {
-  const [featuredProducts, latestProducts, staffPickProducts] = await Promise.all([
+  const [featuredProducts, latestProducts, staffPickProducts, heroPlacements] = await Promise.all([
     getMerchandisingFeaturedProducts(8).catch(() => []),
     getMerchandisingLatestProducts(8).catch(() => []),
     getMerchandisingStaffPickProducts(8).catch(() => []),
+    getActiveHomepageHeroPlacements().catch(() => []),
   ]);
 
   const selectedFeaturedProducts = selectHomepageFeaturedProducts(featuredProducts, 4);
@@ -151,7 +153,7 @@ export async function getProductionHomepageData(): Promise<ProductionHomepageDat
   const selectedStaffPickProducts = selectUniqueProducts(staffPickProducts, [...selectedFeaturedProducts, ...selectedLatestProducts], 4);
 
   return {
-    heroSlides: resolveHomepageHeroSlides(selectedFeaturedProducts),
+    heroSlides: resolveHomepageHeroSlides(heroPlacements),
     featuredProducts: selectedFeaturedProducts,
     latestProducts: selectedLatestProducts,
     staffPickProducts: selectedStaffPickProducts,

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Button, Card, CardContent, Container, OrderStatusBadge, OrderSummary, PaymentStatusBadge, Section } from '@tcg-hobby/ui';
+import { Button, Card, CardContent, Container, OrderStatusBadge, OrderSummary, PaymentStatusBadge, ProductImageStage, Section } from '@tcg-hobby/ui';
 import { getCurrentCustomerOrder } from '../../../../lib/orders';
 
 type ParamsValue = { orderNumber: string };
@@ -34,9 +34,18 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
             {order.items.map((item) => (
               <Card key={item.id}>
                 <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-neutral-50">{item.productName}</h2>
-                    <p className="text-sm text-neutral-400">{item.quantity} x {item.productSlug}</p>
+                  <div className="flex items-center gap-4">
+                    <ProductImageStage className="flex h-20 w-20 flex-none items-center justify-center p-2">
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} className="h-full w-full object-contain" />
+                      ) : (
+                        <span className="text-center text-xs text-neutral-600">Image unavailable</span>
+                      )}
+                    </ProductImageStage>
+                    <div>
+                      <h2 className="text-lg font-semibold text-neutral-50">{item.productName}</h2>
+                      <p className="text-sm text-neutral-400">{item.quantity} x {item.productSlug}</p>
+                    </div>
                   </div>
                   <p className="text-lg font-bold text-accent-soft">GBP {(item.totalMinor / 100).toFixed(2)}</p>
                 </CardContent>

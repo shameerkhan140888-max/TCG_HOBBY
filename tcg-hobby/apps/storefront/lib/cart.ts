@@ -36,6 +36,8 @@ type CartProductRow = {
   } | null;
   customerPurchaseLimit: number | null;
   freeUkStandardShipping: boolean;
+  imageUrl: string | null;
+  imageAlt: string | null;
 };
 
 type CartSnapshot = Awaited<ReturnType<typeof getCustomerCartDetails>>;
@@ -134,6 +136,8 @@ async function loadGuestCartSnapshot(db = prisma): Promise<CartSnapshot> {
         },
         customerPurchaseLimit: product.customerPurchaseLimit ?? null,
         freeUkStandardShipping: product.freeUkStandardShipping ?? hasFreeUkStandardShipping(product.slug),
+        imageUrl: product.imageUrl ?? null,
+        imageAlt: product.imageAlt ?? product.name,
       } as CartProductRow;
     }),
   );
@@ -162,6 +166,8 @@ async function loadGuestCartSnapshot(db = prisma): Promise<CartSnapshot> {
         inStock: available > 0,
         customerPurchaseLimit: product.customerPurchaseLimit,
         freeUkStandardShipping: product.freeUkStandardShipping,
+        imageUrl: product.imageUrl,
+        imageAlt: product.imageAlt,
       },
     ];
   });
@@ -194,6 +200,8 @@ async function loadProductForCart(productId: string, db = prisma) {
     },
     customerPurchaseLimit: product.customerPurchaseLimit ?? null,
     freeUkStandardShipping: product.freeUkStandardShipping ?? hasFreeUkStandardShipping(product.slug),
+    imageUrl: product.imageUrl ?? null,
+    imageAlt: product.imageAlt ?? product.name,
   } as CartProductRow;
 }
 

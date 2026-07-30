@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import {
   addProductToCart,
   clearCart,
@@ -12,6 +12,7 @@ import {
   getCustomerCartDetails,
   getCustomerOrderByNumber,
   getCustomerOrders,
+  isStripeCheckoutConfigured,
   removeCartItem,
   resolveGuestCart,
   updateCartItemQuantity,
@@ -224,8 +225,8 @@ export class PublicCommerceService {
     return this.basket(authorization);
   }
 
-  async shipping(country: string): Promise<ShippingMethod[]> {
-    return getAvailableShippingMethods(country.trim().toUpperCase() || 'GB');
+  async shipping(country: string, subtotalMinor = 0): Promise<ShippingMethod[]> {
+    return getAvailableShippingMethods(country.trim().toUpperCase() || 'GB', Math.max(Math.trunc(subtotalMinor), 0));
   }
 
   async checkout(authorization: string | undefined, input: PublicCheckoutRequest): Promise<PublicCheckoutResponse> {
@@ -233,14 +234,23 @@ export class PublicCommerceService {
     const cart = user ? await getCustomerCartDetails(user.id) : await resolveGuestCart(input.guestItems ?? []);
     if (cart.items.length === 0) throw new BadRequestException('Your basket is empty.');
     const base = process.env.PUBLIC_STOREFRONT_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tcg-hobby.co.uk';
-    return createHostedCheckoutSession({
-      userId: user?.id ?? null,
-      cart,
-      shippingAddress: requireAddress(input.shippingAddress),
-      shippingMethodCode: input.shippingMethodCode,
-      successUrl: `${base.replace(/\/$/, '')}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${base.replace(/\/$/, '')}/cart`,
-    });
+    try {
+      return await createHostedCheckoutSession({
+        userId: user?.id ?? null,
+        cart,
+        shippingAddress: requireAddress(input.shippingAddress),
+        shippingMethodCode: input.shippingMethodCode,
+        ...(input.checkoutAttemptId ? { checkoutAttemptId: input.checkoutAttemptId } : {}),
+        successUrl: `${base.replace(/\/$/, '')}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${base.replace(/\/$/, '')}/cart`,
+      });
+    } catch {
+      console.error('public_checkout_start_failed', {
+        stripeConfigured: isStripeCheckoutConfigured(),
+        reason: isStripeCheckoutConfigured() ? 'checkout_start_failed' : 'missing_secret_key',
+      });
+      throw new ServiceUnavailableException('Secure payment is temporarily unavailable. Please try again later.');
+    }
   }
 
   async orders(authorization?: string): Promise<PublicOrderSummary[]> {
@@ -279,7 +289,19 @@ export class PublicCommerceService {
   private async toPublicBasket(cart: CartSummary): Promise<PublicBasket> {
     const availability = await getAvailableStockByProductIds(cart.items.map((item) => item.productId));
     return {
-      items: cart.items.map((item) => ({ ...item, image: null, stockState: publicStockState(availability.get(item.productId) ?? 0) })),
+      items: cart.items.map((item) => ({
+        ...item,
+        image: item.imageUrl
+          ? {
+              id: `${item.productId}-basket`,
+              url: assetUrl(item.imageUrl),
+              altText: item.imageAlt ?? item.productName,
+              sortOrder: 1,
+              isPrimary: true,
+            }
+          : null,
+        stockState: publicStockState(availability.get(item.productId) ?? 0),
+      })),
       subtotalMinor: cart.subtotalMinor,
       currency: cart.currency,
       totalItems: cart.totalItems,

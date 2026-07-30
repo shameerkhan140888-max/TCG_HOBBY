@@ -1,28 +1,26 @@
 'use server';
 
 import type { CheckoutAddress, ShippingMethodCode } from '@tcg-hobby/types';
+import { randomUUID } from 'node:crypto';
 import {
   attachStripeSessionToOrder,
   createPendingCheckoutOrder,
   createStripeCheckoutSession,
   getAvailableShippingMethods,
+  isStripeCheckoutConfigured,
   releaseCheckoutOrderReservation,
 } from '@tcg-hobby/database';
-import { redirect } from 'next/navigation';
 import type { CheckoutFieldErrors, CheckoutFormState } from './checkout';
 import { getCurrentCustomerCart } from './cart';
 import { getCurrentCustomerSession } from './auth';
+import { resolveInternalReturnTo } from './internal-return';
 
 function siteUrl() {
   return process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 }
 
 function sanitizeReturnUrl(value: FormDataEntryValue | null) {
-  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) {
-    return '/checkout';
-  }
-
-  return value;
+  return resolveInternalReturnTo(typeof value === 'string' ? value : null, '/checkout');
 }
 
 function parseInput(formData: FormData) {
@@ -63,7 +61,8 @@ export async function placeCheckoutOrderAction(_state: CheckoutFormState, formDa
   const cart = await getCurrentCustomerCart();
   const { shippingAddress, fieldErrors } = parseInput(formData);
   const returnTo = sanitizeReturnUrl(formData.get('returnTo'));
-  const shippingMethods = await getAvailableShippingMethods(shippingAddress.country);
+  const shippingMethods = await getAvailableShippingMethods(shippingAddress.country, cart.subtotalMinor, cart.items);
+  const checkoutAttemptId = String(formData.get('checkoutAttemptId') ?? '').trim() || randomUUID();
 
   if (Object.keys(fieldErrors).length) {
     return {
@@ -88,11 +87,23 @@ export async function placeCheckoutOrderAction(_state: CheckoutFormState, formDa
 
   const customerUserId = session?.user.role === 'CUSTOMER' && session ? session.user.id : null;
 
-  const reservation = await createPendingCheckoutOrder(customerUserId, cart, {
-    shippingAddress,
-    shippingMethodCode: shippingMethod.code,
-  });
+  let reservation: Awaited<ReturnType<typeof createPendingCheckoutOrder>>;
+  try {
+    reservation = await createPendingCheckoutOrder(customerUserId, cart, {
+      shippingAddress,
+      shippingMethodCode: shippingMethod.code,
+      checkoutAttemptId,
+    });
+  } catch {
+    return {
+      formError: 'We could not reserve your basket for payment. Review your basket and try again.',
+      fieldErrors: {},
+      values: shippingAddress,
+      shippingMethods,
+    };
+  }
 
+  let checkoutSession;
   try {
     const lineItems = [
       ...reservation.items.map((item) => ({
@@ -109,31 +120,61 @@ export async function placeCheckoutOrderAction(_state: CheckoutFormState, formDa
       },
     ];
 
-    const checkoutSession = await createStripeCheckoutSession({
+    checkoutSession = await createStripeCheckoutSession({
+      orderId: reservation.order.id,
+      checkoutAttemptId,
       orderNumber: reservation.order.orderNumber,
       customerEmail: shippingAddress.email,
       lineItems,
       successUrl: `${siteUrl()}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${siteUrl()}${returnTo}`,
+      cancelUrl: `${siteUrl()}/checkout/cancel?orderId=${encodeURIComponent(reservation.order.id)}&attemptId=${encodeURIComponent(checkoutAttemptId)}&returnTo=${encodeURIComponent(returnTo)}`,
+      idempotencyKey: `checkout-session:${reservation.order.id}`,
     });
+  } catch (error) {
+    console.error('stripe_checkout_start_failed', {
+      configured: isStripeCheckoutConfigured(),
+      reason: isStripeCheckoutConfigured() ? 'provider_request_failed' : 'missing_secret_key',
+    });
+    await releaseCheckoutOrderReservation(reservation.order.id);
 
+    return {
+      formError: 'We could not start secure payment. Your basket is unchanged, so please try again.',
+      fieldErrors: {},
+      values: shippingAddress,
+      shippingMethods,
+    };
+  }
+
+  if (!checkoutSession.url) {
+    await releaseCheckoutOrderReservation(reservation.order.id);
+    return {
+      formError: 'Secure payment is temporarily unavailable. Your basket is unchanged, so please try again.',
+      fieldErrors: {},
+      values: shippingAddress,
+      shippingMethods,
+    };
+  }
+
+  try {
     await attachStripeSessionToOrder({
       orderId: reservation.order.id,
       stripeCheckoutSessionId: checkoutSession.id,
       stripeCheckoutUrl: checkoutSession.url,
       paymentIntentId: checkoutSession.payment_intent,
     });
-
-    redirect(checkoutSession.url ?? `/checkout/success?session_id=${checkoutSession.id}`);
-  } catch (error) {
-    await releaseCheckoutOrderReservation(reservation.order.id);
-    const message = error instanceof Error ? error.message : 'Unable to start checkout.';
-
+  } catch {
     return {
-      formError: message,
+      formError: 'Your payment session was created but could not be linked safely. Please retry to resume it.',
       fieldErrors: {},
       values: shippingAddress,
       shippingMethods,
     };
   }
+
+  return {
+    checkoutUrl: checkoutSession.url,
+    fieldErrors: {},
+    values: shippingAddress,
+    shippingMethods,
+  };
 }

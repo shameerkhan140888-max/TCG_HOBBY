@@ -14,6 +14,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createSessionExpiry, generateSessionToken, SESSION_COOKIE_NAME } from '@tcg-hobby/auth';
 import { requireCustomerSession } from './auth';
+import { resolveInternalReturnTo } from './internal-return';
 
 type AuthFormState = {
   formError?: string;
@@ -40,11 +41,7 @@ export type ProfileFormState = AuthFormState & {
 };
 
 function getReturnTo(value: FormDataEntryValue | null) {
-  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) {
-    return '/account';
-  }
-
-  return value;
+  return resolveInternalReturnTo(value, '/');
 }
 
 function sessionCookieOptions(expires: Date) {

@@ -57,7 +57,7 @@ describe('CataloguePage', () => {
     const markup = renderToStaticMarkup(await CataloguePage({ searchParams: Promise.resolve({ q: 'mega' }) }));
 
     expect(markup).toContain('Storefront Header');
-    expect(markup).toContain('Browse products with search and filters');
+    expect(markup).toContain('Find your next TCG favourite');
     expect(markup).toContain('All games');
     expect(markup).toContain('No products match those filters');
     expect(mocks.getCatalogueProducts).toHaveBeenCalledWith(expect.objectContaining({ search: 'mega' }));

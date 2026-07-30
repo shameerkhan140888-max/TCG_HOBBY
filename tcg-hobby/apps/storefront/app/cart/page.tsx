@@ -1,6 +1,6 @@
 import { Button, CartLineItem, Container, EmptyState, ErrorMessage, OrderSummary, Section } from '@tcg-hobby/ui';
 import { formatMoney } from '@tcg-hobby/utils';
-import { calculatePromotionalShippingMinor, calculateVatEstimateMinor, getAvailableShippingMethods } from '@tcg-hobby/database';
+import { calculatePromotionalShippingMinor, calculateVatEstimateMinor, getAvailableShippingMethods, getFreeStandardDeliveryProgress } from '@tcg-hobby/database';
 import { clearCartAction } from '../../lib/cart';
 import { CartLineQuantityForm, RemoveCartItemButton } from '../../components/cart-actions';
 import { CommerceProgress } from '../../components/commerce-progress';
@@ -19,8 +19,9 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
   const params = (await searchParams) ?? {};
   const cartError = asString(params.cartError);
   const cart = await getCurrentCustomerCart();
-  const shippingMethods = await getAvailableShippingMethods('GB');
-  const estimatedShippingMinor = shippingMethods[0] ? calculatePromotionalShippingMinor(shippingMethods[0], cart.items, 'GB') : 0;
+  const shippingMethods = await getAvailableShippingMethods('GB', cart.subtotalMinor, cart.items);
+  const estimatedShippingMinor = shippingMethods[0] ? calculatePromotionalShippingMinor(shippingMethods[0], cart.items, 'GB', cart.subtotalMinor) : 0;
+  const deliveryProgress = getFreeStandardDeliveryProgress(cart.subtotalMinor);
   const vatEstimateMinor = calculateVatEstimateMinor(cart.subtotalMinor);
   const summary = {
     currency: cart.currency,
@@ -89,6 +90,11 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
 
                 <div className="rounded-2xl border border-surface-line bg-surface-base p-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">Delivery estimate</p>
+                  <p className="mt-3 text-sm font-semibold text-neutral-200">
+                    {deliveryProgress.qualified
+                      ? "You've qualified for free standard delivery."
+                      : `Spend ${formatMoney({ amountMinor: deliveryProgress.remainingMinor, currency: cart.currency })} more for free standard delivery.`}
+                  </p>
                   <div className="mt-4 grid gap-4 sm:grid-cols-3">
                     <div className="rounded-xl border border-surface-line bg-surface-ink p-4">
                       <p className="text-xs uppercase tracking-wide text-neutral-500">Delivery</p>

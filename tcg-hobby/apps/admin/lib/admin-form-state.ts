@@ -57,6 +57,8 @@ export type ProductFormValues = {
   ogImageUrl: string;
   noindex: boolean;
   featured: boolean;
+  heroFeatured: boolean;
+  homepagePriority: string;
   published: boolean;
   hideWhenOutOfStock: boolean;
 };
@@ -169,6 +171,8 @@ export const emptyProductFormValues: ProductFormValues = {
   ogImageUrl: '',
   noindex: false,
   featured: false,
+  heroFeatured: false,
+  homepagePriority: '',
   published: true,
   hideWhenOutOfStock: false,
 };
@@ -285,6 +289,8 @@ export function buildProductValues(formData: FormData): ProductFormValues {
     ogImageUrl: getString(formData, 'ogImageUrl'),
     noindex: getBoolean(formData, 'noindex'),
     featured: getBoolean(formData, 'featured'),
+    heroFeatured: getBoolean(formData, 'heroFeatured'),
+    homepagePriority: getString(formData, 'homepagePriority'),
     published: getBoolean(formData, 'published', true),
     hideWhenOutOfStock: getBoolean(formData, 'hideWhenOutOfStock'),
   };

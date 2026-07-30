@@ -5,6 +5,7 @@ import {
   calculateOrderTotal,
   calculatePromotionalShippingMinor,
   calculateVatEstimateMinor,
+  getFreeStandardDeliveryProgress,
   generateOrderNumber,
   getShippingMethodByCode,
   getShippingMethodsForCountry,
@@ -57,7 +58,9 @@ describe('commerce helpers', () => {
   it('returns UK and worldwide shipping methods for UK customers', () => {
     const methods = getShippingMethodsForCountry('GB');
     expect(methods).toHaveLength(3);
-    expect(getShippingMethodByCode('UK_EXPRESS', 'GB')?.name).toBe('UK Express');
+    expect(getShippingMethodByCode('UK_STANDARD', 'GB')?.amountMinor).toBe(299);
+    expect(getShippingMethodByCode('UK_EXPRESS', 'GB')?.name).toBe('Express delivery');
+    expect(getShippingMethodByCode('UK_EXPRESS', 'GB')?.amountMinor).toBe(499);
   });
 
   it('returns only worldwide shipping for international customers', () => {
@@ -70,9 +73,26 @@ describe('commerce helpers', () => {
     const standard = getShippingMethodByCode('UK_STANDARD', 'GB');
 
     expect(standard).not.toBeNull();
-    expect(calculatePromotionalShippingMinor(standard!, [{ productSlug: MEGA_GRENINJA_PRODUCT_SLUG }], 'GB')).toBe(0);
-    expect(calculatePromotionalShippingMinor(standard!, [{ productSlug: MEGA_GRENINJA_PRODUCT_SLUG }, { productSlug: 'other-product' }], 'GB')).toBe(499);
-    expect(calculatePromotionalShippingMinor(standard!, [{ productSlug: MEGA_GRENINJA_PRODUCT_SLUG }], 'US')).toBe(499);
+    expect(calculatePromotionalShippingMinor(standard!, [{ productSlug: MEGA_GRENINJA_PRODUCT_SLUG }], 'GB', 4999)).toBe(0);
+    expect(calculatePromotionalShippingMinor(standard!, [{ productSlug: MEGA_GRENINJA_PRODUCT_SLUG }, { productSlug: 'other-product' }], 'GB', 4999)).toBe(299);
+    expect(calculatePromotionalShippingMinor(standard!, [{ productSlug: MEGA_GRENINJA_PRODUCT_SLUG }], 'US', 4999)).toBe(299);
+  });
+
+  it('applies the UK delivery threshold to the discounted subtotal', () => {
+    expect(getShippingMethodByCode('UK_STANDARD', 'GB', 0)?.amountMinor).toBe(299);
+    expect(getShippingMethodByCode('UK_STANDARD', 'GB', 4999)?.amountMinor).toBe(299);
+    expect(getShippingMethodByCode('UK_STANDARD', 'GB', 5000)?.amountMinor).toBe(0);
+    expect(getShippingMethodByCode('UK_EXPRESS', 'GB', 5000)?.amountMinor).toBe(299);
+    expect(getFreeStandardDeliveryProgress(4999)).toEqual({
+      qualified: false,
+      remainingMinor: 1,
+      thresholdMinor: 5000,
+    });
+    expect(getFreeStandardDeliveryProgress(5000)).toEqual({
+      qualified: true,
+      remainingMinor: 0,
+      thresholdMinor: 5000,
+    });
   });
 
   it('validates customer purchase limits', () => {

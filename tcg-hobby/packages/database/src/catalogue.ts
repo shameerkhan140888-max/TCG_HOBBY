@@ -668,6 +668,48 @@ export async function getFeaturedCatalogueProducts(
   }
 }
 
+export async function getHomepageHeroProducts(limit = 3): Promise<CatalogueProduct[]> {
+  if (shouldBypassDatabase()) {
+    return seedProducts
+      .filter((product) => product.published && product.heroFeatured)
+      .sort((left, right) => (left.homepagePriority ?? 999) - (right.homepagePriority ?? 999))
+      .slice(0, limit)
+      .map((product) => {
+        const inventory = getSeedInventoryByProductSlug(product.slug);
+        const category = getSeedCategoryBySlug(product.categorySlug);
+        const supplier = getSeedSupplierBySlug(product.supplierSlug);
+
+        if (!inventory || !category || !supplier) {
+          throw new Error(`Incomplete seed data for hero product ${product.slug}`);
+        }
+
+        const primaryImage =
+          seedProductImages.find((image) => image.productSlug === product.slug && image.isPrimary) ??
+          seedProductImages.find((image) => image.productSlug === product.slug) ??
+          null;
+        const heroImage =
+          seedProductImages.find((image) => image.productSlug === product.slug && image.imageType === 'hero') ??
+          null;
+
+        return {
+          ...toCatalogueProduct(product, inventory, category, supplier),
+          imageUrl: resolveProductImageUrl(primaryImage?.url),
+          imageAlt: primaryImage?.altText ?? null,
+          heroImageUrl: resolveProductImageUrl(heroImage?.url),
+        };
+      });
+  }
+
+  const rows = await prisma.product.findMany({
+    where: getStorefrontListingProductWhere({ heroFeatured: true }),
+    orderBy: [{ homepagePriority: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
+    take: Math.max(limit, 1),
+    include: catalogueProductInclude,
+  });
+
+  return filterVisibleCatalogueRows(rows).map(mapCatalogueProductRow);
+}
+
 export async function getCatalogueProducts(
   filters: CatalogueFilters,
 ): Promise<CatalogueProductsResult> {

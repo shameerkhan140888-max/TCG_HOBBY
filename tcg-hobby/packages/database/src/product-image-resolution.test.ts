@@ -18,6 +18,11 @@ describe('canonical product image resolution', () => {
     expect(resolveProductImageUrl('https://cdn.example.test/primary.webp')).toBe('https://cdn.example.test/primary.webp');
   });
 
+  it('finds storefront-managed local media from a workspace process directory', () => {
+    expect(resolveProductImageUrl('/products/pokemon/pokemon-tcg-mega-greninja-ex-premium-collection/primary.webp'))
+      .toBe('/products/pokemon/pokemon-tcg-mega-greninja-ex-premium-collection/primary.webp');
+  });
+
   it('uses a stable id tie-breaker when primary state and sort order are equal', () => {
     const tied = images.slice(0, 2).map((image) => ({ ...image, isPrimary: false, sortOrder: 1 }));
     expect(orderActiveProductImages(tied).map((image) => image.id)).toEqual(['a', 'b']);

@@ -154,6 +154,7 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
   const saleEndsAt = parseOptionalDate(values.saleEndsAt);
   const galleryImages = parseGalleryImages(values.galleryImagesText);
   const contents = parseProductContents(values.contents);
+  const homepagePriority = parseOptionalWholeNumber(values.homepagePriority);
 
   if (priceMinor === null || priceMinor < 0) {
     fieldErrors.priceMinor = 'Enter a valid price in pence.';
@@ -175,6 +176,7 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
   if (minimumOrderQuantity === null || minimumOrderQuantity < 1) fieldErrors.minimumOrderQuantity = 'Enter a minimum order quantity of at least 1.';
   if (packQuantity !== null && packQuantity < 1) fieldErrors.packQuantity = 'Enter a pack quantity of at least 1, or leave it blank.';
   if (supplierLeadTimeDays === null || supplierLeadTimeDays < 0) fieldErrors.supplierLeadTimeDays = 'Enter a supplier lead time of zero days or more.';
+  if (homepagePriority !== null && homepagePriority < 0) fieldErrors.homepagePriority = 'Enter a priority of zero or more.';
   if (values.saleStartsAt && !saleStartsAt) fieldErrors.saleStartsAt = 'Enter a valid sale start date.';
   if (values.saleEndsAt && !saleEndsAt) fieldErrors.saleEndsAt = 'Enter a valid sale end date.';
   if (saleStartsAt && saleEndsAt && saleStartsAt >= saleEndsAt) fieldErrors.saleEndsAt = 'Sale end must be after the start date.';
@@ -231,6 +233,8 @@ export async function saveProductAction(_state: ProductFormState, formData: Form
     locationCode: values.locationCode || 'MAIN',
     imageLabel: values.imageLabel || values.name,
     featured: values.featured,
+    heroFeatured: values.heroFeatured,
+    homepagePriority,
     published: values.published,
     hideWhenOutOfStock: values.hideWhenOutOfStock,
     customerPurchaseLimit,

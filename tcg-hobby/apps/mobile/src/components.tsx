@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   buttonText: { color: '#090909', fontWeight: '800', fontSize: 15 }, buttonTextSecondary: { color: colors.text },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md }, sectionTitle: { color: colors.text, fontSize: 24, fontWeight: '900' },
   productCard: { width: '100%', backgroundColor: colors.surface, borderRadius: 8, padding: 12, gap: 8 }, productCardCompact: { width: '100%' }, cardPressed: { opacity: 0.8 },
-  imageFrame: { aspectRatio: 1, backgroundColor: '#0c0c0e', borderRadius: 6, overflow: 'hidden' }, image: { width: '100%', height: '100%' },
+  imageFrame: { aspectRatio: 1, backgroundColor: colors.white, borderRadius: 6, overflow: 'hidden', padding: 8 }, image: { width: '100%', height: '100%' },
   placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 }, placeholderText: { color: colors.muted, fontSize: 12 },
   badgeRow: { minHeight: 24, flexDirection: 'row', alignItems: 'center', gap: 8 }, stock: { color: colors.green, fontSize: 11, fontWeight: '900', textTransform: 'uppercase' }, stockLow: { color: colors.amber }, stockOut: { color: colors.red },
   featured: { color: colors.orange, fontSize: 11, fontWeight: '900', textTransform: 'uppercase' }, game: { color: colors.muted, fontSize: 12 }, productName: { color: colors.text, fontSize: 17, lineHeight: 23, fontWeight: '800', minHeight: 46 },

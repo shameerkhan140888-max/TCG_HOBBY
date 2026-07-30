@@ -53,6 +53,22 @@ function product(overrides: Partial<CatalogueProduct> = {}): CatalogueProduct {
 }
 
 describe('ProductCard image rendering', () => {
+  it('uses the shared light product-image stage without cropping', () => {
+    const markup = renderToStaticMarkup(
+      <ProductCard
+        product={product({
+          imageUrl: '/products/pokemon/pokemon-tcg-mega-greninja-ex-premium-collection/primary.webp',
+        })}
+        href="/catalogue/test-product"
+      />,
+    );
+
+    expect(markup).toContain('bg-white');
+    expect(markup).toContain('object-contain');
+    expect(markup).toContain('aspect-[5/4]');
+    expect(markup).not.toContain('object-cover');
+  });
+
   it('renders a product image when the storefront-safe product includes one', () => {
     const markup = renderToStaticMarkup(
       <ProductCard

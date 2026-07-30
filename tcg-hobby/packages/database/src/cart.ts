@@ -9,6 +9,7 @@ import {
   validateQuantityAgainstPurchaseLimit,
 } from './commerce';
 import { getStorefrontPublicProductWhere } from './product-visibility';
+import { resolveProductCardImage } from './product-image-resolution';
 
 const cartRecordInclude = {
   items: {
@@ -17,6 +18,7 @@ const cartRecordInclude = {
       product: {
         include: {
           inventory: true,
+          images: true,
         },
       },
     },
@@ -28,6 +30,7 @@ type CartItemRow = CartRecord['items'][number];
 
 const cartProductInclude = {
   inventory: true,
+  images: true,
 } as const satisfies Prisma.ProductInclude;
 
 export type CartProductRow = Prisma.ProductGetPayload<{ include: typeof cartProductInclude }>;
@@ -89,6 +92,8 @@ export async function resolveGuestCart(items: PublicBasketInputItem[], db = pris
       inStock: available > 0,
       customerPurchaseLimit: product.customerPurchaseLimit,
       freeUkStandardShipping: product.freeUkStandardShipping || hasFreeUkStandardShipping(product.slug),
+      imageUrl: resolveProductCardImage(product.images).url,
+      imageAlt: resolveProductCardImage(product.images).image?.altText ?? product.name,
     });
   }
 
@@ -98,6 +103,7 @@ export async function resolveGuestCart(items: PublicBasketInputItem[], db = pris
 function mapCartItemRow(item: CartItemRow): CartLineItem {
   const inventory = item.product.inventory;
   const available = inventory ? inventory.stockOnHand - inventory.reservedStock : 0;
+  const image = resolveProductCardImage(item.product.images);
 
   return {
     id: item.id,
@@ -110,6 +116,8 @@ function mapCartItemRow(item: CartItemRow): CartLineItem {
     inStock: available > 0,
     customerPurchaseLimit: item.product.customerPurchaseLimit,
     freeUkStandardShipping: item.product.freeUkStandardShipping || hasFreeUkStandardShipping(item.product.slug),
+    imageUrl: image.url,
+    imageAlt: image.image?.altText ?? item.product.name,
   };
 }
 

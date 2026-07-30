@@ -319,12 +319,12 @@ export function ProductGallery({ images, productName }: { images: CatalogueProdu
 
   return (
     <div className="min-w-0 space-y-4">
-      <div className="overflow-hidden rounded-2xl bg-surface-base shadow-[0_30px_80px_rgba(0,0,0,0.34)]">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_30px_80px_rgba(0,0,0,0.34)]">
         <button
           type="button"
           disabled={!activeImage}
           onClick={openLightbox}
-          className="group relative block aspect-[4/3] w-full cursor-zoom-in overflow-hidden bg-[radial-gradient(circle_at_70%_20%,rgba(255,122,26,0.18),transparent_34%),linear-gradient(135deg,#171717,#08080a)] text-left focus:outline-none focus:ring-2 focus:ring-accent"
+          className="group relative block aspect-[4/3] w-full cursor-zoom-in overflow-hidden bg-white text-left focus:outline-none focus:ring-2 focus:ring-accent"
           aria-label={activeImage ? `Open image viewer for ${activeImage.altText}` : undefined}
         >
           {activeImage ? (
@@ -369,7 +369,7 @@ export function ProductGallery({ images, productName }: { images: CatalogueProdu
               onMouseEnter={() => setActiveId(image.id)}
               onFocus={() => setActiveId(image.id)}
               onClick={() => setActiveId(image.id)}
-              className={`relative aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-xl bg-surface-base shadow-[0_14px_36px_rgba(0,0,0,0.22)] ring-offset-2 ring-offset-surface-ink transition duration-200 hover:scale-[1.02] hover:ring-2 hover:ring-accent/70 focus:outline-none focus:ring-2 focus:ring-accent sm:w-32 lg:w-36 ${
+              className={`relative aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-xl bg-white shadow-[0_14px_36px_rgba(0,0,0,0.22)] ring-offset-2 ring-offset-surface-ink transition duration-200 hover:scale-[1.02] hover:ring-2 hover:ring-accent/70 focus:outline-none focus:ring-2 focus:ring-accent sm:w-32 lg:w-36 ${
                 selected ? 'ring-2 ring-accent' : ''
               }`}
             >

@@ -48,6 +48,7 @@ function createHref(params: {
   language: string;
   sort: CatalogueSort;
   page: number;
+  basePath?: string;
 }) {
   const query = new URLSearchParams();
 
@@ -61,24 +62,35 @@ function createHref(params: {
   if (params.page > 1) query.set('page', String(params.page));
 
   const queryString = query.toString();
-  return queryString ? `/catalogue?${queryString}` : '/catalogue';
+  const basePath = params.basePath ?? '/catalogue';
+  return queryString ? `${basePath}?${queryString}` : basePath;
 }
 
-export default async function CataloguePage({
+export async function CataloguePageView({
   searchParams,
+  basePath = '/catalogue',
+  lockedGame = '',
+  lockedCategory = '',
+  title = 'Find your next TCG favourite',
+  description = 'Search sealed products, accessories and new releases from across our growing catalogue.',
 }: {
   searchParams: Promise<SearchParamsValue>;
+  basePath?: string;
+  lockedGame?: string;
+  lockedCategory?: string;
+  title?: string;
+  description?: string;
 }) {
   const params = (await searchParams) ?? {};
-  const search = asString(params.q);
-  const category = asString(params.category);
-  const game = asString(params.game);
+  const search = asString(params.search) || asString(params.q);
+  const category = lockedCategory || asString(params.category);
+  const game = lockedGame || asString(params.game);
   const productType = asString(params.productType);
   const set = asString(params.set);
   const language = asString(params.language);
   const sort = asSort(asString(params.sort));
   const page = Math.max(Number(asString(params.page) || '1') || 1, 1);
-  const currentHref = createHref({ search, category, game, productType, set, language, sort, page });
+  const currentHref = createHref({ search, category, game, productType, set, language, sort, page, basePath });
 
   const [data, session, masterData] = await Promise.all([
     getCatalogueProducts({
@@ -106,20 +118,18 @@ export default async function CataloguePage({
       <main className="min-h-screen bg-surface-ink text-neutral-50">
         <section className="border-b border-surface-line bg-surface-base/80">
         <Container className="py-8 sm:py-10">
-          <div className="space-y-3">
+          <div className="mx-auto max-w-3xl space-y-4 text-center">
             <p className="text-sm font-semibold uppercase tracking-wide text-accent">Catalogue</p>
-            <h1 className="text-3xl font-black sm:text-4xl">Browse products with search and filters</h1>
-            <p className="max-w-3xl text-sm leading-6 text-neutral-400">
-              Search the current TCG Hobby catalogue, switch categories, sort results, and page through the available assortment.
-            </p>
+            <h1 className="text-3xl font-black sm:text-4xl">{title}</h1>
+            <p className="text-sm leading-6 text-neutral-400">{description}</p>
           </div>
         </Container>
       </section>
 
       <Container className="py-8">
-        <form className="grid gap-3 rounded-lg border border-surface-line bg-surface-base p-4 lg:grid-cols-[minmax(18rem,1fr)_repeat(5,minmax(8.75rem,0.5fr))_minmax(8rem,0.42fr)]">
-          <Input name="q" defaultValue={search} placeholder="Search cards, sealed product, accessories, or events" />
-          <select
+        <form action={basePath} className={`grid gap-3 rounded-lg border border-surface-line bg-surface-base p-4 ${lockedGame ? 'xl:grid-cols-[minmax(18rem,1fr)_repeat(4,minmax(8.75rem,0.5fr))_minmax(8rem,0.42fr)]' : 'xl:grid-cols-[minmax(18rem,1fr)_repeat(5,minmax(8.75rem,0.5fr))_minmax(8rem,0.42fr)]'}`}>
+          <Input name="q" defaultValue={search} placeholder="Search products and accessories" />
+          {lockedGame ? null : <select
             name="game"
             defaultValue={game}
             className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent"
@@ -129,7 +139,7 @@ export default async function CataloguePage({
             {masterData.games.filter((item) => item.active).map((item) => (
               <option key={item.id} value={item.slug}>{item.name}</option>
             ))}
-          </select>
+          </select>}
           <select
             name="productType"
             defaultValue={productType}
@@ -174,7 +184,7 @@ export default async function CataloguePage({
             <option value="price-desc">Price high to low</option>
           </select>
           <Button type="submit">Search</Button>
-          <input type="hidden" name="category" value={category} />
+          {lockedCategory ? <input type="hidden" name="category" value={lockedCategory} /> : <input type="hidden" name="category" value={category} />}
         </form>
 
         <div className="mt-8 flex items-center justify-between gap-4">
@@ -182,12 +192,9 @@ export default async function CataloguePage({
             <p className="text-sm text-neutral-400">
               {data.pagination.totalItems} products found{search ? ` for "${search}"` : ''}
             </p>
-            {[category, game, productType, set, language].some(Boolean) ? (
-              <p className="mt-1 text-sm text-neutral-500">Filters applied. Use reset to browse everything.</p>
-            ) : null}
           </div>
           <Button asChild variant="ghost">
-            <a href="/catalogue">Reset filters</a>
+            <a href={basePath}>Reset filters</a>
           </Button>
         </div>
 
@@ -238,7 +245,7 @@ export default async function CataloguePage({
               ))}
             </div>
             <div className="mt-8">
-              <Pagination meta={data.pagination} hrefForPage={(nextPage) => createHref({ search, category, game, productType, set, language, sort, page: nextPage })} />
+              <Pagination meta={data.pagination} hrefForPage={(nextPage) => createHref({ search, category, game, productType, set, language, sort, page: nextPage, basePath })} />
             </div>
           </>
         ) : (
@@ -248,7 +255,7 @@ export default async function CataloguePage({
               description="Try a different search term or open another category."
               action={
                 <Button asChild>
-                  <a href="/catalogue">Clear search</a>
+                  <a href={basePath}>Clear search</a>
                 </Button>
               }
             />
@@ -258,4 +265,8 @@ export default async function CataloguePage({
       </main>
     </>
   );
+}
+
+export default async function CataloguePage({ searchParams }: { searchParams: Promise<SearchParamsValue> }) {
+  return CataloguePageView({ searchParams });
 }

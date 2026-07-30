@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { MEGA_GRENINJA_PRODUCT_SLUG } from './commerce';
-import { createPendingCheckoutOrder, finalizePaidCheckoutOrder } from './orders';
+import {
+  createPendingCheckoutOrder,
+  finalizePaidCheckoutOrder,
+  releaseExpiredCheckoutOrderReservations,
+} from './orders';
 
 function createDbMock() {
   const db = {
@@ -10,14 +14,19 @@ function createDbMock() {
     cartItem: {
       deleteMany: vi.fn(),
     },
+    cart: {
+      findUnique: vi.fn(),
+    },
     inventoryItem: {
       findUnique: vi.fn(),
       updateMany: vi.fn(),
     },
     order: {
       create: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
       findUnique: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     orderItem: {
       createMany: vi.fn(),
@@ -47,6 +56,122 @@ const cart = {
 };
 
 describe('order repository', () => {
+  it('reuses a pending order when the same checkout attempt is submitted again', async () => {
+    const mockDb = createDbMock();
+    mockDb.order.findUnique.mockResolvedValue({
+      id: 'order-existing',
+      orderNumber: 'TCG-20260727-EXIST1',
+      userId: null,
+      status: 'PENDING_PAYMENT',
+      paymentStatus: 'REQUIRES_PAYMENT',
+      shippingMethodCode: 'UK_STANDARD',
+      shippingCountry: 'GB',
+      subtotalMinor: 2500,
+      shippingMinor: 299,
+      taxMinor: 417,
+      totalMinor: 2799,
+      items: [{
+        id: 'order-item-1',
+        productId: 'prod-1',
+        productName: 'Alpha Card',
+        productSlug: 'alpha-card',
+        quantity: 2,
+        unitPriceMinor: 1250,
+        totalMinor: 2500,
+        product: { images: [] },
+      }],
+    });
+
+    const result = await createPendingCheckoutOrder(null, cart, {
+      shippingAddress: {
+        fullName: 'Sam Collector',
+        email: 'sam@example.com',
+        line1: '14 Aurora Street',
+        line2: '',
+        city: 'Bristol',
+        region: '',
+        postalCode: 'BS1 4TR',
+        country: 'GB',
+      },
+      shippingMethodCode: 'UK_STANDARD',
+      checkoutAttemptId: 'attempt-existing',
+    }, mockDb);
+
+    expect(result.order.id).toBe('order-existing');
+    expect(mockDb.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('recovers the winning order when simultaneous attempts hit the unique constraint', async () => {
+    const mockDb = createDbMock();
+    const existing = {
+      id: 'order-winning',
+      orderNumber: 'TCG-20260727-WINNER',
+      userId: null,
+      status: 'PENDING_PAYMENT',
+      paymentStatus: 'REQUIRES_PAYMENT',
+      shippingMethodCode: 'UK_STANDARD',
+      shippingCountry: 'GB',
+      subtotalMinor: 2500,
+      shippingMinor: 299,
+      taxMinor: 417,
+      totalMinor: 2799,
+      items: [{
+        id: 'order-item-1',
+        productId: 'prod-1',
+        productName: 'Alpha Card',
+        productSlug: 'alpha-card',
+        quantity: 2,
+        unitPriceMinor: 1250,
+        totalMinor: 2500,
+        product: { images: [] },
+      }],
+    };
+    mockDb.order.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(existing);
+    mockDb.$transaction.mockRejectedValue({ code: 'P2002' });
+
+    const result = await createPendingCheckoutOrder(null, cart, {
+      shippingAddress: {
+        fullName: 'Sam Collector',
+        email: 'sam@example.com',
+        line1: '14 Aurora Street',
+        line2: '',
+        city: 'Bristol',
+        region: '',
+        postalCode: 'BS1 4TR',
+        country: 'GB',
+      },
+      shippingMethodCode: 'UK_STANDARD',
+      checkoutAttemptId: 'attempt-race',
+    }, mockDb);
+
+    expect(result.order.id).toBe('order-winning');
+  });
+
+  it('releases expired pending reservations once without touching completed orders', async () => {
+    const mockDb = createDbMock();
+    mockDb.order.findMany.mockResolvedValue([{ id: 'order-expired' }]);
+    mockDb.order.findUnique.mockResolvedValue({
+      id: 'order-expired',
+      status: 'PENDING_PAYMENT',
+      paymentStatus: 'REQUIRES_PAYMENT',
+      items: [{ productId: 'prod-1', quantity: 2 }],
+    });
+    mockDb.inventoryItem.updateMany.mockResolvedValue({ count: 1 });
+    mockDb.order.updateMany.mockResolvedValue({ count: 1 });
+
+    await expect(releaseExpiredCheckoutOrderReservations(new Date('2026-07-27T12:00:00Z'), mockDb))
+      .resolves.toEqual(['order-expired']);
+    expect(mockDb.inventoryItem.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      data: { reservedStock: { decrement: 2 } },
+    }));
+    expect(mockDb.order.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        status: 'CANCELLED',
+        paymentStatus: 'CANCELED',
+      }),
+    }));
+  });
+
   it('creates a pending order and reserves inventory', async () => {
     const mockDb = createDbMock();
     mockDb.address.create.mockResolvedValue({ id: 'addr-1' });
@@ -84,9 +209,9 @@ describe('order repository', () => {
     );
 
     expect(result.order.orderNumber).toBe('TCG-20260704-ABC123');
-    expect(result.shippingMethod.name).toBe('UK Standard');
+    expect(result.shippingMethod.name).toBe('Standard delivery');
     expect(result.taxMinor).toBe(417);
-    expect(result.totalMinor).toBe(2999);
+    expect(result.totalMinor).toBe(2799);
     expect(mockDb.inventoryItem.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: {
@@ -278,6 +403,7 @@ describe('order repository', () => {
       },
     });
     finalizationDb.inventoryItem.updateMany.mockResolvedValue({ count: 1 });
+    finalizationDb.order.updateMany.mockResolvedValue({ count: 1 });
     finalizationDb.order.update.mockResolvedValue({
       id: 'order-1',
       userId: 'user-1',
@@ -310,5 +436,29 @@ describe('order repository', () => {
         },
       }),
     );
+  });
+
+  it('does not reduce stock again when a paid order is finalized twice', async () => {
+    const finalizationDb = createDbMock();
+    finalizationDb.order.findUnique.mockResolvedValue({
+      id: 'order-1',
+      userId: null,
+      paymentStatus: 'SUCCEEDED',
+      items: [],
+      shippingAddress: null,
+    });
+
+    const order = await finalizePaidCheckoutOrder(
+      {
+        orderId: 'order-1',
+        paymentIntentId: 'pi_123',
+        stripeCheckoutSessionId: 'cs_test_123',
+      },
+      finalizationDb,
+    );
+
+    expect(order.paymentStatus).toBe('SUCCEEDED');
+    expect(finalizationDb.inventoryItem.updateMany).not.toHaveBeenCalled();
+    expect(finalizationDb.$transaction).not.toHaveBeenCalled();
   });
 });

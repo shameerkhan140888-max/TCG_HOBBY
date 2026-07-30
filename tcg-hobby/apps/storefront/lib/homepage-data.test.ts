@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { MerchandisingRecommendation } from '@tcg-hobby/database';
 
 vi.mock('@tcg-hobby/database', () => ({
+  getActiveHomepageHeroPlacements: vi.fn(),
   getMerchandisingFeaturedProducts: vi.fn(),
   getMerchandisingLatestProducts: vi.fn(),
   getMerchandisingStaffPickProducts: vi.fn(),
@@ -15,6 +16,7 @@ import {
   selectUniqueProducts,
 } from './homepage-data';
 import {
+  getActiveHomepageHeroPlacements,
   getMerchandisingFeaturedProducts,
   getMerchandisingLatestProducts,
   getMerchandisingStaffPickProducts,
@@ -82,6 +84,7 @@ describe('homepage data selection', () => {
   });
 
   it('calls merchandising services for featured, latest and staff-pick homepage sections', async () => {
+    vi.mocked(getActiveHomepageHeroPlacements).mockResolvedValue([]);
     vi.mocked(getMerchandisingFeaturedProducts).mockResolvedValue([product({ id: 'featured' })]);
     vi.mocked(getMerchandisingLatestProducts).mockResolvedValue([product({ id: 'featured' }), product({ id: 'latest' })]);
     vi.mocked(getMerchandisingStaffPickProducts).mockResolvedValue([
@@ -101,6 +104,7 @@ describe('homepage data selection', () => {
   });
 
   it('uses the default hero until the featured product image exists in merchandising data', async () => {
+    vi.mocked(getActiveHomepageHeroPlacements).mockResolvedValue([]);
     vi.mocked(getMerchandisingFeaturedProducts).mockResolvedValue([
       product({
         id: 'mega',
@@ -111,7 +115,6 @@ describe('homepage data selection', () => {
     ]);
     vi.mocked(getMerchandisingLatestProducts).mockResolvedValue([]);
     vi.mocked(getMerchandisingStaffPickProducts).mockResolvedValue([]);
-
     const data = await getProductionHomepageData();
 
     expect(data.featuredProducts[0]?.slug).toBe('pokemon-tcg-mega-greninja-ex-premium-collection');
@@ -119,7 +122,37 @@ describe('homepage data selection', () => {
     expect(data.heroSlides[0]?.image.src).toBe('/launch/tcg-hobby-production-hero.png');
   });
 
-  it('switches the first hero slide when the first featured merchandising product has an image', async () => {
+  it('falls back safely when an eligible placement has no usable artwork', async () => {
+    vi.mocked(getActiveHomepageHeroPlacements).mockResolvedValue([{
+      id: 'hero-without-image',
+      headline: 'Product hero',
+      supportingText: 'Supporting text',
+      ctaLabel: 'Shop now',
+      ctaHref: '/shop',
+      imageUrl: null,
+      imageAlt: 'Product',
+      sortOrder: 0,
+      product: {
+        id: 'product-1',
+        slug: 'product-1',
+        name: 'Product One',
+        priceMinor: 4999,
+        stockOnHand: 4,
+        reservedStock: 0,
+        freeUkStandardShipping: false,
+        customerPurchaseLimit: null,
+      },
+    }] as never);
+    vi.mocked(getMerchandisingFeaturedProducts).mockResolvedValue([]);
+    vi.mocked(getMerchandisingLatestProducts).mockResolvedValue([]);
+    vi.mocked(getMerchandisingStaffPickProducts).mockResolvedValue([]);
+
+    const data = await getProductionHomepageData();
+
+    expect(data.heroSlides).toEqual(homepageHeroSlides);
+  });
+
+  it('uses an eligible Admin-managed hero placement independently from featured merchandising', async () => {
     vi.mocked(getMerchandisingFeaturedProducts).mockResolvedValue([
       product({
         id: 'mega',
@@ -134,6 +167,31 @@ describe('homepage data selection', () => {
     ]);
     vi.mocked(getMerchandisingLatestProducts).mockResolvedValue([]);
     vi.mocked(getMerchandisingStaffPickProducts).mockResolvedValue([]);
+    vi.mocked(getActiveHomepageHeroPlacements).mockResolvedValue([
+      {
+        id: 'hero-mega',
+        headline: 'Mega Greninja ex Premium Collection',
+        supportingText: 'Eight booster packs and exclusive collector items.',
+        ctaLabel: 'Shop now',
+        ctaHref: '/catalogue/pokemon-tcg-mega-greninja-ex-premium-collection',
+        imageUrl: '/products/pokemon/mega-greninja-ex-premium-collection/primary.webp',
+        imageAlt: 'Pokémon TCG Mega Greninja ex Premium Collection box',
+        displayMode: 'FULL_BLEED',
+        focalPoint: 'RIGHT',
+        overlayStrength: 'BALANCED',
+        sortOrder: 0,
+        product: {
+          id: 'mega',
+          slug: 'pokemon-tcg-mega-greninja-ex-premium-collection',
+          name: 'Pokémon TCG: Mega Greninja ex Premium Collection',
+          priceMinor: 4999,
+          stockOnHand: 3,
+          reservedStock: 0,
+          freeUkStandardShipping: true,
+          customerPurchaseLimit: 1,
+        },
+      } as never,
+    ]);
 
     const data = await getProductionHomepageData();
 
@@ -141,6 +199,9 @@ describe('homepage data selection', () => {
       eyebrow: 'NOW AVAILABLE',
       badges: ['LOW STOCK', 'FREE UK STANDARD DELIVERY', 'LIMIT 1 PER HOUSEHOLD'],
       primaryCta: { label: 'Shop now', href: '/catalogue/pokemon-tcg-mega-greninja-ex-premium-collection' },
+      displayMode: 'FULL_BLEED',
+      focalPoint: 'RIGHT',
+      overlayStrength: 'BALANCED',
       image: { src: '/products/pokemon/mega-greninja-ex-premium-collection/primary.webp' },
     });
   });
@@ -149,6 +210,7 @@ describe('homepage data selection', () => {
     vi.mocked(getMerchandisingFeaturedProducts).mockRejectedValue(new Error('database unavailable'));
     vi.mocked(getMerchandisingLatestProducts).mockRejectedValue(new Error('database unavailable'));
     vi.mocked(getMerchandisingStaffPickProducts).mockRejectedValue(new Error('database unavailable'));
+    vi.mocked(getActiveHomepageHeroPlacements).mockRejectedValue(new Error('database unavailable'));
 
     const data = await getProductionHomepageData();
 

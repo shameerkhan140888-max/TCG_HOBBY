@@ -1,4 +1,41 @@
 export {
+  HERO_DISPLAY_MODES,
+  HERO_FOCAL_POINTS,
+  HERO_IMAGE_SOURCES,
+  HERO_OVERLAY_STRENGTHS,
+  detachHomepageHeroImage,
+  getActiveHomepageHeroPlacements,
+  getActiveStorefrontBanner,
+  getHomepageHeroPlacements,
+  getHeroPlacementProductOptions,
+  getShopLandingPage,
+  getPublicShopLandingPage,
+  getShopLandingPages,
+  getStorefrontBanners,
+  isSafeStorefrontHref,
+  isSafeStorefrontMediaUrl,
+  recordHomepageHeroImageCleanupFailure,
+  saveHomepageHeroPlacement,
+  setManagedHomepageHeroImage,
+  saveShopLandingPage,
+  saveStorefrontBanner,
+  SHOP_LANDING_DEFAULTS,
+  STOREFRONT_BANNER_ICONS,
+} from './storefront-content';
+export type {
+  HeroDisplayMode,
+  HeroFocalPoint,
+  HeroImageSource,
+  HeroOverlayStrength,
+  HeroPlacementProductOption,
+  HomepageHeroPlacementInput,
+  ManagedHomepageHeroImageInput,
+  ShopLandingPageInput,
+  ShopLandingScope,
+  StorefrontBannerIcon,
+  StorefrontBannerInput,
+} from './storefront-content';
+export {
   MarketingCampaignStatus,
   MarketingSubscriberStatus,
   PrismaClient,
@@ -108,7 +145,9 @@ export {
   calculateOrderTotal,
   calculatePromotionalShippingMinor,
   calculateVatEstimateMinor,
+  FREE_STANDARD_DELIVERY_THRESHOLD_MINOR,
   generateOrderNumber,
+  getFreeStandardDeliveryProgress,
   getShippingMethodByCode,
   getShippingMethodsForCountry,
   hasFreeUkStandardShipping,
@@ -145,6 +184,7 @@ export {
 } from './cart';
 export {
   attachStripeSessionToOrder,
+  cancelCheckoutOrderAttempt,
   createPendingCheckoutOrder,
   createHostedCheckoutSession,
   createStripeCheckoutSession,
@@ -155,8 +195,19 @@ export {
   getLatestLocalCheckoutOrder,
   getOrderByStripeCheckoutSessionId,
   releaseCheckoutOrderReservation,
+  releaseExpiredCheckoutOrderReservations,
   retrieveStripeCheckoutSession,
 } from './orders';
+export {
+  constructStripeWebhookEvent,
+  isStripeCheckoutConfigured,
+  requireStripeSecretKey,
+  requireStripeWebhookSecret,
+} from './stripe-provider';
+export {
+  processStripeWebhookEvent,
+} from './stripe-webhook';
+export type { StripeWebhookProcessingResult } from './stripe-webhook';
 export type {
   CheckoutReservation,
   CheckoutReservationItem,
@@ -172,6 +223,7 @@ export {
   getCatalogueProductBySlug,
   getCatalogueProducts,
   getFeaturedCatalogueProducts,
+  getHomepageHeroProducts,
 } from './catalogue';
 export {
   AccessoryStrategy,

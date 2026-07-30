@@ -92,6 +92,8 @@ function productState(product: NonNullable<Awaited<ReturnType<typeof getAdminPro
       ogImageUrl: product.ogImageUrl ?? '',
       noindex: product.noindex,
       featured: product.featured,
+      heroFeatured: product.heroFeatured,
+      homepagePriority: product.homepagePriority != null ? String(product.homepagePriority) : '',
       published: product.published,
       hideWhenOutOfStock: product.hideWhenOutOfStock,
     },

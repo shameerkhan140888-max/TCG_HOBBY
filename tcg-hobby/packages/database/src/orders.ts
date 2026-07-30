@@ -27,6 +27,8 @@ import {
   validateQuantityAgainstPurchaseLimit,
 } from './commerce';
 import type { CartSnapshot } from './cart';
+import { resolveProductCardImage } from './product-image-resolution';
+import { requireStripeSecretKey } from './stripe-provider';
 
 type CheckoutAddressInput = CheckoutAddress;
 
@@ -35,12 +37,22 @@ const orderRecordInclude = {
     orderBy: {
       id: 'asc',
     },
+    include: {
+      product: {
+        include: {
+          images: true,
+        },
+      },
+    },
   },
   shippingAddress: true,
 } as const satisfies Prisma.OrderInclude;
 
 type DatabaseOrderRecord = Prisma.OrderGetPayload<{ include: typeof orderRecordInclude }>;
-type OrderItemRecord = Pick<DatabaseOrderRecord['items'][number], 'id' | 'productId' | 'productName' | 'productSlug' | 'quantity' | 'unitPriceMinor' | 'totalMinor'>;
+type OrderItemRecord = Pick<DatabaseOrderRecord['items'][number], 'id' | 'productId' | 'productName' | 'productSlug' | 'quantity' | 'unitPriceMinor' | 'totalMinor'> & {
+  imageUrl?: string | null;
+  imageAlt?: string | null;
+};
 
 type OrderRecord = Omit<DatabaseOrderRecord, 'currency' | 'shippingMethodCode' | 'items' | 'shippingAddress'> & {
   currency: string;
@@ -52,6 +64,7 @@ type OrderRecord = Omit<DatabaseOrderRecord, 'currency' | 'shippingMethodCode' |
 type CreateCheckoutOrderInput = {
   shippingAddress: CheckoutAddressInput;
   shippingMethodCode: ShippingMethodCode;
+  checkoutAttemptId?: string | null;
 };
 
 type CheckoutCart = Pick<CartSnapshot, 'cartId' | 'currency' | 'items'>;
@@ -234,6 +247,10 @@ function isDatabaseUnavailableError(error: unknown) {
   return /Can't reach database server|Database client unavailable|query engine/i.test(message);
 }
 
+function isUniqueConstraintError(error: unknown) {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
+}
+
 function createLocalOrderRecord(
   userId: string | null,
   cart: CheckoutCart,
@@ -251,6 +268,7 @@ function createLocalOrderRecord(
   const order: LocalOrderRecord = {
     id: orderId,
     orderNumber,
+    checkoutAttemptId: input.checkoutAttemptId ?? null,
     userId,
     status: 'PENDING_PAYMENT',
     paymentStatus: 'REQUIRES_PAYMENT',
@@ -376,27 +394,14 @@ export async function getLatestLocalCheckoutOrder() {
   return Array.from(localCheckoutOrders.values()).at(-1) ?? null;
 }
 
-function assertStripeConfigured() {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
-
-  if (!secretKey) {
-    throw new Error('Stripe is not configured. Set STRIPE_SECRET_KEY to use checkout in test mode.');
-  }
-
-  return secretKey;
-}
-
-function hasLocalStripeFallback() {
-  return !process.env.STRIPE_SECRET_KEY && process.env.NODE_ENV !== 'production';
-}
-
-async function stripeRequest<T>(path: string, body?: URLSearchParams) {
-  const secretKey = assertStripeConfigured();
+async function stripeRequest<T>(path: string, body?: URLSearchParams, idempotencyKey?: string) {
+  const secretKey = requireStripeSecretKey();
   const init: RequestInit = {
     method: body ? 'POST' : 'GET',
     headers: {
       Authorization: `Bearer ${secretKey}`,
       'Content-Type': 'application/x-www-form-urlencoded',
+      ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
     },
   };
 
@@ -416,43 +421,30 @@ async function stripeRequest<T>(path: string, body?: URLSearchParams) {
 }
 
 export async function retrieveStripeCheckoutSession(sessionId: string) {
-  if (hasLocalStripeFallback()) {
-    return {
-      id: sessionId,
-      payment_status: 'paid',
-      payment_intent: `pi_${sessionId}`,
-      url: null,
-    };
-  }
-
   return stripeRequest<StripeCheckoutSession>(`checkout/sessions/${sessionId}`);
 }
 
 export async function createStripeCheckoutSession(params: {
+  orderId: string;
+  checkoutAttemptId: string;
   orderNumber: string;
   customerEmail: string;
   lineItems: Array<{ name: string; description: string; amountMinor: number; quantity: number }>;
   successUrl: string;
   cancelUrl: string;
+  idempotencyKey: string;
 }) {
-  if (hasLocalStripeFallback()) {
-    const sessionId = `cs_test_${randomBytes(8).toString('hex').toUpperCase()}`;
-    const paymentIntentId = `pi_test_${randomBytes(8).toString('hex').toUpperCase()}`;
-
-    return {
-      id: sessionId,
-      url: params.successUrl.replace('{CHECKOUT_SESSION_ID}', sessionId),
-      payment_intent: paymentIntentId,
-    };
-  }
-
   const body = new URLSearchParams();
   body.set('mode', 'payment');
   body.set('customer_email', params.customerEmail);
   body.set('success_url', params.successUrl);
   body.set('cancel_url', params.cancelUrl);
   body.set('payment_method_types[0]', 'card');
+  body.set('metadata[orderId]', params.orderId);
   body.set('metadata[orderNumber]', params.orderNumber);
+  body.set('metadata[checkoutAttemptId]', params.checkoutAttemptId);
+  body.set('payment_intent_data[metadata][orderId]', params.orderId);
+  body.set('payment_intent_data[metadata][orderNumber]', params.orderNumber);
 
   params.lineItems.forEach((item, index) => {
     body.set(`line_items[${index}][price_data][currency]`, 'gbp');
@@ -462,7 +454,57 @@ export async function createStripeCheckoutSession(params: {
     body.set(`line_items[${index}][quantity]`, String(item.quantity));
   });
 
-  return stripeRequest<{ id: string; url: string | null; payment_intent: string | null }>('checkout/sessions', body);
+  return stripeRequest<{ id: string; url: string | null; payment_intent: string | null }>(
+    'checkout/sessions',
+    body,
+    params.idempotencyKey,
+  );
+}
+
+async function findCheckoutReservationByAttempt(
+  checkoutAttemptId: string | null | undefined,
+  db: typeof prisma,
+): Promise<CheckoutReservation | null> {
+  if (!checkoutAttemptId) return null;
+
+  const order = await db.order.findUnique({
+    where: { checkoutAttemptId },
+    include: orderRecordInclude,
+  });
+
+  if (!order || order.status !== 'PENDING_PAYMENT' || order.paymentStatus !== 'REQUIRES_PAYMENT') {
+    return null;
+  }
+
+  const shippingMethod = getShippingMethodByCode(
+    order.shippingMethodCode as ShippingMethodCode,
+    order.shippingCountry,
+    order.subtotalMinor,
+  );
+  if (!shippingMethod) return null;
+
+  return {
+    order: { id: order.id, orderNumber: order.orderNumber, userId: order.userId },
+    shippingMethod,
+    subtotalMinor: order.subtotalMinor,
+    shippingMinor: order.shippingMinor,
+    taxMinor: order.taxMinor,
+    totalMinor: order.totalMinor,
+    items: order.items.map((item) => ({
+      ...(() => {
+        const image = resolveProductCardImage(item.product.images);
+        return { imageUrl: image.url, imageAlt: image.image?.altText ?? item.productName };
+      })(),
+      id: item.id,
+      productId: item.productId,
+      productName: item.productName,
+      productSlug: item.productSlug,
+      quantity: item.quantity,
+      unitPriceMinor: item.unitPriceMinor,
+      totalMinor: item.totalMinor,
+      inStock: true,
+    })),
+  };
 }
 
 async function reserveInventoryForOrder(tx: Prisma.TransactionClient, orderId: string, items: Array<{ productId: string; quantity: number }>) {
@@ -512,17 +554,21 @@ export async function createPendingCheckoutOrder(
   input: CreateCheckoutOrderInput,
   db = prisma,
 ): Promise<CheckoutReservation> {
+  await releaseExpiredCheckoutOrderReservations(new Date(), db);
+  const existingAttempt = await findCheckoutReservationByAttempt(input.checkoutAttemptId, db);
+  if (existingAttempt) return existingAttempt;
+
   if (!cart || cart.items.length === 0) {
     throw new Error('Your cart is empty.');
   }
 
-  const shippingMethod = getShippingMethodByCode(input.shippingMethodCode, input.shippingAddress.country);
+  const subtotalMinor = calculateCartSubtotal(cart.items);
+  const shippingMethod = getShippingMethodByCode(input.shippingMethodCode, input.shippingAddress.country, subtotalMinor);
 
   if (!shippingMethod) {
     throw new Error('Please choose a valid shipping method for your delivery country.');
   }
 
-  const subtotalMinor = calculateCartSubtotal(cart.items);
   const taxMinor = calculateVatEstimateMinor(subtotalMinor);
   for (const item of cart.items) {
     const limitValidation = validateQuantityAgainstPurchaseLimit(item.quantity, item.customerPurchaseLimit);
@@ -530,7 +576,12 @@ export async function createPendingCheckoutOrder(
       throw new Error(limitValidation.message);
     }
   }
-  const chargedShippingMinor = calculatePromotionalShippingMinor(shippingMethod, cart.items, input.shippingAddress.country);
+  const chargedShippingMinor = calculatePromotionalShippingMinor(
+    shippingMethod,
+    cart.items,
+    input.shippingAddress.country,
+    subtotalMinor,
+  );
   const { totalMinor, shippingMinor } = calculateOrderTotal(subtotalMinor, chargedShippingMinor, taxMinor);
   const reservationExpiresAt = buildCartReservationExpiry();
 
@@ -554,6 +605,7 @@ export async function createPendingCheckoutOrder(
       const order = await tx.order.create({
         data: {
           orderNumber,
+          checkoutAttemptId: input.checkoutAttemptId ?? null,
           userId,
           status: 'PENDING_PAYMENT',
           paymentStatus: 'REQUIRES_PAYMENT',
@@ -597,14 +649,6 @@ export async function createPendingCheckoutOrder(
         })),
       });
 
-      if (cart.cartId) {
-        await tx.cartItem.deleteMany({
-          where: {
-            cartId: cart.cartId,
-          },
-        });
-      }
-
       return {
         order,
         shippingMethod,
@@ -616,6 +660,12 @@ export async function createPendingCheckoutOrder(
       };
     });
   } catch (error) {
+    if (input.checkoutAttemptId && isUniqueConstraintError(error)) {
+      const racedAttempt = await findCheckoutReservationByAttempt(input.checkoutAttemptId, db);
+      if (racedAttempt) return racedAttempt;
+      throw new Error('This checkout attempt has expired. Refresh checkout and try again.');
+    }
+
     if (!isDatabaseUnavailableError(error) || process.env.NODE_ENV === 'production') {
       throw error;
     }
@@ -674,7 +724,11 @@ export async function attachStripeSessionToOrder(params: {
   }
 }
 
-export async function releaseCheckoutOrderReservation(orderId: string, db = prisma) {
+export async function releaseCheckoutOrderReservation(
+  orderId: string,
+  db = prisma,
+  paymentStatus: Extract<PaymentStatus, 'CANCELED' | 'FAILED'> = 'CANCELED',
+) {
   try {
     const order = await db.order.findUnique({
       where: { id: orderId },
@@ -683,11 +737,33 @@ export async function releaseCheckoutOrderReservation(orderId: string, db = pris
       },
     });
 
-    if (!order || order.paymentStatus === 'SUCCEEDED') {
+    if (
+      !order ||
+      order.status !== 'PENDING_PAYMENT' ||
+      order.paymentStatus !== 'REQUIRES_PAYMENT'
+    ) {
       return null;
     }
 
-    await db.$transaction(async (tx) => {
+    const released = await db.$transaction(async (tx) => {
+      const claimed = await tx.order.updateMany({
+        where: {
+          id: order.id,
+          status: 'PENDING_PAYMENT',
+          paymentStatus: 'REQUIRES_PAYMENT',
+        },
+        data: {
+          status: 'CANCELLED',
+          paymentStatus,
+          fulfilmentStatus: 'CANCELLED',
+          cancelledAt: new Date(),
+        },
+      });
+
+      if (claimed.count !== 1) {
+        return false;
+      }
+
       for (const item of order.items) {
         await tx.inventoryItem.updateMany({
           where: {
@@ -702,31 +778,27 @@ export async function releaseCheckoutOrderReservation(orderId: string, db = pris
         });
       }
 
-      await tx.order.update({
-        where: { id: order.id },
-        data: {
-          status: 'CANCELLED',
-          paymentStatus: 'CANCELED',
-          fulfilmentStatus: 'CANCELLED',
-          cancelledAt: new Date(),
-        },
-      });
+      return true;
     });
 
-    return order.id;
+    return released ? order.id : null;
   } catch (error) {
     if (!isDatabaseUnavailableError(error) || process.env.NODE_ENV === 'production') {
       throw error;
     }
 
     const order = localCheckoutOrders.get(orderId);
-    if (!order || order.paymentStatus === 'SUCCEEDED') {
+    if (
+      !order ||
+      order.status !== 'PENDING_PAYMENT' ||
+      order.paymentStatus !== 'REQUIRES_PAYMENT'
+    ) {
       return null;
     }
 
     updateLocalOrder(orderId, (current) => {
       current.status = 'CANCELLED';
-      current.paymentStatus = 'CANCELED';
+      current.paymentStatus = paymentStatus;
       current.fulfilmentStatus = 'CANCELLED';
       current.cancelledAt = new Date();
       return current;
@@ -735,6 +807,47 @@ export async function releaseCheckoutOrderReservation(orderId: string, db = pris
 
     return orderId;
   }
+}
+
+export async function releaseExpiredCheckoutOrderReservations(now = new Date(), db = prisma) {
+  const expiredOrders = await db.order.findMany({
+    where: {
+      status: 'PENDING_PAYMENT',
+      paymentStatus: 'REQUIRES_PAYMENT',
+      reservationExpiresAt: { lte: now },
+    },
+    select: { id: true },
+    orderBy: { reservationExpiresAt: 'asc' },
+    take: 100,
+  });
+
+  const released: string[] = [];
+  for (const order of expiredOrders) {
+    const orderId = await releaseCheckoutOrderReservation(order.id, db);
+    if (orderId) released.push(orderId);
+  }
+  return released;
+}
+
+export async function cancelCheckoutOrderAttempt(
+  orderId: string,
+  checkoutAttemptId: string,
+  db = prisma,
+) {
+  if (!orderId || !checkoutAttemptId) {
+    return null;
+  }
+
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, checkoutAttemptId: true },
+  });
+
+  if (!order || order.checkoutAttemptId !== checkoutAttemptId) {
+    return null;
+  }
+
+  return releaseCheckoutOrderReservation(order.id, db);
 }
 
 export async function finalizePaidCheckoutOrder(input: FinalizeCheckoutOrderInput, db = prisma): Promise<OrderWithItems> {
@@ -755,6 +868,28 @@ export async function finalizePaidCheckoutOrder(input: FinalizeCheckoutOrderInpu
     }
 
     return await db.$transaction(async (tx) => {
+      const claimed = await tx.order.updateMany({
+        where: {
+          id: order.id,
+          status: 'PENDING_PAYMENT',
+          paymentStatus: 'REQUIRES_PAYMENT',
+        },
+        data: {
+          paymentStatus: 'PROCESSING',
+        },
+      });
+
+      if (claimed.count !== 1) {
+        const current = await tx.order.findUnique({
+          where: { id: order.id },
+          include: orderRecordInclude,
+        });
+        if (current?.paymentStatus === 'SUCCEEDED') {
+          return mapOrderRecord(normalizeDatabaseOrderRecord(current));
+        }
+        throw new Error('The order is not awaiting payment.');
+      }
+
       for (const item of order.items) {
         const updated = await tx.inventoryItem.updateMany({
           where: {
@@ -789,6 +924,18 @@ export async function finalizePaidCheckoutOrder(input: FinalizeCheckoutOrderInpu
         },
         include: orderRecordInclude,
       });
+
+      if (order.userId) {
+        const cart = await tx.cart.findUnique({ where: { userId: order.userId }, select: { id: true } });
+        if (cart) {
+          await tx.cartItem.deleteMany({
+            where: {
+              cartId: cart.id,
+              productId: { in: order.items.map((item) => item.productId) },
+            },
+          });
+        }
+      }
 
       return mapOrderRecord(normalizeDatabaseOrderRecord(updatedOrder));
     });
@@ -912,8 +1059,15 @@ export async function getOrderByStripeCheckoutSessionId(stripeCheckoutSessionId:
   }
 }
 
-export async function getAvailableShippingMethods(country: string): Promise<ShippingMethod[]> {
-  return getShippingMethodsForCountry(country);
+export async function getAvailableShippingMethods(
+  country: string,
+  qualifyingSubtotalMinor = 0,
+  items: Pick<CartLineItem, 'productSlug' | 'freeUkStandardShipping'>[] = [],
+): Promise<ShippingMethod[]> {
+  return getShippingMethodsForCountry(country, qualifyingSubtotalMinor).map((method) => ({
+    ...method,
+    amountMinor: calculatePromotionalShippingMinor(method, items, country, qualifyingSubtotalMinor),
+  }));
 }
 
 export async function createHostedCheckoutSession(params: {
@@ -923,8 +1077,14 @@ export async function createHostedCheckoutSession(params: {
   shippingMethodCode: ShippingMethodCode;
   successUrl: string;
   cancelUrl: string;
+  checkoutAttemptId?: string;
 }) {
-  const shippingMethods = await getAvailableShippingMethods(params.shippingAddress.country);
+  const checkoutAttemptId = params.checkoutAttemptId || randomUUID();
+  const shippingMethods = await getAvailableShippingMethods(
+    params.shippingAddress.country,
+    params.cart.subtotalMinor,
+    params.cart.items,
+  );
   const shippingMethod = shippingMethods.find((method) => method.code === params.shippingMethodCode);
 
   if (!shippingMethod) {
@@ -934,10 +1094,20 @@ export async function createHostedCheckoutSession(params: {
   const reservation = await createPendingCheckoutOrder(params.userId, params.cart, {
     shippingAddress: params.shippingAddress,
     shippingMethodCode: shippingMethod.code,
+    checkoutAttemptId,
   });
 
+  let checkoutSession;
   try {
-    const checkoutSession = await createStripeCheckoutSession({
+    const cancellationUrl = new URL(params.cancelUrl);
+    cancellationUrl.pathname = '/checkout/cancel';
+    cancellationUrl.search = '';
+    cancellationUrl.searchParams.set('orderId', reservation.order.id);
+    cancellationUrl.searchParams.set('attemptId', checkoutAttemptId);
+
+    checkoutSession = await createStripeCheckoutSession({
+      orderId: reservation.order.id,
+      checkoutAttemptId,
       orderNumber: reservation.order.orderNumber,
       customerEmail: params.shippingAddress.email,
       lineItems: [
@@ -955,26 +1125,28 @@ export async function createHostedCheckoutSession(params: {
         },
       ],
       successUrl: params.successUrl,
-      cancelUrl: params.cancelUrl,
+      cancelUrl: cancellationUrl.toString(),
+      idempotencyKey: `checkout-session:${reservation.order.id}`,
     });
-
-    if (!checkoutSession.url) {
-      throw new Error('The secure checkout destination is unavailable.');
-    }
-
-    await attachStripeSessionToOrder({
-      orderId: reservation.order.id,
-      stripeCheckoutSessionId: checkoutSession.id,
-      stripeCheckoutUrl: checkoutSession.url,
-      paymentIntentId: checkoutSession.payment_intent,
-    });
-
-    return {
-      orderNumber: reservation.order.orderNumber,
-      checkoutUrl: checkoutSession.url,
-    };
   } catch (error) {
     await releaseCheckoutOrderReservation(reservation.order.id);
     throw error;
   }
+
+  if (!checkoutSession.url) {
+    await releaseCheckoutOrderReservation(reservation.order.id);
+    throw new Error('The secure checkout destination is unavailable.');
+  }
+
+  await attachStripeSessionToOrder({
+    orderId: reservation.order.id,
+    stripeCheckoutSessionId: checkoutSession.id,
+    stripeCheckoutUrl: checkoutSession.url,
+    paymentIntentId: checkoutSession.payment_intent,
+  });
+
+  return {
+    orderNumber: reservation.order.orderNumber,
+    checkoutUrl: checkoutSession.url,
+  };
 }

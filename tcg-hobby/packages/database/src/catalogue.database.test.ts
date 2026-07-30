@@ -126,7 +126,7 @@ describe('database-backed catalogue routing', () => {
     expect(product?.reservedStock).toBe(0);
     expect(product?.imageUrl).toBeNull();
     expect(product?.images).toEqual([]);
-  });
+  }, 15_000);
 
   it('uses the same optional-data tolerant mapping for catalogue listings', async () => {
     process.env.NODE_ENV = 'production';

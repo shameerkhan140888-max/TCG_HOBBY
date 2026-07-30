@@ -81,12 +81,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const categoryPills = [
-  { label: 'Pokémon', href: '/catalogue?q=Pokemon' },
-  { label: 'Magic: The Gathering', href: '/catalogue?q=Magic' },
-  { label: 'Disney Lorcana', href: '/catalogue?q=Lorcana' },
-  { label: 'One Piece Card Game', href: '/catalogue?q=One+Piece' },
-  { label: 'Yu-Gi-Oh!', href: '/catalogue?q=Yu-Gi-Oh' },
-  { label: 'Accessories', href: '/catalogue?category=accessories' },
+  { label: 'Pokémon', href: '/shop/pokemon' },
+  { label: 'Magic: The Gathering', href: '/shop/magic-the-gathering' },
+  { label: 'Disney Lorcana', href: '/shop/disney-lorcana' },
+  { label: 'One Piece Card Game', href: '/shop/one-piece' },
+  { label: 'Yu-Gi-Oh!', href: '/shop/yugioh' },
+  { label: 'Accessories', href: '/shop/accessories' },
 ];
 
 function CategoryPillNav() {
@@ -287,7 +287,7 @@ export default async function HomePage({
       url: siteUrl,
       potentialAction: {
         '@type': 'SearchAction',
-        target: `${siteUrl}/catalogue?q={search_term_string}`,
+        target: `${siteUrl}/shop?search={search_term_string}`,
         'query-input': 'required name=search_term_string',
       },
     },
@@ -318,7 +318,7 @@ export default async function HomePage({
           wishlistIds={wishlistIds}
           authenticated={authenticated}
           placement="HOMEPAGE_FEATURED"
-          actionHref="/catalogue"
+          actionHref="/shop"
           actionLabel="View all products"
         />
 
@@ -338,7 +338,7 @@ export default async function HomePage({
           wishlistIds={wishlistIds}
           authenticated={authenticated}
           placement="HOMEPAGE_NEW_ARRIVALS"
-          actionHref="/catalogue?sort=newest"
+          actionHref="/shop?sort=newest"
           actionLabel="View latest"
         />
 
@@ -350,7 +350,7 @@ export default async function HomePage({
           wishlistIds={wishlistIds}
           authenticated={authenticated}
           placement="HOMEPAGE_FEATURED"
-          actionHref="/catalogue"
+          actionHref="/shop"
           actionLabel="View catalogue"
         />
 
@@ -384,7 +384,7 @@ export default async function HomePage({
           eyebrow="Collector essentials"
           title="Accessories that keep collections display-ready."
           description="Protect cards, organise binders and prepare for launch day with products chosen for collectors and players."
-          href="/catalogue?category=accessories"
+          href="/shop/accessories"
           linkLabel="Shop accessories"
         />
 

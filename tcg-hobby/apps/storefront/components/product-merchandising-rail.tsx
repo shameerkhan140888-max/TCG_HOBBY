@@ -1,8 +1,7 @@
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import type { MerchandisingRecommendation } from '@tcg-hobby/database';
-import { Badge, Button, ProductImagePlaceholder, WishlistButton } from '@tcg-hobby/ui';
+import { Badge, Button, ProductImageMedia, ProductImagePlaceholder, ProductImageStage, WishlistButton } from '@tcg-hobby/ui';
 import { buildStorefrontProductPath, formatMoney } from '@tcg-hobby/utils';
 import { toggleWishlistAction } from '../lib/wishlist';
 import { AddToCartButton } from './cart-actions';
@@ -109,19 +108,20 @@ function RecommendationCard({
       data-merchandising-placement={placement}
     >
       <Link href={href} className="block focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-surface-ink" aria-label={`View ${product.name}`}>
-        <div className="relative aspect-[4/3] bg-[radial-gradient(circle_at_center,rgba(255,122,26,0.12),transparent_56%),#111114] p-5">
+        <ProductImageStage className="aspect-[4/3]">
           {product.imageUrl ? (
-            <Image
+            <ProductImageMedia
               src={product.imageUrl}
               alt={product.imageAlt ?? product.name}
-              fill
-              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 21rem, 82vw"
-              className="object-contain p-5 transition duration-300 group-hover:scale-[1.02]"
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-contain p-5 transition duration-300 group-hover:scale-[1.02]"
+              fallback={<ProductImagePlaceholder label="Product image unavailable" compact />}
             />
           ) : (
             <ProductImagePlaceholder label="Product image unavailable" compact />
           )}
-        </div>
+        </ProductImageStage>
       </Link>
 
       <div className="flex flex-1 flex-col gap-4 p-4">

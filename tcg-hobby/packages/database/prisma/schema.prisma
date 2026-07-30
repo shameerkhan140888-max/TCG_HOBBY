@@ -476,6 +476,7 @@ model Product {
   watchlistItems WatchlistItem[]
   recommendationsFrom ProductRecommendation[] @relation("ProductRecommendationSource")
   recommendationsTo   ProductRecommendation[] @relation("ProductRecommendationTarget")
+  heroPlacements HomepageHeroPlacement[]
   importSourceType String?
   importSourceReference String?
   importedAt     DateTime?
@@ -577,6 +578,7 @@ model ProductImage {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  heroPlacements HomepageHeroPlacement[] @relation("HeroSelectedProductImage")
 
   @@index([productId, deletionState, isPrimary, sortOrder])
   @@index([productId, isPrimary])
@@ -942,6 +944,7 @@ model CartItem {
 model Order {
   id                 String      @id @default(cuid())
   orderNumber        String      @unique
+  checkoutAttemptId  String?     @unique
   userId             String?
   status             OrderStatus @default(DRAFT)
   paymentStatus      PaymentStatus @default(REQUIRES_PAYMENT)
@@ -976,6 +979,7 @@ model Order {
   user               User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   shippingAddress    Address?    @relation("ShippingAddress", fields: [shippingAddressId], references: [id], onDelete: SetNull)
   items              OrderItem[]
+  stripeWebhookEvents StripeWebhookEvent[]
 
   @@index([userId, status])
   @@index([status, createdAt])
@@ -992,6 +996,94 @@ model OrderItem {
   totalMinor     Int
   order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model StripeWebhookEvent {
+  id              String   @id @default(cuid())
+  stripeEventId   String   @unique
+  eventType       String
+  stripeObjectId  String?
+  orderId         String?
+  processingState String   @default("RECEIVED")
+  outcome         String?
+  errorCode       String?
+  processedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  order           Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
+  @@index([processingState, createdAt])
+}
+
+model StorefrontBanner {
+  id        String   @id @default(cuid())
+  label     String?
+  icon      String?
+  message   String
+  ctaLabel  String?
+  ctaHref   String?
+  active    Boolean  @default(false)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, startsAt, endsAt, sortOrder])
+}
+
+model HomepageHeroPlacement {
+  id             String   @id @default(cuid())
+  productId      String   @unique
+  headline       String
+  supportingText String
+  ctaLabel       String
+  ctaHref        String
+  imageUrl       String?
+  imageAlt       String?
+  imageSource    String   @default("PRODUCT")
+  selectedProductImageId String?
+  imageStorageKey String? @unique
+  imageThumbnailUrl String?
+  imageWidth     Int?
+  imageHeight    Int?
+  imageMimeType  String?
+  imageByteSize  Int?
+  imageUploadedAt DateTime?
+  imageUploadedById String?
+  imageDeletionState String @default("ACTIVE")
+  displayMode    String   @default("FULL_BLEED")
+  focalPoint     String   @default("CENTER")
+  overlayStrength String  @default("BALANCED")
+  active         Boolean  @default(false)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  selectedProductImage ProductImage? @relation("HeroSelectedProductImage", fields: [selectedProductImageId], references: [id], onDelete: SetNull)
+
+  @@index([active, startsAt, endsAt, sortOrder])
+  @@index([selectedProductImageId])
+  @@index([imageDeletionState])
+}
+
+model ShopLandingPage {
+  id              String   @id @default(cuid())
+  scopeKey        String   @unique
+  heading         String
+  supportingText  String
+  seoTitle        String?
+  metaDescription String?
+  active          Boolean  @default(true)
+  featuredProductId String?
+  heroImageUrl    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([active, scopeKey])
 }
 
 model StockAdjustment {

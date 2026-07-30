@@ -3,24 +3,25 @@ import type { CartLineItem, CartSummary, CurrencyCode, OrderSummary, ShippingMet
 
 export const MEGA_GRENINJA_PRODUCT_SLUG = 'pokemon-tcg-mega-greninja-ex-premium-collection';
 export const FREE_UK_STANDARD_SHIPPING_PRODUCT_SLUGS = new Set([MEGA_GRENINJA_PRODUCT_SLUG]);
+export const FREE_STANDARD_DELIVERY_THRESHOLD_MINOR = 5000;
 
 export const shippingMethods: ShippingMethod[] = [
   {
     code: 'UK_STANDARD',
-    name: 'UK Standard',
+    name: 'Standard delivery',
     description: 'Reliable tracked delivery for UK customers.',
-    etaLabel: '2-4 business days',
+    etaLabel: 'Estimated 2-4 working days after dispatch',
     currency: 'GBP',
-    amountMinor: 499,
+    amountMinor: 299,
     countryScope: 'GB',
   },
   {
     code: 'UK_EXPRESS',
-    name: 'UK Express',
+    name: 'Express delivery',
     description: 'Faster tracked delivery for urgent UK orders.',
-    etaLabel: 'Next business day',
+    etaLabel: 'Estimated faster delivery on working days; postcode restrictions may apply',
     currency: 'GBP',
-    amountMinor: 899,
+    amountMinor: 499,
     countryScope: 'GB',
   },
   {
@@ -45,18 +46,32 @@ function formatDatePart(date: Date) {
   return `${year}${month}${day}`;
 }
 
-export function getShippingMethodsForCountry(country: string) {
+export function getShippingMethodsForCountry(country: string, qualifyingSubtotalMinor = 0) {
   const normalized = normalizeCountry(country);
 
   if (normalized === 'GB' || normalized === 'UK') {
-    return shippingMethods;
+    return shippingMethods.map((method) => {
+      if (qualifyingSubtotalMinor < FREE_STANDARD_DELIVERY_THRESHOLD_MINOR) {
+        return method;
+      }
+
+      if (method.code === 'UK_STANDARD') {
+        return { ...method, amountMinor: 0 };
+      }
+
+      if (method.code === 'UK_EXPRESS') {
+        return { ...method, amountMinor: 299 };
+      }
+
+      return method;
+    });
   }
 
   return shippingMethods.filter((method) => method.countryScope === 'WORLDWIDE');
 }
 
-export function getShippingMethodByCode(code: ShippingMethodCode, country: string) {
-  return getShippingMethodsForCountry(country).find((method) => method.code === code) ?? null;
+export function getShippingMethodByCode(code: ShippingMethodCode, country: string, qualifyingSubtotalMinor = 0) {
+  return getShippingMethodsForCountry(country, qualifyingSubtotalMinor).find((method) => method.code === code) ?? null;
 }
 
 export function calculateLineTotal(unitPriceMinor: number, quantity: number) {
@@ -93,6 +108,7 @@ export function calculatePromotionalShippingMinor(
   shippingMethod: Pick<ShippingMethod, 'code' | 'amountMinor'>,
   items: Pick<CartLineItem, 'productSlug' | 'freeUkStandardShipping'>[],
   country = 'GB',
+  qualifyingSubtotalMinor = 0,
 ): number {
   const normalizedCountry = normalizeCountry(country);
   const allItemsEligible = items.length > 0 && items.every((item) => item.freeUkStandardShipping || hasFreeUkStandardShipping(item.productSlug));
@@ -101,7 +117,21 @@ export function calculatePromotionalShippingMinor(
     return 0;
   }
 
+  if ((normalizedCountry === 'GB' || normalizedCountry === 'UK') && qualifyingSubtotalMinor >= FREE_STANDARD_DELIVERY_THRESHOLD_MINOR) {
+    if (shippingMethod.code === 'UK_STANDARD') return 0;
+    if (shippingMethod.code === 'UK_EXPRESS') return 299;
+  }
+
   return shippingMethod.amountMinor;
+}
+
+export function getFreeStandardDeliveryProgress(qualifyingSubtotalMinor: number) {
+  const remainingMinor = Math.max(FREE_STANDARD_DELIVERY_THRESHOLD_MINOR - qualifyingSubtotalMinor, 0);
+  return {
+    qualified: remainingMinor === 0,
+    remainingMinor,
+    thresholdMinor: FREE_STANDARD_DELIVERY_THRESHOLD_MINOR,
+  };
 }
 
 export function validateQuantityAgainstPurchaseLimit(quantity: number, limit: number | null | undefined) {

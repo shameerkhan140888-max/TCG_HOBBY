@@ -1,4 +1,5 @@
 import { Button, Container, EmptyState, Section } from '@tcg-hobby/ui';
+import { randomUUID } from 'node:crypto';
 import { calculateVatEstimateMinor } from '@tcg-hobby/database';
 import { CheckoutForm } from '../../components/checkout-form';
 import { CommerceProgress } from '../../components/commerce-progress';
@@ -40,6 +41,7 @@ export default async function CheckoutPage() {
               cartSubtotalMinor={data.cart.subtotalMinor}
               cartItems={data.cart.items}
               taxEstimateMinor={calculateVatEstimateMinor(data.cart.subtotalMinor)}
+              checkoutAttemptId={randomUUID()}
             />
           ) : (
             <EmptyState

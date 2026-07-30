@@ -58,7 +58,7 @@ function SubmitButton({
 }
 
 export function LoginForm({
-  callbackUrl = '/account',
+  callbackUrl = '/',
 }: {
   callbackUrl?: string;
 }) {
@@ -128,7 +128,7 @@ export function LoginForm({
 }
 
 export function RegisterForm({
-  callbackUrl = '/account',
+  callbackUrl = '/',
 }: {
   callbackUrl?: string;
 }) {

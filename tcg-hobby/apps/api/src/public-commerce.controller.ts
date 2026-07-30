@@ -36,7 +36,9 @@ export class PublicCommerceController {
     return this.commerce.clearBasket(authorization);
   }
 
-  @Get('shipping-methods') shipping(@Query('country') country = 'GB') { return this.commerce.shipping(country); }
+  @Get('shipping-methods') shipping(@Query('country') country = 'GB', @Query('subtotalMinor') subtotalMinor = '0') {
+    return this.commerce.shipping(country, Number(subtotalMinor) || 0);
+  }
   @Post('checkout/session') checkout(@Headers('authorization') authorization: string | undefined, @Body() body: PublicCheckoutRequest) {
     return this.commerce.checkout(authorization, body);
   }

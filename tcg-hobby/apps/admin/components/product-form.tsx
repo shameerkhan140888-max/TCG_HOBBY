@@ -1,8 +1,8 @@
 'use client';
 
-import { useActionState, useEffect, useMemo, useRef, useState, type ChangeEvent, type TextareaHTMLAttributes } from 'react';
+import { useActionState, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode, type TextareaHTMLAttributes } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Button, FormField, FormSection, Input } from '@tcg-hobby/ui';
+import { Button, FormField, Input } from '@tcg-hobby/ui';
 import {
   emptyProductFormValues,
   type ProductFormState,
@@ -46,6 +46,61 @@ const onboardingSections = [
   { id: 'product-seo', label: 'SEO' },
   { id: 'product-visibility', label: 'Visibility' },
 ] as const;
+
+type ProductSectionId = (typeof onboardingSections)[number]['id'];
+
+const fieldsBySection: Record<ProductSectionId, string[]> = {
+  'product-identity': ['name', 'slug', 'sku', 'barcode', 'gameId', 'brandId', 'productTypeId', 'categoryId', 'languageId', 'setId'],
+  'product-media': ['description', 'longDescription', 'verifiedContents', 'primaryImageUrl', 'primaryImageAlt', 'imageLabel', 'galleryImagesText'],
+  'product-pricing': ['priceMinor', 'rrpMinor', 'salePriceMinor', 'saleStartsAt', 'saleEndsAt', 'vatRate', 'costMinor', 'landedCostMinor'],
+  'product-supplier': ['supplierId', 'supplierSku', 'supplierProductName'],
+  'product-inventory': ['stockOnHand', 'reorderPoint', 'targetStockLevel', 'minimumOrderQuantity', 'purchaseLimitQuantity'],
+  'product-seo': ['seoTitle', 'seoDescription'],
+  'product-visibility': ['featured', 'published', 'homepagePriority', 'hideWhenOutOfStock'],
+};
+
+function ProductSection({
+  id,
+  title,
+  description,
+  open,
+  onToggle,
+  children,
+}: {
+  id: ProductSectionId;
+  title: string;
+  description: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  const panelId = `${id}-panel`;
+  const triggerId = `${id}-trigger`;
+
+  return (
+    <section id={id} className="scroll-mt-24 rounded-xl bg-surface-base shadow-[0_18px_60px_rgba(0,0,0,0.2)]">
+      <button
+        id={triggerId}
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={onToggle}
+        className="flex w-full items-start justify-between gap-4 px-5 py-4 text-left outline-none transition-colors hover:bg-white/[0.025] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/50"
+      >
+        <span>
+          <span className="block text-base font-semibold text-neutral-50">{title}</span>
+          <span className="mt-1 block text-sm leading-5 text-neutral-400">{description}</span>
+        </span>
+        <span aria-hidden="true" className="mt-0.5 text-xl leading-none text-accent">
+          {open ? '−' : '+'}
+        </span>
+      </button>
+      <div id={panelId} role="region" aria-labelledby={triggerId} className={open ? 'px-5 pb-5' : 'hidden'}>
+        {children}
+      </div>
+    </section>
+  );
+}
 
 function parseMinor(value: string) {
   const parsed = Number.parseInt(value, 10);
@@ -125,6 +180,9 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
   const filteredSets = sets.filter((set) => !set.gameId || !selectedGameId || set.gameId === selectedGameId || set.id === selectedSetId);
   const errorEntries = useMemo(() => Object.entries(formState.fieldErrors), [formState.fieldErrors]);
   const hasPrimaryImage = Boolean(formState.values.primaryImageUrl);
+  const [openSections, setOpenSections] = useState<Set<ProductSectionId>>(
+    () => new Set<ProductSectionId>(['product-identity', 'product-pricing']),
+  );
 
   useEffect(() => {
     setSelectedGameId(formState.values.gameId);
@@ -135,6 +193,17 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
     if (errorEntries.length === 0 && !formState.formError) {
       return;
     }
+
+    setOpenSections((current) => {
+      const next = new Set(current);
+      for (const [fieldName] of errorEntries) {
+        const section = onboardingSections.find(({ id }) => fieldsBySection[id].includes(fieldName));
+        if (section) {
+          next.add(section.id);
+        }
+      }
+      return next;
+    });
 
     errorSummaryRef.current?.focus();
     const firstFieldName = errorEntries[0]?.[0];
@@ -157,9 +226,22 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
     }
   }
 
+  function toggleSection(sectionId: ProductSectionId) {
+    setOpenSections((current) => {
+      const next = new Set(current);
+      if (next.has(sectionId)) {
+        next.delete(sectionId);
+      } else {
+        next.add(sectionId);
+      }
+      return next;
+    });
+  }
+
   return (
     <form key={JSON.stringify(formState.values)} action={formAction} className="space-y-6" noValidate>
       <input type="hidden" name="productId" value={formState.values.productId} />
+      <input type="hidden" name="heroFeatured" value={formState.values.heroFeatured ? 'true' : 'false'} />
       {errorEntries.length || formState.formError ? (
         <div
           ref={errorSummaryRef}
@@ -184,17 +266,28 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
       ) : null}
 
       <div className="grid gap-4 rounded-xl bg-surface-base p-4 shadow-[0_18px_60px_rgba(0,0,0,0.25)] lg:grid-cols-[1fr_280px]">
-        <nav aria-label="Product onboarding sections" className="flex flex-wrap gap-2">
-          {onboardingSections.map((section) => (
-            <a
-              key={section.id}
-              href={`#${section.id}`}
-              className="rounded-full bg-surface-ink px-3 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-300 transition-colors hover:bg-accent/15 hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent/40"
-            >
-              {section.label}
-            </a>
-          ))}
-        </nav>
+        <div>
+          <nav aria-label="Product onboarding sections" className="flex flex-wrap gap-2">
+            {onboardingSections.map((section) => (
+              <a
+                key={section.id}
+                href={`#${section.id}`}
+                onClick={() => setOpenSections((current) => new Set(current).add(section.id))}
+                className="rounded-full bg-surface-ink px-3 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-300 transition-colors hover:bg-accent/15 hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent/40"
+              >
+                {section.label}
+              </a>
+            ))}
+          </nav>
+          <div className="mt-3 flex gap-3 text-xs">
+            <button type="button" className="font-semibold text-accent hover:text-accent-soft focus:outline-none focus:ring-2 focus:ring-accent/40" onClick={() => setOpenSections(new Set(onboardingSections.map(({ id }) => id)))}>
+              Expand all
+            </button>
+            <button type="button" className="font-semibold text-neutral-400 hover:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-accent/40" onClick={() => setOpenSections(new Set())}>
+              Collapse all
+            </button>
+          </div>
+        </div>
         <aside className="rounded-lg bg-surface-ink p-3 text-xs leading-5 text-neutral-400" aria-label="Product review summary">
           <p className="font-semibold text-neutral-50">Review before saving</p>
           <p>{formState.values.name || 'Unnamed product'}</p>
@@ -206,8 +299,7 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
         </aside>
       </div>
 
-      <section id="product-identity" className="scroll-mt-24">
-        <FormSection title="Product identity" description="Identity, category, classification, and publish-safe URLs.">
+      <ProductSection id="product-identity" title="Product identity" description="Identity, category, classification, and publish-safe URLs." open={openSections.has('product-identity')} onToggle={() => toggleSection('product-identity')}>
         <div className="grid gap-4 lg:grid-cols-2">
           <FormField label="Name" htmlFor="name" error={formState.fieldErrors.name} required>
             <Input id="name" name="name" defaultValue={formState.values.name} />
@@ -305,11 +397,9 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
             </select>
           </FormField>
         </div>
-        </FormSection>
-      </section>
+      </ProductSection>
 
-      <section id="product-media" className="scroll-mt-24">
-        <FormSection title="Copy and media" description="Product copy and URL-managed image metadata. Binary upload is handled by the product media/import workflow.">
+      <ProductSection id="product-media" title="Copy and media" description="Product copy and URL-managed image metadata." open={openSections.has('product-media')} onToggle={() => toggleSection('product-media')}>
         <div className="grid gap-4">
           <FormField label="Short description" htmlFor="description" error={formState.fieldErrors.description} required>
             <Textarea id="description" name="description" defaultValue={formState.values.description} />
@@ -368,11 +458,9 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
             />
           </FormField>
         </div>
-        </FormSection>
-      </section>
+      </ProductSection>
 
-      <section id="product-pricing" className="scroll-mt-24">
-        <FormSection title="Pricing" description="VAT-inclusive retail pricing, supplier cost, sale windows, and commercial margin preview.">
+      <ProductSection id="product-pricing" title="Pricing" description="VAT-inclusive retail pricing, supplier cost, sale windows, and commercial margin." open={openSections.has('product-pricing')} onToggle={() => toggleSection('product-pricing')}>
         <div className="grid gap-4 lg:grid-cols-3">
           <FormField label="Retail price (pence)" htmlFor="priceMinor" error={formState.fieldErrors.priceMinor} required>
             <Input id="priceMinor" name="priceMinor" type="number" min={0} defaultValue={formState.values.priceMinor} />
@@ -408,11 +496,9 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
             {lossWarning ? <p className="mt-2 text-amber-200">Warning: current selling price is below landed cost.</p> : null}
           </div>
         </div>
-        </FormSection>
-      </section>
+      </ProductSection>
 
-      <section id="product-supplier" className="scroll-mt-24">
-        <FormSection title="Supplier information" description="Supplier-specific metadata. Supplier SKUs are separate from the public product SKU.">
+      <ProductSection id="product-supplier" title="Supplier information" description="Supplier-specific catalogue and purchasing metadata." open={openSections.has('product-supplier')} onToggle={() => toggleSection('product-supplier')}>
         <div className="grid gap-4 lg:grid-cols-3">
           <FormField label="Supplier" htmlFor="supplierId" error={formState.fieldErrors.supplierId} required>
             <select id="supplierId" name="supplierId" defaultValue={formState.values.supplierId} className="h-10 w-full rounded-md border border-surface-line bg-surface-ink px-3 text-sm text-neutral-50 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
@@ -440,11 +526,9 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
             <Input id="supplierLeadTimeDays" name="supplierLeadTimeDays" type="number" min={0} defaultValue={formState.values.supplierLeadTimeDays} />
           </FormField>
         </div>
-        </FormSection>
-      </section>
+      </ProductSection>
 
-      <section id="product-inventory" className="scroll-mt-24">
-        <FormSection title="Inventory" description="Physical stock is editable. Reserved and available stock are calculated operational values.">
+      <ProductSection id="product-inventory" title="Inventory" description="Physical stock and operational replenishment settings." open={openSections.has('product-inventory')} onToggle={() => toggleSection('product-inventory')}>
         <div className="grid gap-4 lg:grid-cols-3">
           <FormField label="Current stock" htmlFor="stockOnHand" error={formState.fieldErrors.stockOnHand} required>
             <Input id="stockOnHand" name="stockOnHand" type="number" min={0} defaultValue={formState.values.stockOnHand} />
@@ -478,11 +562,9 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
             />
           </FormField>
         </div>
-        </FormSection>
-      </section>
+      </ProductSection>
 
-      <section id="product-seo" className="scroll-mt-24">
-        <FormSection title="SEO" description="Generated defaults are used when these fields are left blank.">
+      <ProductSection id="product-seo" title="SEO" description="Optional search and social metadata overrides." open={openSections.has('product-seo')} onToggle={() => toggleSection('product-seo')}>
         <div className="grid gap-4 lg:grid-cols-2">
           <FormField label="SEO title" htmlFor="seoTitle" error={formState.fieldErrors.seoTitle}>
             <Input id="seoTitle" name="seoTitle" defaultValue={formState.values.seoTitle} />
@@ -501,11 +583,9 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
             </span>
           </label>
         </div>
-        </FormSection>
-      </section>
+      </ProductSection>
 
-      <section id="product-visibility" className="scroll-mt-24">
-        <FormSection title="Visibility" description="Control storefront visibility and merchandising state.">
+      <ProductSection id="product-visibility" title="Visibility" description="Storefront publication and merchandising controls." open={openSections.has('product-visibility')} onToggle={() => toggleSection('product-visibility')}>
         <div className="grid gap-4 md:grid-cols-3">
           <label className="flex items-center gap-3 text-sm text-neutral-300">
             <input name="featured" type="checkbox" value="true" defaultChecked={formState.values.featured} />
@@ -515,6 +595,9 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
             <input name="published" type="checkbox" value="true" defaultChecked={formState.values.published} />
             Published in storefront
           </label>
+          <FormField label="Featured priority" htmlFor="homepagePriority" error={formState.fieldErrors.homepagePriority} hint="Lower values appear first in Featured products. Manage hero placements under Storefront.">
+            <Input id="homepagePriority" name="homepagePriority" type="number" min="0" defaultValue={formState.values.homepagePriority} placeholder="Lower appears first" />
+          </FormField>
           <label className="flex items-start gap-3 text-sm text-neutral-300">
             <input name="hideWhenOutOfStock" type="checkbox" value="true" defaultChecked={formState.values.hideWhenOutOfStock} className="mt-1" />
             <span>
@@ -525,8 +608,7 @@ export function ProductForm({ state, categories, suppliers, games, brands, produ
             </span>
           </label>
         </div>
-        </FormSection>
-      </section>
+      </ProductSection>
 
       <div className="flex flex-wrap items-center gap-3">
         <SubmitButton label={submitLabel} />
