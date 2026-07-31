@@ -1,0 +1,29 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "tcg-hobby-storefront-feasibility",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-07-31",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "tcg-hobby-storefront-feasibility"
+    }
+  ],
+  "vars": {
+    "NEXTJS_ENV": "production",
+    "TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES": "1",
+    "TCG_HOBBY_CATALOGUE_DATA_SOURCE": "database",
+    "NEXT_PUBLIC_SITE_URL": "https://www.tcg-hobby.co.uk",
+    "PUBLIC_STOREFRONT_URL": "https://www.tcg-hobby.co.uk",
+    "TCG_HOBBY_EMAIL_ASSET_BASE_URL": "https://www.tcg-hobby.co.uk",
+    "R2_PUBLIC_BASE_URL": "https://www.tcg-hobby.co.uk"
+  }
+}

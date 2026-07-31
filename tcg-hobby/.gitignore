@@ -1,6 +1,9 @@
 node_modules
 .turbo
 .next
+.open-next
+.open-next-dry-run
+.wrangler
 dist
 build
 coverage
