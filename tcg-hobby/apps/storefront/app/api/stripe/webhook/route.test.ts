@@ -4,9 +4,13 @@ const mocks = vi.hoisted(() => ({
   constructStripeWebhookEvent: vi.fn(),
   processStripeWebhookEvent: vi.fn(),
   requireStripeWebhookSecret: vi.fn(),
+  sendPaidOrderConfirmationEmail: vi.fn(),
 }));
 
 vi.mock('@tcg-hobby/database', () => mocks);
+vi.mock('../../../../lib/order-email', () => ({
+  sendPaidOrderConfirmationEmail: mocks.sendPaidOrderConfirmationEmail,
+}));
 
 import { POST } from './route';
 
@@ -35,6 +39,7 @@ describe('Stripe webhook route', () => {
       outcome: 'processed',
       orderId: 'order-1',
     });
+    mocks.sendPaidOrderConfirmationEmail.mockResolvedValue({ outcome: 'sent' });
   });
 
   it('fails safely when the webhook secret is missing', async () => {
@@ -73,6 +78,16 @@ describe('Stripe webhook route', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ received: true });
     expect(mocks.processStripeWebhookEvent).toHaveBeenCalledTimes(1);
+    expect(mocks.sendPaidOrderConfirmationEmail).toHaveBeenCalledWith('order-1');
+  });
+
+  it('does not fail a paid webhook when confirmation email delivery is unavailable', async () => {
+    mocks.sendPaidOrderConfirmationEmail.mockRejectedValue(new Error('database unavailable'));
+
+    const response = await POST(request());
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ received: true });
   });
 
   it('returns a retryable error without exposing raw processing details', async () => {

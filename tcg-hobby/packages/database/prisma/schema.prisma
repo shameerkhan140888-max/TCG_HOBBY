@@ -980,6 +980,7 @@ model Order {
   shippingAddress    Address?    @relation("ShippingAddress", fields: [shippingAddressId], references: [id], onDelete: SetNull)
   items              OrderItem[]
   stripeWebhookEvents StripeWebhookEvent[]
+  transactionalEmailDeliveries TransactionalEmailDelivery[]
 
   @@index([userId, status])
   @@index([status, createdAt])
@@ -994,8 +995,13 @@ model OrderItem {
   quantity       Int
   unitPriceMinor Int
   totalMinor     Int
+  imageUrl       String?
+  imageAlt       String?
+  imageStorageKey String?
   order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([imageStorageKey])
 }
 
 model StripeWebhookEvent {
@@ -1014,6 +1020,23 @@ model StripeWebhookEvent {
 
   @@index([orderId, createdAt])
   @@index([processingState, createdAt])
+}
+
+model TransactionalEmailDelivery {
+  id                String   @id @default(cuid())
+  orderId           String
+  purpose           String
+  status            String   @default("PENDING")
+  attempts          Int      @default(0)
+  providerMessageId String?
+  lastErrorCode     String?
+  sentAt            DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, purpose])
+  @@index([status, updatedAt])
 }
 
 model StorefrontBanner {

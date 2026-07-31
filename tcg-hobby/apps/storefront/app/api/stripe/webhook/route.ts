@@ -3,6 +3,7 @@ import {
   processStripeWebhookEvent,
   requireStripeWebhookSecret,
 } from '@tcg-hobby/database';
+import { sendPaidOrderConfirmationEmail } from '../../../../lib/order-email';
 
 export const runtime = 'nodejs';
 
@@ -44,6 +45,19 @@ export async function POST(request: Request) {
       outcome: result.outcome,
       orderMatched: Boolean(result.orderId),
     });
+    if (
+      result.orderId
+      && (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded')
+    ) {
+      try {
+        await sendPaidOrderConfirmationEmail(result.orderId);
+      } catch {
+        console.error('order_confirmation_email_delivery_unavailable', {
+          orderId: result.orderId,
+          eventId: event.id,
+        });
+      }
+    }
     return Response.json({ received: true });
   } catch {
     console.error('stripe_webhook_processing_failed', {

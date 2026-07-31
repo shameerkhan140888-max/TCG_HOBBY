@@ -193,6 +193,7 @@ export {
   getCustomerOrderByNumber,
   getCustomerOrders,
   getLatestLocalCheckoutOrder,
+  getOrderById,
   getOrderByStripeCheckoutSessionId,
   releaseCheckoutOrderReservation,
   releaseExpiredCheckoutOrderReservations,
@@ -216,6 +217,13 @@ export type {
   OrderShippingAddress,
   OrderWithItems,
 } from './orders';
+export {
+  ORDER_CONFIRMATION_EMAIL_PURPOSE,
+  claimOrderConfirmationEmail,
+  markTransactionalEmailFailed,
+  markTransactionalEmailSent,
+} from './transactional-email';
+export type { TransactionalEmailClaim } from './transactional-email';
 export {
   getCatalogueCategories,
   getCatalogueHomeData,
@@ -388,6 +396,7 @@ export type { WishlistItem } from './wishlist';
 export {
   completeProductImageDeletion,
   createManagedProductImage,
+  isProductImageReferencedByOrder,
   listAdminProductImages,
   markProductImageForDeletion,
   recordProductImageCleanupFailure,

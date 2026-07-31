@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Button, Card, CardContent, Container, Section } from '@tcg-hobby/ui';
+import { Button, Card, CardContent, Container, ProductImagePlaceholder, ProductImageStage, Section } from '@tcg-hobby/ui';
 import { AdminTable, PageHeader, StatusBadge } from '@tcg-hobby/ui';
 import { getAdminOrderByNumber } from '@tcg-hobby/database';
 
@@ -65,10 +65,19 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
           </Card>
         </div>
 
-        <AdminTable columns={['Item', 'Quantity', 'Unit', 'Total']}>
+        <AdminTable columns={['Image', 'Item', 'Quantity', 'Unit', 'Total']}>
           <tbody className="divide-y divide-surface-line bg-surface-base">
             {order.items.map((item) => (
               <tr key={item.id}>
+                <td className="px-4 py-4">
+                  <ProductImageStage className="flex h-16 w-16 items-center justify-center p-2">
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} className="h-full w-full object-contain" />
+                    ) : (
+                      <ProductImagePlaceholder label="Product image unavailable" compact />
+                    )}
+                  </ProductImageStage>
+                </td>
                 <td className="px-4 py-4 text-neutral-50">{item.productName}</td>
                 <td className="px-4 py-4 text-neutral-300">{item.quantity}</td>
                 <td className="px-4 py-4 text-neutral-300">{formatMoney(item.unitPriceMinor)}</td>

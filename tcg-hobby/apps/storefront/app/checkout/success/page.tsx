@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Button, Container, EmptyState, OrderStatusBadge, OrderSummary, PaymentStatusBadge, ProductImageStage, Section } from '@tcg-hobby/ui';
+import { Button, Container, EmptyState, OrderStatusBadge, OrderSummary, PaymentStatusBadge, ProductImagePlaceholder, ProductImageStage, Section } from '@tcg-hobby/ui';
 import { CommerceProgress } from '../../../components/commerce-progress';
 import { GuestCartClearer } from '../../../components/guest-cart-clearer';
 import { PaymentStatusRefresher } from '../../../components/payment-status-refresher';
@@ -74,7 +74,7 @@ export default async function CheckoutSuccessPage({
                           {item.imageUrl ? (
                             <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} className="h-full w-full object-contain" />
                           ) : (
-                            <span className="text-center text-xs text-neutral-600">Image unavailable</span>
+                            <ProductImagePlaceholder label="Product image unavailable" compact />
                           )}
                         </ProductImageStage>
                         <div className="min-w-0 flex-1">

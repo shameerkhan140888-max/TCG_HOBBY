@@ -31,6 +31,9 @@ function createDbMock() {
     orderItem: {
       createMany: vi.fn(),
     },
+    product: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
   } as any;
 
   db.$transaction = vi.fn(async (callback: (tx: any) => Promise<unknown>) => callback(db));
@@ -188,6 +191,19 @@ describe('order repository', () => {
     mockDb.inventoryItem.updateMany.mockResolvedValue({ count: 1 });
     mockDb.orderItem.createMany.mockResolvedValue({ count: 1 });
     mockDb.cartItem.deleteMany.mockResolvedValue({ count: 1 });
+    mockDb.product.findMany.mockResolvedValue([{
+      id: 'prod-1',
+      images: [{
+        id: 'image-1',
+        url: 'https://media.example.test/alpha.webp',
+        thumbnailUrl: 'https://media.example.test/alpha-card.webp',
+        storageKey: 'products/alpha.webp',
+        altText: 'Alpha Card packaging',
+        isPrimary: true,
+        sortOrder: 0,
+        deletionState: 'ACTIVE',
+      }],
+    }]);
 
     const result = await createPendingCheckoutOrder(
       'user-1',
@@ -222,6 +238,13 @@ describe('order repository', () => {
       }),
     );
     expect(mockDb.orderItem.createMany).toHaveBeenCalled();
+    expect(mockDb.orderItem.createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({
+        imageUrl: 'https://media.example.test/alpha-card.webp',
+        imageAlt: 'Alpha Card packaging',
+        imageStorageKey: 'products/alpha.webp',
+      })],
+    });
   });
 
   it('creates a guest order without linking a user account', async () => {
@@ -388,6 +411,10 @@ describe('order repository', () => {
           quantity: 2,
           unitPriceMinor: 1250,
           totalMinor: 2500,
+          imageUrl: null,
+          imageAlt: null,
+          imageStorageKey: null,
+          product: { images: [] },
         },
       ],
       shippingAddress: {

@@ -1,6 +1,6 @@
 'use server';
 import { revalidatePath } from 'next/cache';
-import { completeProductImageDeletion, markProductImageForDeletion, recordProductImageCleanupFailure, reorderProductImages, setPrimaryProductImage, updateProductImageAltText } from '@tcg-hobby/database';
+import { completeProductImageDeletion, isProductImageReferencedByOrder, markProductImageForDeletion, recordProductImageCleanupFailure, reorderProductImages, setPrimaryProductImage, updateProductImageAltText } from '@tcg-hobby/database';
 import { requireAdminSession } from './auth.server';
 import { deleteProductImageObjects, thumbnailKeyFor } from './product-storage.server';
 
@@ -19,7 +19,8 @@ export async function deleteProductImageAction(productId: string, imageId: strin
   await requireAdminSession(`/admin/products/${productId}`);
   try {
     const image = await markProductImageForDeletion(productId, imageId);
-    if (image.storageKey) {
+    const retainedForOrderHistory = await isProductImageReferencedByOrder(image.id);
+    if (image.storageKey && !retainedForOrderHistory) {
       const keys = [image.storageKey, thumbnailKeyFor(image.storageKey)];
       try { await deleteProductImageObjects(keys); }
       catch (error) { await recordProductImageCleanupFailure(productId, image.id, image.storageKey, error instanceof Error ? error.message : 'Storage deletion failed'); return { ok: false, message: 'The image is hidden. Storage cleanup has been queued for retry.' }; }

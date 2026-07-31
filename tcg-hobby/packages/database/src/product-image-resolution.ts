@@ -5,6 +5,7 @@ export type ProductImageSource = {
   id: string;
   url: string;
   thumbnailUrl?: string | null;
+  storageKey?: string | null;
   altText: string;
   isPrimary: boolean;
   sortOrder: number;
@@ -49,4 +50,25 @@ export function selectPrimaryProductImage<T extends ProductImageSource>(images: 
 export function resolveProductCardImage<T extends ProductImageSource>(images: readonly T[]): { image: T | null; url: string | null } {
   const image = selectPrimaryProductImage(images);
   return { image, url: resolveProductImageUrl(image?.thumbnailUrl) ?? resolveProductImageUrl(image?.url) };
+}
+
+export function resolveOrderLineImage<T extends ProductImageSource>(
+  snapshot: { imageUrl?: string | null; imageAlt?: string | null; imageStorageKey?: string | null },
+  productImages: readonly T[],
+): { url: string | null; altText: string | null; storageKey: string | null } {
+  const snapshotUrl = resolveProductImageUrl(snapshot.imageUrl);
+  if (snapshotUrl) {
+    return {
+      url: snapshotUrl,
+      altText: snapshot.imageAlt?.trim() || null,
+      storageKey: snapshot.imageStorageKey?.trim() || null,
+    };
+  }
+
+  const current = resolveProductCardImage(productImages);
+  return {
+    url: current.url,
+    altText: snapshot.imageAlt?.trim() || current.image?.altText || null,
+    storageKey: snapshot.imageStorageKey?.trim() || current.image?.storageKey || null,
+  };
 }
