@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { orderActiveProductImages, resolveProductCardImage, resolveProductImageUrl, selectPrimaryProductImage } from './product-image-resolution';
+import {
+  orderActiveProductImages,
+  resolveOrderLineImage,
+  resolveProductCardImage,
+  resolveProductImageUrl,
+  selectPrimaryProductImage,
+} from './product-image-resolution';
 
 const images = [
   { id: 'b', url: 'https://cdn.example.test/gallery.webp', thumbnailUrl: null, altText: 'Gallery', isPrimary: false, sortOrder: 1, deletionState: 'ACTIVE' },
@@ -26,5 +32,30 @@ describe('canonical product image resolution', () => {
   it('uses a stable id tie-breaker when primary state and sort order are equal', () => {
     const tied = images.slice(0, 2).map((image) => ({ ...image, isPrimary: false, sortOrder: 1 }));
     expect(orderActiveProductImages(tied).map((image) => image.id)).toEqual(['a', 'b']);
+  });
+
+  it('keeps an order image snapshot when the current primary image changes', () => {
+    expect(resolveOrderLineImage({
+      imageUrl: 'https://orders.example.test/original.webp',
+      imageAlt: 'Original product packaging',
+      imageStorageKey: 'orders/original.webp',
+    }, images)).toEqual({
+      url: 'https://orders.example.test/original.webp',
+      altText: 'Original product packaging',
+      storageKey: 'orders/original.webp',
+    });
+  });
+
+  it('falls back to the canonical current image for historic orders without a snapshot', () => {
+    expect(resolveOrderLineImage({}, images)).toEqual({
+      url: 'https://cdn.example.test/primary-card.webp',
+      altText: 'Primary',
+      storageKey: null,
+    });
+    expect(resolveOrderLineImage({}, [])).toEqual({
+      url: null,
+      altText: null,
+      storageKey: null,
+    });
   });
 });

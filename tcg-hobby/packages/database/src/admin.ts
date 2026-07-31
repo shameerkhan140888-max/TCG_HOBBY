@@ -8,6 +8,7 @@ import { derivePublicStockState } from './product-import';
 import { getRelatedProducts, isMerchandisingProductEligible } from './merchandising';
 import { refreshProductPricing } from './pricing';
 import { resolveProductMasterDataInput } from './catalogue-master-data';
+import { resolveOrderLineImage } from './product-image-resolution';
 import {
   seedCategories,
   seedInventory,
@@ -93,7 +94,15 @@ const adminOrderListInclude = {
 type OrderListRow = Prisma.OrderGetPayload<{ include: typeof adminOrderListInclude }>;
 
 const adminOrderDetailInclude = {
-  items: { select: { id: true, productName: true, productSlug: true, quantity: true, unitPriceMinor: true, totalMinor: true } },
+  items: {
+    include: {
+      product: {
+        select: {
+          images: true,
+        },
+      },
+    },
+  },
   shippingAddress: true,
   user: { select: { name: true, email: true } },
 } as const satisfies Prisma.OrderInclude;
@@ -113,6 +122,8 @@ type OrderItemRow = {
   quantity: number;
   unitPriceMinor: number;
   totalMinor: number;
+  imageUrl: string | null;
+  imageAlt: string | null;
 };
 
 type AddressRow = {
@@ -2036,6 +2047,18 @@ export async function getAdminOrderByNumber(orderNumber: string, db = prisma): P
     shippingMinor: order.shippingMinor,
     taxMinor: order.taxMinor,
     shippingAddress: order.shippingAddress,
-    items: order.items,
+    items: order.items.map((item) => {
+      const image = resolveOrderLineImage(item, item.product.images);
+      return {
+        id: item.id,
+        productName: item.productName,
+        productSlug: item.productSlug,
+        quantity: item.quantity,
+        unitPriceMinor: item.unitPriceMinor,
+        totalMinor: item.totalMinor,
+        imageUrl: image.url,
+        imageAlt: image.altText ?? item.productName,
+      };
+    }),
   };
 }

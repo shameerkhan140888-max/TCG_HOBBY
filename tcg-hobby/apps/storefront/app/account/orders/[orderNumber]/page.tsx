@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Button, Card, CardContent, Container, OrderStatusBadge, OrderSummary, PaymentStatusBadge, ProductImageStage, Section } from '@tcg-hobby/ui';
+import { Button, Card, CardContent, Container, OrderStatusBadge, OrderSummary, PaymentStatusBadge, ProductImagePlaceholder, ProductImageStage, Section } from '@tcg-hobby/ui';
 import { getCurrentCustomerOrder } from '../../../../lib/orders';
 
 type ParamsValue = { orderNumber: string };
@@ -39,7 +39,7 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
                       {item.imageUrl ? (
                         <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} className="h-full w-full object-contain" />
                       ) : (
-                        <span className="text-center text-xs text-neutral-600">Image unavailable</span>
+                        <ProductImagePlaceholder label="Product image unavailable" compact />
                       )}
                     </ProductImageStage>
                     <div>

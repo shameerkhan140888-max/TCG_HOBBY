@@ -91,6 +91,25 @@ export async function completeProductImageDeletion(imageId: string, db = prisma)
   await db.productImage.deleteMany({ where: { id: imageId, deletionState: 'PENDING_DELETE' } });
 }
 
+export async function isProductImageReferencedByOrder(imageId: string, db = prisma) {
+  const image = await db.productImage.findUnique({
+    where: { id: imageId },
+    select: { url: true, thumbnailUrl: true, storageKey: true },
+  });
+  if (!image) return false;
+
+  const urls = [image.url, image.thumbnailUrl].filter((value): value is string => Boolean(value));
+  const references = await db.orderItem.count({
+    where: {
+      OR: [
+        ...(image.storageKey ? [{ imageStorageKey: image.storageKey }] : []),
+        ...(urls.length ? [{ imageUrl: { in: urls } }] : []),
+      ],
+    },
+  });
+  return references > 0;
+}
+
 export async function recordProductImageCleanupFailure(productId: string, imageId: string, objectKey: string, message: string, db = prisma) {
   await db.productImageCleanup.create({ data: { productId, imageId, objectKey, attempts: 1, lastError: message.slice(0, 500) } });
 }

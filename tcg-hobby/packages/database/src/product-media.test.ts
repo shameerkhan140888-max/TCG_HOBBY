@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { reorderProductImages, setPrimaryProductImage, updateProductImageAltText } from './product-media';
+import {
+  isProductImageReferencedByOrder,
+  reorderProductImages,
+  setPrimaryProductImage,
+  updateProductImageAltText,
+} from './product-media';
 
 describe('managed product image operations', () => {
   it('requires every active image exactly once when reordering', async () => {
@@ -19,5 +24,26 @@ describe('managed product image operations', () => {
     const direct = { productImage: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) } };
     await updateProductImageAltText('product', 'image', 'Front product packaging', direct as never);
     expect(direct.productImage.updateMany).toHaveBeenCalledWith({ where: { id: 'image', productId: 'product', deletionState: 'ACTIVE' }, data: { altText: 'Front product packaging' } });
+  });
+  it('detects durable order references before managed media is physically removed', async () => {
+    const db = {
+      productImage: {
+        findUnique: vi.fn().mockResolvedValue({
+          url: 'https://media.example.test/product.webp',
+          thumbnailUrl: 'https://media.example.test/product-card.webp',
+          storageKey: 'products/product.webp',
+        }),
+      },
+      orderItem: { count: vi.fn().mockResolvedValue(1) },
+    };
+    await expect(isProductImageReferencedByOrder('image', db as never)).resolves.toBe(true);
+    expect(db.orderItem.count).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { imageStorageKey: 'products/product.webp' },
+          { imageUrl: { in: ['https://media.example.test/product.webp', 'https://media.example.test/product-card.webp'] } },
+        ],
+      },
+    });
   });
 });

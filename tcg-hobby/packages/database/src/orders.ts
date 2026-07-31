@@ -27,7 +27,7 @@ import {
   validateQuantityAgainstPurchaseLimit,
 } from './commerce';
 import type { CartSnapshot } from './cart';
-import { resolveProductCardImage } from './product-image-resolution';
+import { resolveOrderLineImage, resolveProductCardImage } from './product-image-resolution';
 import { requireStripeSecretKey } from './stripe-provider';
 
 type CheckoutAddressInput = CheckoutAddress;
@@ -49,9 +49,10 @@ const orderRecordInclude = {
 } as const satisfies Prisma.OrderInclude;
 
 type DatabaseOrderRecord = Prisma.OrderGetPayload<{ include: typeof orderRecordInclude }>;
-type OrderItemRecord = Pick<DatabaseOrderRecord['items'][number], 'id' | 'productId' | 'productName' | 'productSlug' | 'quantity' | 'unitPriceMinor' | 'totalMinor'> & {
+type OrderItemRecord = Pick<DatabaseOrderRecord['items'][number], 'id' | 'productId' | 'productName' | 'productSlug' | 'quantity' | 'unitPriceMinor' | 'totalMinor' | 'imageUrl' | 'imageAlt' | 'imageStorageKey'> & {
   imageUrl?: string | null;
   imageAlt?: string | null;
+  imageStorageKey?: string | null;
 };
 
 type OrderRecord = Omit<DatabaseOrderRecord, 'currency' | 'shippingMethodCode' | 'items' | 'shippingAddress'> & {
@@ -166,15 +167,21 @@ function normalizeDatabaseOrderRecord(order: DatabaseOrderRecord): OrderRecord {
     ...order,
     currency: order.currency,
     shippingMethodCode: order.shippingMethodCode as ShippingMethodCode,
-    items: order.items.map((item) => ({
-      id: item.id,
-      productId: item.productId,
-      productName: item.productName,
-      productSlug: item.productSlug,
-      quantity: item.quantity,
-      unitPriceMinor: item.unitPriceMinor,
-      totalMinor: item.totalMinor,
-    })),
+    items: order.items.map((item) => {
+      const image = resolveOrderLineImage(item, item.product.images);
+      return {
+        id: item.id,
+        productId: item.productId,
+        productName: item.productName,
+        productSlug: item.productSlug,
+        quantity: item.quantity,
+        unitPriceMinor: item.unitPriceMinor,
+        totalMinor: item.totalMinor,
+        imageUrl: image.url,
+        imageAlt: image.altText ?? item.productName,
+        imageStorageKey: image.storageKey,
+      };
+    }),
     shippingAddress: order.shippingAddress
       ? {
           id: order.shippingAddress.id,
@@ -200,6 +207,8 @@ function mapOrderItemRecord(item: OrderItemRecord): OrderLineItem {
     quantity: item.quantity,
     unitPriceMinor: item.unitPriceMinor,
     totalMinor: item.totalMinor,
+    imageUrl: item.imageUrl ?? null,
+    imageAlt: item.imageAlt ?? item.productName,
   };
 }
 
@@ -308,6 +317,9 @@ function createLocalOrderRecord(
       quantity: item.quantity,
       unitPriceMinor: item.unitPriceMinor,
       totalMinor: item.totalMinor,
+      imageUrl: item.imageUrl ?? null,
+      imageAlt: item.imageAlt ?? null,
+      imageStorageKey: null,
     })),
     shippingAddress: {
       id: shippingAddressId,
@@ -637,16 +649,34 @@ export async function createPendingCheckoutOrder(
 
       await reserveInventoryForOrder(tx, order.id, cart.items);
 
+      const imageProducts = await tx.product.findMany({
+        where: { id: { in: cart.items.map((item) => item.productId) } },
+        select: {
+          id: true,
+          images: {
+            where: { deletionState: 'ACTIVE' },
+            orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }, { id: 'asc' }],
+          },
+        },
+      });
+      const productImages = new Map(imageProducts.map((product) => [product.id, product.images]));
+
       await tx.orderItem.createMany({
-        data: cart.items.map((item) => ({
-          orderId: order.id,
-          productId: item.productId,
-          productName: item.productName,
-          productSlug: item.productSlug,
-          quantity: item.quantity,
-          unitPriceMinor: item.unitPriceMinor,
-          totalMinor: item.totalMinor,
-        })),
+        data: cart.items.map((item) => {
+          const currentImage = resolveProductCardImage(productImages.get(item.productId) ?? []);
+          return {
+            orderId: order.id,
+            productId: item.productId,
+            productName: item.productName,
+            productSlug: item.productSlug,
+            quantity: item.quantity,
+            unitPriceMinor: item.unitPriceMinor,
+            totalMinor: item.totalMinor,
+            imageUrl: currentImage.url ?? item.imageUrl ?? null,
+            imageAlt: currentImage.image?.altText ?? item.imageAlt ?? item.productName,
+            imageStorageKey: currentImage.image?.storageKey ?? null,
+          };
+        }),
       });
 
       return {
@@ -1057,6 +1087,15 @@ export async function getOrderByStripeCheckoutSessionId(stripeCheckoutSessionId:
     const order = orderId ? localCheckoutOrders.get(orderId) : null;
     return order ? mapOrderRecord(order) : null;
   }
+}
+
+export async function getOrderById(orderId: string, db = prisma): Promise<OrderWithItems | null> {
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    include: orderRecordInclude,
+  });
+
+  return order ? mapOrderRecord(normalizeDatabaseOrderRecord(order)) : null;
 }
 
 export async function getAvailableShippingMethods(
