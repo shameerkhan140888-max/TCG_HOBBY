@@ -1,5 +1,6 @@
 const DEFAULT_SITE_URL = "https://www.capitalhobbygroup.co.uk";
 const DEFAULT_TCG_HOBBY_URL = "https://tcg-hobby.co.uk";
+const DEFAULT_IRON_SPRUE_URL = "https://www.ironsprue.co.uk";
 
 type CorporateEnvironment = Readonly<Record<string, string | undefined>> & {
   CORPORATE_SITE_URL?: string;
@@ -18,11 +19,6 @@ function requiredHttpsUrl(value: string | undefined, fallback: string, name: str
   return url.toString().replace(/\/$/, "");
 }
 
-function optionalHttpsUrl(value: string | undefined, name: string): string | undefined {
-  if (!value?.trim()) return undefined;
-  return requiredHttpsUrl(value, value, name);
-}
-
 function publicEmail(value: string | undefined, fallback: string, name: string): string {
   const candidate = value?.trim() || fallback;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate)) {
@@ -32,7 +28,11 @@ function publicEmail(value: string | undefined, fallback: string, name: string):
 }
 
 export function createCorporateConfig(environment: CorporateEnvironment = process.env) {
-  const ironSprueUrl = optionalHttpsUrl(environment.IRON_SPRUE_URL, "IRON_SPRUE_URL");
+  const ironSprueUrl = requiredHttpsUrl(
+    environment.IRON_SPRUE_URL,
+    DEFAULT_IRON_SPRUE_URL,
+    "IRON_SPRUE_URL",
+  );
 
   return Object.freeze({
     company: Object.freeze({
@@ -67,7 +67,8 @@ export function createCorporateConfig(environment: CorporateEnvironment = proces
       ironSprue: Object.freeze({
         name: "Iron Sprue",
         url: ironSprueUrl,
-        isLive: Boolean(ironSprueUrl),
+        status: "Launching Soon",
+        isLive: false,
       }),
     }),
   });

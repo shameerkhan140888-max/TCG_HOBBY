@@ -52,8 +52,8 @@ export default function HomePage() {
         <div className="home-primary">
           <div className="corporate-statement">
             <p className="eyebrow">Capital Hobby Group Ltd</p>
-            <h1 id="home-title">Building specialist brands.</h1>
-            <p className="statement-tagline">For collectors, players and hobbyists.</p>
+            <h1 id="home-title">Parent company for specialist hobby divisions.</h1>
+            <p className="statement-tagline">Focused retail brands for distinct hobby communities.</p>
             <p>
               We develop focused UK retail brands with clear identities, dependable operations and a genuine
               understanding of the communities they serve.
@@ -68,10 +68,10 @@ export default function HomePage() {
               <div className="division-content">
                 <div className="division-meta">
                   <span>Trading cards</span>
-                  <span className="status status-live">Live</span>
+                  <span className="status status-live">Trading</span>
                 </div>
                 <p>
-                  Sealed trading-card products and accessories for collectors and players.
+                  Trading-card products and accessories for collectors and players through a dedicated TCG Hobby customer journey.
                 </p>
                 <a className="division-cta division-cta-tcg" href={divisions.tcgHobby.url}>
                   Visit TCG Hobby <span aria-hidden="true">→</span>
@@ -86,22 +86,14 @@ export default function HomePage() {
               <div className="division-content">
                 <div className="division-meta">
                   <span>Modelling and hobby</span>
-                  <span className={divisions.ironSprue.isLive ? "status status-live" : "status"}>
-                    {divisions.ironSprue.isLive ? "Live" : "In development"}
-                  </span>
+                  <span className="status status-launching">{divisions.ironSprue.status}</span>
                 </div>
                 <p>
-                  Model kits, paints, tools and accessories for hobbyists and modellers.
+                  Model kits, 3D puzzles, display builds, workshop tools and modelling essentials.
                 </p>
-                {divisions.ironSprue.url ? (
-                  <a className="division-cta division-cta-sprue" href={divisions.ironSprue.url}>
-                    Visit Iron Sprue <span aria-hidden="true">→</span>
-                  </a>
-                ) : (
-                  <span className="division-cta division-cta-sprue division-cta-disabled">
-                    Website in development
-                  </span>
-                )}
+                <a className="division-cta division-cta-sprue" href={divisions.ironSprue.url}>
+                  Visit Iron Sprue <span aria-hidden="true">→</span>
+                </a>
               </div>
             </article>
           </div>

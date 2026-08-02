@@ -6,6 +6,7 @@ import { corporateNavigation } from "../components/site-header";
 import { createCorporateConfig } from "../lib/site-config";
 import AboutPage from "./about/page";
 import ContactPage from "./contact/page";
+import CookiesPage from "./cookies/page";
 import HomePage from "./page";
 
 describe("corporate site", () => {
@@ -16,8 +17,12 @@ describe("corporate site", () => {
     expect(markup).toContain("TCG Hobby");
     expect(markup).toContain("Iron Sprue");
     expect(markup).toContain("https://tcg-hobby.co.uk");
-    expect(markup).toContain("Website in development");
+    expect(markup).toContain("https://www.ironsprue.co.uk");
+    expect(markup).toContain("Launching Soon");
+    expect(markup).toContain("Trading");
     expect(markup).not.toContain("Our Brands");
+    expect(markup).not.toContain("Website in development");
+    expect(markup).not.toContain("In development");
     expect(markup.match(/class="division-card/g)).toHaveLength(2);
     expect(markup.match(/class="credibility-icon"/g)).toHaveLength(4);
     expect(markup).toContain('data-testid="corporate-frame"');
@@ -28,18 +33,25 @@ describe("corporate site", () => {
     expect(corporateNavigation.map(({ label }) => label)).toEqual(["Home", "About", "Contact"]);
   });
 
-  it("renders factual About and approved Contact details", () => {
-    const markup = renderToStaticMarkup(<><AboutPage /><ContactPage /></>);
+  it("renders factual About, approved Contact details and cookie content", () => {
+    const markup = renderToStaticMarkup(<><AboutPage /><ContactPage /><CookiesPage /></>);
     expect(markup).toContain("Registered company information");
     expect(markup).toContain("4-6 Greatorex Street");
     expect(markup).toContain("info@capitalhobbygroup.co.uk");
     expect(markup).toContain("accounts@capitalhobbygroup.co.uk");
+    expect(markup).toContain("No marketing tracking on this corporate site.");
+    expect(markup).toContain("does not provide customer accounts");
   });
 
-  it("keeps Iron Sprue unavailable until a valid HTTPS URL is configured", () => {
-    expect(createCorporateConfig({}).divisions.ironSprue).toMatchObject({ isLive: false, url: undefined });
+  it("keeps Iron Sprue marked as launching soon with a public HTTPS destination", () => {
+    expect(createCorporateConfig({}).divisions.ironSprue).toMatchObject({
+      isLive: false,
+      status: "Launching Soon",
+      url: "https://www.ironsprue.co.uk",
+    });
     expect(createCorporateConfig({ IRON_SPRUE_URL: "https://www.ironsprue.co.uk" }).divisions.ironSprue).toMatchObject({
-      isLive: true,
+      isLive: false,
+      status: "Launching Soon",
       url: "https://www.ironsprue.co.uk",
     });
   });

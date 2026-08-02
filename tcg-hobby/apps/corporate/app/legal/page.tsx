@@ -19,7 +19,7 @@ export default function LegalPage() {
         <h2>Registered office</h2>
         <address>{company.registeredOffice.join(", ")}</address>
         <h2>Trading divisions</h2>
-        <p>TCG Hobby and Iron Sprue are trading divisions of {company.legalName}. Each division is responsible for its own retail information and customer journey.</p>
+        <p>TCG Hobby and Iron Sprue are trading divisions of {company.legalName}. TCG Hobby operates its own customer journey, while Iron Sprue is launching through its public coming-soon site before the full storefront opens.</p>
         <h2>Website enquiries</h2>
         <p>Contact <a href={`mailto:${contact.informationEmail}`}>{contact.informationEmail}</a> about this corporate website.</p>
       </article>

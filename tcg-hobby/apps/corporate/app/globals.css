@@ -307,6 +307,11 @@ p {
   object-fit: contain;
 }
 
+.division-logo-sprue img {
+  width: min(100%, 320px);
+  height: 104px;
+}
+
 .division-logo-tcg {
   background:
     linear-gradient(135deg, rgb(243 108 24 / 8%), transparent 68%),
@@ -355,6 +360,11 @@ p {
 .status-live {
   border-color: rgb(83 197 142 / 48%);
   color: var(--green);
+}
+
+.status-launching {
+  border-color: rgb(74 181 215 / 58%);
+  color: #83d8f1;
 }
 
 .division-cta {
@@ -710,6 +720,11 @@ p {
     height: 110px;
   }
 
+  .division-logo-sprue img {
+    width: 128px;
+    height: 118px;
+  }
+
   .credibility-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -857,6 +872,11 @@ p {
     height: 100px;
   }
 
+  .division-logo-sprue img {
+    width: 112px;
+    height: 108px;
+  }
+
   .division-content {
     padding: 14px;
   }
@@ -978,6 +998,11 @@ p {
   .division-logo img {
     width: 190px;
     height: 60px;
+  }
+
+  .division-logo-sprue img {
+    width: 210px;
+    height: 66px;
   }
 
   .credibility-strip {

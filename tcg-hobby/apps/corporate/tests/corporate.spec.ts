@@ -7,15 +7,17 @@ test.describe("Capital Hobby Group corporate site", () => {
       if (message.type() === "error") errors.push(message.text());
     });
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1, name: "Building specialist brands." })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Parent company for specialist hobby divisions." })).toBeVisible();
     await expect(page.getByTestId("corporate-frame")).toBeVisible();
     await expect(page.getByRole("banner").getByRole("link", { name: "Capital Hobby Group home" })).toBeVisible();
     await expect(page.locator(".division-card")).toHaveCount(2);
     await expect(page.locator(".credibility-strip article")).toHaveCount(4);
     await expect(page.getByRole("link", { name: /Visit TCG Hobby/ })).toHaveAttribute("href", "https://tcg-hobby.co.uk");
-    await expect(page.getByText("Website in development")).toBeVisible();
+    await expect(page.getByText("Launching Soon")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Visit Iron Sprue/ })).toHaveAttribute("href", "https://www.ironsprue.co.uk");
     await expect(page.getByText("Company number 17336948")).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Primary navigation" }).getByText("Our Brands")).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: "Legal links" }).getByText("Cookies")).toBeVisible();
     await expect(page.locator("img")).toHaveCount(3);
     for (const image of await page.locator("img").all()) {
       await expect(image).toHaveJSProperty("complete", true);

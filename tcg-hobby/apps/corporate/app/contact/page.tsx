@@ -41,8 +41,8 @@ export default function ContactPage() {
           <article className="contact-item">
             <p className="eyebrow">Modelling</p>
             <h2>Iron Sprue enquiries</h2>
-            <p>{divisions.ironSprue.isLive ? "Visit Iron Sprue for division-specific enquiries." : "The Iron Sprue website and customer contact route are in development."}</p>
-            {divisions.ironSprue.url ? <a className="text-link" href={divisions.ironSprue.url}>Visit Iron Sprue</a> : <span className="muted-action">Coming soon</span>}
+            <p>Iron Sprue is launching soon with a dedicated public landing page for division-specific updates.</p>
+            <a className="text-link" href={divisions.ironSprue.url}>Visit Iron Sprue</a>
           </article>
         </div>
       </section>

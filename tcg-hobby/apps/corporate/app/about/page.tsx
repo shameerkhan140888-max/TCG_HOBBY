@@ -27,7 +27,7 @@ export default function AboutPage() {
           </div>
           <div className="prose">
             <p>Capital Hobby Group Ltd was established to develop focused retail brands across specialist hobby markets. Each trading division serves a distinct community while sharing a common approach to product information, service and responsible growth.</p>
-            <p>TCG Hobby serves trading-card collectors and players through sealed products and accessories. Iron Sprue is being developed for modellers and hobbyists seeking model kits, paints, tools and related products.</p>
+            <p>TCG Hobby serves trading-card collectors and players through sealed products and accessories. Iron Sprue is launching soon for modellers and hobbyists seeking model kits, 3D puzzles, display builds, tools and modelling essentials.</p>
             <p>The group supports both divisions with shared commercial direction, operational standards and a long-term approach to supplier and trade relationships.</p>
           </div>
         </div>
