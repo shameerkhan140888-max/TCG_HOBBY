@@ -13,7 +13,7 @@ import {
   TrendBadge,
   WatchButton,
 } from '@tcg-hobby/ui';
-import { getNotificationCenterPreferences, getWatchlist } from '@tcg-hobby/database';
+import { getNotificationCenterPreferences, getWatchlist } from '@tcg-hobby/database/storefront';
 import { requireCustomerSession } from '../../lib/auth';
 import { SiteHeader } from '../../components/site-header';
 import { toggleWatchlistAction, updateWatchlistPreferencesAction } from '../../lib/market-actions';

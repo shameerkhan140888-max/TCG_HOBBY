@@ -1,7 +1,7 @@
 import 'server-only';
 
 import type { CheckoutAddress, ShippingMethod, ShippingMethodCode } from '@tcg-hobby/types';
-import { getAvailableShippingMethods, prisma } from '@tcg-hobby/database';
+import { getAvailableShippingMethods, prisma } from '@tcg-hobby/database/storefront';
 import { getCurrentCustomerSession } from './auth';
 import { getCurrentCustomerCart } from './cart';
 

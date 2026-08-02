@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from '@tcg-hobby/database';
+import { prisma } from '@tcg-hobby/database/storefront';
 import {
   hashPassword,
   normalizeEmail,

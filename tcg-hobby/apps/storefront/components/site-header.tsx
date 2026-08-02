@@ -5,7 +5,7 @@ import { getCurrentCustomerSession } from '../lib/auth';
 import { getCurrentCustomerCart } from '../lib/cart';
 import { ShopMenu } from './shop-menu';
 import { HeaderSearch } from './header-search';
-import { getActiveStorefrontBanner } from '@tcg-hobby/database';
+import { getActiveStorefrontBanner } from '@tcg-hobby/database/storefront';
 
 function AccountIcon() {
   return (

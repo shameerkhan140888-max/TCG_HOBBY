@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Container, EmptyState, Input, Pagination, ProductCard, WishlistButton, NotifyButton } from '@tcg-hobby/ui';
-import { getCatalogueMasterDataOptions, getCatalogueProducts, getCustomerNotificationSubscriptions, getWishlistProductIds } from '@tcg-hobby/database';
+import { getCatalogueMasterDataOptions, getCatalogueProducts, getCustomerNotificationSubscriptions, getWishlistProductIds } from '@tcg-hobby/database/storefront';
 import type { CatalogueSort } from '@tcg-hobby/types';
 import { buildStorefrontProductPath } from '@tcg-hobby/utils';
 import { SiteHeader } from '../../components/site-header';

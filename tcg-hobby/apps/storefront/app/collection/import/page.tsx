@@ -1,5 +1,5 @@
 import { Button, Container, EmptyState, Input, PageShell, Pagination, Section } from '@tcg-hobby/ui';
-import { getCatalogueCategories, getCatalogueProducts } from '@tcg-hobby/database';
+import { getCatalogueCategories, getCatalogueProducts } from '@tcg-hobby/database/storefront';
 import type { CatalogueSort } from '@tcg-hobby/types';
 import { requireCustomerSession } from '../../../lib/auth';
 import { SiteHeader } from '../../../components/site-header';

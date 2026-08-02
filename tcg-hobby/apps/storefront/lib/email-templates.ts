@@ -1,4 +1,4 @@
-import type { OrderWithItems } from '@tcg-hobby/database';
+import type { OrderWithItems } from '@tcg-hobby/database/storefront';
 
 export type RenderedEmail = {
   subject: string;

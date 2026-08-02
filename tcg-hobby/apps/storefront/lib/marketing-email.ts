@@ -2,7 +2,7 @@ import {
   recordMarketingConfirmationAttempt,
   recordMarketingConfirmationFailure,
   recordMarketingConfirmationSent,
-} from '@tcg-hobby/database';
+} from '@tcg-hobby/database/storefront';
 import { Resend } from 'resend';
 import { buildSignupEmail } from './email-templates';
 

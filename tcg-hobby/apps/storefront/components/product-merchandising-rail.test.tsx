@@ -1,6 +1,6 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { MerchandisingRecommendation } from '@tcg-hobby/database';
+import type { MerchandisingRecommendation } from '@tcg-hobby/database/storefront';
 import { describe, expect, it, vi } from 'vitest';
 import { ProductMerchandisingRail } from './product-merchandising-rail';
 

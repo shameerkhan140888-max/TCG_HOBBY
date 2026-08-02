@@ -1,4 +1,4 @@
-import { getCatalogueProducts, getCustomerDeckById } from '@tcg-hobby/database';
+import { getCatalogueProducts, getCustomerDeckById } from '@tcg-hobby/database/storefront';
 import { Button, Card, CardContent, Container, EmptyState, Input, PageShell, Pagination, ProductCard, Section, DeckHeader, ProgressBar } from '@tcg-hobby/ui';
 import type { CatalogueSort } from '@tcg-hobby/types';
 import { requireCustomerSession } from '../../../lib/auth';

@@ -2,7 +2,7 @@
 
 import { randomBytes } from 'node:crypto';
 import { hashPassword, normalizeEmail, validateEmail, validatePassword } from '@tcg-hobby/auth';
-import { consumePasswordResetToken, prisma } from '@tcg-hobby/database';
+import { consumePasswordResetToken, prisma } from '@tcg-hobby/database/storefront';
 import { Resend } from 'resend';
 import { hashPasswordResetToken } from './password-recovery';
 

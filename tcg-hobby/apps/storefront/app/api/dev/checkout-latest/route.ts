@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getLatestLocalCheckoutOrder } from '@tcg-hobby/database';
+import { getLatestLocalCheckoutOrder } from '@tcg-hobby/database/storefront';
 
 export const dynamic = 'force-dynamic';
 

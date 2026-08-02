@@ -1,6 +1,6 @@
 'use server';
 
-import { addCardToDeck, createDeck, removeDeckCard, updateDeckCardQuantity, updateDeckDetails } from '@tcg-hobby/database';
+import { addCardToDeck, createDeck, removeDeckCard, updateDeckCardQuantity, updateDeckDetails } from '@tcg-hobby/database/storefront';
 import { requireCustomerSession } from './auth';
 import { redirect } from 'next/navigation';
 

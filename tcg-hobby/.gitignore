@@ -4,6 +4,7 @@ node_modules
 .open-next
 .open-next-dry-run
 .wrangler
+packages/database/src/generated
 dist
 build
 coverage
@@ -11,6 +12,7 @@ playwright-report
 test-results
 .env
 .env.local
+.dev.vars
 .expo
 .expo-shared
 ios

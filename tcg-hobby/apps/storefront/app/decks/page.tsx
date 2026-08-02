@@ -1,5 +1,5 @@
 import { Button, Container, EmptyCollection, PageShell, Section } from '@tcg-hobby/ui';
-import { getCustomerDecks } from '@tcg-hobby/database';
+import { getCustomerDecks } from '@tcg-hobby/database/storefront';
 import { requireCustomerSession } from '../../lib/auth';
 import { SiteHeader } from '../../components/site-header';
 import { DeckList } from '@tcg-hobby/ui';

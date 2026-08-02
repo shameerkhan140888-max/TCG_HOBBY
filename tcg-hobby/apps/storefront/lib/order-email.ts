@@ -5,7 +5,7 @@ import {
   getOrderById,
   markTransactionalEmailFailed,
   markTransactionalEmailSent,
-} from '@tcg-hobby/database';
+} from '@tcg-hobby/database/storefront';
 import { Resend } from 'resend';
 import { buildOrderConfirmationEmail } from './email-templates';
 

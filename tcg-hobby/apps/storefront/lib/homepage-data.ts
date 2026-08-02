@@ -4,7 +4,7 @@ import {
   getMerchandisingStaffPickProducts,
   getActiveHomepageHeroPlacements,
   type MerchandisingRecommendation,
-} from '@tcg-hobby/database';
+} from '@tcg-hobby/database/storefront';
 
 export type HomepageHeroSlide = {
   id: string;

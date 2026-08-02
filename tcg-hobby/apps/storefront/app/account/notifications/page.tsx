@@ -1,4 +1,4 @@
-import { getNotificationCenterPreferences } from '@tcg-hobby/database';
+import { getNotificationCenterPreferences } from '@tcg-hobby/database/storefront';
 import { Button, Card, CardContent, Container, EmptyState, Section, StatusBadge, NotificationPreference } from '@tcg-hobby/ui';
 import { AnnouncementBanner } from '@tcg-hobby/ui';
 import { requireCustomerSession } from '../../../lib/auth';

@@ -4,7 +4,7 @@ import {
   toggleWatchlistItem,
   updateNotificationCenterPreference,
   updateWatchlistItemPreferences,
-} from '@tcg-hobby/database';
+} from '@tcg-hobby/database/storefront';
 import type { NotificationType, WatchlistSubjectType } from '@tcg-hobby/types';
 import { redirect } from 'next/navigation';
 import { requireCustomerSession } from './auth';

@@ -1,4 +1,4 @@
-import type { OrderWithItems } from '@tcg-hobby/database';
+import type { OrderWithItems } from '@tcg-hobby/database/storefront';
 import { buildOrderConfirmationEmail, buildSignupEmail } from '../../../../lib/email-templates';
 
 export const runtime = 'nodejs';

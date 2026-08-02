@@ -14,7 +14,7 @@ import {
   updateCartItemQuantity as updateMemberCartItemQuantity,
   validateQuantityAgainstAvailability,
   validateQuantityAgainstPurchaseLimit,
-} from '@tcg-hobby/database';
+} from '@tcg-hobby/database/storefront';
 import { getCurrentCustomerSession } from './auth';
 
 const GUEST_CART_COOKIE = 'tcg-hobby-basket';

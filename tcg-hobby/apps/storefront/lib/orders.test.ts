@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('server-only', () => ({}));
-vi.mock('@tcg-hobby/database', () => ({
+vi.mock('@tcg-hobby/database/storefront', () => ({
   getCustomerOrderByNumber: vi.fn(),
   getCustomerOrders: vi.fn(),
   getOrderByStripeCheckoutSessionId: mocks.getOrderByStripeCheckoutSessionId,

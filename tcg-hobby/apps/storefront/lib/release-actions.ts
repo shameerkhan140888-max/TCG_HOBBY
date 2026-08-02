@@ -4,7 +4,7 @@ import {
   getCustomerNotificationSubscriptions,
   setNotificationSubscriptionPreference,
   toggleNotificationSubscription,
-} from '@tcg-hobby/database';
+} from '@tcg-hobby/database/storefront';
 import type { NotificationPreference } from '@tcg-hobby/types';
 import { redirect } from 'next/navigation';
 import { requireCustomerSession } from './auth';

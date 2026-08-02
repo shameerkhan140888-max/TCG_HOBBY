@@ -8,7 +8,7 @@ import {
   removeProductFromBuylist,
   submitBuylistRequest,
   updateBuylistItemQuantity,
-} from '@tcg-hobby/database';
+} from '@tcg-hobby/database/storefront';
 import { requireCustomerSession } from './auth';
 
 function resolveReturnTo(value: FormDataEntryValue | null) {

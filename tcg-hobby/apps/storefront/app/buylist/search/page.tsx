@@ -1,6 +1,6 @@
 import { Badge, Button, Card, CardContent, Container, EmptyState, Input, PageShell, Pagination, Section } from '@tcg-hobby/ui';
 import { BuylistStatusBadge, PriceBadge } from '@tcg-hobby/ui';
-import { getCatalogueCategories, getBuylistSearchProducts } from '@tcg-hobby/database';
+import { getCatalogueCategories, getBuylistSearchProducts } from '@tcg-hobby/database/storefront';
 import { getCurrentCustomerBuylistDraft } from '../../../lib/buylist';
 import { AddToBuylistButton } from '../../../components/buylist-actions';
 import { SiteHeader } from '../../../components/site-header';

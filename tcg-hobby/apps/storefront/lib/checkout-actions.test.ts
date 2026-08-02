@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   getCurrentCustomerSession: vi.fn(),
 }));
 
-vi.mock('@tcg-hobby/database', () => ({
+vi.mock('@tcg-hobby/database/storefront', () => ({
   attachStripeSessionToOrder: mocks.attachStripeSessionToOrder,
   createPendingCheckoutOrder: mocks.createPendingCheckoutOrder,
   createStripeCheckoutSession: mocks.createStripeCheckoutSession,

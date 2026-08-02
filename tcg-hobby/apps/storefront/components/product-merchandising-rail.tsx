@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import type { MerchandisingRecommendation } from '@tcg-hobby/database';
+import type { MerchandisingRecommendation } from '@tcg-hobby/database/storefront';
 import { Badge, Button, ProductImageMedia, ProductImagePlaceholder, ProductImageStage, WishlistButton } from '@tcg-hobby/ui';
 import { buildStorefrontProductPath, formatMoney } from '@tcg-hobby/utils';
 import { toggleWishlistAction } from '../lib/wishlist';

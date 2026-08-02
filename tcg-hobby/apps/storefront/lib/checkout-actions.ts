@@ -9,7 +9,7 @@ import {
   getAvailableShippingMethods,
   isStripeCheckoutConfigured,
   releaseCheckoutOrderReservation,
-} from '@tcg-hobby/database';
+} from '@tcg-hobby/database/storefront';
 import type { CheckoutFieldErrors, CheckoutFormState } from './checkout';
 import { getCurrentCustomerCart } from './cart';
 import { getCurrentCustomerSession } from './auth';

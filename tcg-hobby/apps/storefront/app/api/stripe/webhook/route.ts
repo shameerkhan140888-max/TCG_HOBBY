@@ -2,7 +2,7 @@ import {
   constructStripeWebhookEvent,
   processStripeWebhookEvent,
   requireStripeWebhookSecret,
-} from '@tcg-hobby/database';
+} from '@tcg-hobby/database/storefront';
 import { sendPaidOrderConfirmationEmail } from '../../../../lib/order-email';
 
 export const runtime = 'nodejs';

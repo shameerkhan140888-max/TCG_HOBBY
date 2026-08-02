@@ -1,7 +1,4 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import { readFile, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import type {
   CartLineItem,
   CheckoutAddress,
@@ -160,7 +157,6 @@ export type CheckoutReservation = {
 
 const localCheckoutOrders = new Map<string, LocalOrderRecord>();
 const localCheckoutOrdersBySessionId = new Map<string, string>();
-const localCheckoutOrdersFile = join(tmpdir(), 'tcg-hobby-local-checkout-orders.json');
 
 function normalizeDatabaseOrderRecord(order: DatabaseOrderRecord): OrderRecord {
   return {
@@ -353,45 +349,11 @@ function updateLocalOrder(orderId: string, updater: (order: LocalOrderRecord) =>
 }
 
 async function persistLocalCheckoutOrders() {
-  await writeFile(localCheckoutOrdersFile, JSON.stringify(Array.from(localCheckoutOrders.values())), 'utf8');
-}
-
-function reviveLocalOrder(order: Omit<LocalOrderRecord, 'createdAt' | 'updatedAt' | 'reservationExpiresAt' | 'paidAt' | 'fulfilledAt' | 'cancelledAt'> & {
-  createdAt: string;
-  updatedAt: string;
-  reservationExpiresAt: string | null;
-  paidAt: string | null;
-  fulfilledAt: string | null;
-  cancelledAt: string | null;
-}) {
-  return {
-    ...order,
-    createdAt: new Date(order.createdAt),
-    updatedAt: new Date(order.updatedAt),
-    reservationExpiresAt: order.reservationExpiresAt ? new Date(order.reservationExpiresAt) : null,
-    paidAt: order.paidAt ? new Date(order.paidAt) : null,
-    fulfilledAt: order.fulfilledAt ? new Date(order.fulfilledAt) : null,
-    cancelledAt: order.cancelledAt ? new Date(order.cancelledAt) : null,
-  } as LocalOrderRecord;
+  return undefined;
 }
 
 async function loadLocalCheckoutOrdersFromDisk() {
-  try {
-    const raw = await readFile(localCheckoutOrdersFile, 'utf8');
-    const parsed = JSON.parse(raw) as Array<ReturnType<typeof reviveLocalOrder>>;
-    localCheckoutOrders.clear();
-    localCheckoutOrdersBySessionId.clear();
-
-    for (const entry of parsed) {
-      const order = reviveLocalOrder(entry as never);
-      localCheckoutOrders.set(order.id, order);
-      if (order.stripeCheckoutSessionId) {
-        localCheckoutOrdersBySessionId.set(order.stripeCheckoutSessionId, order.id);
-      }
-    }
-  } catch {
-    return;
-  }
+  return undefined;
 }
 
 export async function getLatestLocalCheckoutOrder() {

@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('server-only', () => ({}));
-vi.mock('@tcg-hobby/database', () => ({
+vi.mock('@tcg-hobby/database/storefront', () => ({
   getOrderById: mocks.getOrderById,
   claimOrderConfirmationEmail: mocks.claim,
   markTransactionalEmailFailed: mocks.markFailed,

@@ -1,6 +1,6 @@
 import { Button, Container, EmptyState, Input, PageShell, Section } from '@tcg-hobby/ui';
 import { AnnouncementBanner, ReleaseTimeline } from '@tcg-hobby/ui';
-import { getCatalogueCategories, getReleaseCalendar } from '@tcg-hobby/database';
+import { getCatalogueCategories, getReleaseCalendar } from '@tcg-hobby/database/storefront';
 import type { ReleaseCalendarEntry } from '@tcg-hobby/types';
 import { SiteHeader } from '../../components/site-header';
 

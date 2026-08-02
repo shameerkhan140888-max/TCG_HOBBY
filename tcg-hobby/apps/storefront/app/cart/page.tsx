@@ -1,6 +1,6 @@
 import { Button, CartLineItem, Container, EmptyState, ErrorMessage, OrderSummary, Section } from '@tcg-hobby/ui';
 import { formatMoney } from '@tcg-hobby/utils';
-import { calculatePromotionalShippingMinor, calculateVatEstimateMinor, getAvailableShippingMethods, getFreeStandardDeliveryProgress } from '@tcg-hobby/database';
+import { calculatePromotionalShippingMinor, calculateVatEstimateMinor, getAvailableShippingMethods, getFreeStandardDeliveryProgress } from '@tcg-hobby/database/storefront';
 import { clearCartAction } from '../../lib/cart';
 import { CartLineQuantityForm, RemoveCartItemButton } from '../../components/cart-actions';
 import { CommerceProgress } from '../../components/commerce-progress';

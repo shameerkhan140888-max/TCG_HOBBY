@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { getWishlistItems, prisma, type WishlistItem } from '@tcg-hobby/database';
+import { getWishlistItems, prisma, type WishlistItem } from '@tcg-hobby/database/storefront';
 import {
   SESSION_COOKIE_NAME,
   createSessionExpiry,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { CatalogueProductDetail } from '@tcg-hobby/types';
-import type { MerchandisingRecommendation } from '@tcg-hobby/database';
+import type { MerchandisingRecommendation } from '@tcg-hobby/database/storefront';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -18,7 +18,7 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-vi.mock('@tcg-hobby/database', () => ({
+vi.mock('@tcg-hobby/database/storefront', () => ({
   MEGA_GRENINJA_PRODUCT_SLUG: 'pokemon-tcg-mega-greninja-ex-premium-collection',
   getCatalogueProductBySlug: vi.fn(async () => mocks.product),
   getCustomerNotificationSubscriptions: vi.fn(async () => mocks.notificationIds),

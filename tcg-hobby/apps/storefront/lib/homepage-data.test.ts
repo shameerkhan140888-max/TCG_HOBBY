@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { MerchandisingRecommendation } from '@tcg-hobby/database';
+import type { MerchandisingRecommendation } from '@tcg-hobby/database/storefront';
 
-vi.mock('@tcg-hobby/database', () => ({
+vi.mock('@tcg-hobby/database/storefront', () => ({
   getActiveHomepageHeroPlacements: vi.fn(),
   getMerchandisingFeaturedProducts: vi.fn(),
   getMerchandisingLatestProducts: vi.fn(),
@@ -20,7 +20,7 @@ import {
   getMerchandisingFeaturedProducts,
   getMerchandisingLatestProducts,
   getMerchandisingStaffPickProducts,
-} from '@tcg-hobby/database';
+} from '@tcg-hobby/database/storefront';
 
 function product(overrides: Partial<MerchandisingRecommendation> = {}): MerchandisingRecommendation {
   return {

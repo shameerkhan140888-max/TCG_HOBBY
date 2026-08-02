@@ -7,6 +7,18 @@
     "nodejs_compat",
     "global_fetch_strictly_public"
   ],
+  "find_additional_modules": true,
+  "preserve_file_names": true,
+  "base_dir": ".open-next/.worker-files",
+  "rules": [
+    {
+      "type": "CompiledWasm",
+      "globs": [
+        "node_modules/.prisma/client/*.wasm"
+      ],
+      "fallthrough": true
+    }
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -19,6 +31,7 @@
   ],
   "vars": {
     "NEXTJS_ENV": "production",
+    "TCG_HOBBY_PRISMA_RUNTIME": "worker",
     "TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES": "1",
     "TCG_HOBBY_CATALOGUE_DATA_SOURCE": "database",
     "NEXT_PUBLIC_SITE_URL": "https://www.tcg-hobby.co.uk",

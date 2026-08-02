@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getPublicShopLandingPage, type ShopLandingScope } from '@tcg-hobby/database';
+import { getPublicShopLandingPage, type ShopLandingScope } from '@tcg-hobby/database/storefront';
 import { notFound } from 'next/navigation';
 import { CataloguePageView } from '../../catalogue/page';
 
