@@ -2,7 +2,7 @@
 
 ## Pokémon TCG: Mega Greninja ex Premium Collection
 
-The product images stored under `apps/storefront/public/products/pokemon/mega-greninja-ex-premium-collection/` were supplied by the business owner for use on the TCG Hobby product listing.
+The product images stored under `apps/tcg-hobby/public/products/pokemon/mega-greninja-ex-premium-collection/` were supplied by the business owner for use on the TCG Hobby product listing.
 
 These files should not be described internally as original TCG Hobby photography unless that provenance is confirmed. They may later be replaced with:
 

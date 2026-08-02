@@ -15,7 +15,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'npm run dev -w @tcg-hobby/storefront',
+      command: 'npm run dev -w @capital-hobby/tcg-hobby',
       url: 'http://127.0.0.1:3000',
       env: {
         TCG_HOBBY_CATALOGUE_DATA_SOURCE: 'database',

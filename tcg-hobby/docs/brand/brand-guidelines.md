@@ -15,7 +15,7 @@ These files are the canonical source for TCG Hobby branding. Do not recreate, re
 
 Runtime copies are published from the master assets into:
 
-- `apps/storefront/public/brand/`
+- `apps/tcg-hobby/public/brand/`
 - `apps/admin/public/brand/`
 
 Contributors must never edit runtime copies directly. If a runtime copy needs to be refreshed, copy the corresponding file from `assets/brand/master/` without modifying it.

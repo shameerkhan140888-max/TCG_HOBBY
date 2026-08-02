@@ -4,12 +4,12 @@ Iron Sprue should be the first production storefront to use the shared hybrid ar
 
 ## Reusable Cloudflare Files
 
-- `apps/storefront/open-next.config.ts`: minimal OpenNext Cloudflare adapter configuration.
-- `apps/storefront/wrangler.jsonc`: compatibility flags, assets binding, service binding shape, vars and WASM packaging rule.
-- `apps/storefront/scripts/cloudflare-build.mjs`: deterministic build, preview and dry-run wrapper plus Prisma WASM copy step.
-- `apps/storefront/next.config.ts`: Worker-safe image optimisation switch.
+- `apps/tcg-hobby/open-next.config.ts`: minimal OpenNext Cloudflare adapter configuration.
+- `apps/tcg-hobby/wrangler.jsonc`: compatibility flags, assets binding, service binding shape, vars and WASM packaging rule.
+- `apps/tcg-hobby/scripts/cloudflare-build.mjs`: deterministic build, preview and dry-run wrapper plus Prisma WASM copy step.
+- `apps/tcg-hobby/next.config.ts`: Worker-safe image optimisation switch.
 - `.gitignore`: local `.dev.vars` protection.
-- `apps/storefront/app/icon.png` and `apps/storefront/app/apple-icon.png`: static icon pattern that avoids runtime file reads.
+- `apps/tcg-hobby/app/icon.png` and `apps/tcg-hobby/app/apple-icon.png`: static icon pattern that avoids runtime file reads.
 
 ## Reusable Database Read Path
 

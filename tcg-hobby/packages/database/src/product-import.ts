@@ -199,8 +199,8 @@ export type ProductImportResult = ProductImportPlan & {
 
 const SUPPORTED_IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif']);
 const ALLOWED_CATEGORIES = new Set(['sealed-product', 'single-card', 'accessories', 'event-entry']);
-const PUBLIC_STOREFRONT_PRODUCTS_ROOT = path.join(process.cwd(), 'apps', 'storefront', 'public', 'products');
-const PRODUCT_MERCHANDISING_CONTENT_PATH = path.join(process.cwd(), 'apps', 'storefront', 'content', 'product-merchandising.generated.json');
+const PUBLIC_STOREFRONT_PRODUCTS_ROOT = path.join(process.cwd(), 'apps', 'tcg-hobby', 'public', 'products');
+const PRODUCT_MERCHANDISING_CONTENT_PATH = path.join(process.cwd(), 'apps', 'tcg-hobby', 'content', 'product-merchandising.generated.json');
 const PRODUCT_LIFECYCLE_STATES = [
   'DRAFT',
   'AWAITING_IMAGES',

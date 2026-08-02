@@ -18,7 +18,7 @@ function localPublicImageExists(url: string): boolean {
   let current = resolve(process.cwd());
 
   while (true) {
-    for (const publicRoot of [join(current, 'public'), join(current, 'apps', 'storefront', 'public')]) {
+    for (const publicRoot of [join(current, 'public'), join(current, 'apps', 'tcg-hobby', 'public')]) {
       const target = resolve(publicRoot, ...relativePath);
       if ((target === publicRoot || target.startsWith(`${publicRoot}${sep}`)) && existsSync(target)) {
         return true;

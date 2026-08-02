@@ -36,7 +36,7 @@ npm run db:seed
 4. Open the storefront catalogue:
 
 ```bash
-npm run dev -w @tcg-hobby/storefront
+npm run dev -w @capital-hobby/tcg-hobby
 ```
 
 Then visit `http://localhost:3000/catalogue`.

@@ -1,17 +1,21 @@
-# Architecture
+# Capital Hobby Group Architecture
 
-TCG Hobby follows clean architecture so business rules remain independent from framework, persistence, and delivery mechanisms.
+Capital Hobby Group follows clean architecture so business rules remain independent from framework, persistence, and delivery mechanisms.
 
 ## Monorepo Shape
 
-- `apps/storefront`: customer web storefront built with Next.js 15.
-- `apps/admin`: internal admin portal built with Next.js 15.
-- `apps/api`: NestJS backend API.
-- `apps/mobile`: Expo mobile application.
-- `packages/domain`: framework-free commerce and hobby domain logic.
-- `packages/db`: Prisma schema, migrations, and database client boundary.
+- `apps/corporate`: Capital Hobby Group corporate application.
+- `apps/tcg-hobby`: TCG Hobby customer web storefront built with Next.js 15.
+- `apps/iron-sprue`: Iron Sprue customer web storefront built with Next.js 15.
+- `apps/admin`: shared internal admin portal built with Next.js 15.
+- `apps/api`: shared NestJS backend API.
+- `apps/mobile`: TCG Hobby Expo mobile application.
+- `packages/auth`: shared authorization helpers.
+- `packages/database`: Prisma schema, migrations, and database client boundary.
+- `packages/types`: shared API and domain-facing TypeScript types.
 - `packages/ui`: shared Tailwind and shadcn/ui-compatible components.
 - `packages/config`: shared TypeScript and tooling configuration.
+- `packages/utils`: shared utility functions.
 
 ## Dependency Rule
 

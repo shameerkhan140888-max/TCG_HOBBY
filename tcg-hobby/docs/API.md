@@ -1,6 +1,6 @@
-# API
+# Shared API
 
-The API is implemented with NestJS and exposes versioned HTTP endpoints under `/v1`.
+The shared Capital Hobby Group API is implemented with NestJS and exposes versioned HTTP endpoints under `/v1`. It remains a shared service boundary, not a TCG-only backend.
 
 ## Conventions
 

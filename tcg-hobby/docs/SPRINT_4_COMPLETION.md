@@ -17,7 +17,7 @@ Start the local stack:
 docker compose up -d
 npm run db:generate
 npm run db:seed
-npm run dev -w @tcg-hobby/storefront
+npm run dev -w @capital-hobby/tcg-hobby
 ```
 
 Then visit:

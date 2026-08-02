@@ -284,7 +284,7 @@ PayPal and other payment methods are intentionally not shown because the current
 
 Work Package 2D connects the production homepage to the merchandising engine.
 
-Homepage data is assembled by `apps/storefront/lib/homepage-data.ts` using:
+Homepage data is assembled by `apps/tcg-hobby/lib/homepage-data.ts` using:
 
 - `getMerchandisingFeaturedProducts(8)`
 - `getMerchandisingLatestProducts(8)`

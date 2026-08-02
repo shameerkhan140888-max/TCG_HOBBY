@@ -1,13 +1,15 @@
-# TCG Hobby
+# Capital Hobby Group
 
-TCG Hobby is a Turborepo monorepo for a premium trading card game commerce platform.
+Capital Hobby Group is a Turborepo monorepo for the group corporate site, the TCG Hobby commerce storefront, the Iron Sprue modelling storefront, shared Admin, shared API and common platform packages.
 
 ## Workspaces
 
-- `apps/storefront`: Next.js 15 customer storefront.
-- `apps/admin`: Next.js 15 admin portal.
-- `apps/api`: NestJS API.
-- `apps/mobile`: React Native Expo mobile app.
+- `apps/corporate`: Capital Hobby Group corporate site.
+- `apps/tcg-hobby`: TCG Hobby Next.js 15 customer storefront.
+- `apps/iron-sprue`: Iron Sprue Next.js 15 customer storefront.
+- `apps/admin`: shared Next.js 15 admin portal.
+- `apps/api`: shared NestJS API.
+- `apps/mobile`: TCG Hobby React Native Expo mobile app.
 - `packages/auth`: shared authorization helpers.
 - `packages/config`: shared TypeScript and Tailwind configuration.
 - `packages/database`: Prisma schema and database client boundary.
@@ -36,9 +38,20 @@ The default development command starts the browser-facing services only:
 npm run dev
 ```
 
-Open `http://localhost:3000` for the storefront and `http://localhost:3001` for Admin. The Expo mobile app is native-only in this workspace; `localhost:8081` is Metro's manifest endpoint and will display JSON in a desktop browser. Start mobile separately when needed:
+Default local ports:
+
+- Corporate: `http://localhost:3002`
+- TCG Hobby: `http://localhost:3000`
+- Iron Sprue: `http://localhost:3003`
+- Admin: `http://localhost:3001/admin`
+- API: `http://localhost:4000`
+- Mobile tooling: Metro on `http://localhost:8081`
+
+The default `npm run dev` starts TCG Hobby, Admin and API. Start Corporate, Iron Sprue or mobile separately when needed:
 
 ```bash
+npm run dev:corporate
+npm run dev:iron-sprue
 npm run dev:mobile
 ```
 
@@ -48,7 +61,7 @@ npm run dev:mobile
 docker compose up -d
 npm run db:generate
 npm run db:seed
-npm run dev -w @tcg-hobby/storefront
+npm run dev -w @capital-hobby/tcg-hobby
 ```
 
 Then open `http://localhost:3000/catalogue`.
@@ -56,7 +69,7 @@ Then open `http://localhost:3000/catalogue`.
 ## Sprint 4 Identity Flow
 
 ```bash
-npm run dev -w @tcg-hobby/storefront
+npm run dev -w @capital-hobby/tcg-hobby
 ```
 
 Then open:
@@ -76,7 +89,7 @@ Seeded customer login:
 docker compose up -d
 npm run db:generate
 npm run db:seed
-npm run dev -w @tcg-hobby/storefront
+npm run dev -w @capital-hobby/tcg-hobby
 ```
 
 Set these environment variables before starting the storefront:

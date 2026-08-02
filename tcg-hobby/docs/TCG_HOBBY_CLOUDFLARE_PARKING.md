@@ -20,7 +20,7 @@ The database client selects the Neon adapter by runtime. Node continues to use t
 
 ## 5. Environment And Credential Issues Resolved
 
-The local Worker preview reads `DATABASE_URL` from `apps/storefront/.dev.vars` at request runtime. That value was aligned with the known-good Neon credential source without printing or committing the secret. `.dev.vars` is ignored by Git and must stay local or be configured as a Cloudflare secret in real environments.
+The local Worker preview reads `DATABASE_URL` from `apps/tcg-hobby/.dev.vars` at request runtime. That value was aligned with the known-good Neon credential source without printing or committing the secret. `.dev.vars` is ignored by Git and must stay local or be configured as a Cloudflare secret in real environments.
 
 ## 6. Current Successful Worker Routes
 
@@ -33,7 +33,7 @@ The generated Worker preview has proven the database-backed read path:
 
 ## 7. Current Bundle Size
 
-The latest recorded upload-relevant generated output contains 109 files and about 13,830.66 KiB before compression. The last canonical Wrangler dry-run recorded a compressed upload size of 4,283.61 KiB, leaving about 5,956.39 KiB below the Cloudflare Workers Paid 10 MiB compressed script limit. Recheck this with `npm run cloudflare:dry-run -w @tcg-hobby/storefront` before any future deployment decision.
+The latest recorded upload-relevant generated output contains 109 files and about 13,830.66 KiB before compression. The last canonical Wrangler dry-run recorded a compressed upload size of 4,283.61 KiB, leaving about 5,956.39 KiB below the Cloudflare Workers Paid 10 MiB compressed script limit. Recheck this with `npm run cloudflare:dry-run -w @capital-hobby/tcg-hobby` before any future deployment decision.
 
 ## 8. Current Runtime Limitation
 
@@ -79,16 +79,16 @@ Future TCG refinements retained from the previous work:
 Run from the repository root:
 
 ```powershell
-npm run cloudflare:build -w @tcg-hobby/storefront
-npm run cloudflare:preview -w @tcg-hobby/storefront
-npm run cloudflare:dry-run -w @tcg-hobby/storefront
+npm run cloudflare:build -w @capital-hobby/tcg-hobby
+npm run cloudflare:preview -w @capital-hobby/tcg-hobby
+npm run cloudflare:dry-run -w @capital-hobby/tcg-hobby
 ```
 
 Do not run repeated full Cloudflare builds while investigating runtime issues. Prefer the existing generated Worker preview for route checks unless source changes require a rebuild.
 
 ## 14. Required Local Environment Files
 
-Local Worker preview requires `apps/storefront/.dev.vars` with non-committed values for `DATABASE_URL` and any other runtime secrets needed by the route under test. Real Cloudflare environments must use Cloudflare secrets or vars. Do not commit `.dev.vars`, `.env.local` or copied credential files.
+Local Worker preview requires `apps/tcg-hobby/.dev.vars` with non-committed values for `DATABASE_URL` and any other runtime secrets needed by the route under test. Real Cloudflare environments must use Cloudflare secrets or vars. Do not commit `.dev.vars`, `.env.local` or copied credential files.
 
 ## 15. Troubleshooting Guidance
 

@@ -23,7 +23,7 @@ The production homepage renders these sections in order:
 
 ## Data Sources
 
-Homepage data is assembled by `apps/storefront/lib/homepage-data.ts`.
+Homepage data is assembled by `apps/tcg-hobby/lib/homepage-data.ts`.
 
 Product sections use the WP2A merchandising engine:
 

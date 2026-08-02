@@ -1,8 +1,8 @@
 # Payment Trust Banner
 
-The storefront payment trust banner is implemented by `apps/storefront/components/payment-trust-banner.tsx`.
+The storefront payment trust banner is implemented by `apps/tcg-hobby/components/payment-trust-banner.tsx`.
 
-Payment methods are configured in `apps/storefront/lib/payment-methods.ts`.
+Payment methods are configured in `apps/tcg-hobby/lib/payment-methods.ts`.
 
 ## Current Public Methods
 
@@ -36,9 +36,9 @@ Do not enable these publicly until checkout genuinely supports them.
 
 Local payment mark assets live in:
 
-- `apps/storefront/public/payments/visa.svg`
-- `apps/storefront/public/payments/mastercard.svg`
-- `apps/storefront/public/payments/paypal.svg`
+- `apps/tcg-hobby/public/payments/visa.svg`
+- `apps/tcg-hobby/public/payments/mastercard.svg`
+- `apps/tcg-hobby/public/payments/paypal.svg`
 
 These are bundled locally and not hotlinked. The component renders official-supplied SVGs without recolouring, stretching or distortion. Disabled assets are kept for configuration readiness but are not displayed publicly.
 
@@ -63,7 +63,7 @@ The banner includes visible payment wording, not logos alone. Payment marks have
 
 To add a future method:
 
-1. Add an approved local asset under `apps/storefront/public/payments/`.
+1. Add an approved local asset under `apps/tcg-hobby/public/payments/`.
 2. Add or update the method in `storefrontPaymentMethods`.
 3. Enable it only after checkout support is verified.
 4. Update tests to prove enabled methods render and disabled methods remain hidden.

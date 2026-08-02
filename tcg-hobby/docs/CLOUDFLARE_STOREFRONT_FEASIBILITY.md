@@ -9,9 +9,9 @@ It does not replace the existing Vercel path. Production DNS, Vercel settings an
 Run from the repository package root:
 
 ```powershell
-npm run cloudflare:build -w @tcg-hobby/storefront
-npm run cloudflare:preview -w @tcg-hobby/storefront
-npm run cloudflare:dry-run -w @tcg-hobby/storefront
+npm run cloudflare:build -w @capital-hobby/tcg-hobby
+npm run cloudflare:preview -w @capital-hobby/tcg-hobby
+npm run cloudflare:dry-run -w @capital-hobby/tcg-hobby
 ```
 
 The feasibility config deliberately sets `TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES=1` during Cloudflare builds so the proof does not require Cloudflare Images. Product and brand images must therefore be served as normal static or public remote assets.

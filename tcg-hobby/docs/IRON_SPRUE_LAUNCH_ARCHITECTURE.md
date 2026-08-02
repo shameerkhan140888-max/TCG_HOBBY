@@ -58,7 +58,7 @@ Iron Sprue product data uses `storeCode: "IRON_SPRUE"` in the launch import seed
 
 ## Application Path
 
-The launch storefront app lives at `apps/iron-sprue`. It is deliberately separate from `apps/storefront` so Iron Sprue can have a premium modelling-workshop identity without becoming a TCG reskin.
+The launch storefront app lives at `apps/iron-sprue`. It is deliberately separate from `apps/tcg-hobby` so Iron Sprue can have a premium modelling-workshop identity without becoming a TCG reskin.
 
 ## Current Implementation Slice
 

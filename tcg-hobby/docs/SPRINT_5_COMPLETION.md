@@ -19,7 +19,7 @@ Sprint 5 delivered the first real purchasing flow for TCG Hobby.
 docker compose up -d
 npm run db:generate
 npm run db:seed
-npm run dev -w @tcg-hobby/storefront
+npm run dev -w @capital-hobby/tcg-hobby
 ```
 
 Then open:

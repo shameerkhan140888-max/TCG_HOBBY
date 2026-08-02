@@ -26,7 +26,7 @@ Only valid `https://` URLs are rendered. Invalid, missing or non-HTTPS values ar
 
 The reusable component is:
 
-`apps/storefront/components/social-links.tsx`
+`apps/tcg-hobby/components/social-links.tsx`
 
 It accepts:
 

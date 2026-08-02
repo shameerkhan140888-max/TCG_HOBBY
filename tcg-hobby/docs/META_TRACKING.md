@@ -6,12 +6,12 @@ TCG Hobby uses a consent-aware analytics layer for Meta Pixel and Meta Conversio
 
 The storefront integration lives under:
 
-- `apps/storefront/lib/analytics/events.ts`
-- `apps/storefront/lib/analytics/consent.ts`
-- `apps/storefront/lib/analytics/browser.ts`
-- `apps/storefront/lib/analytics/server.ts`
-- `apps/storefront/lib/analytics/meta.ts`
-- `apps/storefront/components/analytics/meta-analytics.tsx`
+- `apps/tcg-hobby/lib/analytics/events.ts`
+- `apps/tcg-hobby/lib/analytics/consent.ts`
+- `apps/tcg-hobby/lib/analytics/browser.ts`
+- `apps/tcg-hobby/lib/analytics/server.ts`
+- `apps/tcg-hobby/lib/analytics/meta.ts`
+- `apps/tcg-hobby/components/analytics/meta-analytics.tsx`
 
 Browser components should not call `fbq()` directly. Use the analytics layer so future providers such as GA4 or Google Ads can be added without scattering tracking code through the storefront.
 

@@ -229,7 +229,7 @@ Admin surfaces import source, lifecycle, last import date, warnings and merchand
 Approved media is copied to:
 
 ```text
-apps/storefront/public/products/{game}/{slug}/
+apps/tcg-hobby/public/products/{game}/{slug}/
 ```
 
 Output names are stable:

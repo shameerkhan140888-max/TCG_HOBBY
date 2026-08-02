@@ -4,7 +4,7 @@ Canonical source:
 - `assets/brand/master/`
 
 The approved runtime brand folders are:
-- `apps/storefront/public/brand/`
+- `apps/tcg-hobby/public/brand/`
 - `apps/admin/public/brand/`
 
 Legacy assets have been moved out of runtime and into `docs/archive/brand-legacy/`.
@@ -15,10 +15,10 @@ Legacy assets have been moved out of runtime and into `docs/archive/brand-legacy
 | `tcg-hobby-horizontal.png` | `assets/brand/master/tcg-hobby-horizontal.png` | Supplied master | Canonical horizontal bitmap logo | Approved master |
 | `tcg-hobby-icon.svg` | `assets/brand/master/tcg-hobby-icon.svg` | Supplied master | Canonical icon vector logo | Approved master |
 | `tcg-hobby-icon.png` | `assets/brand/master/tcg-hobby-icon.png` | Supplied master | Canonical icon bitmap logo | Approved master |
-| `tcg-hobby-horizontal.svg` | `apps/storefront/public/brand/tcg-hobby-horizontal.svg` | Runtime copy | Storefront horizontal brand placements | Approved runtime copy |
-| `tcg-hobby-horizontal.png` | `apps/storefront/public/brand/tcg-hobby-horizontal.png` | Runtime copy | Storefront metadata and horizontal brand placements | Approved runtime copy |
-| `tcg-hobby-icon.svg` | `apps/storefront/public/brand/tcg-hobby-icon.svg` | Runtime copy | Storefront favicon and icon placements | Approved runtime copy |
-| `tcg-hobby-icon.png` | `apps/storefront/public/brand/tcg-hobby-icon.png` | Runtime copy | Storefront app icons and generated icon routes | Approved runtime copy |
+| `tcg-hobby-horizontal.svg` | `apps/tcg-hobby/public/brand/tcg-hobby-horizontal.svg` | Runtime copy | Storefront horizontal brand placements | Approved runtime copy |
+| `tcg-hobby-horizontal.png` | `apps/tcg-hobby/public/brand/tcg-hobby-horizontal.png` | Runtime copy | Storefront metadata and horizontal brand placements | Approved runtime copy |
+| `tcg-hobby-icon.svg` | `apps/tcg-hobby/public/brand/tcg-hobby-icon.svg` | Runtime copy | Storefront favicon and icon placements | Approved runtime copy |
+| `tcg-hobby-icon.png` | `apps/tcg-hobby/public/brand/tcg-hobby-icon.png` | Runtime copy | Storefront app icons and generated icon routes | Approved runtime copy |
 | `tcg-hobby-horizontal.svg` | `apps/admin/public/brand/tcg-hobby-horizontal.svg` | Runtime copy | Admin horizontal brand placements | Approved runtime copy |
 | `tcg-hobby-horizontal.png` | `apps/admin/public/brand/tcg-hobby-horizontal.png` | Runtime copy | Admin metadata and horizontal brand placements | Approved runtime copy |
 | `tcg-hobby-icon.svg` | `apps/admin/public/brand/tcg-hobby-icon.svg` | Runtime copy | Admin favicon and icon placements | Approved runtime copy |
@@ -29,12 +29,12 @@ Legacy assets have been moved out of runtime and into `docs/archive/brand-legacy
 ## Active code references
 
 - `packages/ui/src/brand-mark.tsx` uses the approved horizontal logo.
-- `apps/storefront/components/site-header.tsx` uses `BrandMark`.
-- `apps/storefront/app/login/page.tsx` uses `BrandMark`.
-- `apps/storefront/app/register/page.tsx` uses `BrandMark`.
-- `apps/storefront/components/site-footer.tsx` uses `BrandMark`.
-- `apps/storefront/app/layout.tsx` uses the approved horizontal logo in metadata and structured data.
-- `apps/storefront/app/icon.tsx` and `apps/storefront/app/apple-icon.tsx` use the approved icon asset.
+- `apps/tcg-hobby/components/site-header.tsx` uses `BrandMark`.
+- `apps/tcg-hobby/app/login/page.tsx` uses `BrandMark`.
+- `apps/tcg-hobby/app/register/page.tsx` uses `BrandMark`.
+- `apps/tcg-hobby/components/site-footer.tsx` uses `BrandMark`.
+- `apps/tcg-hobby/app/layout.tsx` uses the approved horizontal logo in metadata and structured data.
+- `apps/tcg-hobby/app/icon.tsx` and `apps/tcg-hobby/app/apple-icon.tsx` use the approved icon asset.
 - `apps/admin/components/admin-shell.tsx` uses `BrandMark`.
 - `apps/admin/app/login/page.tsx` uses `BrandMark`.
 - `apps/admin/app/layout.tsx` uses the approved icon asset.
