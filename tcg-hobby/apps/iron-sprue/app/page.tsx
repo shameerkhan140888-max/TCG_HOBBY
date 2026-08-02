@@ -1,5 +1,8 @@
 import { ironSprueBrand } from '../lib/brand';
-import { featuredWorkshopInterests, launchCatalogueStatus, sampleRangeCards } from '../lib/catalogue';
+import launchProducts from '../data/launch-products.json';
+import { deriveBrandsWeStock, featuredWorkshopInterests, launchCatalogueStatus, sampleRangeCards, type IronSprueProduct } from '../lib/catalogue';
+
+const brandsWeStock = deriveBrandsWeStock(launchProducts as IronSprueProduct[]);
 
 export default function HomePage() {
   return (
@@ -62,6 +65,25 @@ export default function HomePage() {
         {launchCatalogueStatus.blocker ? (
           <p className="notice" style={{ marginTop: 24 }}>{launchCatalogueStatus.blocker}</p>
         ) : null}
+      </section>
+
+      <section className="band">
+        <div className="section-head">
+          <p className="eyebrow">Shop by brand</p>
+          <h2>Brands we stock</h2>
+        </div>
+        <div className="brand-rail" aria-label="Brands we stock">
+          {brandsWeStock.map((brand) => (
+            <a className="brand-tile" href={brand.href} key={brand.slug} aria-label={`Shop ${brand.name} products`}>
+              {brand.logoUrl ? (
+                <img src={brand.logoUrl} alt={brand.altText} width="144" height="48" />
+              ) : (
+                <span className="brand-wordmark">{brand.name}</span>
+              )}
+              <small>{brand.productCount} stocked line{brand.productCount === 1 ? '' : 's'}</small>
+            </a>
+          ))}
+        </div>
       </section>
 
       <section className="band">

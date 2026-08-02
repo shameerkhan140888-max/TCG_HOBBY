@@ -1,4 +1,8 @@
 const encoder = new TextEncoder();
+const INTERNAL_HEADER_PREFIX = 'x-iron-sprue-internal-';
+
+export const IRON_SPRUE_STORE_CODE = 'IRON_SPRUE';
+export const IRON_SPRUE_ENVIRONMENT = process.env.IRON_SPRUE_ENVIRONMENT?.trim() || process.env.NODE_ENV || 'development';
 
 export const allowedProxyRoutes = [
   { method: 'POST', pattern: /^\/api\/customer\/register$/ },
@@ -44,8 +48,41 @@ function bytesToHex(bytes: ArrayBuffer) {
   return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-export async function signInternalRequest(input: { method: string; pathname: string; body: string; timestamp: string; nonce: string; secret: string }) {
-  const payload = [input.method.toUpperCase(), input.pathname, input.timestamp, input.nonce, input.body].join('\n');
+async function sha256Hex(value: string) {
+  return bytesToHex(await crypto.subtle.digest('SHA-256', encoder.encode(value)));
+}
+
+export type InternalRequestSignatureInput = {
+  method: string;
+  pathname: string;
+  query?: string;
+  body: string;
+  timestamp: string;
+  nonce: string;
+  keyId: string;
+  secret: string;
+  store: string;
+  environment: string;
+};
+
+export async function canonicalizeInternalRequest(input: Omit<InternalRequestSignatureInput, 'secret'>) {
+  const canonicalQuery = input.query?.replace(/^\?/, '') ?? '';
+  const bodyDigest = await sha256Hex(input.body);
+  return [
+    input.keyId,
+    input.method.toUpperCase(),
+    input.pathname,
+    canonicalQuery,
+    bodyDigest,
+    input.timestamp,
+    input.nonce,
+    input.store,
+    input.environment,
+  ].join('\n');
+}
+
+export async function signInternalRequest(input: InternalRequestSignatureInput) {
+  const payload = await canonicalizeInternalRequest(input);
   const key = await crypto.subtle.importKey('raw', encoder.encode(input.secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   return bytesToHex(await crypto.subtle.sign('HMAC', key, encoder.encode(payload)));
 }
@@ -55,11 +92,20 @@ export function copyProxyRequestHeaders(source: Headers) {
   source.forEach((value, key) => {
     const lower = key.toLowerCase();
     if (hopByHopHeaders.has(lower)) return;
-    if (lower.startsWith('x-iron-sprue-internal-')) return;
+    if (lower.startsWith(INTERNAL_HEADER_PREFIX)) return;
     if (lower === 'host' || lower === 'content-length') return;
     headers.set(key, value);
   });
   return headers;
+}
+
+export function requireInternalSigningConfig() {
+  const keyId = process.env.IRON_SPRUE_INTERNAL_API_KEY_ID?.trim();
+  const secret = process.env.IRON_SPRUE_INTERNAL_API_SECRET?.trim();
+  if (!keyId || !secret) {
+    throw new Error('IRON_SPRUE_INTERNAL_API_KEY_ID and IRON_SPRUE_INTERNAL_API_SECRET are required for mutation proxying.');
+  }
+  return { keyId, secret, store: IRON_SPRUE_STORE_CODE, environment: IRON_SPRUE_ENVIRONMENT };
 }
 
 export function getNodeApiOrigin() {

@@ -1,8 +1,9 @@
 export type IronSprueProduct = {
   line?: number;
-  storeCode?: 'IRON_SPRUE';
+  storeCode?: 'IRON_SPRUE' | 'TCG_HOBBY';
   sku: string;
   supplierSku?: string;
+  barcode?: string;
   slug: string;
   name: string;
   brand: string;
@@ -75,6 +76,54 @@ export const sampleRangeCards = [
   { brand: 'Deluxe Materials', title: 'Adhesives and finishing', href: '/shop?brand=Deluxe%20Materials' },
   { brand: 'Tasma', title: 'Bench tools and abrasives', href: '/shop?brand=Tasma' },
 ] as const;
+
+export type IronSprueBrandRecord = {
+  name: string;
+  slug: string;
+  href: string;
+  productCount: number;
+  displayOrder: number;
+  active: boolean;
+  approvalStatus: 'TEXT_APPROVED' | 'LOGO_APPROVED' | 'NEEDS_REVIEW';
+  logoUrl?: string;
+  altText: string;
+};
+
+const launchBrandOrder = new Map([
+  ['Aoshima', 10],
+  ['Deluxe Materials', 20],
+  ['Expo Tools', 30],
+  ['OcCre Creations', 40],
+  ['Pintoo', 50],
+  ['Tasma', 60],
+]);
+
+export function brandSlug(name: string) {
+  return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+export function deriveBrandsWeStock(products: IronSprueProduct[]): IronSprueBrandRecord[] {
+  const counts = new Map<string, number>();
+  for (const product of products) {
+    if (product.storeCode !== 'IRON_SPRUE') continue;
+    if (product.published === false) continue;
+    counts.set(product.brand, (counts.get(product.brand) ?? 0) + 1);
+  }
+
+  return Array.from(counts.entries())
+    .filter(([, productCount]) => productCount > 0)
+    .map(([name, productCount]) => ({
+      name,
+      slug: brandSlug(name),
+      href: `/shop?brand=${encodeURIComponent(name)}`,
+      productCount,
+      displayOrder: launchBrandOrder.get(name) ?? 999,
+      active: true,
+      approvalStatus: 'TEXT_APPROVED' as const,
+      altText: name,
+    }))
+    .sort((a, b) => a.displayOrder - b.displayOrder || a.name.localeCompare(b.name));
+}
 
 export function productPriceMinor(product: IronSprueProduct) {
   return product.retailPriceMinor ?? product.priceMinor ?? 0;
