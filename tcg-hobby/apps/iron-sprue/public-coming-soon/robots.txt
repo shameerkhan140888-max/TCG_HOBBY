@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /shop
+Disallow: /products
+Disallow: /catalogue
+Disallow: /account
+Disallow: /cart
+Disallow: /checkout
+Disallow: /api
+Disallow: /admin
+
+Sitemap: https://www.ironsprue.co.uk/sitemap.xml

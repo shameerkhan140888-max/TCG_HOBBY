@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Iron Sprue launch preview</title>
+  <desc id="desc">Precision builds. Remarkable results.</desc>
+  <rect width="1200" height="630" fill="#f3eee4"/>
+  <path d="M0 0h1200v630H0z" fill="#f3eee4"/>
+  <path d="M84 92h1032v446H84z" fill="#fffaf1" stroke="#d7cdbc" stroke-width="3"/>
+  <path d="M130 148h190v18H130zm0 54h380v8H130zm0 34h292v8H130z" fill="#2f6f63"/>
+  <path d="M130 328h420v16H130zm0 46h260v16H130z" fill="#191713"/>
+  <path d="M762 128h244v244H762z" fill="#e8ded0" stroke="#d7cdbc" stroke-width="3"/>
+  <path d="M814 194h142v16H814zm0 66h96v16h-96z" fill="#59646b"/>
+  <path d="M742 402h304v64H742z" fill="#191713"/>
+  <path d="M782 424h224v20H782z" fill="#c6782d"/>
+  <text x="130" y="284" fill="#191713" font-family="Georgia, serif" font-size="68" font-weight="700">Iron Sprue</text>
+  <text x="130" y="438" fill="#686156" font-family="Arial, sans-serif" font-size="30">Precision builds. Remarkable results.</text>
+</svg>

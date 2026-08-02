@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "build:coming-soon": "node scripts/build-coming-soon.mjs",
     "dev": "next dev",
     "lint": "tsc -p tsconfig.check.json --noEmit",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.check.json --noEmit"
+    "typecheck": "tsc -p tsconfig.check.json --noEmit",
+    "validate:coming-soon": "node scripts/validate-coming-soon.mjs"
   },
   "dependencies": {
     "@tcg-hobby/types": "*",
