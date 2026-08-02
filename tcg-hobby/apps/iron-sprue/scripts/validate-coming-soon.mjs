@@ -2,7 +2,25 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const root = new URL('../dist/public-coming-soon/', import.meta.url);
-const requiredFiles = ['index.html', '404.html', 'robots.txt', 'sitemap.xml', '_headers', '_redirects', 'assets/iron-sprue-horizontal.svg'];
+const requiredFiles = [
+  'index.html',
+  '404.html',
+  'privacy.html',
+  'cookies.html',
+  'robots.txt',
+  'sitemap.xml',
+  '_headers',
+  '_redirects',
+  'assets/iron-sprue-horizontal.svg',
+  'assets/brands/aoshima.svg',
+  'assets/brands/deluxe-materials.svg',
+  'assets/brands/expo-tools.svg',
+  'assets/brands/occre-creations.svg',
+  'assets/brands/pintoo.svg',
+  'assets/products/aoshima-kit.svg',
+  'assets/products/pintoo-display-build.svg',
+  'assets/products/workshop-essentials.svg',
+];
 const forbiddenPatterns = [
   /href=["']\/(?:shop|products|catalogue|account|cart|checkout|api|admin)\b/i,
   /\b(?:Stripe|Prisma|DATABASE_URL|STRIPE_SECRET|STRIPE_WEBHOOK|Resend|NEXTAUTH|AUTH_SECRET)\b/,
@@ -48,10 +66,12 @@ const checks = [
   ['canonical www URL', /<link rel="canonical" href="https:\/\/www\.ironsprue\.co\.uk\/">/],
   ['mailing-list form', /<form[^>]+id="launch-list-form"/],
   ['accessible email label', /<label for="launch-email">Email address<\/label>/],
+  ['public contact email', /info@ironsprue\.co\.uk/],
   ['Instagram handle', /@iron\.sprue/],
   ['Capital Hobby Group attribution', /trading division of Capital Hobby Group Ltd/],
   ['robots metadata allows indexing', /<meta name="robots" content="index, follow">/],
   ['structured data', /application\/ld\+json/],
+  ['brand carousel', /data-carousel/],
 ];
 
 for (const [label, pattern] of checks) {

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" role="img" aria-labelledby="title">
+  <title id="title">Aoshima model kit launch preview</title>
+  <rect width="360" height="360" rx="16" fill="#161817"/>
+  <rect x="42" y="52" width="276" height="172" rx="10" fill="#f3eadc"/>
+  <rect x="60" y="72" width="238" height="92" rx="6" fill="#2b665e"/>
+  <path d="M91 174h176l26 26H66l25-26Z" fill="#202325"/>
+  <path d="M105 184h68l-14 16h-68l14-16Zm84 0h76l14 16h-72l-18-16Z" fill="#d7a047"/>
+  <text x="62" y="254" fill="#f8f1e7" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="800">AOSHIMA</text>
+  <text x="62" y="285" fill="#b9c8c4" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">plastic model kits</text>
+</svg>

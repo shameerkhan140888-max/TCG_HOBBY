@@ -29,7 +29,38 @@
     localStorage.setItem(storageKey, value);
     const subject = encodeURIComponent('Iron Sprue launch list signup');
     const body = encodeURIComponent(`Please add ${value} to the Iron Sprue launch list.\n\nI understand this request is completed only when this email is sent.`);
-    window.location.href = `mailto:hello@ironsprue.co.uk?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:info@ironsprue.co.uk?subject=${subject}&body=${body}`;
     setStatus('Your email app should open with a prepared request. Send the draft to complete signup.', 'info');
   });
+
+  const carousel = document.querySelector('[data-carousel]');
+  const track = document.querySelector('[data-carousel-track]');
+  const previous = document.querySelector('[data-carousel-prev]');
+  const next = document.querySelector('[data-carousel-next]');
+
+  if (!carousel || !track || !previous || !next) return;
+
+  let currentIndex = 0;
+  const cards = Array.from(track.children);
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const updateCarousel = () => {
+    track.style.transform = `translateX(calc(${currentIndex} * -1 * (100% / ${cards.length})))`;
+  };
+
+  const move = (direction) => {
+    currentIndex = (currentIndex + direction + cards.length) % cards.length;
+    updateCarousel();
+  };
+
+  previous.addEventListener('click', () => move(-1));
+  next.addEventListener('click', () => move(1));
+  carousel.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') move(-1);
+    if (event.key === 'ArrowRight') move(1);
+  });
+
+  if (!reduceMotion) {
+    window.setInterval(() => move(1), 5000);
+  }
 })();

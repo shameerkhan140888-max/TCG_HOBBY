@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 92" role="img" aria-labelledby="title">
+  <title id="title">Deluxe Materials</title>
+  <rect width="220" height="92" rx="8" fill="#161817"/>
+  <rect x="22" y="24" width="34" height="44" rx="5" fill="#d9a14a"/>
+  <path d="M33 24h12l5-10H28l5 10Z" fill="#f7f1e6"/>
+  <text x="70" y="43" fill="#f7f1e6" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="800">DELUXE</text>
+  <text x="70" y="64" fill="#d9a14a" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="800">MATERIALS</text>
+</svg>

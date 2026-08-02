@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" role="img" aria-labelledby="title">
+  <title id="title">Workshop tools and finishing essentials launch preview</title>
+  <rect width="220" height="220" rx="14" fill="#151815"/>
+  <path d="M54 56h68l-12 22H66L54 56Z" fill="#d7a047"/>
+  <rect x="74" y="80" width="24" height="92" rx="7" fill="#f1eadf"/>
+  <path d="M132 56h24l14 118h-52l14-118Z" fill="#7fc5ba"/>
+  <path d="M40 180h140" stroke="#f1eadf" stroke-width="8" stroke-linecap="round"/>
+  <text x="40" y="42" fill="#f1eadf" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800">BENCH KIT</text>
+</svg>

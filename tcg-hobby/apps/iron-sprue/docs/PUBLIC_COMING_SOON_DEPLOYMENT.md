@@ -17,6 +17,8 @@ The generated output contains only:
 
 - `index.html`
 - `404.html`
+- `privacy.html`
+- `cookies.html`
 - `styles.css`
 - `signup.js`
 - `robots.txt`
@@ -29,9 +31,15 @@ Do not deploy the full Next.js Iron Sprue storefront for this task.
 
 ## Cloudflare Pages Settings
 
-- Project root: `apps/iron-sprue`
-- Build command: `npm run build:coming-soon`
-- Build output directory: `dist/public-coming-soon`
+- GitHub repository: `TCG_HOBBY`
+- Project type: Pages, not Workers
+- Project name: `iron-sprue-coming-soon`
+- Production branch: `main`
+- Root directory: `tcg-hobby`
+- Framework preset: None
+- Build command: `npm run build:coming-soon -w @capital-hobby/iron-sprue`
+- Build output directory: `apps/iron-sprue/dist/public-coming-soon`
+- Node.js version: 22
 - Environment variables: none required
 - Compatibility flags: none required
 - Workers Paid: not required

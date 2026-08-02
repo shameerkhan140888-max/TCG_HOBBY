@@ -9,6 +9,8 @@ const script = readFileSync(join(sourceRoot, 'signup.js'), 'utf8');
 const robots = readFileSync(join(sourceRoot, 'robots.txt'), 'utf8');
 const sitemap = readFileSync(join(sourceRoot, 'sitemap.xml'), 'utf8');
 const headers = readFileSync(join(sourceRoot, '_headers'), 'utf8');
+const privacy = readFileSync(join(sourceRoot, 'privacy.html'), 'utf8');
+const cookies = readFileSync(join(sourceRoot, 'cookies.html'), 'utf8');
 
 describe('Iron Sprue static coming-soon page', () => {
   it('is scoped to the public landing page and does not link to incomplete commerce routes', () => {
@@ -18,11 +20,14 @@ describe('Iron Sprue static coming-soon page', () => {
   });
 
   it('uses only confirmed launch catalogue brands without partnership claims', () => {
-    for (const brand of ['Aoshima', 'Deluxe Materials', 'Expo Tools', 'OcCre Creations', 'Pintoo', 'Tasma']) {
+    for (const brand of ['Aoshima', 'Deluxe Materials', 'Expo Tools', 'OcCre Creations', 'Pintoo']) {
       expect(index).toContain(brand);
     }
 
+    expect(index).not.toContain('Tasma');
     expect(index).not.toMatch(/official partner|authorised dealer|approved retailer|official stockist/i);
+    expect(index).toContain('data-carousel');
+    expect(script).toContain('data-carousel-track');
   });
 
   it('contains the required SEO, canonical and company attribution metadata', () => {
@@ -31,15 +36,26 @@ describe('Iron Sprue static coming-soon page', () => {
     expect(index).toContain('application/ld+json');
     expect(index).toContain('trading division of Capital Hobby Group Ltd');
     expect(sitemap).toContain('<loc>https://www.ironsprue.co.uk/</loc>');
+    expect(sitemap).toContain('<loc>https://www.ironsprue.co.uk/privacy.html</loc>');
+    expect(sitemap).toContain('<loc>https://www.ironsprue.co.uk/cookies.html</loc>');
     expect(sitemap).not.toMatch(/shop|products|account|checkout|api|admin/);
   });
 
   it('keeps the mailing-list path explicit and free of backend secrets', () => {
     expect(index).toContain('id="launch-list-form"');
     expect(index).toContain('<label for="launch-email">Email address</label>');
-    expect(index).toContain('mailto:hello@ironsprue.co.uk');
+    expect(index).toContain('mailto:info@ironsprue.co.uk');
+    expect(index).not.toContain('mailto:hello@ironsprue.co.uk');
     expect(script).toContain('Send the draft to complete signup');
     expect(`${index}\n${script}`).not.toMatch(/Resend|STRIPE|DATABASE_URL|AUTH_SECRET|localhost|127\.0\.0\.1/i);
+  });
+
+  it('publishes standalone privacy and cookie pages without commerce services', () => {
+    expect(index).toContain('href="/privacy.html"');
+    expect(index).toContain('href="/cookies.html"');
+    expect(privacy).toContain('Privacy notice');
+    expect(cookies).toContain('Cookie policy');
+    expect(`${privacy}\n${cookies}`).not.toMatch(/Stripe|Prisma|DATABASE_URL|AUTH_SECRET|localhost|127\.0\.0\.1/i);
   });
 
   it('ships static Cloudflare Pages controls and avoids service calls', () => {
