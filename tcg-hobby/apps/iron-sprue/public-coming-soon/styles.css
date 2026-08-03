@@ -87,6 +87,10 @@ input:focus-visible {
   height: auto;
 }
 
+.brand-link img {
+  width: clamp(230px, 24vw, 330px);
+}
+
 .site-nav,
 .site-footer nav {
   display: flex;
@@ -107,6 +111,20 @@ input:focus-visible {
 .site-footer a {
   text-decoration-thickness: 1px;
   text-underline-offset: 5px;
+}
+
+.icon-link,
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-link svg,
+.icon-button svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
 }
 
 .hero {
@@ -198,6 +216,10 @@ button {
 .button.secondary {
   background: transparent;
   color: var(--ink);
+}
+
+.site-header .icon-link {
+  color: var(--panel);
 }
 
 .hero-visual {
@@ -306,21 +328,15 @@ button {
   flex-direction: column;
   justify-content: center;
   gap: 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--graphite);
-  padding: 22px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 18px;
 }
 
 .brand-track img {
   width: min(100%, 220px);
   height: auto;
-}
-
-.brand-track small {
-  color: rgba(255, 250, 241, 0.72);
-  font-weight: 800;
-  text-align: center;
 }
 
 .carousel-button {
@@ -382,6 +398,13 @@ button {
   margin-top: 26px;
 }
 
+.hidden-field {
+  position: absolute;
+  left: -100vw;
+  width: 1px;
+  height: 1px;
+}
+
 label {
   display: block;
   margin-bottom: 8px;
@@ -410,6 +433,25 @@ input {
 .form-status {
   max-width: 700px;
   font-size: 14px;
+}
+
+.consent-check {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  max-width: 720px;
+  margin-top: 14px;
+  color: var(--soft-ink);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.consent-check input {
+  width: 18px;
+  min-height: 18px;
+  margin-top: 2px;
 }
 
 .form-status {
