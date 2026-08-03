@@ -455,17 +455,22 @@ p {
 }
 
 .site-footer {
-  display: flex;
+  display: grid;
   min-height: 50px;
+  grid-template-columns: minmax(260px, 1fr) auto auto;
   align-items: center;
-  justify-content: space-between;
   gap: 24px;
-  padding: 12px 18px;
+  padding: 14px 18px;
   border: 1px solid var(--line-soft);
   border-top: 0;
   border-radius: 0 0 var(--radius) var(--radius);
   color: var(--quiet);
   font-size: 11px;
+}
+
+.footer-company {
+  display: grid;
+  gap: 4px;
 }
 
 .site-footer p {
@@ -609,6 +614,16 @@ p {
 .company-facts dd {
   margin: 0;
   color: var(--silver);
+}
+
+.legal-facts {
+  padding: 4px 0;
+  border-block: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+}
+
+.legal-facts div {
+  min-height: 70px;
 }
 
 .centred-cta {
@@ -922,6 +937,7 @@ p {
     justify-items: start;
     gap: 8px;
     padding: 13px 14px;
+    grid-template-columns: 1fr;
   }
 
   .site-footer p {

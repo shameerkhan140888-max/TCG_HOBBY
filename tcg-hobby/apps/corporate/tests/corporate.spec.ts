@@ -39,7 +39,7 @@ test.describe("Capital Hobby Group corporate site", () => {
     await expect(navigation.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
     await navigation.getByRole("link", { name: "About" }).click();
     await expect(page).toHaveURL(/\/about$/);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Focused brands, developed responsibly.");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Built from the hobbies, not outside them.");
     await page.getByRole("link", { name: "Contact" }).first().click();
     await expect(page).toHaveURL(/\/contact$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Direct your enquiry.");

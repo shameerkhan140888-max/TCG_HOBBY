@@ -35,12 +35,24 @@ describe("corporate site", () => {
 
   it("renders factual About, approved Contact details and cookie content", () => {
     const markup = renderToStaticMarkup(<><AboutPage /><ContactPage /><CookiesPage /></>);
+    expect(markup).toContain("Built from the hobbies, not outside them.");
+    expect(markup).toContain("specialist hobbies deserve shops that understand why the details matter");
     expect(markup).toContain("Registered company information");
+    expect(markup).toContain("legal-facts");
     expect(markup).toContain("4-6 Greatorex Street");
     expect(markup).toContain("info@capitalhobbygroup.co.uk");
     expect(markup).toContain("accounts@capitalhobbygroup.co.uk");
     expect(markup).toContain("No marketing tracking on this corporate site.");
     expect(markup).toContain("does not provide customer accounts");
+  });
+
+  it("uses a compact icon-only Corporate favicon and professional footer links", () => {
+    const markup = renderToStaticMarkup(<SiteFooter />);
+    expect(markup).toContain("info@capitalhobbygroup.co.uk");
+    expect(markup).toContain("TCG Hobby");
+    expect(markup).toContain("Iron Sprue");
+    expect(markup).toContain("/privacy");
+    expect(markup).toContain("/cookies");
   });
 
   it("keeps Iron Sprue marked as launching soon with a public HTTPS destination", () => {

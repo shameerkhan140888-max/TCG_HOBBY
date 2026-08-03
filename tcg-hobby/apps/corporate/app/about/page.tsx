@@ -16,19 +16,19 @@ export default function AboutPage() {
     <>
       <PageIntro
         eyebrow="About the group"
-        title="Focused brands, developed responsibly."
-        description="Capital Hobby Group Ltd provides shared commercial and operational direction for specialist hobby retail divisions."
+        title="Built from the hobbies, not outside them."
+        description="Capital Hobby Group Ltd exists to build clear, reliable retail brands for specialist hobby communities."
       />
       <section className="section">
         <div className="site-shell editorial-grid">
           <div className="editorial-aside">
             <p className="eyebrow">Our purpose</p>
-            <h2>Specialist retail with a clear point of view.</h2>
+            <h2>Practical retail for people who care about the details.</h2>
           </div>
           <div className="prose">
-            <p>Capital Hobby Group Ltd was established to develop focused retail brands across specialist hobby markets. Each trading division serves a distinct community while sharing a common approach to product information, service and responsible growth.</p>
-            <p>TCG Hobby serves trading-card collectors and players through sealed products and accessories. Iron Sprue is launching soon for modellers and hobbyists seeking model kits, 3D puzzles, display builds, tools and modelling essentials.</p>
-            <p>The group supports both divisions with shared commercial direction, operational standards and a long-term approach to supplier and trade relationships.</p>
+            <p>Capital Hobby Group Ltd was established because specialist hobbies deserve shops that understand why the details matter. The group is shaped by hands-on interest in collecting, building and the small decisions that make a purchase feel dependable.</p>
+            <p>TCG Hobby serves trading-card collectors and players through sealed products and accessories. Iron Sprue is launching soon for modellers and hobbyists seeking model kits, 3D puzzles, display builds, tools and workshop essentials.</p>
+            <p>Each division keeps its own identity and customer journey, while the group provides shared standards for clear product information, careful supplier relationships, privacy-conscious operations and responsible growth.</p>
           </div>
         </div>
       </section>
@@ -38,7 +38,7 @@ export default function AboutPage() {
             <p className="eyebrow">Company details</p>
             <h2 id="company-details-title">Registered company information.</h2>
           </div>
-          <dl className="company-facts">
+          <dl className="company-facts legal-facts">
             <div><dt>Legal name</dt><dd>{company.legalName}</dd></div>
             <div><dt>Company number</dt><dd>{company.companyNumber}</dd></div>
             <div><dt>Jurisdiction</dt><dd>{company.jurisdiction}</dd></div>

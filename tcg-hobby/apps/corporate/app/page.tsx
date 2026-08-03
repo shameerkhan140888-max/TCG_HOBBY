@@ -55,8 +55,8 @@ export default function HomePage() {
             <h1 id="home-title">Parent company for specialist hobby divisions.</h1>
             <p className="statement-tagline">Focused retail brands for distinct hobby communities.</p>
             <p>
-              We develop focused UK retail brands with clear identities, dependable operations and a genuine
-              understanding of the communities they serve.
+              We build UK hobby retail brands with clear identities, careful product information and practical
+              operations shaped around collectors, players, modellers and hobbyists.
             </p>
           </div>
 

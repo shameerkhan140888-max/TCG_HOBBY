@@ -31,7 +31,10 @@ export const metadata: Metadata = {
     images: ["/brand/capital-hobby-group-horizontal.svg"],
   },
   icons: {
-    icon: "/brand/capital-hobby-group-stacked.svg",
+    icon: [
+      { url: "/brand/capital-hobby-group-icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/brand/capital-hobby-group-icon.svg",
   },
 };
 
