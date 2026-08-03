@@ -20,7 +20,7 @@ describe('Iron Sprue static coming-soon page', () => {
   });
 
   it('uses only confirmed launch catalogue brands without partnership claims', () => {
-    for (const brand of ['Aoshima', 'Deluxe Materials', 'Expo Tools', 'OcCre Creations', 'Pintoo']) {
+    for (const brand of ['Aoshima', 'CubicFun', 'Deluxe Materials', 'Expo Tools', 'OcCre Creations', 'Pintoo']) {
       expect(index).toContain(brand);
     }
 
@@ -28,6 +28,18 @@ describe('Iron Sprue static coming-soon page', () => {
     expect(index).not.toMatch(/official partner|authorised dealer|approved retailer|official stockist/i);
     expect(index).toContain('data-carousel');
     expect(script).toContain('data-carousel-track');
+    expect(index).toContain('/assets/brands/aoshima.webp');
+    expect(index).toContain('/assets/brands/cubicfun.webp');
+    expect(index).toContain('/assets/brands/pintoo.webp');
+  });
+
+  it('uses authorised local product imagery rather than pseudo product placeholders', () => {
+    expect(index).toContain('/assets/products/aoshima-lamborghini-adventador-green.jpg');
+    expect(index).toContain('/assets/products/cubicfun-burj-al-arab.jpg');
+    expect(index).toContain('Aoshima Lamborghini Adventador Green');
+    expect(index).toContain('CubicFun Burj Al Arab');
+    expect(index).not.toContain('/assets/products/aoshima-kit.svg');
+    expect(index).not.toContain('/assets/products/pintoo-display-build.svg');
   });
 
   it('contains the required SEO, canonical and company attribution metadata', () => {

@@ -12,13 +12,14 @@ const requiredFiles = [
   '_headers',
   '_redirects',
   'assets/iron-sprue-horizontal.svg',
-  'assets/brands/aoshima.svg',
+  'assets/brands/aoshima.webp',
+  'assets/brands/cubicfun.webp',
   'assets/brands/deluxe-materials.svg',
   'assets/brands/expo-tools.svg',
   'assets/brands/occre-creations.svg',
-  'assets/brands/pintoo.svg',
-  'assets/products/aoshima-kit.svg',
-  'assets/products/pintoo-display-build.svg',
+  'assets/brands/pintoo.webp',
+  'assets/products/aoshima-lamborghini-adventador-green.jpg',
+  'assets/products/cubicfun-burj-al-arab.jpg',
   'assets/products/workshop-essentials.svg',
 ];
 const forbiddenPatterns = [
