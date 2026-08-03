@@ -12,6 +12,7 @@
     "validate:coming-soon": "node scripts/validate-coming-soon.mjs"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "@tcg-hobby/types": "*",
     "@tcg-hobby/ui": "*",
     "@tcg-hobby/utils": "*",

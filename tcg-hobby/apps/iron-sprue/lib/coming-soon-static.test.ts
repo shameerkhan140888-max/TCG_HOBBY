@@ -44,10 +44,13 @@ describe('Iron Sprue static coming-soon page', () => {
   it('keeps the mailing-list path explicit and free of backend secrets', () => {
     expect(index).toContain('id="launch-list-form"');
     expect(index).toContain('<label for="launch-email">Email address</label>');
-    expect(index).toContain('mailto:info@ironsprue.co.uk');
+    expect(index).toContain('action="/api/launch-list"');
+    expect(index).toContain('id="launch-consent"');
+    expect(index).toContain('I agree to receive Iron Sprue launch updates');
     expect(index).not.toContain('mailto:hello@ironsprue.co.uk');
-    expect(script).toContain('Send the draft to complete signup');
-    expect(`${index}\n${script}`).not.toMatch(/Resend|STRIPE|DATABASE_URL|AUTH_SECRET|localhost|127\.0\.0\.1/i);
+    const formMarkup = index.match(/<form[^>]+id="launch-list-form"[\s\S]*?<\/form>/i)?.[0] ?? '';
+    expect(`${formMarkup}\n${script}`).not.toMatch(/mailto:|localStorage|STRIPE|DATABASE_URL|AUTH_SECRET|localhost|127\.0\.0\.1/i);
+    expect(script).toContain("fetch('/api/launch-list'");
   });
 
   it('publishes standalone privacy and cookie pages without commerce services', () => {
@@ -55,12 +58,15 @@ describe('Iron Sprue static coming-soon page', () => {
     expect(index).toContain('href="/cookies.html"');
     expect(privacy).toContain('Privacy notice');
     expect(cookies).toContain('Cookie policy');
+    expect(privacy).toContain('dedicated Iron Sprue Neon database');
+    expect(privacy).toContain('Resend');
+    expect(cookies).toContain('does not use browser local storage');
     expect(`${privacy}\n${cookies}`).not.toMatch(/Stripe|Prisma|DATABASE_URL|AUTH_SECRET|localhost|127\.0\.0\.1/i);
   });
 
   it('ships static Cloudflare Pages controls and avoids service calls', () => {
-    expect(headers).toContain("connect-src 'none'");
-    expect(headers).toContain("form-action 'self' mailto:");
+    expect(headers).toContain("connect-src 'self'");
+    expect(headers).toContain("form-action 'self'");
     expect(robots).toContain('Disallow: /checkout');
     expect(robots).toContain('Sitemap: https://www.ironsprue.co.uk/sitemap.xml');
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)');

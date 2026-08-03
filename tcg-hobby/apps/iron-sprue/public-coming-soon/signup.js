@@ -1,10 +1,12 @@
 (function () {
   const form = document.getElementById('launch-list-form');
   const email = document.getElementById('launch-email');
+  const consent = document.getElementById('launch-consent');
+  const website = document.getElementById('launch-website');
   const status = document.getElementById('launch-list-status');
-  const storageKey = 'ironSprueLaunchListEmail';
+  const submit = form ? form.querySelector('button[type="submit"]') : null;
 
-  if (!form || !email || !status) return;
+  if (!form || !email || !consent || !status || !submit) return;
 
   const setStatus = (message, type) => {
     status.textContent = message;
@@ -16,21 +18,43 @@
     const value = email.value.trim().toLowerCase();
 
     if (!email.checkValidity()) {
-      setStatus('Enter a valid email address before preparing the signup email.', 'error');
+      setStatus('Enter a valid email address.', 'error');
       email.focus();
       return;
     }
 
-    if (localStorage.getItem(storageKey) === value) {
-      setStatus('This browser has already prepared a launch-list request for that address. Send the draft if you have not already done so.', 'info');
+    if (!consent.checked) {
+      setStatus('Please tick the consent box to join the launch list.', 'error');
+      consent.focus();
       return;
     }
 
-    localStorage.setItem(storageKey, value);
-    const subject = encodeURIComponent('Iron Sprue launch list signup');
-    const body = encodeURIComponent(`Please add ${value} to the Iron Sprue launch list.\n\nI understand this request is completed only when this email is sent.`);
-    window.location.href = `mailto:info@ironsprue.co.uk?subject=${subject}&body=${body}`;
-    setStatus('Your email app should open with a prepared request. Send the draft to complete signup.', 'info');
+    submit.disabled = true;
+    submit.textContent = 'Joining...';
+    setStatus('', 'info');
+
+    fetch('/api/launch-list', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email: value,
+        consent: consent.checked,
+        website: website ? website.value : '',
+      }),
+    })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.message || 'Signup failed.');
+        setStatus(payload.duplicate ? 'You are already on the Iron Sprue launch list.' : 'You are on the Iron Sprue launch list. Please check your email for confirmation.', 'info');
+        form.reset();
+      })
+      .catch(() => {
+        setStatus('Sorry, signup is temporarily unavailable. Please try again later.', 'error');
+      })
+      .finally(() => {
+        submit.disabled = false;
+        submit.textContent = submit.dataset.submitLabel || 'Join launch list';
+      });
   });
 
   const carousel = document.querySelector('[data-carousel]');
@@ -61,6 +85,10 @@
   });
 
   if (!reduceMotion) {
-    window.setInterval(() => move(1), 5000);
+    let timer = window.setInterval(() => move(1), 5000);
+    carousel.addEventListener('pointerdown', () => {
+      window.clearInterval(timer);
+      timer = 0;
+    }, { once: true });
   }
 })();
