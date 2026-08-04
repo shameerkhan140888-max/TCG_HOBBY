@@ -11,6 +11,8 @@ const sitemap = readFileSync(join(sourceRoot, 'sitemap.xml'), 'utf8');
 const headers = readFileSync(join(sourceRoot, '_headers'), 'utf8');
 const privacy = readFileSync(join(sourceRoot, 'privacy.html'), 'utf8');
 const cookies = readFileSync(join(sourceRoot, 'cookies.html'), 'utf8');
+const contact = readFileSync(join(sourceRoot, 'contact.html'), 'utf8');
+const logo = readFileSync(join(__dirname, '..', 'public', 'brand', 'iron-sprue-horizontal.svg'), 'utf8');
 
 describe('Iron Sprue static coming-soon page', () => {
   it('is scoped to the public landing page and does not link to incomplete commerce routes', () => {
@@ -40,12 +42,15 @@ describe('Iron Sprue static coming-soon page', () => {
     expect(index).toContain('/assets/products/aoshima-skyline-gtr-red-pearl.jpg');
     expect(index).toContain('/assets/products/aoshima-toyota-gr86-spark-red.jpg');
     expect(index).toContain('/assets/products/cubicfun-burj-al-arab.jpg');
+    expect(index).toContain('/assets/products/pintoo-koi-carp-lotus-vase.jpg');
     expect(index).toContain('Aoshima Lamborghini Adventador Green');
     expect(index).toContain('Toyota GR86 Spark Red');
     expect(index).toContain('Skyline GTR Red Pearl');
     expect(index).toContain('CubicFun Burj Al Arab');
+    expect(index).toContain('Koi Carp and Lotus Vase');
     expect(index).not.toContain('/assets/products/aoshima-kit.svg');
     expect(index).not.toContain('/assets/products/pintoo-display-build.svg');
+    expect(index).not.toContain('/assets/products/workshop-essentials.svg');
   });
 
   it('keeps the coming-soon page short and avoids repeated product sections', () => {
@@ -56,7 +61,13 @@ describe('Iron Sprue static coming-soon page', () => {
     expect(index).not.toContain('Company and privacy');
     expect(index).not.toContain('Launch categories');
     expect(index).not.toContain('Follow the bench as it comes together');
+    expect(index).not.toMatch(/approved lines|183 units|opening PO|purchase order|approved opening purchase order/i);
     expect((index.match(/aoshima-lamborghini-adventador-green\.jpg/g) ?? [])).toHaveLength(2);
+  });
+
+  it('uses the transparent Iron Sprue logo asset without a baked-in header panel', () => {
+    expect(logo).not.toContain('fill:#151515');
+    expect(logo).not.toMatch(/<polygon[^>]+points="8015\.43,7005\.8 8015\.43,3994\.2 484\.57,3994\.2 484\.57,7005\.8 "/);
   });
 
   it('contains the required SEO, canonical and company attribution metadata', () => {
@@ -67,6 +78,7 @@ describe('Iron Sprue static coming-soon page', () => {
     expect(sitemap).toContain('<loc>https://www.ironsprue.co.uk/</loc>');
     expect(sitemap).toContain('<loc>https://www.ironsprue.co.uk/privacy.html</loc>');
     expect(sitemap).toContain('<loc>https://www.ironsprue.co.uk/cookies.html</loc>');
+    expect(sitemap).toContain('<loc>https://www.ironsprue.co.uk/contact.html</loc>');
     expect(sitemap).not.toMatch(/shop|products|account|checkout|api|admin/);
   });
 
@@ -82,15 +94,19 @@ describe('Iron Sprue static coming-soon page', () => {
     expect(script).toContain("fetch('/api/launch-list'");
   });
 
-  it('publishes standalone privacy and cookie pages without commerce services', () => {
+  it('publishes standalone privacy, cookie and contact pages without commerce services', () => {
     expect(index).toContain('href="/privacy.html"');
     expect(index).toContain('href="/cookies.html"');
+    expect(index).toContain('href="/contact.html"');
     expect(privacy).toContain('Privacy notice');
     expect(cookies).toContain('Cookie policy');
-    expect(privacy).toContain('dedicated Iron Sprue Neon database');
-    expect(privacy).toContain('Resend');
+    expect(contact).toContain('Contact Iron Sprue');
+    expect(privacy).toContain('company number 17336948');
     expect(cookies).toContain('does not use browser local storage');
-    expect(`${privacy}\n${cookies}`).not.toMatch(/Stripe|Prisma|DATABASE_URL|AUTH_SECRET|localhost|127\.0\.0\.1/i);
+    expect(contact).toContain('4-6 Greatorex Street');
+    expect(contact).toContain('info@ironsprue.co.uk');
+    expect(cookies).toContain('does not use browser local storage');
+    expect(`${privacy}\n${cookies}\n${contact}`).not.toMatch(/Stripe|Prisma|DATABASE_URL|AUTH_SECRET|localhost|127\.0\.0\.1/i);
   });
 
   it('ships static Cloudflare Pages controls and avoids service calls', () => {

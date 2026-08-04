@@ -7,6 +7,7 @@ const requiredFiles = [
   '404.html',
   'privacy.html',
   'cookies.html',
+  'contact.html',
   'robots.txt',
   'sitemap.xml',
   '_headers',
@@ -22,7 +23,7 @@ const requiredFiles = [
   'assets/products/aoshima-skyline-gtr-red-pearl.jpg',
   'assets/products/aoshima-toyota-gr86-spark-red.jpg',
   'assets/products/cubicfun-burj-al-arab.jpg',
-  'assets/products/workshop-essentials.svg',
+  'assets/products/pintoo-koi-carp-lotus-vase.jpg',
 ];
 const forbiddenPatterns = [
   /href=["']\/(?:shop|products|catalogue|account|cart|checkout|api|admin)\b/i,
@@ -65,23 +66,33 @@ for (const file of files) {
 }
 
 const index = await readOutput('index.html');
+const contact = await readOutput('contact.html');
+const logo = await readOutput('assets/iron-sprue-horizontal.svg');
 const checks = [
   ['canonical www URL', /<link rel="canonical" href="https:\/\/www\.ironsprue\.co\.uk\/">/],
   ['mailing-list form', /<form[^>]+id="launch-list-form"/],
   ['server-side signup action', /action="\/api\/launch-list"/],
   ['accessible email label', /<label for="launch-email">Email address<\/label>/],
   ['explicit consent checkbox', /<input[^>]+id="launch-consent"[^>]+type="checkbox"[^>]+required/],
-  ['public contact email', /info@ironsprue\.co\.uk/],
   ['Instagram handle', /@iron\.sprue/],
   ['Capital Hobby Group attribution', /trading division of Capital Hobby Group Ltd/],
   ['robots metadata allows indexing', /<meta name="robots" content="index, follow">/],
   ['structured data', /application\/ld\+json/],
   ['payment trust banner', /Safe\. Secure\. Trusted\./],
   ['static brand strip', /Brands planned for launch/],
+  ['Pintoo launch product', /Koi Carp and Lotus Vase/],
 ];
 
 for (const [label, pattern] of checks) {
 if (!pattern.test(index)) throw new Error(`Missing ${label}`);
+}
+
+if (!/info@ironsprue\.co\.uk/.test(contact)) {
+  throw new Error('Missing public contact email on contact page');
+}
+
+if (/fill:#151515/.test(logo) || /<polygon[^>]+points="8015\.43,7005\.8 8015\.43,3994\.2 484\.57,3994\.2 484\.57,7005\.8 "/.test(logo)) {
+  throw new Error('Iron Sprue logo must not include a baked-in dark background panel.');
 }
 
 const script = await readOutput('signup.js');
