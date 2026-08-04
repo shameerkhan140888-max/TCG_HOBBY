@@ -17,6 +17,8 @@ describe('Iron Sprue static coming-soon page', () => {
     expect(index).not.toMatch(/href=["']\/(?:shop|products|catalogue|account|cart|checkout|api|admin)\b/i);
     expect(index).toContain('href="#launch-list"');
     expect(index).toContain('https://www.instagram.com/iron.sprue/');
+    expect(index).not.toContain('<a href="#brands">Brands</a>');
+    expect(index).not.toContain('<a href="#launch-list">Launch list</a>');
   });
 
   it('uses only confirmed launch catalogue brands without partnership claims', () => {
@@ -26,8 +28,8 @@ describe('Iron Sprue static coming-soon page', () => {
 
     expect(index).not.toContain('Tasma');
     expect(index).not.toMatch(/official partner|authorised dealer|approved retailer|official stockist/i);
-    expect(index).toContain('data-carousel');
-    expect(script).toContain('data-carousel-track');
+    expect(index).toContain('Brands planned for launch');
+    expect(index).not.toContain('data-carousel');
     expect(index).toContain('/assets/brands/aoshima.webp');
     expect(index).toContain('/assets/brands/cubicfun.webp');
     expect(index).toContain('/assets/brands/pintoo.webp');
@@ -35,11 +37,26 @@ describe('Iron Sprue static coming-soon page', () => {
 
   it('uses authorised local product imagery rather than pseudo product placeholders', () => {
     expect(index).toContain('/assets/products/aoshima-lamborghini-adventador-green.jpg');
+    expect(index).toContain('/assets/products/aoshima-skyline-gtr-red-pearl.jpg');
+    expect(index).toContain('/assets/products/aoshima-toyota-gr86-spark-red.jpg');
     expect(index).toContain('/assets/products/cubicfun-burj-al-arab.jpg');
     expect(index).toContain('Aoshima Lamborghini Adventador Green');
+    expect(index).toContain('Toyota GR86 Spark Red');
+    expect(index).toContain('Skyline GTR Red Pearl');
     expect(index).toContain('CubicFun Burj Al Arab');
     expect(index).not.toContain('/assets/products/aoshima-kit.svg');
     expect(index).not.toContain('/assets/products/pintoo-display-build.svg');
+  });
+
+  it('keeps the coming-soon page short and avoids repeated product sections', () => {
+    expect(index).toContain('Safe. Secure. Trusted.');
+    expect(index).toContain('Visa');
+    expect(index).toContain('Mastercard');
+    expect(index).toContain('PayPal');
+    expect(index).not.toContain('Company and privacy');
+    expect(index).not.toContain('Launch categories');
+    expect(index).not.toContain('Follow the bench as it comes together');
+    expect((index.match(/aoshima-lamborghini-adventador-green\.jpg/g) ?? [])).toHaveLength(2);
   });
 
   it('contains the required SEO, canonical and company attribution metadata', () => {

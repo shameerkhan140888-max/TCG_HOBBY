@@ -19,6 +19,8 @@ const requiredFiles = [
   'assets/brands/occre-creations.svg',
   'assets/brands/pintoo.webp',
   'assets/products/aoshima-lamborghini-adventador-green.jpg',
+  'assets/products/aoshima-skyline-gtr-red-pearl.jpg',
+  'assets/products/aoshima-toyota-gr86-spark-red.jpg',
   'assets/products/cubicfun-burj-al-arab.jpg',
   'assets/products/workshop-essentials.svg',
 ];
@@ -74,7 +76,8 @@ const checks = [
   ['Capital Hobby Group attribution', /trading division of Capital Hobby Group Ltd/],
   ['robots metadata allows indexing', /<meta name="robots" content="index, follow">/],
   ['structured data', /application\/ld\+json/],
-  ['brand carousel', /data-carousel/],
+  ['payment trust banner', /Safe\. Secure\. Trusted\./],
+  ['static brand strip', /Brands planned for launch/],
 ];
 
 for (const [label, pattern] of checks) {
