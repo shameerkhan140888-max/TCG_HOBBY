@@ -46,12 +46,27 @@ describe('authorised distributor content import guards', () => {
     }, {
       store: 'IRON_SPRUE',
       bucketBinding: 'IRON_SPRUE_MEDIA',
-      bucketName: 'iron-sprue-media',
-      publicBaseUrl: 'https://media.iron-sprue.example',
+      accountId: 'iron-account',
+      bucketName: 'iron-sprue-product-media',
+      accessKeyId: 'iron-access-key',
+      secretAccessKey: 'iron-secret-key',
+      endpoint: 'https://iron-account.r2.cloudflarestorage.com',
+      region: 'auto',
+      publicBaseUrl: 'https://media.ironsprue.co.uk',
       uploadPrefix: 'products/',
       allowedMimeTypes: ['image/jpeg'],
       maxFileSizeBytes: 1_000_000,
       cacheControl: 'public, max-age=31536000, immutable',
+      corsPolicy: {
+        allowedOrigins: ['https://www.ironsprue.co.uk'],
+        allowedMethods: ['GET', 'HEAD'],
+        allowedHeaders: ['Content-Type', 'Cache-Control'],
+        exposeHeaders: ['ETag', 'Cache-Control'],
+      },
+      lifecyclePolicy: {
+        incompleteMultipartUploadDays: 7,
+        nonCurrentVersionExpirationDays: 90,
+      },
     })).toBe('products/is-aos-05627/abc123.jpg');
   });
 });

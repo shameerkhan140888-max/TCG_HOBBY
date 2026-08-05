@@ -1,0 +1,29 @@
+{
+  "sourceDocument": "Proforma Capital Hobby.pdf",
+  "supplier": "Tasma Products Limited",
+  "customer": "Capital Hobby Group Ltd t/a Iron Sprue",
+  "salesOrder": "27676",
+  "orderDate": "2026-08-03",
+  "purchaseOrderReference": "IS-PO-2026-07",
+  "pdfRowCount": 84,
+  "approvedSellableLineCount": 81,
+  "approvedUnitCount": 233,
+  "zeroQuantityLineCount": 3,
+  "netTotal": 1343.9,
+  "vatTotal": 268.77,
+  "orderTotal": 1612.67,
+  "zeroQuantityLines": [
+    {
+      "supplierSku": "TAS008143",
+      "description": "Deluxe Materials BD44 Perfect Plastic Putty 40ml"
+    },
+    {
+      "supplierSku": "TAS075026",
+      "description": "Expo 70250 Flexible Sanding Sheet Set"
+    },
+    {
+      "supplierSku": "TAS080853",
+      "description": "3D Jigsaw Vase S1004 The Harmonious Phoenix"
+    }
+  ]
+}

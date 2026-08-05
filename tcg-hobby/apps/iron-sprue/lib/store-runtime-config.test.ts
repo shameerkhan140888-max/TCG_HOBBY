@@ -32,16 +32,43 @@ describe('Iron Sprue runtime isolation config', () => {
   });
 
   it('requires a dedicated HTTPS Iron Sprue R2 public base URL', () => {
+    process.env.IRON_SPRUE_ENVIRONMENT = 'production';
     process.env.R2_BUCKET_NAME = 'tcg-hobby-media';
-    process.env.IRON_SPRUE_R2_BUCKET_NAME = 'iron-sprue-media';
-    process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL = 'https://media.iron-sprue.co.uk';
+    process.env.IRON_SPRUE_R2_ACCOUNT_ID = 'iron-account';
+    process.env.IRON_SPRUE_R2_BUCKET_NAME = 'iron-sprue-product-media';
+    process.env.IRON_SPRUE_R2_ACCESS_KEY_ID = 'iron-access-key';
+    process.env.IRON_SPRUE_R2_SECRET_ACCESS_KEY = 'iron-secret-key';
+    process.env.IRON_SPRUE_R2_ENDPOINT = 'https://iron-account.r2.cloudflarestorage.com';
+    process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL = 'https://media.ironsprue.co.uk';
 
     expect(getIronSprueMediaConfig()).toMatchObject({
       store: 'IRON_SPRUE',
       bucketBinding: 'IRON_SPRUE_MEDIA',
-      bucketName: 'iron-sprue-media',
-      publicBaseUrl: 'https://media.iron-sprue.co.uk',
+      bucketName: 'iron-sprue-product-media',
+      publicBaseUrl: 'https://media.ironsprue.co.uk',
+      uploadPrefix: 'products/',
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
+      cacheControl: 'public, max-age=31536000, immutable',
     });
+  });
+
+  it('fails closed when Iron Sprue media would reuse a TCG bucket or non-production host', () => {
+    process.env.IRON_SPRUE_ENVIRONMENT = 'production';
+    process.env.R2_BUCKET_NAME = 'tcg-hobby-media';
+    process.env.IRON_SPRUE_R2_ACCOUNT_ID = 'iron-account';
+    process.env.IRON_SPRUE_R2_BUCKET_NAME = 'tcg-hobby-media';
+    process.env.IRON_SPRUE_R2_ACCESS_KEY_ID = 'iron-access-key';
+    process.env.IRON_SPRUE_R2_SECRET_ACCESS_KEY = 'iron-secret-key';
+    process.env.IRON_SPRUE_R2_ENDPOINT = 'https://iron-account.r2.cloudflarestorage.com';
+    process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL = 'https://media.ironsprue.co.uk';
+
+    expect(() => getIronSprueMediaConfig()).toThrow(/iron-sprue-product-media/);
+
+    process.env.R2_BUCKET_NAME = 'tcg-hobby-media';
+    process.env.IRON_SPRUE_R2_BUCKET_NAME = 'iron-sprue-product-media';
+    process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL = 'https://iron-sprue-media.r2.dev';
+
+    expect(() => getIronSprueMediaConfig()).toThrow(/custom media domain/);
   });
 
   it('rejects TCG media paths', () => {
