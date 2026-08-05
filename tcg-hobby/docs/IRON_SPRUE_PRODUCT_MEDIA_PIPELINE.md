@@ -44,18 +44,39 @@ Required runtime variables:
 
 The application must not print access keys, secret keys, connection strings or signed object URLs in build or runtime logs.
 
+`IRON_SPRUE_R2_PUBLIC_BASE_URL` may remain empty in local development until the custom public media domain is configured. That does not block private R2 upload, archive or processing work during the catalogue sprint. Production media delivery must use `https://media.ironsprue.co.uk`; production must fail closed if the public base URL is missing or points at `r2.dev`.
+
+## Object-Key Strategy
+
+R2 uses object prefixes, not physical folders. The catalogue sprint must write real objects beneath these prefixes and must not create empty placeholder objects merely to simulate directories:
+
+- `incoming/products/<sku>/`
+- `archive/products/<sku>/original/`
+- `processed/products/<sku>/catalogue/`
+- `processed/products/<sku>/completed/`
+- `processed/products/<sku>/workshop/`
+- `processed/products/<sku>/lifestyle/`
+- `published/products/<sku>/`
+- `marketing/heroes/`
+- `brands/logos/`
+- `categories/`
+
 ## Asset Stages
 
 Each imported product should have these media records, all replaceable through the Iron Sprue Admin media controls:
 
-1. Manufacturer original: authorised source image kept for audit/reference.
-2. Catalogue white background: clean product-only commerce image on white.
+1. Manufacturer original: authorised source image kept unaltered for audit/reference and gallery use. It is not the default storefront image.
+2. Catalogue white background: clean product-only commerce image on white. This is Image 2 and is the default customer-facing storefront image.
 3. Completed product render: faithful finished-kit/product visual.
 4. Workshop photography: product staged on the official Iron Sprue playmat/workbench identity.
 5. Supporting workshop image: optional additional range/detail image.
 6. Hero artwork: bespoke promotional artwork for home panels and offer banners.
 
 Hero artwork must not bake in headline, CTA, badges, prices or accessibility text. Those remain HTML/CSS so Admin can change them without regenerating images.
+
+Product gallery order is: Image 2 catalogue primary, completed result, Iron Sprue workshop image, supporting/detail images, then the original manufacturer packaging/reference image. Products must remain Draft until Image 2 has been produced and approved.
+
+Permanent principle: Catalogue images document the product. Hero artwork sells the hobby.
 
 Responsive derivatives should be prepared at `320`, `640`, `960`, `1280`, `1600` and `2048` pixels where the source quality allows. WebP and AVIF should be preferred for storefront delivery, with JPEG/PNG retained where transparency or source fidelity requires it.
 

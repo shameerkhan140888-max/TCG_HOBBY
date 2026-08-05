@@ -28,13 +28,26 @@ export type IronSprueMediaAssetSpec = {
 
 export type IronSprueMediaPlanItem = IronSprueMediaAssetSpec & {
   keyPrefix: string;
-  publicUrlPrefix: string;
+  publicUrlPrefix?: string;
   responsiveWidths: readonly number[];
 };
 
 export const IRON_SPRUE_PRODUCT_MEDIA_BUCKET = 'iron-sprue-product-media';
 export const IRON_SPRUE_MEDIA_DOMAIN = 'media.ironsprue.co.uk';
 export const IRON_SPRUE_RESPONSIVE_IMAGE_WIDTHS = [320, 640, 960, 1280, 1600, 2048] as const;
+
+export const IRON_SPRUE_MEDIA_PREFIXES = {
+  incomingProduct: (sku: string) => `incoming/products/${slugifyMediaPart(sku)}/`,
+  archiveOriginal: (sku: string) => `archive/products/${slugifyMediaPart(sku)}/original/`,
+  processedCatalogue: (sku: string) => `processed/products/${slugifyMediaPart(sku)}/catalogue/`,
+  processedCompleted: (sku: string) => `processed/products/${slugifyMediaPart(sku)}/completed/`,
+  processedWorkshop: (sku: string) => `processed/products/${slugifyMediaPart(sku)}/workshop/`,
+  processedLifestyle: (sku: string) => `processed/products/${slugifyMediaPart(sku)}/lifestyle/`,
+  publishedProduct: (sku: string) => `published/products/${slugifyMediaPart(sku)}/`,
+  marketingHeroes: 'marketing/heroes/',
+  brandLogos: 'brands/logos/',
+  categories: 'categories/',
+} as const;
 
 export const IRON_SPRUE_WORKSHOP_IDENTITY = {
   playmat:
@@ -114,6 +127,9 @@ export function buildIronSprueMediaKey(product: IronSprueMediaProductInput, kind
 }
 
 export function buildIronSpruePublicMediaUrl(config: Pick<IronSprueMediaConfig, 'publicBaseUrl'>, key: string) {
+  if (!config.publicBaseUrl) {
+    throw new Error('IRON_SPRUE_R2_PUBLIC_BASE_URL is required to build public Iron Sprue media URLs.');
+  }
   return `${config.publicBaseUrl.replace(/\/$/, '')}/${assertIronSprueMediaKey(key)}`;
 }
 
@@ -130,8 +146,8 @@ export function createIronSprueMediaPlan(
     return {
       ...stage,
       keyPrefix,
-      publicUrlPrefix: buildIronSpruePublicMediaUrl(config, keyPrefix),
       responsiveWidths: IRON_SPRUE_RESPONSIVE_IMAGE_WIDTHS,
+      ...(config.publicBaseUrl ? { publicUrlPrefix: buildIronSpruePublicMediaUrl(config, keyPrefix) } : {}),
     };
   });
 }

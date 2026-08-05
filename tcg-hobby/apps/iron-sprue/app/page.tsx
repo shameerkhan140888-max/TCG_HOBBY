@@ -1,4 +1,3 @@
-import { ironSprueBrand } from '../lib/brand';
 import launchProducts from '../data/launch-products.json';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
 import { featuredProducts, formatPrice, heroSlides, productAvailability, productImage, promoPanels, withOfficialBrandLogos } from '../lib/storefront';
@@ -122,19 +121,6 @@ export default function HomePage() {
             <li key={brand.slug} aria-current={index === 0 ? 'true' : undefined} />
           ))}
         </ol>
-      </section>
-
-      <section className="mailing-callout">
-        <div>
-          <p className="eyebrow">Be first to know</p>
-          <h2>New kits, stock notes and launch updates.</h2>
-          <p>Join the launch list for new kits, range updates and opening offers.</p>
-        </div>
-        <form action="/api/launch-list" method="post">
-          <label htmlFor="home-email">Email address</label>
-          <input id="home-email" name="email" type="email" placeholder="you@example.com" required />
-          <button type="submit">Join list</button>
-        </form>
       </section>
     </>
   );

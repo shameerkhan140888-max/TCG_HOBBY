@@ -31,7 +31,25 @@ describe('Iron Sprue runtime isolation config', () => {
     expect(() => getIronSprueDatabaseConfig()).toThrow(/dedicated Neon project/);
   });
 
-  it('requires a dedicated HTTPS Iron Sprue R2 public base URL', () => {
+  it('allows local private R2 access before the public media URL is configured', () => {
+    process.env.IRON_SPRUE_ENVIRONMENT = 'development';
+    process.env.R2_BUCKET_NAME = 'tcg-hobby-media';
+    process.env.IRON_SPRUE_R2_ACCOUNT_ID = 'iron-account';
+    process.env.IRON_SPRUE_R2_BUCKET_NAME = 'iron-sprue-product-media';
+    process.env.IRON_SPRUE_R2_ACCESS_KEY_ID = 'iron-access-key';
+    process.env.IRON_SPRUE_R2_SECRET_ACCESS_KEY = 'iron-secret-key';
+    process.env.IRON_SPRUE_R2_ENDPOINT = 'https://iron-account.r2.cloudflarestorage.com';
+
+    expect(getIronSprueMediaConfig()).toMatchObject({
+      store: 'IRON_SPRUE',
+      bucketBinding: 'IRON_SPRUE_MEDIA',
+      bucketName: 'iron-sprue-product-media',
+      uploadPrefix: 'products/',
+    });
+    expect(getIronSprueMediaConfig().publicBaseUrl).toBeUndefined();
+  });
+
+  it('requires a dedicated HTTPS Iron Sprue R2 public base URL in production', () => {
     process.env.IRON_SPRUE_ENVIRONMENT = 'production';
     process.env.R2_BUCKET_NAME = 'tcg-hobby-media';
     process.env.IRON_SPRUE_R2_ACCOUNT_ID = 'iron-account';
@@ -50,6 +68,9 @@ describe('Iron Sprue runtime isolation config', () => {
       allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
       cacheControl: 'public, max-age=31536000, immutable',
     });
+
+    delete process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL;
+    expect(() => getIronSprueMediaConfig()).toThrow(/production media delivery/);
   });
 
   it('fails closed when Iron Sprue media would reuse a TCG bucket or non-production host', () => {

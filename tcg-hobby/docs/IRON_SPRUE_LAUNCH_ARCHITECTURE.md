@@ -31,7 +31,7 @@ The Worker database path must remain read-oriented. Do not run Prisma transactio
 Iron Sprue must use dedicated operational resources. Store-aware schema fields remain useful as a safety layer, but they are not the primary production boundary.
 
 - Neon: Iron Sprue uses its own Neon project, production branch, development branch, roles, pooled runtime URL, direct migration URL and Worker read URL. Do not point Iron Sprue at the TCG Hobby production database.
-- R2: Iron Sprue media uses a dedicated `iron-sprue-media` bucket and `IRON_SPRUE_MEDIA` Worker binding. Product images, order images, email images, logos and import assets must not be stored in the TCG Hobby bucket.
+- R2: Iron Sprue media uses a dedicated `iron-sprue-product-media` bucket and `IRON_SPRUE_MEDIA` Worker binding. Product images, order images, email images, logos and import assets must not be stored in the TCG Hobby bucket.
 - Stripe: Iron Sprue uses a separate Stripe account and store-specific test/live keys, webhook secrets, account ID, descriptor, public business name, success URL and cancel URL. Do not use the unqualified `STRIPE_SECRET_KEY` for Iron Sprue.
 - Railway/Node API: Worker-to-Railway mutation calls are signed with HMAC using Iron Sprue-scoped key IDs and secrets. Stripe webhooks call the Node API directly and are authenticated only by store-specific Stripe raw-body signature validation.
 

@@ -17,7 +17,7 @@ export type IronSprueMediaConfig = {
   secretAccessKey: string;
   endpoint: string;
   region: string;
-  publicBaseUrl: string;
+  publicBaseUrl?: string;
   customMediaDomain?: string;
   uploadPrefix: string;
   allowedMimeTypes: readonly string[];
@@ -85,16 +85,20 @@ export function getIronSprueMediaConfig(): IronSprueMediaConfig {
   const secretAccessKey = required('IRON_SPRUE_R2_SECRET_ACCESS_KEY');
   const endpoint = required('IRON_SPRUE_R2_ENDPOINT').replace(/\/$/, '');
   const region = process.env.IRON_SPRUE_R2_REGION?.trim() || 'auto';
-  const publicBaseUrl = required('IRON_SPRUE_R2_PUBLIC_BASE_URL').replace(/\/$/, '');
-  if (!publicBaseUrl.startsWith('https://')) {
-    throw new Error('IRON_SPRUE_R2_PUBLIC_BASE_URL must be an absolute HTTPS URL.');
-  }
   const environment = normalizedEnvironment();
-  if (publicBaseUrl.includes('r2.dev') && environment === 'production') {
-    throw new Error('Iron Sprue production media must use a custom media domain, not r2.dev.');
-  }
-  if (environment === 'production' && new URL(publicBaseUrl).hostname !== PRODUCTION_MEDIA_HOST) {
-    throw new Error(`Iron Sprue production media must be served from ${PRODUCTION_MEDIA_HOST}.`);
+  const publicBaseUrl = process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL?.trim().replace(/\/$/, '');
+  if (publicBaseUrl) {
+    if (!publicBaseUrl.startsWith('https://')) {
+      throw new Error('IRON_SPRUE_R2_PUBLIC_BASE_URL must be an absolute HTTPS URL.');
+    }
+    if (publicBaseUrl.includes('r2.dev') && environment === 'production') {
+      throw new Error('Iron Sprue production media must use a custom media domain, not r2.dev.');
+    }
+    if (environment === 'production' && new URL(publicBaseUrl).hostname !== PRODUCTION_MEDIA_HOST) {
+      throw new Error(`Iron Sprue production media must be served from ${PRODUCTION_MEDIA_HOST}.`);
+    }
+  } else if (environment === 'production') {
+    throw new Error('IRON_SPRUE_R2_PUBLIC_BASE_URL is required for Iron Sprue production media delivery.');
   }
 
   const config: IronSprueMediaConfig = {
@@ -106,7 +110,6 @@ export function getIronSprueMediaConfig(): IronSprueMediaConfig {
     secretAccessKey,
     endpoint,
     region,
-    publicBaseUrl,
     uploadPrefix: process.env.IRON_SPRUE_R2_UPLOAD_PREFIX?.trim() || 'products/',
     allowedMimeTypes: DEFAULT_IMAGE_MIME_TYPES,
     maxFileSizeBytes: Number(process.env.IRON_SPRUE_R2_MAX_FILE_SIZE_BYTES ?? 12 * 1024 * 1024),
@@ -122,6 +125,7 @@ export function getIronSprueMediaConfig(): IronSprueMediaConfig {
       nonCurrentVersionExpirationDays: Number(process.env.IRON_SPRUE_R2_NONCURRENT_VERSION_DAYS ?? 90),
     },
   };
+  if (publicBaseUrl) config.publicBaseUrl = publicBaseUrl;
   const customMediaDomain = process.env.IRON_SPRUE_R2_CUSTOM_MEDIA_DOMAIN?.trim();
   if (customMediaDomain) config.customMediaDomain = customMediaDomain;
   return config;
