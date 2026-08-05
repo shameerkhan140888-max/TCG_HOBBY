@@ -1,98 +1,144 @@
 import { ironSprueBrand } from '../lib/brand';
 import launchProducts from '../data/launch-products.json';
-import { deriveBrandsWeStock, featuredWorkshopInterests, launchCatalogueStatus, sampleRangeCards, type IronSprueProduct } from '../lib/catalogue';
+import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
+import { featuredProducts, formatPrice, heroSlides, productAvailability, productImage, promoPanels, withOfficialBrandLogos } from '../lib/storefront';
+import type { CSSProperties } from 'react';
 
-const brandsWeStock = deriveBrandsWeStock(launchProducts as IronSprueProduct[]);
+const products = launchProducts as IronSprueProduct[];
+const brandsWeStock = withOfficialBrandLogos(deriveBrandsWeStock(products));
+const newArrivals = featuredProducts(products, 4);
 
 export default function HomePage() {
   return (
     <>
       <section className="hero">
-        <div>
-          <p className="eyebrow">Premium modelling workshop</p>
-          <h1>Model kits and build essentials curated for a cleaner bench.</h1>
-          <p className="lead">
-            Iron Sprue is the modelling storefront from Capital Hobby Group, focused on considered kits, architectural builds,
-            display pieces and practical workshop add-ons.
-          </p>
-          <div className="button-row">
-            <a className="button" href="/shop">Shop the launch range</a>
-            <a className="button secondary" href={ironSprueBrand.instagramUrl} rel="noreferrer" target="_blank">Follow {ironSprueBrand.instagramHandle}</a>
-          </div>
+        <div className="hero-carousel" aria-label="Featured Iron Sprue hero products">
+          {heroSlides.map((slide, index) => (
+            <article className="hero-slide" style={{ '--slide-index': index } as CSSProperties} key={slide.title}>
+              <img className="hero-art" src={slide.image} alt={slide.alt} width="1536" height="864" />
+              <div className="hero-badges" aria-label="Hero product status">
+                <span>{slide.label}</span>
+                <strong>{slide.availabilityLabel}</strong>
+              </div>
+              <div className="hero-brand">
+                <img src={slide.brandLogo} alt={`${slide.brandName} logo`} width="180" height="70" />
+                <small>{slide.brandName}</small>
+              </div>
+              <ul className="hero-dots" aria-hidden="true">
+                {heroSlides.map((dot) => <li key={dot.title} />)}
+              </ul>
+            </article>
+          ))}
         </div>
-        <div className="workbench" aria-label="Workshop composition">
-          <div className="workbench-grid" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-            <span />
+        <div className="hero-message">
+          <p className="pill"><span aria-hidden="true" /> Coming soon</p>
+          <h1>Built for the bench.</h1>
+          <p className="script-line">Kits. Tools. Finishing.</p>
+          <p className="lead">Everything a modeller needs, from display-ready builds to the essentials that make the finish sharper.</p>
+          <div className="hero-actions">
+            <a className="button" href="/shop">Shop now</a>
+            <a className="button secondary" href="/brands">Browse brands</a>
           </div>
-          <p className="meta" style={{ marginTop: 16 }}>A quiet storefront language: measured layout, clear stock states and product detail built around assembly decisions.</p>
         </div>
       </section>
 
-      <section className="band">
-        <div className="section-head">
-          <p className="eyebrow">Shop by modelling interest</p>
-          <h2>Built around what modellers actually need to decide.</h2>
+      <section className="category-strip" aria-label="Shop categories">
+        {heroSlides[0].meta.map((item, index) => (
+          <a href={`/shop?category=${item.toLowerCase().replaceAll(' ', '-').replaceAll('&', 'and')}`} key={item}>
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              {index === 0 ? <path d="M4 20c3-5 8-8 14-8h5l5 5v6H4v-3Zm4 3a3 3 0 1 0 6 0m8 0a3 3 0 1 0 6 0" /> : null}
+              {index === 1 ? <path d="m16 4 10 6v12l-10 6-10-6V10l10-6Zm0 0v12m10-6-10 6L6 10" /> : null}
+              {index === 2 ? <path d="M8 24 22 10m-8-2 10 10m-4-12 6 6-4 4-6-6 4-4ZM6 22l4 4" /> : null}
+              {index === 3 ? <path d="M12 4h8v7l4 4v13H8V15l4-4V4Zm0 9h8M11 20h10" /> : null}
+              {index === 4 ? <path d="M8 24c7-1 13-7 14-14l2-4-4 2C13 9 7 15 6 22l2 2Zm4-4 8-8" /> : null}
+              {index === 5 ? <path d="M5 9h22v17H5V9Zm3-5h16v5H8V4Zm3 9h10m-10 5h6" /> : null}
+            </svg>
+            {item}
+          </a>
+        ))}
+      </section>
+
+      <section className="promo-grid" aria-label="Special offers">
+        {promoPanels.map((panel) => (
+          <article className="promo-card" key={panel.title}>
+            <img src={panel.image} alt={panel.alt} width="900" height="600" />
+            <div>
+              <p className="eyebrow">{panel.eyebrow}</p>
+              <h2>{panel.title}</h2>
+              <p>{panel.copy}</p>
+              <a className="button" href={panel.href}>{panel.cta}</a>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="section-block">
+        <div className="section-head split">
+          <div>
+            <p className="eyebrow">New arrivals</p>
+            <h2>Opening bench picks.</h2>
+          </div>
+          <a className="text-link" href="/shop?sort=new">See new arrivals</a>
         </div>
-        <div className="grid">
-          {featuredWorkshopInterests.map((interest) => (
-            <article className="card" key={interest.title}>
-              <h3>{interest.title}</h3>
-              <p className="meta">{interest.description}</p>
-              <a href={interest.href}>View range</a>
+        <div className="product-grid">
+          {newArrivals.map((product) => (
+            <article className="product-card" key={product.sku}>
+              <div className="product-image">
+                {productImage(product) ? <img src={productImage(product) ?? ''} alt={product.name} width="1000" height="1000" /> : <span>{product.brand}</span>}
+              </div>
+              <div className="product-card-body">
+                <p className="product-brand">{product.brand}</p>
+                <h3>{product.name}</h3>
+                <p>{product.category}</p>
+                <strong>{formatPrice(product)} inc VAT</strong>
+                <span className="stock-badge">{productAvailability(product)}</span>
+                <div className="product-actions">
+                  <a href={`/products/${product.slug}`}>Details</a>
+                  <button type="button" disabled>Add to basket</button>
+                </div>
+              </div>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="band">
-        <div className="section-head">
-          <p className="eyebrow">Launch catalogue</p>
-          <h2>Aoshima, CubicFun, Pintoo and workshop add-ons are wired as the supported launch range.</h2>
-          <p className="lead">{launchCatalogueStatus.genuineSkuCount} genuine PO-derived product lines and {launchCatalogueStatus.stockUnits} opening units are loaded. The importer does not invent SKUs or mix Iron Sprue stock with TCG Hobby products.</p>
-        </div>
-        <div className="grid">
-          {sampleRangeCards.map((range) => (
-            <article className="card" key={range.brand}>
-              <p className="eyebrow">{range.brand}</p>
-              <h3>{range.title}</h3>
-              <a href={range.href}>Open filtered shop</a>
-            </article>
-          ))}
-        </div>
-        {launchCatalogueStatus.blocker ? (
-          <p className="notice" style={{ marginTop: 24 }}>{launchCatalogueStatus.blocker}</p>
-        ) : null}
-      </section>
-
-      <section className="band">
-        <div className="section-head">
-          <p className="eyebrow">Shop by brand</p>
-          <h2>Brands we stock</h2>
-        </div>
-        <div className="brand-rail" aria-label="Brands we stock">
-          {brandsWeStock.map((brand) => (
-            <a className="brand-tile" href={brand.href} key={brand.slug} aria-label={`Shop ${brand.name} products`}>
-              {brand.logoUrl ? (
-                <img src={brand.logoUrl} alt={brand.altText} width="144" height="48" />
-              ) : (
-                <span className="brand-wordmark">{brand.name}</span>
-              )}
-              <small>{brand.productCount} stocked line{brand.productCount === 1 ? '' : 's'}</small>
+      <section className="brand-carousel" aria-label="Brands we stock">
+        <h2>Brands we stock</h2>
+        <div className="brand-stage">
+          <button type="button" aria-label="Previous brand"><span aria-hidden="true">&lt;</span></button>
+          <div className="brand-viewport" aria-live="off">
+            {brandsWeStock.slice(0, 5).map((brand, index) => (
+            <a
+              className="brand-feature"
+              href={brand.href}
+              aria-label={`Shop ${brand.name} products`}
+              style={{ '--brand-index': index } as CSSProperties}
+              key={brand.slug}
+            >
+              <img src={brand.logoUrl} alt={brand.altText} width="340" height="130" />
             </a>
-          ))}
+            ))}
+          </div>
+          <button type="button" aria-label="Next brand"><span aria-hidden="true">&gt;</span></button>
         </div>
+        <ol className="carousel-dots" aria-label="Brand carousel position">
+          {brandsWeStock.slice(0, 5).map((brand, index) => (
+            <li key={brand.slug} aria-current={index === 0 ? 'true' : undefined} />
+          ))}
+        </ol>
       </section>
 
-      <section className="band">
-        <div className="section-head">
-          <p className="eyebrow">Instagram</p>
-          <h2>Bench notes without blocking the page.</h2>
-          <p className="lead">Recent build content will use a compliant, non-blocking integration. Until a live feed is approved, the storefront links directly to {ironSprueBrand.instagramHandle}.</p>
-          <a className="button secondary" href={ironSprueBrand.instagramUrl} rel="noreferrer" target="_blank">Open Instagram</a>
+      <section className="mailing-callout">
+        <div>
+          <p className="eyebrow">Be first to know</p>
+          <h2>New kits, stock notes and launch updates.</h2>
+          <p>Join the launch list for new kits, range updates and opening offers.</p>
         </div>
+        <form action="/api/launch-list" method="post">
+          <label htmlFor="home-email">Email address</label>
+          <input id="home-email" name="email" type="email" placeholder="you@example.com" required />
+          <button type="submit">Join list</button>
+        </form>
       </section>
     </>
   );

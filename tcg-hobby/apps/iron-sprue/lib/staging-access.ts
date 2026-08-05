@@ -11,7 +11,7 @@ export type AccessMode = 'protected' | 'public';
 export type AccessEnv = Partial<Record<string, string | undefined>>;
 
 export function storefrontAccessMode(env: AccessEnv = process.env): AccessMode {
-  return env.STOREFRONT_ACCESS_MODE === 'public' ? 'public' : 'protected';
+  return env.STOREFRONT_ACCESS_MODE === 'protected' ? 'protected' : 'public';
 }
 
 export function noindexHeaders() {

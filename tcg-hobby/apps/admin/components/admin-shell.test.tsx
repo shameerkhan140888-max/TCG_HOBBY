@@ -27,7 +27,7 @@ describe('AdminShell', () => {
     for (const group of ['Overview', 'Catalogue', 'Commerce', 'Marketing', 'Operations']) {
       expect(markup).toContain(group);
     }
-    for (const href of ['/admin/products', '/admin/releases', '/admin/catalogue', '/admin/inventory', '/admin/orders', '/admin/buylist', '/admin/storefront', '/admin/marketing/subscribers', '/admin/marketing/campaigns', '/admin/suppliers']) {
+    for (const href of ['/admin/products', '/admin/releases', '/admin/catalogue', '/admin/inventory', '/admin/orders', '/admin/buylist', '/admin/storefront', '/admin/iron-sprue', '/admin/marketing/subscribers', '/admin/marketing/campaigns', '/admin/suppliers']) {
       expect(markup).toContain(`href="${href}"`);
     }
     expect(markup).toContain('href="/admin/products" aria-current="page"');

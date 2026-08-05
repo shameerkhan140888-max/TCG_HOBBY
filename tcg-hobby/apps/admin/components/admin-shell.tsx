@@ -36,6 +36,7 @@ const navGroups: Array<{
     label: 'Marketing',
     items: [
       { href: '/admin/storefront', label: 'Storefront', icon: 'storefront' },
+      { href: '/admin/iron-sprue', label: 'Iron Sprue', icon: 'storefront' },
       { href: '/admin/marketing/subscribers', label: 'Subscribers', icon: 'subscribers' },
       { href: '/admin/marketing/campaigns', label: 'Campaigns', icon: 'campaigns' },
     ],

@@ -39,7 +39,7 @@ export type IronSprueProduct = {
 };
 
 export const launchCatalogueStatus = {
-  source: 'Iron Sprue purchase order',
+  source: 'Iron Sprue launch catalogue',
   availableInRepository: true,
   genuineSkuCount: 67,
   stockUnits: 183,
@@ -74,7 +74,7 @@ export const sampleRangeCards = [
   { brand: 'CubicFun', title: 'Architecture models', href: '/shop?brand=CubicFun' },
   { brand: 'Pintoo', title: '3D puzzle objects', href: '/shop?brand=Pintoo' },
   { brand: 'Deluxe Materials', title: 'Adhesives and finishing', href: '/shop?brand=Deluxe%20Materials' },
-  { brand: 'Tasma', title: 'Bench tools and abrasives', href: '/shop?brand=Tasma' },
+  { brand: 'Expo Tools', title: 'Bench tools and abrasives', href: '/shop?brand=Expo%20Tools' },
 ] as const;
 
 export type IronSprueBrandRecord = {

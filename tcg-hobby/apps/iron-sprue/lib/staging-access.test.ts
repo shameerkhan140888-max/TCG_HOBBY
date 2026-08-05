@@ -13,9 +13,10 @@ import {
 describe('Iron Sprue staging access', () => {
   beforeEach(() => resetPasswordAttemptLimitForTests());
 
-  it('defaults to protected mode and only switches public explicitly', () => {
-    expect(storefrontAccessMode({})).toBe('protected');
+  it('defaults to public mode and only switches protected explicitly', () => {
+    expect(storefrontAccessMode({})).toBe('public');
     expect(storefrontAccessMode({ STOREFRONT_ACCESS_MODE: 'public' })).toBe('public');
+    expect(storefrontAccessMode({ STOREFRONT_ACCESS_MODE: 'protected' })).toBe('protected');
   });
 
   it('validates a server-side password secret without exposing it to client code', async () => {
