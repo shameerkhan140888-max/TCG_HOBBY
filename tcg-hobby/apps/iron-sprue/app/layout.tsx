@@ -11,9 +11,9 @@ export const metadata: Metadata = {
   description: 'A premium modelling workshop and curated model-building retailer from Capital Hobby Group Ltd.',
   metadataBase: new URL(ironSprueBrand.siteUrl),
   icons: {
-    icon: '/icon.svg',
-    shortcut: '/icon.svg',
-    apple: '/icon.svg',
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
   },
   robots: process.env.STOREFRONT_ACCESS_MODE === 'protected' ? { index: false, follow: false } : undefined,
 };
@@ -91,31 +91,47 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
         <main className="page-frame">{children}</main>
-        <section className="payment-trust-banner" aria-label="Accepted payments and trust">
-          <div>
+        <aside className="trust-workshop-band" aria-label="Launch updates and accepted payments">
+          <section className="newsletter-panel" aria-labelledby="newsletter-title">
+            <div>
+              <h2 id="newsletter-title">Join the workshop</h2>
+              <p>Be first to know about new kits, stock updates, special offers and exclusive content.</p>
+            </div>
+            <form action="/api/launch-list" method="post">
+              <label htmlFor="footer-email">Email address</label>
+              <input id="footer-email" name="email" type="email" placeholder="Enter your email address" required />
+              <button type="submit">Join the list</button>
+            </form>
+            <ul aria-label="Launch-list benefits">
+              <li><strong>New arrivals</strong><span>Straight to your inbox</span></li>
+              <li><strong>Exclusive offers</strong><span>Subscribers only</span></li>
+              <li><strong>Modeller content</strong><span>Tips, guides and more</span></li>
+            </ul>
+          </section>
+          <section className="payment-trust-banner" aria-label="Accepted payments and trust">
             <strong>Safe. Secure. Trusted.</strong>
-            <span>Your payment will be protected by recognised checkout providers when the store opens.</span>
-          </div>
-          <ul aria-label="Accepted payment methods">
-            <li><img src="/payments/visa.svg" alt="Visa" width="70" height="24" /></li>
-            <li><img src="/payments/mastercard.svg" alt="Mastercard" width="54" height="34" /></li>
-            <li><span className="payment-wordmark paypal">PayPal</span></li>
-            <li><span className="payment-wordmark">Apple Pay</span></li>
-            <li><span className="payment-wordmark">Google Pay</span></li>
-          </ul>
-        </section>
+            <ul aria-label="Accepted payment methods">
+              <li><img src="/payments/visa.svg" alt="Visa" width="70" height="24" /></li>
+              <li><img src="/payments/mastercard.svg" alt="Mastercard" width="54" height="34" /></li>
+              <li><span className="payment-wordmark paypal">PayPal</span></li>
+              <li><span className="payment-wordmark applepay">Apple Pay</span></li>
+              <li><span className="payment-wordmark googlepay">G Pay</span></li>
+              <li><span className="payment-wordmark klarna">Klarna.</span></li>
+            </ul>
+          </section>
+        </aside>
         <footer className="site-footer">
           <div className="footer-grid">
             <div className="footer-brand">
               <img src={ironSprueBrand.logoPath} alt="Iron Sprue" width="280" height="64" />
               <p>Premium model kits, display builds and workshop essentials curated by {ironSprueBrand.legalEntity}.</p>
-              <a href={`mailto:${ironSprueBrand.contactEmail}`}>{ironSprueBrand.contactEmail}</a>
               <a className="footer-instagram" href={ironSprueBrand.instagramUrl} rel="noreferrer" target="_blank" aria-label="Instagram - @iron.sprue">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <rect x="3" y="3" width="18" height="18" rx="5" />
                   <circle cx="12" cy="12" r="4" />
                   <circle cx="17" cy="7" r="1.2" />
                 </svg>
+                <span>{ironSprueBrand.instagramHandle}</span>
               </a>
             </div>
             <nav aria-label="Legal links">
@@ -136,7 +152,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p>Trading as Iron Sprue</p>
               <p>Company Number 17336948</p>
               <p>Registered in England &amp; Wales</p>
-              <p><span>Registered Office:</span> 4-6 Greatorex Street, London, United Kingdom, E1 5NF</p>
+              <p><span>Registered Office:</span><br />4-6 Greatorex Street, London<br />United Kingdom, E1 5NF</p>
             </div>
           </div>
           <div className="footer-bottom">

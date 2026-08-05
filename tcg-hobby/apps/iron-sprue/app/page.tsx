@@ -16,10 +16,6 @@ export default function HomePage() {
           {heroSlides.map((slide, index) => (
             <article className="hero-slide" style={{ '--slide-index': index } as CSSProperties} key={slide.title}>
               <img className="hero-art" src={slide.image} alt={slide.alt} width="1536" height="864" />
-              <div className="hero-badges" aria-label="Hero product status">
-                <span>{slide.label}</span>
-                <strong>{slide.availabilityLabel}</strong>
-              </div>
               <div className="hero-brand">
                 <img src={slide.brandLogo} alt={`${slide.brandName} logo`} width="180" height="70" />
                 <small>{slide.brandName}</small>
@@ -31,14 +27,14 @@ export default function HomePage() {
           ))}
         </div>
         <div className="hero-message">
-          <p className="pill"><span aria-hidden="true" /> Coming soon</p>
+          <div className="hero-availability-sticker" aria-label="In stock now">
+            <span aria-hidden="true" />
+            <strong>In stock now</strong>
+          </div>
           <h1>Built for the bench.</h1>
           <p className="script-line">Kits. Tools. Finishing.</p>
           <p className="lead">Everything a modeller needs, from display-ready builds to the essentials that make the finish sharper.</p>
-          <div className="hero-actions">
-            <a className="button" href="/shop">Shop now</a>
-            <a className="button secondary" href="/brands">Browse brands</a>
-          </div>
+          <a className="hero-shop-now" href="/shop">Shop now</a>
         </div>
       </section>
 
