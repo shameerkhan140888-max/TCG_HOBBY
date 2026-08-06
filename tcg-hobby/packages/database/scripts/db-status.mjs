@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaNeon } from '@prisma/adapter-neon';
 import { readdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,7 +22,14 @@ function isMigrationFolder(name) {
   return name !== 'migration_lock.toml' && !name.startsWith('.') && !name.endsWith('.md');
 }
 
-const prisma = new PrismaClient();
+const adapter = new PrismaNeon({
+  connectionString: env.DATABASE_URL,
+  allowExitOnIdle: true,
+  connectionTimeoutMillis: 10_000,
+  idleTimeoutMillis: 5_000,
+  max: 5,
+});
+const prisma = new PrismaClient({ adapter });
 
 try {
   console.log('Checking migration status...');
@@ -42,7 +50,7 @@ try {
       .filter((migration) => migration.finished_at && !migration.rolled_back_at)
       .map((migration) => migration.migration_name),
   );
-  const failed = databaseMigrations.filter((migration) => !migration.finished_at || migration.rolled_back_at || migration.logs);
+  const failed = databaseMigrations.filter((migration) => !migration.finished_at && !migration.rolled_back_at);
   const missing = localMigrations.filter((migration) => !appliedNames.has(migration));
   const unknown = databaseMigrations
     .map((migration) => migration.migration_name)

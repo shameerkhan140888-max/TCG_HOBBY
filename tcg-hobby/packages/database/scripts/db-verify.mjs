@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaNeon } from '@prisma/adapter-neon';
 import { configureWindowsPrismaEngine, loadRootDatabaseEnv } from '../../../scripts/lib/database-env.mjs';
 import { resolve } from 'node:path';
 import { dirname } from 'node:path';
@@ -16,7 +17,14 @@ try {
   process.exit(1);
 }
 
-const prisma = new PrismaClient();
+const adapter = new PrismaNeon({
+  connectionString: env.DATABASE_URL,
+  allowExitOnIdle: true,
+  connectionTimeoutMillis: 10_000,
+  idleTimeoutMillis: 5_000,
+  max: 5,
+});
+const prisma = new PrismaClient({ adapter });
 
 try {
   console.log('Connecting to database...');
