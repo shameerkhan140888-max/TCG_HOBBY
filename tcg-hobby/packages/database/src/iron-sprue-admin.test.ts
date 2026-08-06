@@ -1,0 +1,192 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  assertIronSpruePrimaryMediaRole,
+  assertIronSprueR2Bucket,
+  assertNoClientStoreOverride,
+  createIronSprueAdminProduct,
+  evaluateIronSprueProductReadiness,
+  getIronSprueAdminDashboard,
+  getIronSprueAdminPermissionMatrix,
+  listIronSprueAdminProducts,
+  receiveIronSprueStock,
+  resolveIronSprueAdminPermissions,
+  setIronSprueProductPublicationState,
+} from './iron-sprue-admin';
+
+const originalEnv = { ...process.env };
+
+afterEach(() => {
+  process.env = { ...originalEnv };
+});
+
+const actor = { id: 'admin-1', email: 'admin@example.test', role: 'ADMIN' };
+
+function readyProduct(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'product-1',
+    storeCode: 'IRON_SPRUE',
+    customerTitle: 'Aoshima Kit',
+    sourceTitle: 'Aoshima Kit',
+    sku: 'IS-AOSHIMA-1',
+    slug: 'aoshima-kit',
+    brandId: 'brand-1',
+    categoryId: 'category-1',
+    supplierId: 'supplier-1',
+    grossPriceMinor: 2650,
+    vatRate: 20,
+    shortDescription: 'Short copy',
+    fullDescription: 'Full copy',
+    specifications: { scale: '1/32' },
+    seoTitle: 'Aoshima Kit',
+    metaDescription: 'Aoshima kit for modellers',
+    mediaAssets: [
+      { role: 'catalogue-primary', approvalState: 'APPROVED', isPrimary: true },
+    ],
+    contentReviews: [],
+    ...overrides,
+  } as never;
+}
+
+describe('Iron Sprue dedicated Admin foundation', () => {
+  it('maps existing platform admins to the full Iron Sprue Admin role without TCG store input', async () => {
+    const matrix = getIronSprueAdminPermissionMatrix();
+    expect(matrix.map((item) => item.role)).toContain('SUPER_ADMIN');
+
+    const permissions = await resolveIronSprueAdminPermissions(actor, {} as never);
+    expect(permissions.role).toBe('SUPER_ADMIN');
+    expect(permissions.permissions).toContain('products:publish');
+    expect(permissions.permissions).toContain('roles:manage');
+  });
+
+  it('fails closed on browser-supplied or cross-store context', () => {
+    expect(() => assertNoClientStoreOverride({ storeCode: 'TCG_HOBBY' })).toThrow(/IRON_SPRUE/);
+    expect(() => assertNoClientStoreOverride({ storeCode: 'IRON_SPRUE' })).not.toThrow();
+    expect(() => assertNoClientStoreOverride({})).not.toThrow();
+  });
+
+  it('rejects non-Iron Sprue media storage and non-Image-2 primary media roles', () => {
+    expect(() => assertIronSprueR2Bucket('tcg-hobby-media')).toThrow(/iron-sprue-product-media/);
+    expect(() => assertIronSprueR2Bucket('iron-sprue-product-media')).not.toThrow();
+    expect(() => assertIronSpruePrimaryMediaRole('manufacturer-original')).toThrow(/Image 2/);
+    expect(() => assertIronSpruePrimaryMediaRole('catalogue-primary')).not.toThrow();
+  });
+
+  it('requires Image 2, content, SEO and review completion before publication readiness', () => {
+    const checks = evaluateIronSprueProductReadiness(readyProduct({
+      mediaAssets: [],
+      contentReviews: [{ status: 'PENDING' }],
+      metaDescription: null,
+    }));
+
+    expect(checks.find((check) => check.key === 'media')?.passed).toBe(false);
+    expect(checks.find((check) => check.key === 'seo')?.passed).toBe(false);
+    expect(checks.find((check) => check.key === 'content-conflicts')?.passed).toBe(false);
+    expect(evaluateIronSprueProductReadiness(readyProduct()).every((check) => check.passed)).toBe(true);
+  });
+
+  it('blocks READY or PUBLISHED when readiness checks fail', async () => {
+    const client = {
+      ironSprueAdminProduct: {
+        findFirst: vi.fn().mockResolvedValue(readyProduct({ mediaAssets: [] })),
+      },
+    };
+
+    await expect(setIronSprueProductPublicationState('product-1', 'READY', actor, client as never)).rejects.toThrow(/media/);
+    expect(client.ironSprueAdminProduct.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'product-1', storeCode: 'IRON_SPRUE' },
+    }));
+  });
+
+  it('creates products, inventory and audit records inside one Iron Sprue transaction', async () => {
+    const createdProduct = {
+      id: 'product-1',
+      sku: 'IS-AOSHIMA-1',
+      customerTitle: 'Aoshima Kit',
+    };
+    const tx = {
+      ironSprueAdminProduct: { create: vi.fn().mockResolvedValue(createdProduct) },
+      ironSprueAdminInventory: { create: vi.fn().mockResolvedValue({}) },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+    const client = { $transaction: vi.fn((callback) => callback(tx)) };
+
+    await createIronSprueAdminProduct({ sourceTitle: 'Aoshima Kit', sku: 'IS-AOSHIMA-1', grossPriceMinor: 2650 }, actor, client as never);
+
+    expect(tx.ironSprueAdminProduct.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ storeCode: 'IRON_SPRUE', sku: 'IS-AOSHIMA-1' }),
+    }));
+    expect(tx.ironSprueAdminInventory.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ storeCode: 'IRON_SPRUE', productId: 'product-1' }),
+    }));
+    expect(tx.ironSprueAdminAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ storeCode: 'IRON_SPRUE', action: 'product.create' }),
+    }));
+  });
+
+  it('records goods received movement and rejects negative stock quantities', async () => {
+    await expect(receiveIronSprueStock('product-1', { receivedQuantity: -1 }, actor, {} as never)).rejects.toThrow(/negative/);
+
+    const tx = {
+      ironSprueAdminInventory: { update: vi.fn().mockResolvedValue({}) },
+      ironSprueAdminStockMovement: { create: vi.fn().mockResolvedValue({}) },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+    const client = {
+      ironSprueAdminInventory: { findFirst: vi.fn().mockResolvedValue({ id: 'inventory-1', availableStock: 2 }) },
+      $transaction: vi.fn((callback) => callback(tx)),
+    };
+
+    await receiveIronSprueStock('product-1', { receivedQuantity: 3, damagedQuantity: 1, missingQuantity: 0 }, actor, client as never);
+
+    expect(client.ironSprueAdminInventory.findFirst).toHaveBeenCalledWith({ where: { productId: 'product-1', storeCode: 'IRON_SPRUE' } });
+    expect(tx.ironSprueAdminStockMovement.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ storeCode: 'IRON_SPRUE', beforeQuantity: 2, afterQuantity: 5 }),
+    }));
+  });
+
+  it('counts dashboard data only through Iron Sprue scoped tables', async () => {
+    process.env.IRON_SPRUE_WORKER_READ_DATABASE_URL = 'postgresql://redacted.example/iron';
+    process.env.IRON_SPRUE_R2_BUCKET_NAME = 'iron-sprue-product-media';
+    process.env.IRON_SPRUE_R2_ACCESS_KEY_ID = 'test-access';
+    process.env.IRON_SPRUE_R2_SECRET_ACCESS_KEY = 'test-secret';
+
+    const count = vi.fn().mockResolvedValue(0);
+    const productCount = vi.fn().mockResolvedValue(0);
+    const client = {
+      ironSprueAdminProduct: { count: productCount },
+      ironSprueAdminInventory: { aggregate: vi.fn().mockResolvedValue({ _sum: {} }) },
+      ironSprueAdminSpecialOffer: { count },
+      ironSprueAdminHero: { count },
+      ironSprueAdminImportBatch: { count },
+      ironSprueAdminMediaAsset: { count },
+    };
+
+    const dashboard = await getIronSprueAdminDashboard(client as never);
+
+    expect(dashboard.storeCode).toBe('IRON_SPRUE');
+    expect(dashboard.r2Status).toBe('configured');
+    expect(dashboard.workerReadStatus).toBe('configured');
+    for (const call of [...productCount.mock.calls, ...count.mock.calls]) {
+      expect(JSON.stringify(call[0])).toContain('IRON_SPRUE');
+    }
+  });
+
+  it('lists products with server-side Iron Sprue filters and no client store selector', async () => {
+    const client = {
+      ironSprueAdminProduct: {
+        count: vi.fn().mockResolvedValue(1),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+    };
+
+    await listIronSprueAdminProducts({ search: 'Aoshima', pageSize: 10 }, client as never);
+
+    expect(client.ironSprueAdminProduct.count).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ storeCode: 'IRON_SPRUE' }),
+    }));
+    expect(client.ironSprueAdminProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ storeCode: 'IRON_SPRUE' }),
+      take: 10,
+    }));
+  });
+});

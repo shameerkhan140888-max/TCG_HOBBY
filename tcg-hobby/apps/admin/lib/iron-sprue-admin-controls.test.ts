@@ -2,23 +2,24 @@ import { describe, expect, it } from 'vitest';
 import { getIronSprueAdminControl, ironSprueAdminControls, ironSpruePlaceholderAssets } from './iron-sprue-admin-controls';
 
 describe('Iron Sprue Admin controls', () => {
-  it('maps the launch storefront controls to existing Admin capabilities', () => {
+  it('maps launch controls to the dedicated Iron Sprue Admin workspace', () => {
     expect(ironSprueAdminControls.map((control) => control.key)).toEqual([
       'products',
-      'hero-carousel',
-      'promotional-banner',
+      'inventory',
+      'media',
       'stocked-brands',
       'categories',
-      'landing-copy',
+      'homepage',
     ]);
 
     expect(getIronSprueAdminControl('products')).toMatchObject({
-      href: '/admin/products?game=iron-sprue',
+      href: '/admin/iron-sprue/products',
       requiresIronSprueRuntime: true,
     });
-    expect(getIronSprueAdminControl('hero-carousel')?.capability).toMatch(/homepage hero placements/i);
-    expect(getIronSprueAdminControl('promotional-banner')?.capability).toMatch(/banner controls/i);
+    expect(getIronSprueAdminControl('inventory')?.href).toBe('/admin/iron-sprue/inventory');
+    expect(getIronSprueAdminControl('media')?.capability).toMatch(/Image 2/i);
     expect(getIronSprueAdminControl('stocked-brands')?.description).toMatch(/carousel/i);
+    expect(ironSprueAdminControls.map((control) => control.href).join(' ')).not.toMatch(/\/admin\/products\?game=iron-sprue|\/admin\/storefront|\/admin\/catalogue/);
   });
 
   it('requires the Iron Sprue Admin runtime for every mutable launch control', () => {

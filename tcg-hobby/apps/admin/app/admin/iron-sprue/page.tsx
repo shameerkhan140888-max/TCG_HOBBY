@@ -1,43 +1,90 @@
-import { Button, Card, CardContent, Container, Section } from '@tcg-hobby/ui';
+import {
+  getIronSprueAdminDashboard,
+  getIronSprueAdminImplementationMap,
+  getIronSprueAdminPermissionMatrix,
+  resolveIronSprueAdminPermissions,
+} from '@tcg-hobby/database';
+import { Card, CardContent, Container, Section } from '@tcg-hobby/ui';
 import { PageHeader } from '@tcg-hobby/ui';
-import { ironSprueAdminControls, ironSpruePlaceholderAssets } from '../../../lib/iron-sprue-admin-controls';
+import { requireAdminSession } from '../../../lib/auth.server';
 
 export const dynamic = 'force-dynamic';
 
-export default function IronSprueAdminPage() {
+function StatusPill({ status }: { status: string }) {
+  const tone = status === 'blocked' ? 'text-red-300 border-red-900/70 bg-red-950/30' : status === 'ready' || status === 'configured' || status === 'connected' ? 'text-emerald-300 border-emerald-900/70 bg-emerald-950/30' : 'text-amber-200 border-amber-900/70 bg-amber-950/30';
+  return <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${tone}`}>{status}</span>;
+}
+
+export default async function IronSprueAdminPage() {
+  const session = await requireAdminSession('/admin/iron-sprue');
+  const [{ role, permissions }, dashboard] = await Promise.all([
+    resolveIronSprueAdminPermissions(session.user),
+    getIronSprueAdminDashboard(),
+  ]);
+  const implementationMap = getIronSprueAdminImplementationMap();
+  const permissionMatrix = getIronSprueAdminPermissionMatrix();
+
   return (
     <Section className="py-8">
       <Container className="space-y-8">
         <PageHeader
           eyebrow="Iron Sprue"
-          title="Launch storefront controls"
-          description="Use the same Admin capabilities as TCG Hobby, but only from an Admin runtime configured for the dedicated Iron Sprue database, media bucket and commerce credentials."
+          title="Dedicated Admin workspace"
+          description="Store-scoped product, inventory, media, content and merchandising administration for Iron Sprue before catalogue import."
         />
 
         <Card>
-          <CardContent className="space-y-4">
-            <h2 className="text-xl font-bold">Operational boundary</h2>
-            <p className="max-w-4xl text-sm leading-6 text-neutral-400">
-              Iron Sprue product, hero carousel, promotional banner and stocked-brand edits must run against the Iron Sprue Neon project and Iron Sprue R2 bucket. Do not use a TCG Hobby production Admin session for Iron Sprue launch content.
-            </p>
+          <CardContent className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-accent">Operational boundary</p>
+                <h2 className="mt-2 text-xl font-bold">IRON_SPRUE only</h2>
+              </div>
+              <p className="max-w-4xl text-sm leading-6 text-neutral-400">
+                Every read and write in this workspace is server-scoped to Iron Sprue. The UI never trusts a browser-supplied store ID, and catalogue imports remain disabled until the next sprint.
+              </p>
+              {dashboard.warnings.length ? (
+                <ul className="space-y-2 text-sm text-amber-200">
+                  {dashboard.warnings.map((warning) => <li key={warning}>{warning}</li>)}
+                </ul>
+              ) : null}
+            </div>
+            <dl className="grid gap-3 text-sm md:grid-cols-2">
+              <div className="rounded-md border border-surface-line bg-surface-ink p-3">
+                <dt className="text-neutral-500">Store</dt>
+                <dd className="mt-1 font-semibold">{dashboard.storeCode}</dd>
+              </div>
+              <div className="rounded-md border border-surface-line bg-surface-ink p-3">
+                <dt className="text-neutral-500">Environment</dt>
+                <dd className="mt-1 font-semibold">{dashboard.environment}</dd>
+              </div>
+              <div className="rounded-md border border-surface-line bg-surface-ink p-3">
+                <dt className="text-neutral-500">Signed in</dt>
+                <dd className="mt-1 truncate font-semibold">{session.user.name ?? session.user.email}</dd>
+              </div>
+              <div className="rounded-md border border-surface-line bg-surface-ink p-3">
+                <dt className="text-neutral-500">Role</dt>
+                <dd className="mt-1 font-semibold">{role}</dd>
+              </div>
+              <div className="rounded-md border border-surface-line bg-surface-ink p-3">
+                <dt className="text-neutral-500">Database</dt>
+                <dd className="mt-1"><StatusPill status={dashboard.databaseStatus} /></dd>
+              </div>
+              <div className="rounded-md border border-surface-line bg-surface-ink p-3">
+                <dt className="text-neutral-500">Worker read</dt>
+                <dd className="mt-1"><StatusPill status={dashboard.workerReadStatus} /></dd>
+              </div>
+            </dl>
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          {ironSprueAdminControls.map((control) => (
-            <Card key={control.key}>
-              <CardContent className="flex h-full flex-col gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-accent">Iron Sprue control</p>
-                  <h2 className="mt-2 text-xl font-bold">{control.label}</h2>
-                  <p className="mt-2 text-sm leading-6 text-neutral-400">{control.description}</p>
-                  <p className="mt-3 text-sm leading-6 text-neutral-300">{control.capability}</p>
-                </div>
-                <div className="mt-auto">
-                  <Button asChild variant="outline">
-                    <a href={control.href}>Open control</a>
-                  </Button>
-                </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          {dashboard.metrics.map((metric) => (
+            <Card key={metric.label}>
+              <CardContent className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{metric.label}</p>
+                <p className="text-3xl font-black text-neutral-50">{metric.value}</p>
+                <p className="text-xs leading-5 text-neutral-400">{metric.detail}</p>
               </CardContent>
             </Card>
           ))}
@@ -46,25 +93,57 @@ export default function IronSprueAdminPage() {
         <Card>
           <CardContent className="space-y-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-accent">Placeholder media</p>
-              <h2 className="mt-2 text-xl font-bold">Iron Sprue generated placeholder library</h2>
+              <p className="text-xs font-semibold uppercase tracking-wide text-accent">Workspace navigation</p>
+              <h2 className="mt-2 text-xl font-bold">Catalogue sprint controls</h2>
               <p className="mt-2 max-w-4xl text-sm leading-6 text-neutral-400">
-                These are original generated workshop scenes for Iron Sprue placeholders only. They are not manufacturer assets and should be replaced by approved product-led artwork when available.
+                These sections are wired as Iron Sprue-scoped empty workspaces. They will accept real data only in the catalogue import sprint.
               </p>
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              {ironSpruePlaceholderAssets.map((asset) => (
-                <article key={asset.href} className="overflow-hidden rounded-md border border-surface-line bg-surface-ink">
-                  <img src={asset.href} alt={asset.alt} className="aspect-[4/3] w-full object-cover" />
-                  <div className="space-y-2 p-4">
-                    <h3 className="font-bold text-neutral-50">{asset.label}</h3>
-                    <p className="text-sm leading-6 text-neutral-400">{asset.usage}</p>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {dashboard.workspace.map((card) => (
+                <a key={card.key} href={card.href} className="rounded-md border border-surface-line bg-surface-ink p-4 transition hover:border-accent focus:outline-none focus:ring-2 focus:ring-accent">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="font-bold text-neutral-50">{card.label}</h3>
+                    <StatusPill status={card.status} />
                   </div>
-                </article>
+                  <p className="mt-2 text-sm leading-6 text-neutral-400">{card.description}</p>
+                  <p className="mt-3 text-xs uppercase tracking-wide text-neutral-500">{card.requiredPermission}</p>
+                </a>
               ))}
             </div>
           </CardContent>
         </Card>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardContent className="space-y-4">
+              <h2 className="text-xl font-bold">Permission matrix</h2>
+              <div className="space-y-3">
+                {permissionMatrix.map((item) => (
+                  <div key={item.role} className="rounded-md border border-surface-line bg-surface-ink p-3">
+                    <p className="font-semibold">{item.role}</p>
+                    <p className="mt-1 text-xs leading-5 text-neutral-400">{item.permissions.join(', ')}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-neutral-400">Current session permissions: {permissions.length ? permissions.join(', ') : 'none'}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="space-y-4">
+              <h2 className="text-xl font-bold">Implementation map</h2>
+              <div className="space-y-3">
+                {implementationMap.map((item) => (
+                  <div key={item.capability} className="rounded-md border border-surface-line bg-surface-ink p-3">
+                    <p className="font-semibold">{item.capability}</p>
+                    <p className="mt-1 text-xs uppercase tracking-wide text-accent">{item.classification}</p>
+                    <p className="mt-2 text-sm leading-6 text-neutral-400">{item.note}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </Container>
     </Section>
   );

@@ -1343,3 +1343,323 @@ model DeckCard {
   @@index([deckId, updatedAt])
   @@index([productId, createdAt])
 }
+
+model IronSprueAdminProduct {
+  id                    String   @id @default(cuid())
+  storeCode             String   @default("IRON_SPRUE")
+  sourceTitle           String
+  customerTitle         String
+  slug                  String
+  sku                   String
+  supplierProductCode   String?
+  barcode               String?
+  mpn                   String?
+  brandId               String?
+  categoryId            String?
+  supplierId            String?
+  shortDescription      String?
+  fullDescription       String?
+  featureBullets        String[] @default([])
+  specifications        Json?
+  scale                 String?
+  material              String?
+  buildType             String?
+  assemblyMethod        String?
+  glueRequirement       String?
+  difficulty            String?
+  dimensions            String?
+  contents              String?
+  safetyAgeGuidance     String?
+  tags                  String[] @default([])
+  searchKeywords        String[] @default([])
+  seoTitle              String?
+  metaDescription       String?
+  supplierUnitCostMinor Int?
+  landedCostMinor       Int?
+  grossPriceMinor       Int?
+  compareAtPriceMinor   Int?
+  vatRate               Int      @default(20)
+  currency              String   @default("GBP")
+  publicationState      String   @default("DRAFT")
+  featured              Boolean  @default(false)
+  newArrival            Boolean  @default(false)
+  comingSoon            Boolean  @default(false)
+  specialOffer          Boolean  @default(false)
+  hideWhenOutOfStock    Boolean  @default(false)
+  archivedAt            DateTime?
+  readyApprovedAt       DateTime?
+  publishedAt           DateTime?
+  createdById           String?
+  updatedById           String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  brand                 IronSprueAdminBrand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  category              IronSprueAdminCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  supplier              IronSprueAdminSupplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  inventory             IronSprueAdminInventory?
+  mediaAssets           IronSprueAdminMediaAsset[]
+  contentReviews        IronSprueAdminContentReview[]
+  offers                IronSprueAdminSpecialOffer[]
+  auditLogs             IronSprueAdminAuditLog[]
+
+  @@unique([storeCode, sku])
+  @@unique([storeCode, slug])
+  @@unique([storeCode, barcode])
+  @@index([storeCode, publicationState, updatedAt])
+  @@index([storeCode, brandId])
+  @@index([storeCode, categoryId])
+  @@index([storeCode, supplierId])
+  @@index([storeCode, featured])
+  @@index([storeCode, newArrival])
+  @@index([storeCode, specialOffer])
+}
+
+model IronSprueAdminInventory {
+  id               String   @id @default(cuid())
+  storeCode        String   @default("IRON_SPRUE")
+  productId        String   @unique
+  expectedQuantity Int      @default(0)
+  receivedQuantity Int      @default(0)
+  damagedQuantity  Int      @default(0)
+  missingQuantity  Int      @default(0)
+  availableStock   Int      @default(0)
+  reservedStock    Int      @default(0)
+  reorderPoint     Int      @default(0)
+  locationCode     String   @default("MAIN")
+  lastReceivedAt   DateTime?
+  updatedAt        DateTime @updatedAt
+  product          IronSprueAdminProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([storeCode, availableStock])
+  @@index([storeCode, locationCode])
+}
+
+model IronSprueAdminStockMovement {
+  id              String   @id @default(cuid())
+  storeCode       String   @default("IRON_SPRUE")
+  productId       String
+  movementType    String
+  quantity        Int
+  beforeQuantity  Int
+  afterQuantity   Int
+  reason          String
+  batchReference  String?
+  actorId         String?
+  createdAt       DateTime @default(now())
+
+  @@index([storeCode, productId, createdAt])
+  @@index([storeCode, movementType, createdAt])
+}
+
+model IronSprueAdminCategory {
+  id          String   @id @default(cuid())
+  storeCode   String   @default("IRON_SPRUE")
+  name        String
+  slug        String
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  products    IronSprueAdminProduct[]
+
+  @@unique([storeCode, slug])
+  @@index([storeCode, active, sortOrder])
+}
+
+model IronSprueAdminBrand {
+  id          String   @id @default(cuid())
+  storeCode   String   @default("IRON_SPRUE")
+  name        String
+  slug        String
+  logoUrl     String?
+  logoAltText String?
+  website     String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  products    IronSprueAdminProduct[]
+
+  @@unique([storeCode, slug])
+  @@index([storeCode, active, sortOrder])
+  @@index([storeCode, featured])
+}
+
+model IronSprueAdminSupplier {
+  id            String   @id @default(cuid())
+  storeCode     String   @default("IRON_SPRUE")
+  name          String
+  slug          String
+  contactName   String?
+  email         String?
+  website       String?
+  internalNotes String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  products      IronSprueAdminProduct[]
+
+  @@unique([storeCode, slug])
+  @@index([storeCode, active])
+}
+
+model IronSprueAdminMediaAsset {
+  id            String   @id @default(cuid())
+  storeCode     String   @default("IRON_SPRUE")
+  productId     String?
+  role          String
+  url           String?
+  storageKey    String?
+  altText       String?
+  mimeType      String?
+  byteSize      Int?
+  width         Int?
+  height        Int?
+  approvalState String  @default("PENDING")
+  isPrimary     Boolean @default(false)
+  sortOrder     Int     @default(0)
+  uploadedById  String?
+  approvedById  String?
+  approvedAt    DateTime?
+  lastError     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  product       IronSprueAdminProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([storeCode, storageKey])
+  @@index([storeCode, productId, role, approvalState])
+  @@index([storeCode, productId, isPrimary])
+}
+
+model IronSprueAdminContentReview {
+  id              String   @id @default(cuid())
+  storeCode       String   @default("IRON_SPRUE")
+  productId       String
+  fieldName       String
+  proposedValue   Json
+  sourceReference String?
+  status          String   @default("PENDING")
+  conflictReason  String?
+  reviewedById    String?
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  product         IronSprueAdminProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([storeCode, productId, status])
+  @@index([storeCode, status, createdAt])
+}
+
+model IronSprueAdminImportBatch {
+  id             String   @id @default(cuid())
+  storeCode      String   @default("IRON_SPRUE")
+  sourceName     String
+  sourceChecksum String?
+  status         String   @default("DRAFT")
+  totalRows      Int      @default(0)
+  successfulRows Int      @default(0)
+  failedRows     Int      @default(0)
+  skippedRows    Int      @default(0)
+  zeroQuantityRows Int    @default(0)
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([storeCode, sourceChecksum])
+  @@index([storeCode, status, createdAt])
+}
+
+model IronSprueAdminHomepagePlacement {
+  id          String   @id @default(cuid())
+  storeCode   String   @default("IRON_SPRUE")
+  placementKey String
+  title       String
+  ctaLabel    String?
+  ctaHref     String?
+  imageUrl    String?
+  active      Boolean  @default(false)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([storeCode, placementKey])
+  @@index([storeCode, active, sortOrder])
+}
+
+model IronSprueAdminHero {
+  id          String   @id @default(cuid())
+  storeCode   String   @default("IRON_SPRUE")
+  headline    String
+  strapline   String?
+  ctaLabel    String?
+  ctaHref     String?
+  imageUrl    String?
+  active      Boolean  @default(false)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([storeCode, active, sortOrder])
+}
+
+model IronSprueAdminSpecialOffer {
+  id              String   @id @default(cuid())
+  storeCode       String   @default("IRON_SPRUE")
+  productId       String?
+  title           String
+  badge           String?
+  normalPriceMinor Int?
+  offerPriceMinor  Int?
+  ctaLabel        String?
+  ctaHref         String?
+  active          Boolean  @default(false)
+  startsAt        DateTime?
+  endsAt          DateTime?
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  product         IronSprueAdminProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([storeCode, active, startsAt, endsAt, sortOrder])
+}
+
+model IronSprueAdminPermissionGrant {
+  id          String   @id @default(cuid())
+  storeCode   String   @default("IRON_SPRUE")
+  userId      String
+  role        String
+  permissions String[] @default([])
+  active      Boolean  @default(true)
+  grantedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([storeCode, userId])
+  @@index([storeCode, role, active])
+}
+
+model IronSprueAdminAuditLog {
+  id          String   @id @default(cuid())
+  storeCode   String   @default("IRON_SPRUE")
+  actorId     String?
+  action      String
+  entityType  String
+  entityId    String?
+  productId   String?
+  summary     String
+  before      Json?
+  after       Json?
+  createdAt   DateTime @default(now())
+  product     IronSprueAdminProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([storeCode, action, createdAt])
+  @@index([storeCode, entityType, entityId])
+  @@index([productId, createdAt])
+}

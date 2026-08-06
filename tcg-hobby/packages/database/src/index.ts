@@ -430,3 +430,4 @@ export * from './product-image-resolution';
 
 export * from './admin-identity';
 export * from './account-recovery';
+export * from './iron-sprue-admin';
