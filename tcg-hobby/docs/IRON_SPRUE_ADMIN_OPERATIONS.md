@@ -111,6 +111,43 @@ Preferred recovery is to create a clean Neon branch from the Iron Sprue project,
 
 The direct migration URL must use `IRON_SPRUE_DIRECT_DATABASE_URL`. Runtime pooled reads/writes must use the approved Iron Sprue pooled URL. Never point Iron Sprue migration or import commands at the TCG Hobby database.
 
+### Clean Branch Handoff
+
+Keep the old Iron Sprue Neon branch as recovery history until the catalogue import has passed review and the replacement branch has been backed up. Do not delete it merely because it is empty; it records the original failed migration state.
+
+Create the replacement branch inside the same dedicated Iron Sprue Neon project. Name it clearly, for example `iron-sprue-catalogue-ready`, and generate these branch-specific values:
+
+- `IRON_SPRUE_DATABASE_URL`: pooled application connection string for the clean branch.
+- `IRON_SPRUE_DIRECT_DATABASE_URL`: direct, non-pooler migration connection string for the clean branch.
+- `IRON_SPRUE_WORKER_READ_DATABASE_URL`: worker/read connection string for the clean branch, using the approved worker-compatible endpoint.
+
+All three must point at the clean Iron Sprue branch and must not reuse the TCG Hobby database host. The direct URL is for migrations only; runtime application code should use the pooled URL unless a documented worker read path requires the worker value.
+
+After updating local environment values, run:
+
+```powershell
+npm run db:generate
+npm run db:status
+npm run db:verify
+npm run typecheck -w @tcg-hobby/database
+npm run test -w @tcg-hobby/database
+npm run typecheck -w @tcg-hobby/admin
+npm run test -w @tcg-hobby/admin
+npm run build -w @tcg-hobby/admin
+npm run typecheck -w @capital-hobby/iron-sprue
+npm run test -w @capital-hobby/iron-sprue
+npm run build -w @capital-hobby/iron-sprue
+git diff --check
+```
+
+Before catalogue import, also verify on the selected clean branch:
+
+- `_prisma_migrations` has zero failed rows;
+- schema diff against `packages/database/prisma/schema.prisma` reports no differences;
+- `Category`, `Supplier`, `Product`, `User` and `Order` row counts are zero;
+- all `IronSprueAdmin*` tables exist;
+- a minimal read/write smoke test can insert and delete a disposable Admin lookup row.
+
 Catalogue import may begin only after:
 
 - migration deploy succeeds from an empty target;
