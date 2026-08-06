@@ -532,7 +532,7 @@ model ProductRecommendation {
   sourceProduct        Product                   @relation("ProductRecommendationSource", fields: [sourceProductId], references: [id], onDelete: Cascade)
   recommendedProduct   Product                   @relation("ProductRecommendationTarget", fields: [recommendedProductId], references: [id], onDelete: Cascade)
 
-  @@unique([sourceProductId, recommendedProductId, relationshipType])
+  @@unique([sourceProductId, recommendedProductId, relationshipType], map: "ProductRecommendation_sourceProductId_recommendedProductId_rela")
   @@index([sourceProductId, active, priority])
   @@index([recommendedProductId])
   @@index([relationshipType, active])
@@ -1448,7 +1448,7 @@ model IronSprueAdminStockMovement {
   createdAt       DateTime @default(now())
 
   @@index([storeCode, productId, createdAt])
-  @@index([storeCode, movementType, createdAt])
+  @@index([storeCode, movementType, createdAt], map: "IronSprueAdminStockMovement_storeCode_movementType_createdAt_id")
 }
 
 model IronSprueAdminCategory {
@@ -1530,7 +1530,7 @@ model IronSprueAdminMediaAsset {
   product       IronSprueAdminProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([storeCode, storageKey])
-  @@index([storeCode, productId, role, approvalState])
+  @@index([storeCode, productId, role, approvalState], map: "IronSprueAdminMediaAsset_storeCode_productId_role_approvalState")
   @@index([storeCode, productId, isPrimary])
 }
 
@@ -1627,7 +1627,7 @@ model IronSprueAdminSpecialOffer {
   updatedAt       DateTime @updatedAt
   product         IronSprueAdminProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
-  @@index([storeCode, active, startsAt, endsAt, sortOrder])
+  @@index([storeCode, active, startsAt, endsAt, sortOrder], map: "IronSprueAdminSpecialOffer_storeCode_active_startsAt_endsAt_sor")
 }
 
 model IronSprueAdminPermissionGrant {

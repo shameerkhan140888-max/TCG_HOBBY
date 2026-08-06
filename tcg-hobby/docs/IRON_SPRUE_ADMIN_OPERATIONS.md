@@ -75,13 +75,46 @@ The current visual storefront uses local approved launch data while the commerce
 
 The Tasma proforma and final catalogue are not imported in this Admin-completion sprint. The next sprint must explicitly select the Iron Sprue environment, verify the target Neon database and R2 bucket, run the import as a draft/review operation, and keep every row retryable or skippable.
 
-## Current Migration Blocker
+## Migration Chain Repair
 
-The dedicated Iron Sprue Neon database is reachable, but the historical migration chain is not fresh-database safe yet. `20260718_catalogue_master_data` assumes legacy `Product.brand`, `Product.productType` and `Product.language` text columns exist before `20260718_product_management_foundation` adds them. The Iron Sprue database now has a failed `_prisma_migrations` record for `20260718_catalogue_master_data`.
+The historical migration chain previously failed on an empty Iron Sprue Neon database because `20260718_catalogue_master_data` backfilled `Product.brandId`, `Product.productTypeId` and `Product.languageId` from legacy text columns before `20260718_product_management_foundation` created `Product.brand`, `Product.productType` and `Product.language`.
 
-Do not run `prisma migrate reset`, `db push`, manual compatibility SQL, or `prisma migrate resolve` without explicit approval. The safe recovery package is:
+The permanent repository repair is intentionally narrow:
 
-1. Add a reviewed compatibility migration or reorder-safe migration path for fresh isolated store databases without modifying already-applied production migrations.
-2. Mark the failed Iron Sprue migration as rolled back only after the recovery migration is reviewed.
-3. Re-run `migrate deploy` against the Iron Sprue direct URL.
-4. Confirm the new `20260805130000_iron_sprue_admin_foundation` migration applies cleanly.
+- `20260718_000000_product_legacy_text_columns_for_catalogue_master_data` temporarily creates the three legacy text columns before the catalogue backfill.
+- `20260718_catalogue_master_data_cleanup_legacy_text_columns` removes those temporary columns before product-management adds the durable columns.
+- The cleanup is guarded by `_prisma_migrations` so an existing database that already applied `20260718_product_management_foundation` keeps its real columns.
+
+Do not use `prisma migrate reset`, destructive `db push`, manual SQL patches, or migration-history deletion to repair store databases. Every migration must be validated against a completely empty database before it is accepted.
+
+### Fresh Database Validation
+
+Use a disposable Neon branch or an isolated PostgreSQL schema selected through the direct Iron Sprue connection string. Do not seed the catalogue as part of migration validation.
+
+Required sequence:
+
+1. Confirm the disposable target is empty and `_prisma_migrations` does not exist.
+2. Run `node ./scripts/prisma-run.mjs migrate deploy` from `packages/database` with `DATABASE_URL` pointing to the disposable target.
+3. Run `node ./scripts/prisma-run.mjs migrate status`.
+4. Run `node ./scripts/prisma-run.mjs validate`.
+5. Run `node ./scripts/prisma-run.mjs generate`.
+6. Confirm `_prisma_migrations` has no failed rows.
+7. Confirm the Iron Sprue Admin tables exist.
+8. Run a minimal insert/delete smoke test and remove the disposable test rows.
+9. Run schema diff and document any Prisma identifier-name-only drift.
+
+### Existing Iron Sprue Database Recovery
+
+The current dedicated Iron Sprue database is empty of catalogue data but has one failed `_prisma_migrations` row for `20260718_catalogue_master_data`. Inspection found no partial `Game`, `Brand`, `ProductType`, `ProductLanguage`, `ProductSet` or Iron Sprue Admin tables and no partial Product master-data columns.
+
+Preferred recovery is to create a clean Neon branch from the Iron Sprue project, apply the repaired migration chain from zero, verify it, then update the Iron Sprue environment variables to the new branch after explicit approval. If continuing the existing branch is chosen instead, first obtain approval to mark only the failed `20260718_catalogue_master_data` row as rolled back, then run normal `migrate deploy`; do not mark the migration as applied.
+
+The direct migration URL must use `IRON_SPRUE_DIRECT_DATABASE_URL`. Runtime pooled reads/writes must use the approved Iron Sprue pooled URL. Never point Iron Sprue migration or import commands at the TCG Hobby database.
+
+Catalogue import may begin only after:
+
+- migration deploy succeeds from an empty target;
+- `_prisma_migrations` has zero failed rows;
+- Admin-required tables exist;
+- database target host/database have been redacted and confirmed as Iron Sprue;
+- no TCG or Corporate database is selected.
