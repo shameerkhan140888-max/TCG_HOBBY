@@ -130,14 +130,17 @@ export function productImage(product: IronSprueProduct) {
 }
 
 export function productAvailability(product: IronSprueProduct) {
-  if (product.stockQuantity <= 0) return 'Out of stock';
-  if (product.stockQuantity <= Math.max(1, product.reorderLevel ?? 1)) return 'Low stock';
+  const availableQuantity = product.availableQuantity ?? product.stockQuantity;
+  if (availableQuantity <= 0) return 'Out of stock';
+  if (availableQuantity <= Math.max(1, product.reorderLevel ?? 1)) return 'Low stock';
   return 'In stock';
 }
 
-export function featuredProducts(products: IronSprueProduct[], count = 8) {
-  const withImages = products.filter((product) => product.storeCode === 'IRON_SPRUE' && product.published !== false && productImage(product));
-  const rest = products.filter((product) => product.storeCode === 'IRON_SPRUE' && product.published !== false && !productImage(product));
+export function featuredProducts(products: IronSprueProduct[], count = 8, options: { includeUnpublishedPreview?: boolean } = {}) {
+  const isVisible = (product: IronSprueProduct) =>
+    product.storeCode === 'IRON_SPRUE' && (options.includeUnpublishedPreview || product.published !== false);
+  const withImages = products.filter((product) => isVisible(product) && productImage(product));
+  const rest = products.filter((product) => isVisible(product) && !productImage(product));
   return [...withImages, ...rest].slice(0, count);
 }
 

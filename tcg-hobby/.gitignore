@@ -10,6 +10,7 @@ build
 coverage
 playwright-report
 test-results
+.media-work
 .env
 .env.local
 .dev.vars

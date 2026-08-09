@@ -1,27 +1,55 @@
 export type IronSprueProduct = {
   line?: number;
+  sourceRow?: number;
   storeCode?: 'IRON_SPRUE' | 'TCG_HOBBY';
   sku: string;
   supplierSku?: string;
+  manufacturerReference?: string;
   barcode?: string;
   slug: string;
   name: string;
+  sourceTitle?: string;
+  customerTitle?: string;
   brand: string;
   category: string;
   productType: string;
   orderQuantity?: number;
+  expectedQuantity?: number;
+  receivedQuantity?: number;
+  missingQuantity?: number;
+  damagedQuantity?: number;
+  availableQuantity?: number;
   priceMinor?: number;
   retailPriceMinor?: number;
   compareAtPriceMinor?: number | null;
   vatRate?: number;
   tradePriceExVatMinor?: number;
   tradePriceIncVatMinor?: number;
+  invoiceUnitCostExVatMinor?: number;
+  supplierUnitCostMinor?: number;
+  sellingPriceExVatMinor?: number;
+  grossProfitUnitMinor?: number;
+  grossMarginPercent?: number;
+  belowMarginThreshold?: boolean;
+  totalStockCostExVatMinor?: number;
+  projectedRevenueIncVatMinor?: number;
+  projectedGrossProfitExVatMinor?: number;
   stockQuantity: number;
   reservedQuantity?: number;
   shortDescription: string;
   description?: string;
+  features?: string[];
+  specifications?: Record<string, unknown>;
+  seoTitle?: string;
+  metaDescription?: string;
+  searchKeywords?: string[];
   imageUrl?: string;
   imageReferences?: string[];
+  sourceMediaLinks?: Array<{
+    url: string;
+    sourceType: string;
+    permissionBasis: string;
+  }>;
   scale?: string;
   skillLevel?: string;
   assemblyRequired?: string;
@@ -35,14 +63,16 @@ export type IronSprueProduct = {
   supplierAssetReference?: string | null;
   assetContentStatus?: string | null;
   purchaseNotes?: string | null;
+  validationWarnings?: string[];
+  publicationState?: string;
   published?: boolean;
 };
 
 export const launchCatalogueStatus = {
-  source: 'Iron Sprue launch catalogue',
+  source: 'Iron Sprue updated sales prices and margins workbook',
   availableInRepository: true,
-  genuineSkuCount: 67,
-  stockUnits: 183,
+  genuineSkuCount: 81,
+  stockUnits: 256,
   blocker: null,
 } as const;
 
@@ -91,11 +121,12 @@ export type IronSprueBrandRecord = {
 
 const launchBrandOrder = new Map([
   ['Aoshima', 10],
-  ['Deluxe Materials', 20],
-  ['Expo Tools', 30],
-  ['OcCre Creations', 40],
-  ['Pintoo', 50],
-  ['Tasma', 60],
+  ['CubicFun', 20],
+  ['Deluxe Materials', 30],
+  ['Expo Tools', 40],
+  ['OcCre Creations', 50],
+  ['Pintoo', 60],
+  ['Tasma', 70],
 ]);
 
 export function brandSlug(name: string) {

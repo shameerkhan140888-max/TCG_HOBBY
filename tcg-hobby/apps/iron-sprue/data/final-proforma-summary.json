@@ -1,29 +1,33 @@
 {
-  "sourceDocument": "Proforma Capital Hobby.pdf",
-  "supplier": "Tasma Products Limited",
-  "customer": "Capital Hobby Group Ltd t/a Iron Sprue",
-  "salesOrder": "27676",
-  "orderDate": "2026-08-03",
-  "purchaseOrderReference": "IS-PO-2026-07",
+  "salesOrder": "updated-sales-prices-and-margins",
+  "purchaseOrderReference": "IRON-SPRUE-LAUNCH-2026-08",
+  "sourceDocument": "Iron_Sprue_Updated_Sales_Prices_and_Margins.xlsx",
   "pdfRowCount": 84,
+  "workbookRowCount": 81,
   "approvedSellableLineCount": 81,
-  "approvedUnitCount": 233,
-  "zeroQuantityLineCount": 3,
-  "netTotal": 1343.9,
-  "vatTotal": 268.77,
-  "orderTotal": 1612.67,
-  "zeroQuantityLines": [
-    {
-      "supplierSku": "TAS008143",
-      "description": "Deluxe Materials BD44 Perfect Plastic Putty 40ml"
-    },
-    {
-      "supplierSku": "TAS075026",
-      "description": "Expo 70250 Flexible Sanding Sheet Set"
-    },
-    {
-      "supplierSku": "TAS080853",
-      "description": "3D Jigsaw Vase S1004 The Harmonious Phoenix"
-    }
-  ]
+  "approvedUnitCount": 256,
+  "zeroQuantityLines": [],
+  "brands": {
+    "Aoshima": 21,
+    "CubicFun": 14,
+    "Deluxe Materials": 15,
+    "Expo Tools": 1,
+    "OcCre Creations": 5,
+    "Pintoo": 15,
+    "Tasma": 10
+  },
+  "unitsByBrand": {
+    "Aoshima": 42,
+    "CubicFun": 70,
+    "Deluxe Materials": 38,
+    "Expo Tools": 1,
+    "OcCre Creations": 14,
+    "Pintoo": 33,
+    "Tasma": 58
+  },
+  "reviewRequiredRows": 5,
+  "notes": "Workbook supersedes earlier provisional 67-line/183-unit planning fixture. Products remain unpublished until media and content review is complete.",
+  "sourceLinkedRows": 43,
+  "sourceLinkRequiredRows": 38,
+  "provisionalSourceDocument": "Iron_Sprue_Purchase_Order_v3_Focused_CubicFun.xlsx"
 }

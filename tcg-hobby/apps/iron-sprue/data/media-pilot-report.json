@@ -1,0 +1,29 @@
+{
+  "bucket": "iron-sprue-product-media",
+  "r2Probe": {
+    "listObjectsV2": 200,
+    "putObject": 200,
+    "getObject": 200,
+    "deleteObject": 204,
+    "endpointJurisdiction": "default",
+    "region": "auto",
+    "s3CompatibleApi": true
+  },
+  "sourceLinkedRows": 43,
+  "skuSpecificFallbackRows": 1,
+  "correctedLinkedPassPending": true,
+  "correctedLinkedPassBlocker": "Escalated command approval was unavailable after the targeted CubicFun fallback repair.",
+  "postRepairDurableAssets": {
+    "sourceOriginalsUploaded": 34,
+    "image2DerivativeFilesUploaded": 510,
+    "workshopPlaceholderFilesUploaded": 30,
+    "contaminatedCubicFunSkusRepaired": 11,
+    "contaminatedR2ObjectsDeleted": 187,
+    "recreatedPlaceholderRows": 22
+  },
+  "approvalState": {
+    "image2AssetsApproved": 0,
+    "productsPublished": 0,
+    "reason": "Generated catalogue derivatives remain pending visual review; products without an approved Image 2 remain draft/media pending."
+  }
+}

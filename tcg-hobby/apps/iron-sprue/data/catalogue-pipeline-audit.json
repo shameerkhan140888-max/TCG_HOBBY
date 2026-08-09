@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-08-09T15:18:21.664Z",
+  "catalogue": {
+    "manifestProducts": 81,
+    "launchProducts": 81,
+    "importedProductCount": 81,
+    "physicalUnits": 256,
+    "sourceLinkedProducts": 43,
+    "sourceLinkRequiredProducts": 38,
+    "manufacturerUrlProducts": 0,
+    "supplierUrlProducts": 43,
+    "reviewRequiredProducts": 5,
+    "publishedProducts": 0,
+    "byBrand": {
+      "Aoshima": 21,
+      "Deluxe Materials": 15,
+      "Tasma": 10,
+      "OcCre Creations": 5,
+      "Expo Tools": 1,
+      "Pintoo": 15,
+      "CubicFun": 14
+    },
+    "byPublicationState": {
+      "MEDIA_PENDING": 76,
+      "REVIEW_REQUIRED": 5
+    }
+  },
+  "mediaClassification": {
+    "originalSourceAssets": 34,
+    "technicalDerivatives": 510,
+    "trueIsolatedImage2Assets": 0,
+    "trueCompletedResultAssets": 0,
+    "trueIronSprueWorkshopAssets": 0,
+    "workshopPlaceholders": 30,
+    "placeholders": 76,
+    "brandLogosCompleted": 0,
+    "heroAssetsCompleted": 0
+  },
+  "contentClassification": {
+    "generatedDescriptionsFromVerifiedSources": 0,
+    "importedDescriptionsPendingReview": 81,
+    "provenanceLinkedRows": 43
+  },
+  "providerReadiness": {
+    "providerInterfacesImplemented": true,
+    "productionResearchProviderConfigured": false,
+    "productionContentProviderConfigured": false,
+    "productionCatalogueImageProviderConfigured": false,
+    "productionCreativeImageProviderConfigured": false,
+    "productionMediaValidationProviderConfigured": false,
+    "reason": "Current implementation includes provider contracts and mock/unavailable providers. Production AI/image providers still require configuration."
+  }
+}

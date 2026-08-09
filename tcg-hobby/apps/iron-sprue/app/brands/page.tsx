@@ -2,7 +2,8 @@ import launchProducts from '../../data/launch-products.json';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../../lib/catalogue';
 import { withOfficialBrandLogos } from '../../lib/storefront';
 
-const brands = withOfficialBrandLogos(deriveBrandsWeStock(launchProducts as IronSprueProduct[]));
+const products = launchProducts as IronSprueProduct[];
+const brands = withOfficialBrandLogos(deriveBrandsWeStock(products.map((product) => ({ ...product, published: true }))));
 
 export default function BrandsPage() {
   return (

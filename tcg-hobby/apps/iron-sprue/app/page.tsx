@@ -4,8 +4,9 @@ import { featuredProducts, formatPrice, heroSlides, productAvailability, product
 import type { CSSProperties } from 'react';
 
 const products = launchProducts as IronSprueProduct[];
-const brandsWeStock = withOfficialBrandLogos(deriveBrandsWeStock(products));
-const newArrivals = featuredProducts(products, 4);
+const previewProducts = products.map((product) => ({ ...product, published: true }));
+const brandsWeStock = withOfficialBrandLogos(deriveBrandsWeStock(previewProducts));
+const newArrivals = featuredProducts(products, 4, { includeUnpublishedPreview: true });
 
 export default function HomePage() {
   return (
