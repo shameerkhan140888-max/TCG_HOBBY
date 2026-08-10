@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-08-09T21:50:58.578Z",
+  "uploaded": [
+    {
+      "sku": "IS-AOS-05778",
+      "key": "products/is-aos-05778/workshop/iron-sprue-workshop-v1-approved-8f622993145f.png",
+      "mediaId": "cmsmc73dq0000zcvzdu6el1l1",
+      "byteSize": 2234852,
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "sku": "IS-CUB-C108H",
+      "key": "products/is-cub-c108h/workshop/iron-sprue-workshop-v1-approved-12660aca0c56.png",
+      "mediaId": "cmsmc73xx0001zcvz2z53elgc",
+      "byteSize": 2255199,
+      "width": 1536,
+      "height": 1024
+    }
+  ]
+}

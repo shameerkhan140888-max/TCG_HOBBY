@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-08-10T16:41:02.085Z",
+  "products": 81,
+  "suppliers": 1,
+  "categories": 22,
+  "r2Objects": 223,
+  "mediaAssets": 207,
+  "mediaByRole": {
+    "catalogue-primary": 102,
+    "workshop-photography": 71,
+    "manufacturer-original": 34
+  },
+  "mediaByApprovalState": {
+    "REVIEW_REQUIRED": 207
+  },
+  "brokenReferences": [],
+  "unreferencedProductObjects": [],
+  "staleReferencesDeleted": 0
+}

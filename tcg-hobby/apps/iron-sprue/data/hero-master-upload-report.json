@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-08-09T16:55:10.979Z",
+  "bucket": "iron-sprue-product-media",
+  "heroMastersUploaded": 15,
+  "uniqueProducts": 15,
+  "uploaded": [
+    {
+      "slug": "aoshima-06348-lamborghini-adventador-green",
+      "key": "marketing/heroes/aoshima-06348-lamborghini-adventador-green/69f6eec34058.png",
+      "checksum": "69f6eec34058",
+      "byteSize": 1864783,
+      "exists": true
+    },
+    {
+      "slug": "cubicfun-mc101h-burj-al-arab",
+      "key": "marketing/heroes/cubicfun-mc101h-burj-al-arab/c6ef73739d18.png",
+      "checksum": "c6ef73739d18",
+      "byteSize": 1960658,
+      "exists": true
+    },
+    {
+      "slug": "pintoo-s1024-3d-jigsaw-vase-koi-carp-lotus",
+      "key": "marketing/heroes/pintoo-s1024-3d-jigsaw-vase-koi-carp-lotus/f6458956f31a.png",
+      "checksum": "f6458956f31a",
+      "byteSize": 2054406,
+      "exists": true
+    },
+    {
+      "slug": "is-aos-05628-toyota-2000gt-red",
+      "key": "marketing/heroes/is-aos-05628-toyota-2000gt-red/b7ddcdffd377.png",
+      "checksum": "b7ddcdffd377",
+      "byteSize": 1902994,
+      "exists": true
+    },
+    {
+      "slug": "is-aos-05778-suzuki-jimny-blue",
+      "key": "marketing/heroes/is-aos-05778-suzuki-jimny-blue/d9f9a165a057.png",
+      "checksum": "d9f9a165a057",
+      "byteSize": 2211780,
+      "exists": true
+    },
+    {
+      "slug": "is-aos-06357-skyline-gtr-red-pearl",
+      "key": "marketing/heroes/is-aos-06357-skyline-gtr-red-pearl/8b7e3d18943f.png",
+      "checksum": "8b7e3d18943f",
+      "byteSize": 1953578,
+      "exists": true
+    },
+    {
+      "slug": "is-aos-06540-lamborghini-countach-lpi-800-4-red",
+      "key": "marketing/heroes/is-aos-06540-lamborghini-countach-lpi-800-4-red/bfd92a41118c.png",
+      "checksum": "bfd92a41118c",
+      "byteSize": 1944207,
+      "exists": true
+    },
+    {
+      "slug": "is-cub-c712h-brandenburg-gate",
+      "key": "marketing/heroes/is-cub-c712h-brandenburg-gate/da0952d4a677.png",
+      "checksum": "da0952d4a677",
+      "byteSize": 1788424,
+      "exists": true
+    },
+    {
+      "slug": "is-cub-mc133h-burj-khalifa",
+      "key": "marketing/heroes/is-cub-mc133h-burj-khalifa/179604fe54a4.png",
+      "checksum": "179604fe54a4",
+      "byteSize": 1876870,
+      "exists": true
+    },
+    {
+      "slug": "is-cub-om3606-magic-box-london-at-night",
+      "key": "marketing/heroes/is-cub-om3606-magic-box-london-at-night/0a324225762a.png",
+      "checksum": "0a324225762a",
+      "byteSize": 2092932,
+      "exists": true
+    },
+    {
+      "slug": "is-cub-t4008h-santa-maria",
+      "key": "marketing/heroes/is-cub-t4008h-santa-maria/c7902d343e77.png",
+      "checksum": "c7902d343e77",
+      "byteSize": 2119428,
+      "exists": true
+    },
+    {
+      "slug": "is-pin-bluemarble-jigsaw-globe-the-blue-marble",
+      "key": "marketing/heroes/is-pin-bluemarble-jigsaw-globe-the-blue-marble/6fd622b902d1.png",
+      "checksum": "6fd622b902d1",
+      "byteSize": 2033466,
+      "exists": true
+    },
+    {
+      "slug": "is-pin-kc1005-jigsaw-clock-classic-rose",
+      "key": "marketing/heroes/is-pin-kc1005-jigsaw-clock-classic-rose/d2e20fb51685.png",
+      "checksum": "d2e20fb51685",
+      "byteSize": 2157585,
+      "exists": true
+    },
+    {
+      "slug": "is-pin-q1038-jigsaw-lantern-floral",
+      "key": "marketing/heroes/is-pin-q1038-jigsaw-lantern-floral/d26c60d56999.png",
+      "checksum": "d26c60d56999",
+      "byteSize": 2106457,
+      "exists": true
+    },
+    {
+      "slug": "is-pin-s1024-3d-jigsaw-vase-koi-carp-and-lotus",
+      "key": "marketing/heroes/is-pin-s1024-3d-jigsaw-vase-koi-carp-and-lotus/50b5f262c259.png",
+      "checksum": "50b5f262c259",
+      "byteSize": 2266382,
+      "exists": true
+    }
+  ]
+}

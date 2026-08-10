@@ -1,0 +1,210 @@
+{
+  "generatedAt": "2026-08-10T14:02:17.691Z",
+  "downloaded": [
+    {
+      "sku": "IS-AOS-05603",
+      "key": "archive/products/is-aos-05603-aoshima-05603-pagani-zonda-f/original/195d8da5b43763284ed7ed4d5e3ffc52983dba72c035f3330f0d3a0d9eaa5488.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-aos-05603-source.jpg",
+      "size": 23295
+    },
+    {
+      "sku": "IS-AOS-05627",
+      "key": "archive/products/is-aos-05627-aoshima-05627-toyota-2000gt-white/original/32fb3b29cfa26e2d3bdaeb1360e35046eb9f3877133bb81ac2c38f209784c877.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-aos-05627-source.jpg",
+      "size": 56282
+    },
+    {
+      "sku": "IS-AOS-05628",
+      "key": "archive/products/is-aos-05628-aoshima-05628-toyota-2000gt-red/original/b54ac7455ab4fbe319a919438a5c55787829eead55b9067c5e085a90c36266dd.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-aos-05628-source.jpg",
+      "size": 578961
+    },
+    {
+      "sku": "IS-AOS-05629",
+      "key": "archive/products/is-aos-05629-aoshima-05629-toyota-2000gt-silver/original/42c12fa0dcccda1aaf4d1070ad87bf647579747ed6c57c5f05a264a5cdbcb2b3.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-aos-05629-source.jpg",
+      "size": 203895
+    },
+    {
+      "sku": "IS-AOS-06259",
+      "key": "archive/products/is-aos-06259-aoshima-06259-nissan-fairlady-z-blue/original/86b1954cf1f8b11a67e9d8fdfd04182301d53f1d03d3025b2154b7156893cd32.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-aos-06259-source.jpg",
+      "size": 213092
+    },
+    {
+      "sku": "IS-AOS-06345",
+      "key": "archive/products/is-aos-06345-aoshima-06345-lamborghini-aventador-white/original/f465e83c24b4ffebbfde77202c3be651a00bfeeb702e43ae1cc624d4883c8fcb.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-aos-06345-source.jpg",
+      "size": 48842
+    },
+    {
+      "sku": "IS-AOS-06357",
+      "key": "archive/products/is-aos-06357-aoshima-06357-skyline-gtr-red-pearl/original/96325724002f85f64e5f3879f046fd59fefd65b9e4dddb28650fb05db90535c7.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-aos-06357-source.jpg",
+      "size": 100632
+    },
+    {
+      "sku": "IS-CUB-C007H",
+      "key": "archive/products/is-cub-c007h-cubicfun-c007h-era-of-navigation/original/d25671a649629d1e752c94906ab5d626a2cca89c5ff879c1933c81e0c580b3d1.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-cub-c007h-source.jpg",
+      "size": 59264
+    },
+    {
+      "sku": "IS-CUB-MC133H",
+      "key": "archive/products/is-cub-mc133h-cubicfun-mc133h-burj-khalifa/original/6b1fc88e93ee5e1939de1cb4ff62486e9281143013203277c0b25d3190a547b6.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-cub-mc133h-source.jpg",
+      "size": 8248
+    },
+    {
+      "sku": "IS-DLM-AC20",
+      "key": "archive/products/is-dlm-ac20-deluxe-materials-ac20-roket-glue-tips-6/original/72082a8a37e59a55d43abcd0a0594d055f1b2143ae71603baedd90c48d63b64c.webp",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-dlm-ac20-source.webp",
+      "size": 60294
+    },
+    {
+      "sku": "IS-DLM-AC9",
+      "key": "archive/products/is-dlm-ac9-deluxe-materials-ac9-micro-tips-tube/original/57d5d6eca9ef023bf9cfa69801cca4c6d6f58d448f2044d270f896ad7958ea74.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-dlm-ac9-source.jpg",
+      "size": 35937
+    },
+    {
+      "sku": "IS-DLM-AD10",
+      "key": "archive/products/is-dlm-ad10-deluxe-materials-ad10-speedbond/original/e70f9364f724b3f7d3d06c941fb3485c7a454c301fcde28297060ef87ecd2d61.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-dlm-ad10-source.jpg",
+      "size": 25670
+    },
+    {
+      "sku": "IS-DLM-AD22",
+      "key": "archive/products/is-dlm-ad22-deluxe-materials-ad22-citrus-grip/original/cc4582f3a75fbf444e24ec8bf02b4b492e6a5acd141a3de22f445b5a44b8a803.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-dlm-ad22-source.jpg",
+      "size": 41719
+    },
+    {
+      "sku": "IS-DLM-AD44",
+      "key": "archive/products/is-dlm-ad44-deluxe-materials-ad44-roket-rapid-medium-20g/original/985af367af07122e9f95026beb399a8b92fcbac05e367b6ffa075aab3022b418.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-dlm-ad44-source.jpg",
+      "size": 24165
+    },
+    {
+      "sku": "IS-DLM-AD48",
+      "key": "archive/products/is-dlm-ad48-deluxe-materials-ad48-glue-buster/original/62cb6b878f39590eb1e3cce2a65fa5d43308e5c66548d06271ae2ebb72007e05.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-dlm-ad48-source.jpg",
+      "size": 8901
+    },
+    {
+      "sku": "IS-DLM-AD55",
+      "key": "archive/products/is-dlm-ad55-deluxe-materials-ad55-glue-n-glaze/original/89c2ed21ead07c4e02c6dd5b829d301fc3e2ce79e6245acfb474153d5a843562.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-dlm-ad55-source.jpg",
+      "size": 6780
+    },
+    {
+      "sku": "IS-DLM-AD67",
+      "key": "archive/products/is-dlm-ad67-deluxe-materials-ad67-speed-epoxy-ii-4-minutes-28g/original/7989f97978d0e776c235512a6dd0e46dfa1bab7ea8a1061112991625b53bff7d.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-dlm-ad67-source.jpg",
+      "size": 8183
+    },
+    {
+      "sku": "IS-DLM-AD78",
+      "key": "archive/products/is-dlm-ad78-deluxe-materials-ad78-fix-n-flex-40g/original/060352117439975148bde2452d86db791dfc2a7c8a28bd7c3f936f750396f5c6.webp",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-dlm-ad78-source.webp",
+      "size": 14268
+    },
+    {
+      "sku": "IS-DLM-BD84",
+      "key": "archive/products/is-dlm-bd84-deluxe-materials-bd84-masking-magic-opaque-40g/original/dee3c494f86f9cc280614a7809125af7a08326af0e2d547f9c4b2b7be8ee0161.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-dlm-bd84-source.jpg",
+      "size": 41698
+    },
+    {
+      "sku": "IS-DLM-BD85",
+      "key": "archive/products/is-dlm-bd85-deluxe-materials-bd85-masking-magic-clear-tint-40g/original/5e77495f0e09e39b93aa8d4b9042d66fe4119b6b28e130b08ef134be0662bcfe.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-dlm-bd85-source.jpg",
+      "size": 48239
+    },
+    {
+      "sku": "IS-EXP-70240",
+      "key": "archive/products/is-exp-70240-expo-tools-70240-modelmakers-flexible-file-set/original/1a0edae18df0c29696fbccfe92daa90b98880efd1d18bbc60e2c91ba4beefd4c.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-exp-70240-source.jpg",
+      "size": 139300
+    },
+    {
+      "sku": "IS-OCC-19103",
+      "key": "archive/products/is-occ-19103-occre-creations-19103-basic-tool-case/original/cee6c0007f88e121473d9f84b929e02b5fdb2c44e7ec9cf3d8ba92bf670b5298.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-occ-19103-source.jpg",
+      "size": 30995
+    },
+    {
+      "sku": "IS-OCC-19114",
+      "key": "archive/products/is-occ-19114-occre-creations-19114-short-sander-new/original/e320395467cc59d736abbff5924ca009f4dcb8650be6586eeb5669dd3af4b058.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-occ-19114-source.jpg",
+      "size": 24721
+    },
+    {
+      "sku": "IS-OCC-19115",
+      "key": "archive/products/is-occ-19115-occre-creations-19115-rigid-sander-new/original/601b3193033b992c6162a8d5d6096b949c9a9e5f0c57d2172e49df349cedaa25.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-occ-19115-source.jpg",
+      "size": 26431
+    },
+    {
+      "sku": "IS-OCC-19116",
+      "key": "archive/products/is-occ-19116-occre-creations-19116-flexible-sander-new/original/397a9167960d756153ccf51e79ae41aa10840fb774cee066e40bc46a779c0986.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-occ-19116-source.jpg",
+      "size": 12301
+    },
+    {
+      "sku": "IS-PIN-K1001",
+      "key": "archive/products/is-pin-k1001-pintoo-k1001-jigsaw-flowerpot-red-carpet-of-life/original/24de7d9890914ab0e6d2108645570bc37d6a8e43a1f74ea2dca06dd5af1faca5.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-pin-k1001-source.jpg",
+      "size": 61152
+    },
+    {
+      "sku": "IS-PIN-K1002",
+      "key": "archive/products/is-pin-k1002-pintoo-k1002-jigsaw-flowerpot-slow-down/original/891885fa69c0b18dad8073821a3cd234f0cb264ba486d192b2f9f903a40ec910.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-pin-k1002-source.jpg",
+      "size": 58985
+    },
+    {
+      "sku": "IS-PIN-K1006",
+      "key": "archive/products/is-pin-k1006-pintoo-k1006-jigsaw-flowerpot-singing-birds-flowers/original/e6c3e6c12cbe5a696c93c2c734a247bd0887654b7c47b9fd4db35faf77bac4f7.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-pin-k1006-source.jpg",
+      "size": 105675
+    },
+    {
+      "sku": "IS-PIN-KC1005",
+      "key": "archive/products/is-pin-kc1005-pintoo-kc1005-jigsaw-clock-classic-rose/original/6be0a7d69f478b9a352fcc171b2983d10b9dfc0017e76cec9e8309b31a014a8d.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-pin-kc1005-source.jpg",
+      "size": 173747
+    },
+    {
+      "sku": "IS-PIN-KC1007",
+      "key": "archive/products/is-pin-kc1007-pintoo-kc1007-jigsaw-clock-into-the-woods/original/4c7f175ca1eb4ec88c9cf0f14b439e2c08b17639d13aedfdd776c5a4fd70af42.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-pin-kc1007-source.jpg",
+      "size": 18844
+    },
+    {
+      "sku": "IS-PIN-Q1038",
+      "key": "archive/products/is-pin-q1038-pintoo-q1038-jigsaw-lantern-floral/original/b3bf1350b6a5341fb4b08a0cea13909a73871404da2d66c7798f29b4ecb9ae8d.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-pin-q1038-source.jpg",
+      "size": 67937
+    },
+    {
+      "sku": "IS-PIN-Q1040",
+      "key": "archive/products/is-pin-q1040-pintoo-q1040-jigsaw-lantern-derjen-dancing-girls/original/65c8ffc46ceb4434cd343b8bea27e55d5f47caecc8844db40121a9ffd85012cd.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-pin-q1040-source.jpg",
+      "size": 50010
+    },
+    {
+      "sku": "IS-PIN-S1009",
+      "key": "archive/products/is-pin-s1009-pintoo-s1009-3d-jigsaw-vase-children/original/2b9e6d8ba49b65f9dc21cec3b963295cbf078dfc9ee1e969023c54d77211d6f4.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-pin-s1009-source.jpg",
+      "size": 36441
+    },
+    {
+      "sku": "IS-PIN-S1025",
+      "key": "archive/products/is-pin-s1025-pintoo-s1025-3d-jigsaw-vase-magpies-on-a-plum-tree/original/a9a1dcaf7f701feff3e769ca4264b951e769fe608222c1b4f768e88b0216b3f3.jpg",
+      "file": "apps\\iron-sprue\\public\\assets\\workshop-remaining-sources\\is-pin-s1025-source.jpg",
+      "size": 55238
+    }
+  ],
+  "missing": []
+}

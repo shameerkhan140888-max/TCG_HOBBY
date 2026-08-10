@@ -1,0 +1,1605 @@
+{
+  "generatedAt": "2026-08-09T20:43:05.204Z",
+  "mode": "applied",
+  "recovered": [
+    {
+      "sku": "IS-AOS-05778",
+      "product": "Suzuki Jimny Blue",
+      "brand": "Aoshima",
+      "pageUrl": "https://www.tasmaproducts.com/aoshima-plastic-kits/05778-suzuki-jimny-blue",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Snap%20Kits/05778-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 3,
+        "title": "05778 Suzuki Jimny Blue"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "48b77df7d04c999106e40160d8a9345e027a24760bb6cb018481322fdb314ff0",
+      "originalKey": "archive/products/is-aos-05778-aoshima-05778-suzuki-jimny-blue/original/48b77df7d04c999106e40160d8a9345e027a24760bb6cb018481322fdb314ff0.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-AOS-06347",
+      "product": "Lamborghini Aventador Red",
+      "brand": "Aoshima",
+      "pageUrl": "https://www.tasmaproducts.com/06347-lamborghini-adventador-red?search=06347",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Snap%20Kits/06347-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": false,
+        "tokenHits": 2,
+        "title": "06347 Lamborghini Adventador Red"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "53fcad338904ee90668e7399cbec5b58bc0f1aea6b90cc75b55163d571c9677f",
+      "originalKey": "archive/products/is-aos-06347-aoshima-06347-lamborghini-aventador-red/original/53fcad338904ee90668e7399cbec5b58bc0f1aea6b90cc75b55163d571c9677f.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-AOS-06349",
+      "product": "Lamborghini Aventador Blue",
+      "brand": "Aoshima",
+      "pageUrl": "https://www.tasmaproducts.com/06349-lamborghini-adventador-blue?search=06349",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Snap%20Kits/06349-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": false,
+        "tokenHits": 2,
+        "title": "06349 Lamborghini Adventador Blue"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "60c24f4a871066fe9bba09765c1cc6e05d9f26a0160dd00f8e27ff0e592dbabe",
+      "originalKey": "archive/products/is-aos-06349-aoshima-06349-lamborghini-aventador-blue/original/60c24f4a871066fe9bba09765c1cc6e05d9f26a0160dd00f8e27ff0e592dbabe.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-AOS-06459",
+      "product": "Toyota GR86 Spark Red",
+      "brand": "Aoshima",
+      "pageUrl": "https://www.tasmaproducts.com/aoshima-plastic-kits/06459-toyota-gr86-spark-red",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Aoshima/2024/06459-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 4,
+        "title": "06459 Toyota GR86 Spark Red"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "056b4ca1d9577ac0bfa59591346e68facdc3046c7ec1ade525767f07974d19bc",
+      "originalKey": "archive/products/is-aos-06459-aoshima-06459-toyota-gr86-spark-red/original/056b4ca1d9577ac0bfa59591346e68facdc3046c7ec1ade525767f07974d19bc.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-AOS-06460",
+      "product": "Toyota GR86 White Pearl",
+      "brand": "Aoshima",
+      "pageUrl": "https://www.tasmaproducts.com/aoshima-plastic-kits/06460-toyota-gr86-white-pearl",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Aoshima/2024/06460-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 4,
+        "title": "06460 Toyota GR86 White Pearl"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "9b11d2ac2a5ae62112878879b5dbc5bedb11387239f912520528345b2547b73f",
+      "originalKey": "archive/products/is-aos-06460-aoshima-06460-toyota-gr86-white-pearl/original/9b11d2ac2a5ae62112878879b5dbc5bedb11387239f912520528345b2547b73f.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-AOS-06474",
+      "product": "Nissan S30 Fairlady Z Red Custom Wheels",
+      "brand": "Aoshima",
+      "pageUrl": "https://www.tasmaproducts.com/aoshima-plastic-kits/06474-nissan-s30-fairlady-z-red-custom-wheels",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Snap%20Kits/06474-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 6,
+        "title": "06474 Nissan S30 Fairlady Z Red Custom Wheels"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "7c37c76bf69fbcaddbca68764fc2bb4e7d6fc3627f61419f273ab5a39adbd8fb",
+      "originalKey": "archive/products/is-aos-06474-aoshima-06474-nissan-s30-fairlady-z-red-custom-wheels/original/7c37c76bf69fbcaddbca68764fc2bb4e7d6fc3627f61419f273ab5a39adbd8fb.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-AOS-06477",
+      "product": "Nissan S30 Fairlady Z Brown Custom Wheels",
+      "brand": "Aoshima",
+      "pageUrl": "https://www.tasmaproducts.com/aoshima-plastic-kits/06477-nissan-s30-fairlady-z-brown-custom-wheels",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Snap%20Kits/06477-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 6,
+        "title": "06477 Nissan S30 Fairlady Z Brown Custom Wheels"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "c8de64069da87c07cd56bc495391015eb83e443a408e78fa95da2e4b45d57066",
+      "originalKey": "archive/products/is-aos-06477-aoshima-06477-nissan-s30-fairlady-z-brown-custom-wheels/original/c8de64069da87c07cd56bc495391015eb83e443a408e78fa95da2e4b45d57066.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-AOS-06539",
+      "product": "Lamborghini Countach LPI 800-4 White",
+      "brand": "Aoshima",
+      "pageUrl": "https://www.tasmaproducts.com/aoshima-plastic-kits/06539-lamborghini-countach-lpi-800-4-white",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Aoshima/2024/06539-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 5,
+        "title": "06539 Lamborghini Countach LPI 800-4 White"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "c3c72112d337875c824222771a073540ec828738e432ca1651859afd2557efea",
+      "originalKey": "archive/products/is-aos-06539-aoshima-06539-lamborghini-countach-lpi-800-4-white/original/c3c72112d337875c824222771a073540ec828738e432ca1651859afd2557efea.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-AOS-06540",
+      "product": "Lamborghini Countach LPI 800-4 Red",
+      "brand": "Aoshima",
+      "pageUrl": "https://www.tasmaproducts.com/aoshima-plastic-kits/06540-lamborghini-countach-lpi-800-4-red",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Aoshima/2024/06540-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 5,
+        "title": "06540 Lamborghini Countach LPI 800-4 Red"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "6317248a3084b1eab72651cd94df51894c093939b46f826afc444fc011a85e31",
+      "originalKey": "archive/products/is-aos-06540-aoshima-06540-lamborghini-countach-lpi-800-4-red/original/6317248a3084b1eab72651cd94df51894c093939b46f826afc444fc011a85e31.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-AOS-06290",
+      "product": "Honda Motocompo",
+      "brand": "Aoshima",
+      "pageUrl": "https://www.tasmaproducts.com/aoshima-06290-honda-motocompo?search=06290",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Aoshima/06290-600x315w.png",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 2,
+        "title": "Aoshima 06290 Honda Motocompo"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/png",
+      "checksum": "e913b24665063bb03207ba0e24305785e4c0160713c16454e8d95f6ed4f7bbef",
+      "originalKey": "archive/products/is-aos-06290-aoshima-06290-honda-motocompo/original/e913b24665063bb03207ba0e24305785e4c0160713c16454e8d95f6ed4f7bbef.png",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-AOS-06437",
+      "product": "Back to the Future Part II",
+      "brand": "Aoshima",
+      "pageUrl": "https://www.tasmaproducts.com/aoshima-06437-back-to-the-future-part-ii?search=06437",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/Aoshima%2006437-600x315w.JPG",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 3,
+        "title": "Aoshima 06437 Back to the Future Part II"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "18780680a6ac8a6d444d93920e9a01447eb02d8d054de916c87acc712cd52da4",
+      "originalKey": "archive/products/is-aos-06437-aoshima-06437-back-to-the-future-part-ii/original/18780680a6ac8a6d444d93920e9a01447eb02d8d054de916c87acc712cd52da4.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-AOS-06438",
+      "product": "Back to the Future Part III",
+      "brand": "Aoshima",
+      "pageUrl": "https://www.tasmaproducts.com/aoshima-06438-back-to-the-future-part-iii?search=06438",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/Aoshima%20btf%20III-600x315w.JPG",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 4,
+        "title": "Aoshima 06438 Back to the Future Part III"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "960807a7a74de8c5bbff123c6b0078b42824660264861e61f8ac635bde46783d",
+      "originalKey": "archive/products/is-aos-06438-aoshima-06438-back-to-the-future-part-iii/original/960807a7a74de8c5bbff123c6b0078b42824660264861e61f8ac635bde46783d.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-DLM-AD21",
+      "product": "Super Phatic",
+      "brand": "Deluxe Materials",
+      "pageUrl": "https://www.tasmaproducts.com/deluxe-materials/ad21-super-phatic",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Deluxe-Materials/AD21_super-phatic_500x500-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 2,
+        "title": "AD21 - Super Phatic"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "0c7f3ec14aa552ca0525a77ede1fbc4c9959033f738a6a61b253a81741773d2e",
+      "originalKey": "archive/products/is-dlm-ad21-deluxe-materials-ad21-super-phatic/original/0c7f3ec14aa552ca0525a77ede1fbc4c9959033f738a6a61b253a81741773d2e.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-DLM-AD43",
+      "product": "Roket Hot Cyano 20g",
+      "brand": "Deluxe Materials",
+      "pageUrl": "https://www.tasmaproducts.com/deluxe-materials/ad43-roket-hot-cyano-20g",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/deluxe%20ad43-600x315w.JPG",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 4,
+        "title": "AD43 Roket Hot Cyano 20g"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "68c5c44b07f42bb18a8234f7446f55b209cffe3cb1f717b5495a1312ba854f68",
+      "originalKey": "archive/products/is-dlm-ad43-deluxe-materials-ad43-roket-hot-cyano-20g/original/68c5c44b07f42bb18a8234f7446f55b209cffe3cb1f717b5495a1312ba854f68.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-DLM-AD46",
+      "product": "Roket Odourless Cyano 20g",
+      "brand": "Deluxe Materials",
+      "pageUrl": "https://www.tasmaproducts.com/deluxe-materials/ad46-roket-odourless-cyano-20g",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/deluxe%20ad46-600x315w.JPG",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 4,
+        "title": "AD46 Roket Odourless Cyano 20g"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "08f424a4760005fd514e5cfa377489e73c3ee5448699f3424acc51e75ee59567",
+      "originalKey": "archive/products/is-dlm-ad46-deluxe-materials-ad46-roket-odourless-cyano-20g/original/08f424a4760005fd514e5cfa377489e73c3ee5448699f3424acc51e75ee59567.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-DLM-AD73",
+      "product": "Speed Epoxy II Syringe 28g (4mins)",
+      "brand": "Deluxe Materials",
+      "pageUrl": "https://www.tasmaproducts.com/ad73-speed-epoxy-ii-syringe-28g?search=AD73",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Deluxe-Materials/AD73_Speed_Epoxy_Syringe-600x315w.png",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 4,
+        "title": "AD73 - Speed Epoxy II Syringe 28g (4min)"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/png",
+      "checksum": "6522c3e2862e86dcdf49a7c82309c7864c436503d782e2ec596a0d2c2662c83f",
+      "originalKey": "archive/products/is-dlm-ad73-deluxe-materials-ad73-speed-epoxy-ii-syringe-28g-4mins/original/6522c3e2862e86dcdf49a7c82309c7864c436503d782e2ec596a0d2c2662c83f.png",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-OCC-19124",
+      "product": "Mini Calliper",
+      "brand": "OcCre Creations",
+      "pageUrl": "https://www.tasmaproducts.com/19124-mini-caliper?search=19124",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Occre/Tools/occ19124-01-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 1,
+        "title": "19124 - Mini Caliper"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "d1e9f041f20eb534d0b1cf771cfa334d7faaadda4c2604016b99cd52d10b5dfe",
+      "originalKey": "archive/products/is-occ-19124-occre-creations-19124-mini-calliper/original/d1e9f041f20eb534d0b1cf771cfa334d7faaadda4c2604016b99cd52d10b5dfe.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-PIN-S1024",
+      "product": "3D Jigsaw Vase - Koi Carp and Lotus",
+      "brand": "Pintoo",
+      "pageUrl": "https://www.tasmaproducts.com/3d-jigsaw-vase-s1024-koi-carp-lotus?search=S1024",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Pintoo/Vases/S1024-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 5,
+        "title": "3D Jigsaw Vase S1024 Koi Carp and Lotus"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "5a10720a6763fb28b720fc5c72d305056db6a86272f6bd4451593fcebce2255f",
+      "originalKey": "archive/products/is-pin-s1024-pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus/original/5a10720a6763fb28b720fc5c72d305056db6a86272f6bd4451593fcebce2255f.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-PIN-KC1046",
+      "product": "Jigsaw Clock - Singing Birds and Fragrant Flowers",
+      "brand": "Pintoo",
+      "pageUrl": "https://www.tasmaproducts.com/jigsaw-clock-kc1046-singing-birds-fragrant-flowers?search=KC1046",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Pintoo/Clocks/KC1046-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 6,
+        "title": "Jigsaw Clock KC1046 Singing Birds and Fragrant Flowers"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "5e78ac802fceeec31474bdf496533dac78cd26f116fff8d91fd988df51458640",
+      "originalKey": "archive/products/is-pin-kc1046-pintoo-kc1046-jigsaw-clock-singing-birds-and-fragrant-flowers/original/5e78ac802fceeec31474bdf496533dac78cd26f116fff8d91fd988df51458640.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-PIN-Q1037",
+      "product": "Jigsaw Lantern - Famous Architecture",
+      "brand": "Pintoo",
+      "pageUrl": "https://www.tasmaproducts.com/jigsaw-lantern-q1037-famous-architecture?search=Q1037",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Pintoo/Lanterns/Q1037-Architecture-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 4,
+        "title": "Jigsaw Lantern Q1037 Famous Architecture"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "808d8585379a351f0af91857b497b04019b9c6be8e45da3d947cc41ca4cb3233",
+      "originalKey": "archive/products/is-pin-q1037-pintoo-q1037-jigsaw-lantern-famous-architecture/original/808d8585379a351f0af91857b497b04019b9c6be8e45da3d947cc41ca4cb3233.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-CUB-T4008H",
+      "product": "Santa Maria",
+      "brand": "CubicFun",
+      "pageUrl": "https://www.tasmaproducts.com/t4008h-santa-maria-christopher-columbus?search=T4008H",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Cubicfun/T4008-Santa-Maria-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 2,
+        "title": "T4008H Santa Maria (Christopher Columbus)"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "fcbe7328b834f4742fbc1d734c3f40a90db5e59e687010c582a305598fc87d82",
+      "originalKey": "archive/products/is-cub-t4008h-cubicfun-t4008h-santa-maria/original/fcbe7328b834f4742fbc1d734c3f40a90db5e59e687010c582a305598fc87d82.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-CUB-MC106H",
+      "product": "Queen Anne's Revenge",
+      "brand": "CubicFun",
+      "pageUrl": "https://www.tasmaproducts.com/cubic-fun/mc106h-queen-annes-revenge",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Cubicfun/MC106h-The-Queen-Annes-Revenge-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 3,
+        "title": "MC106H Queen Anne's Revenge"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "4812650ed5462caf4aecdc0a133e23624acd0fb9a1b0f7d0241a49bb54907572",
+      "originalKey": "archive/products/is-cub-mc106h-cubicfun-mc106h-queen-anne-s-revenge/original/4812650ed5462caf4aecdc0a133e23624acd0fb9a1b0f7d0241a49bb54907572.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-CUB-C119H",
+      "product": "Two Masted Schooner",
+      "brand": "CubicFun",
+      "pageUrl": "https://www.tasmaproducts.com/tc119h-two-masted-schooner?search=C119H",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Cubicfun/TC119h-Two-Masted-Schooner-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 3,
+        "title": "TC119H Two Masted Schooner"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "cc533965059322885961cc48e4cc39bc8d17914166aeabcd1119b646a1504be3",
+      "originalKey": "archive/products/is-cub-c119h-cubicfun-c119h-two-masted-schooner/original/cc533965059322885961cc48e4cc39bc8d17914166aeabcd1119b646a1504be3.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-CUB-C712H",
+      "product": "Brandenburg Gate",
+      "brand": "CubicFun",
+      "pageUrl": "https://www.tasmaproducts.com/cubic-fun/c712h-brandenburg-gate",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Cubicfun/C712-Brandenburg-Gate-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 2,
+        "title": "C712H Brandenburg Gate"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "64a06df3b0382a580cfea617fbb22d0ee0977ab6988c3e90c7374dd257469a62",
+      "originalKey": "archive/products/is-cub-c712h-cubicfun-c712h-brandenburg-gate/original/64a06df3b0382a580cfea617fbb22d0ee0977ab6988c3e90c7374dd257469a62.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-CUB-MC092H",
+      "product": "St Peter's Basilica",
+      "brand": "CubicFun",
+      "pageUrl": "https://www.tasmaproducts.com/cubic-fun/mc092h-st-peters-basilica",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Cubicfun/MC092h-St-Peters-Basilica-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 2,
+        "title": "MC092H St Peter's Basilica"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "0fba73f1270a65a2946e4374a4c81ee1fb12298d2783804dc2395f9d4f53576a",
+      "originalKey": "archive/products/is-cub-mc092h-cubicfun-mc092h-st-peter-s-basilica/original/0fba73f1270a65a2946e4374a4c81ee1fb12298d2783804dc2395f9d4f53576a.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-CUB-MC093H",
+      "product": "St Basil's Cathedral",
+      "brand": "CubicFun",
+      "pageUrl": "https://www.tasmaproducts.com/cubic-fun/mc093h-st-basils-cathedral",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Cubicfun/MC093H-St-Basils-Large-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 2,
+        "title": "MC093H St Basil's Cathedral"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "7ed015e246e3dbaf5565019d35119369bf5e4c3f61495815de58c92bc9603097",
+      "originalKey": "archive/products/is-cub-mc093h-cubicfun-mc093h-st-basil-s-cathedral/original/7ed015e246e3dbaf5565019d35119369bf5e4c3f61495815de58c92bc9603097.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-CUB-MC139H",
+      "product": "Chateau de Chenonceau",
+      "brand": "CubicFun",
+      "pageUrl": "https://www.tasmaproducts.com/cubic-fun/mc139h-chateau-de-chenonceau",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Cubicfun/MC139H-Chateau-de-Chenonceau-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 2,
+        "title": "MC139H Chateau de Chenonceau"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "3d4fba7b7656bdfbada02af7f2f8e60a109d889ff4fd6ce836f31f0cc3b3623a",
+      "originalKey": "archive/products/is-cub-mc139h-cubicfun-mc139h-chateau-de-chenonceau/original/3d4fba7b7656bdfbada02af7f2f8e60a109d889ff4fd6ce836f31f0cc3b3623a.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-CUB-C108H",
+      "product": "Thomas Jefferson Memorial",
+      "brand": "CubicFun",
+      "pageUrl": "https://www.tasmaproducts.com/cubic-fun/c108h-thomas-jefferson-memorial",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Cubicfun/C108H-Thomas-Jefferson-Memorial-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 3,
+        "title": "C108H Thomas Jefferson Memorial"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "1101da515d0926a87f893f4878c849c65300f863fcf18c51657bcd8fa98724b9",
+      "originalKey": "archive/products/is-cub-c108h-cubicfun-c108h-thomas-jefferson-memorial/original/1101da515d0926a87f893f4878c849c65300f863fcf18c51657bcd8fa98724b9.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-CUB-C114H",
+      "product": "St Patrick's Cathedral",
+      "brand": "CubicFun",
+      "pageUrl": "https://www.tasmaproducts.com/c114h-st-patricks-cathedral-new-york?search=C114H",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Cubicfun/C114h-St-Patricks-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 2,
+        "title": "C114H St Patrick's Cathedral (New York)"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "8b47ddf195311c73865c537638e4804c4e3ef1f5b353c01f7f327c658c748f71",
+      "originalKey": "archive/products/is-cub-c114h-cubicfun-c114h-st-patrick-s-cathedral/original/8b47ddf195311c73865c537638e4804c4e3ef1f5b353c01f7f327c658c748f71.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-CUB-C112H",
+      "product": "Basilica of the National Shrine",
+      "brand": "CubicFun",
+      "pageUrl": "https://www.tasmaproducts.com/cubic-fun/c112h-basilica-of-the-national-shrine",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Cubicfun/C112h-Basilica-of-the-National-Shrine-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 3,
+        "title": "C112H Basilica of the National Shrine"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "03b1651c32e4ff8881c3811032b11ffb700eef88de89a06130b9268268f4d525",
+      "originalKey": "archive/products/is-cub-c112h-cubicfun-c112h-basilica-of-the-national-shrine/original/03b1651c32e4ff8881c3811032b11ffb700eef88de89a06130b9268268f4d525.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-CUB-OM3603",
+      "product": "Magic Box  Underwater World",
+      "brand": "CubicFun",
+      "pageUrl": "https://www.tasmaproducts.com/magic-box-underwater-world?search=OM3603",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Cubicfun/OM3603h-Underwater-World-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 4,
+        "title": "OM3603 Magic Box  Underwater World"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "6bc4e1fc551d3d4cce88cc161131cf45d0ded2b87641c7c4c6bced87dcb9d5ea",
+      "originalKey": "archive/products/is-cub-om3603-cubicfun-om3603-magic-box-underwater-world/original/6bc4e1fc551d3d4cce88cc161131cf45d0ded2b87641c7c4c6bced87dcb9d5ea.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-CUB-OM3606",
+      "product": "Magic Box  London at Night",
+      "brand": "CubicFun",
+      "pageUrl": "https://www.tasmaproducts.com/magic-box-london-at-night?search=OM3606",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Cubicfun/OM3606h-London-at-Night-600x315w.JPG",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 4,
+        "title": "OM3606 Magic Box - London at Night"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "723f0333fc48a19178e2a94f874b2b38c060ce33e0887c7a48962ade0d0b2a56",
+      "originalKey": "archive/products/is-cub-om3606-cubicfun-om3606-magic-box-london-at-night/original/723f0333fc48a19178e2a94f874b2b38c060ce33e0887c7a48962ade0d0b2a56.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-PIN-Q1035",
+      "product": "Jigsaw Screen - Famous Architectures",
+      "brand": "Pintoo",
+      "pageUrl": "https://www.tasmaproducts.com/jigsaw-screen-q1035-famous-architectures?search=Q1035",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Pintoo/Screens/Q1035-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 4,
+        "title": "Jigsaw Screen Q1035 Famous Architectures"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "8ca69b4c1c01d4272baa07c367cb099f7ab408fc454177aaf8f7f6afac0c26e5",
+      "originalKey": "archive/products/is-pin-q1035-pintoo-q1035-jigsaw-screen-famous-architectures/original/8ca69b4c1c01d4272baa07c367cb099f7ab408fc454177aaf8f7f6afac0c26e5.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    },
+    {
+      "sku": "IS-PIN-Q1061",
+      "product": "Jigsaw Screen - Le Papillon et la Fleur",
+      "brand": "Pintoo",
+      "pageUrl": "https://www.tasmaproducts.com/jigsaw-screen-q1061-le-papillion-et-la-fleur?search=Q1061",
+      "sourceImageUrl": "https://www.tasmaproducts.com/image/cache/catalog/products/Pintoo/Screens/Q1061-600x315w.jpg",
+      "identity": {
+        "ok": true,
+        "hasCode": true,
+        "brandHit": true,
+        "tokenHits": 3,
+        "title": "Jigsaw Screen Q1061 Le Papillion et la Fleur"
+      },
+      "width": 600,
+      "height": 315,
+      "contentType": "image/jpeg",
+      "checksum": "f3a8db78b48ebf296da237bb22fe4e604daa0a1914756709c28ee315bbdb23c7",
+      "originalKey": "archive/products/is-pin-q1061-pintoo-q1061-jigsaw-screen-le-papillon-et-la-fleur/original/f3a8db78b48ebf296da237bb22fe4e604daa0a1914756709c28ee315bbdb23c7.jpg",
+      "image2Key": null,
+      "image2Status": "NOT_GENERATED_REQUIRES_VISUAL_ACCEPTANCE_BATCH",
+      "workshopKey": null,
+      "workshopStatus": "NOT_GENERATED_REQUIRES_APPROVED_IMAGE2_TO_WORKSHOP_IMAGEGEN_PASS"
+    }
+  ],
+  "unresolved": [
+    {
+      "sku": "IS-AOS-06258",
+      "product": "Nissan Fairlady Z Silver",
+      "brand": "Aoshima",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/aoshima-plastic-kits/06258-nissan-fairlady-z-silver",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/aoshima-plastic-kits/06258-06258-nissan-fairlady-z-silver",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/aoshima-plastic-kits/06258",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/index.php?route=product/search&search=06258",
+          "status": "search-page",
+          "discoveredLinks": 0
+        },
+        {
+          "url": "https://www.tasmaproducts.com/index.php?route=product/search&search=Nissan%20Fairlady%20Z%20Silver",
+          "status": "search-page",
+          "discoveredLinks": 0
+        }
+      ]
+    },
+    {
+      "sku": "IS-AOS-06475",
+      "product": "Nissan S30 Fairlady Z Blue Custom Wheels",
+      "brand": "Aoshima",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/aoshima-plastic-kits/06475-nissan-s30-fairlady-z-blue-custom-wheels",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/aoshima-plastic-kits/06475-06475-nissan-s30-fairlady-z-blue-custom-wheels",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/aoshima-plastic-kits/06475",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/index.php?route=product/search&search=06475",
+          "status": "search-page",
+          "discoveredLinks": 0
+        },
+        {
+          "url": "https://www.tasmaproducts.com/index.php?route=product/search&search=Nissan%20S30%20Fairlady%20Z%20Blue%20Custom%20Wheels",
+          "status": "search-page",
+          "discoveredLinks": 0
+        }
+      ]
+    },
+    {
+      "sku": "IS-TAS-HD01",
+      "product": "HSS Mini Drill Bit Set (30 pcs)",
+      "brand": "Tasma",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/tools/hd01-hd-01-hss-mini-drill-bit-set-30-pcs",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/hd01",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/hd-01-hss-mini-drill-bit-set-30-pcs",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/hd-01-hd-01-hss-mini-drill-bit-set-30-pcs",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/hd-01",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/hd01-hss-mini-drill-bit-set-30-pcs",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/hd01-hd-01-hss-mini-drill-bit-set-30-pcs",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/hd01",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/hd-01-hss-mini-drill-bit-set-30-pcs",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/hd-01-hd-01-hss-mini-drill-bit-set-30-pcs",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/hd-01",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/hd01-hss-mini-drill-bit-set-30-pcs",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        }
+      ]
+    },
+    {
+      "sku": "IS-TAS-MG04",
+      "product": "Head Loupe with Lights (10x)",
+      "brand": "Tasma",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/tools/mg04-mg-04-head-loupe-with-lights-10x",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/mg04",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/mg-04-head-loupe-with-lights-10x",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/mg-04-mg-04-head-loupe-with-lights-10x",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/mg-04",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/mg04-head-loupe-with-lights-10x",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/mg04-mg-04-head-loupe-with-lights-10x",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/mg04",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/mg-04-head-loupe-with-lights-10x",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/mg-04-mg-04-head-loupe-with-lights-10x",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/mg-04",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/mg04-head-loupe-with-lights-10x",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        }
+      ]
+    },
+    {
+      "sku": "IS-TAS-PV05",
+      "product": "Pin Vice with 6 Attachments & Diamond Burr",
+      "brand": "Tasma",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/tools/pv05-pv-05-pin-vice-with-6-attachments-diamond-burr",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/pv05",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/pv-05-pin-vice-with-6-attachments-and-diamond-burr",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/pv-05-pv-05-pin-vice-with-6-attachments-diamond-burr",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/pv-05",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/pv05-pin-vice-with-6-attachments-and-diamond-burr",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/pv05-pv-05-pin-vice-with-6-attachments-diamond-burr",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/pv05",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/pv-05-pin-vice-with-6-attachments-and-diamond-burr",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/pv-05-pv-05-pin-vice-with-6-attachments-diamond-burr",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/pv-05",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/pv05-pin-vice-with-6-attachments-and-diamond-burr",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        }
+      ]
+    },
+    {
+      "sku": "IS-TAS-TW01",
+      "product": "Reverse Tweezers",
+      "brand": "Tasma",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/tools/tw01-tw-01-reverse-tweezers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/tw01",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/tw-01-reverse-tweezers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/tw-01-tw-01-reverse-tweezers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/tw-01",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/tw01-reverse-tweezers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/tw01-tw-01-reverse-tweezers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/tw01",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/tw-01-reverse-tweezers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/tw-01-tw-01-reverse-tweezers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/tw-01",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/tw01-reverse-tweezers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        }
+      ]
+    },
+    {
+      "sku": "IS-TAS-JP0102",
+      "product": "Long Nose Pliers with Teeth",
+      "brand": "Tasma",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/tools/jp0102-jp-0102-long-nose-pliers-with-teeth",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/jp0102",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/jp-0102-long-nose-pliers-with-teeth",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/jp-0102-jp-0102-long-nose-pliers-with-teeth",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/jp-0102",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/jp0102-long-nose-pliers-with-teeth",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/jp0102-jp-0102-long-nose-pliers-with-teeth",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/jp0102",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/jp-0102-long-nose-pliers-with-teeth",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/jp-0102-jp-0102-long-nose-pliers-with-teeth",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/jp-0102",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/jp0102-long-nose-pliers-with-teeth",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        }
+      ]
+    },
+    {
+      "sku": "IS-TAS-JP0106",
+      "product": "Bent Nose Pliers",
+      "brand": "Tasma",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/tools/jp0106-jp-0106-bent-nose-pliers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/jp0106",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/jp-0106-bent-nose-pliers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/jp-0106-jp-0106-bent-nose-pliers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/jp-0106",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/jp0106-bent-nose-pliers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/jp0106-jp-0106-bent-nose-pliers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/jp0106",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/jp-0106-bent-nose-pliers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/jp-0106-jp-0106-bent-nose-pliers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/jp-0106",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/jp0106-bent-nose-pliers",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        }
+      ]
+    },
+    {
+      "sku": "IS-TAS-11MMHOBBYKNIFE",
+      "product": "11mm Hobby Knife",
+      "brand": "Tasma",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/tools/11mm-hobby-knife-11mm-hobby-knife-11mm-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/11mm-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/11mmhobbyknife-11mm-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/11mmhobbyknife-11mm-hobby-knife-11mm-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/11mmhobbyknife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/11mm hobby knife-11mm-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/11mm hobby knife-11mm-hobby-knife-11mm-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/11mm hobby knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/11mm-hobby-knife-11mm-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/11mm-hobby-knife-11mm-hobby-knife-11mm-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/11mm-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/11mmhobbyknife-11mm-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        }
+      ]
+    },
+    {
+      "sku": "IS-TAS-CARTON24SNAPKNIFE",
+      "product": "Snap-Off Hobby Knife (sold individually)",
+      "brand": "Tasma",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/tools/carton24snapknife-carton-24-snap-knife-snap-off-hobby-knife-sold-individually",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/carton24snapknife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/carton-24-snap-knife-snap-off-hobby-knife-sold-individually",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/carton-24-snap-knife-carton-24-snap-knife-snap-off-hobby-knife-sold-individually",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/carton-24-snap-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/carton24snapknife-snap-off-hobby-knife-sold-individually",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/carton24snapknife-carton-24-snap-knife-snap-off-hobby-knife-sold-individually",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/carton24snapknife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/carton-24-snap-knife-snap-off-hobby-knife-sold-individually",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/carton-24-snap-knife-carton-24-snap-knife-snap-off-hobby-knife-sold-individually",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/carton-24-snap-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/carton24snapknife-snap-off-hobby-knife-sold-individually",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        }
+      ]
+    },
+    {
+      "sku": "IS-TAS-RETRACTABLEHOBBYKNIFE",
+      "product": "Retractable Hobby Knife",
+      "brand": "Tasma",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/tools/retractable-hobby-knife-retractable-hobby-knife-retractable-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/retractable-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/retractablehobbyknife-retractable-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/retractablehobbyknife-retractable-hobby-knife-retractable-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/retractablehobbyknife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractable hobby knife-retractable-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractable hobby knife-retractable-hobby-knife-retractable-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractable hobby knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractable-hobby-knife-retractable-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractable-hobby-knife-retractable-hobby-knife-retractable-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractable-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractablehobbyknife-retractable-hobby-knife",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        }
+      ]
+    },
+    {
+      "sku": "IS-TAS-RETRACTABLEBLADES5",
+      "product": "Retractable Hobby Knife Blades (5)",
+      "brand": "Tasma",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/tools/retractable-blades-5-retractable-blades-5-retractable-hobby-knife-blades-5",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/retractable-blades-5",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/retractableblades5-retractable-hobby-knife-blades-5",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/retractableblades5-retractable-blades-5-retractable-hobby-knife-blades-5",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/tools/retractableblades5",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractable blades (5)-retractable-hobby-knife-blades-5",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractable blades (5)-retractable-blades-5-retractable-hobby-knife-blades-5",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractable blades (5)",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractable-blades-5-retractable-hobby-knife-blades-5",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractable-blades-5-retractable-blades-5-retractable-hobby-knife-blades-5",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractable-blades-5",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/accessories/retractableblades5-retractable-hobby-knife-blades-5",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        }
+      ]
+    },
+    {
+      "sku": "IS-PIN-BLUEMARBLE",
+      "product": "Jigsaw Globe - The Blue Marble",
+      "brand": "Pintoo",
+      "reason": "TASMA_RECOVERY_FAILED",
+      "attempts": [
+        {
+          "url": "https://www.tasmaproducts.com/pintoo/bluemarble-blue-marble-jigsaw-globe-the-blue-marble",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/pintoo/bluemarble",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/blue-marble-jigsaw-globe-the-blue-marble",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/blue-marble-blue-marble-jigsaw-globe-the-blue-marble",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/blue-marble",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/bluemarble-jigsaw-globe-the-blue-marble",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/bluemarble-blue-marble-jigsaw-globe-the-blue-marble",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/end-of-line/bluemarble",
+          "status": "page-failed",
+          "error": "HTTP_404"
+        },
+        {
+          "url": "https://www.tasmaproducts.com/index.php?route=product/search&search=BLUE-MARBLE",
+          "status": "search-page",
+          "discoveredLinks": 0
+        },
+        {
+          "url": "https://www.tasmaproducts.com/index.php?route=product/search&search=blue-marble",
+          "status": "search-page",
+          "discoveredLinks": 0
+        },
+        {
+          "url": "https://www.tasmaproducts.com/index.php?route=product/search&search=BLUEMARBLE",
+          "status": "search-page",
+          "discoveredLinks": 0
+        },
+        {
+          "url": "https://www.tasmaproducts.com/index.php?route=product/search&search=bluemarble",
+          "status": "search-page",
+          "discoveredLinks": 0
+        }
+      ]
+    }
+  ],
+  "skippedExistingOriginal": []
+}

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-09T15:18:21.664Z",
+  "generatedAt": "2026-08-10T16:39:51.503Z",
   "catalogue": {
     "manifestProducts": 81,
     "launchProducts": 81,
@@ -27,14 +27,14 @@
   },
   "mediaClassification": {
     "originalSourceAssets": 34,
-    "technicalDerivatives": 510,
-    "trueIsolatedImage2Assets": 0,
+    "technicalDerivatives": 0,
+    "trueIsolatedImage2Assets": 34,
     "trueCompletedResultAssets": 0,
-    "trueIronSprueWorkshopAssets": 0,
-    "workshopPlaceholders": 30,
-    "placeholders": 76,
+    "trueIronSprueWorkshopAssets": 34,
+    "workshopPlaceholders": 0,
+    "placeholders": 13,
     "brandLogosCompleted": 0,
-    "heroAssetsCompleted": 0
+    "heroAssetsCompleted": 15
   },
   "contentClassification": {
     "generatedDescriptionsFromVerifiedSources": 0,

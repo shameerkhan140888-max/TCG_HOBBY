@@ -1,0 +1,397 @@
+{
+  "generatedAt": "2026-08-09T17:27:46.531Z",
+  "version": "IRON_SPRUE_WORKSHOP_V1",
+  "generated": 33,
+  "proofRetained": 1,
+  "reviewRequired": 34,
+  "failures": [
+    {
+      "sku": "IS-AOS-05778",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06258",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06290",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06347",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06349",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06437",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06438",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06459",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06460",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06474",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06475",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06477",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06539",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-AOS-06540",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-CUB-C108H",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-CUB-C112H",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-CUB-C114H",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-CUB-C119H",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-CUB-C712H",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-CUB-MC092H",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-CUB-MC093H",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-CUB-MC106H",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-CUB-MC139H",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-CUB-OM3603",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-CUB-OM3606",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-CUB-T4008H",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-DLM-AD21",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-DLM-AD43",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-DLM-AD46",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-DLM-AD73",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-OCC-19124",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-PIN-BLUEMARBLE",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-PIN-KC1046",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-PIN-Q1035",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-PIN-Q1037",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-PIN-Q1061",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-PIN-S1024",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-TAS-11MMHOBBYKNIFE",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-TAS-CARTON24SNAPKNIFE",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-TAS-HD01",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-TAS-JP0102",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-TAS-JP0106",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-TAS-MG04",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-TAS-PV05",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-TAS-RETRACTABLEBLADES5",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-TAS-RETRACTABLEHOBBYKNIFE",
+      "reason": "NO_USABLE_ORIGINAL"
+    },
+    {
+      "sku": "IS-TAS-TW01",
+      "reason": "NO_USABLE_ORIGINAL"
+    }
+  ],
+  "objects": [
+    {
+      "sku": "IS-AOS-05603",
+      "key": "products/is-aos-05603/workshop/iron-sprue-workshop-v1-4c94b26a0da4.png",
+      "mediaId": "cmsm2so650000novz5iv957w1",
+      "byteSize": 1818032
+    },
+    {
+      "sku": "IS-AOS-05627",
+      "key": "products/is-aos-05627/workshop/iron-sprue-workshop-v1-6f0621d5bb9d.png",
+      "mediaId": "cmsm2spmr0001novz0f2o6u04",
+      "byteSize": 1923757
+    },
+    {
+      "sku": "IS-AOS-05629",
+      "key": "products/is-aos-05629/workshop/iron-sprue-workshop-v1-e6a9d14f4954.png",
+      "mediaId": "cmsm2sr3f0002novzmpkkhvik",
+      "byteSize": 2011625
+    },
+    {
+      "sku": "IS-AOS-06259",
+      "key": "products/is-aos-06259/workshop/iron-sprue-workshop-v1-1e3720ab41e1.png",
+      "mediaId": "cmsm2ssps0003novz6j3mdt28",
+      "byteSize": 2063776
+    },
+    {
+      "sku": "IS-AOS-06345",
+      "key": "products/is-aos-06345/workshop/iron-sprue-workshop-v1-5129f1c794a7.png",
+      "mediaId": "cmsm2su7o0004novzrb6ymfgr",
+      "byteSize": 1791333
+    },
+    {
+      "sku": "IS-AOS-06357",
+      "key": "products/is-aos-06357/workshop/iron-sprue-workshop-v1-9518c31bc998.png",
+      "mediaId": "cmsm2svfe0005novz0zwwgf1o",
+      "byteSize": 1870004
+    },
+    {
+      "sku": "IS-CUB-C007H",
+      "key": "products/is-cub-c007h/workshop/iron-sprue-workshop-v1-be68f5c7cf2e.png",
+      "mediaId": "cmsm2swgu0006novzvhga7w6x",
+      "byteSize": 1948035
+    },
+    {
+      "sku": "IS-CUB-MC133H",
+      "key": "products/is-cub-mc133h/workshop/iron-sprue-workshop-v1-0d5bc44ac58f.png",
+      "mediaId": "cmsm2sxtf0007novzie3afqqx",
+      "byteSize": 1874973
+    },
+    {
+      "sku": "IS-DLM-AC20",
+      "key": "products/is-dlm-ac20/workshop/iron-sprue-workshop-v1-b5aa4a70f924.png",
+      "mediaId": "cmsm2sz680008novz0wjnkapw",
+      "byteSize": 2038509
+    },
+    {
+      "sku": "IS-DLM-AC9",
+      "key": "products/is-dlm-ac9/workshop/iron-sprue-workshop-v1-516b021f85d8.png",
+      "mediaId": "cmsm2t0fa0009novzaw5gyu18",
+      "byteSize": 1837569
+    },
+    {
+      "sku": "IS-DLM-AD10",
+      "key": "products/is-dlm-ad10/workshop/iron-sprue-workshop-v1-b9212eacf89e.png",
+      "mediaId": "cmsm2t1me000anovz18it5894",
+      "byteSize": 1726484
+    },
+    {
+      "sku": "IS-DLM-AD22",
+      "key": "products/is-dlm-ad22/workshop/iron-sprue-workshop-v1-dc29c21890a2.png",
+      "mediaId": "cmsm2t2vv000bnovzdyzgz0uh",
+      "byteSize": 1814259
+    },
+    {
+      "sku": "IS-DLM-AD44",
+      "key": "products/is-dlm-ad44/workshop/iron-sprue-workshop-v1-856fde1efd6f.png",
+      "mediaId": "cmsm2t4ce000cnovzvtnihuc0",
+      "byteSize": 1741191
+    },
+    {
+      "sku": "IS-DLM-AD48",
+      "key": "products/is-dlm-ad48/workshop/iron-sprue-workshop-v1-945f52cc5deb.png",
+      "mediaId": "cmsm2t5q2000dnovz87xixz5w",
+      "byteSize": 1872818
+    },
+    {
+      "sku": "IS-DLM-AD55",
+      "key": "products/is-dlm-ad55/workshop/iron-sprue-workshop-v1-e91e6bc75319.png",
+      "mediaId": "cmsm2t731000enovzlxa2en3g",
+      "byteSize": 1835272
+    },
+    {
+      "sku": "IS-DLM-AD67",
+      "key": "products/is-dlm-ad67/workshop/iron-sprue-workshop-v1-bc44a9e84ba5.png",
+      "mediaId": "cmsm2t8g5000fnovz0g8wog08",
+      "byteSize": 1839143
+    },
+    {
+      "sku": "IS-DLM-AD78",
+      "key": "products/is-dlm-ad78/workshop/iron-sprue-workshop-v1-d5a44543c4dc.png",
+      "mediaId": "cmsm2t9rb000gnovzlaq3h49e",
+      "byteSize": 1806812
+    },
+    {
+      "sku": "IS-DLM-BD84",
+      "key": "products/is-dlm-bd84/workshop/iron-sprue-workshop-v1-2b12335d52d8.png",
+      "mediaId": "cmsm2tb12000hnovzjykcxooe",
+      "byteSize": 1753901
+    },
+    {
+      "sku": "IS-DLM-BD85",
+      "key": "products/is-dlm-bd85/workshop/iron-sprue-workshop-v1-6a645892f2f5.png",
+      "mediaId": "cmsm2tccw000inovzgylifa14",
+      "byteSize": 1902020
+    },
+    {
+      "sku": "IS-EXP-70240",
+      "key": "products/is-exp-70240/workshop/iron-sprue-workshop-v1-b127d811b0f8.png",
+      "mediaId": "cmsm2tdpr000jnovz42m51ihm",
+      "byteSize": 1697143
+    },
+    {
+      "sku": "IS-OCC-19103",
+      "key": "products/is-occ-19103/workshop/iron-sprue-workshop-v1-ade60aebc9ae.png",
+      "mediaId": "cmsm2tf0h000knovz0u9sz81a",
+      "byteSize": 1829134
+    },
+    {
+      "sku": "IS-OCC-19114",
+      "key": "products/is-occ-19114/workshop/iron-sprue-workshop-v1-a6002992d157.png",
+      "mediaId": "cmsm2tg8t000lnovzdsg381cf",
+      "byteSize": 1600143
+    },
+    {
+      "sku": "IS-OCC-19115",
+      "key": "products/is-occ-19115/workshop/iron-sprue-workshop-v1-98c0ee518c76.png",
+      "mediaId": "cmsm2thel000mnovz4z4q1dqy",
+      "byteSize": 1578653
+    },
+    {
+      "sku": "IS-OCC-19116",
+      "key": "products/is-occ-19116/workshop/iron-sprue-workshop-v1-9d0b53a2e6ec.png",
+      "mediaId": "cmsm2tikd000nnovzqsvc3e09",
+      "byteSize": 1648536
+    },
+    {
+      "sku": "IS-PIN-K1001",
+      "key": "products/is-pin-k1001/workshop/iron-sprue-workshop-v1-13b57b7fcb64.png",
+      "mediaId": "cmsm2tjzc000onovzral3huln",
+      "byteSize": 2169303
+    },
+    {
+      "sku": "IS-PIN-K1002",
+      "key": "products/is-pin-k1002/workshop/iron-sprue-workshop-v1-1f5d90a09272.png",
+      "mediaId": "cmsm2tlbl000pnovzwc8hzcht",
+      "byteSize": 2146978
+    },
+    {
+      "sku": "IS-PIN-K1006",
+      "key": "products/is-pin-k1006/workshop/iron-sprue-workshop-v1-98dbfcd796b5.png",
+      "mediaId": "cmsm2tmjz000qnovzi29djv1d",
+      "byteSize": 1757929
+    },
+    {
+      "sku": "IS-PIN-KC1005",
+      "key": "products/is-pin-kc1005/workshop/iron-sprue-workshop-v1-768ee0602466.png",
+      "mediaId": "cmsm2tnvp000rnovzlfsvq45l",
+      "byteSize": 1943770
+    },
+    {
+      "sku": "IS-PIN-KC1007",
+      "key": "products/is-pin-kc1007/workshop/iron-sprue-workshop-v1-fd8041493909.png",
+      "mediaId": "cmsm2tpch000snovzqe1jrmeq",
+      "byteSize": 1936139
+    },
+    {
+      "sku": "IS-PIN-Q1038",
+      "key": "products/is-pin-q1038/workshop/iron-sprue-workshop-v1-a8abdb126ff2.png",
+      "mediaId": "cmsm2tqp0000tnovzcmijbqm6",
+      "byteSize": 1908302
+    },
+    {
+      "sku": "IS-PIN-Q1040",
+      "key": "products/is-pin-q1040/workshop/iron-sprue-workshop-v1-64202a677071.png",
+      "mediaId": "cmsm2ts0i000unovzcyk04q7z",
+      "byteSize": 1902330
+    },
+    {
+      "sku": "IS-PIN-S1009",
+      "key": "products/is-pin-s1009/workshop/iron-sprue-workshop-v1-e206c9cd046d.png",
+      "mediaId": "cmsm2ttco000vnovz31u39x6m",
+      "byteSize": 1926423
+    },
+    {
+      "sku": "IS-PIN-S1025",
+      "key": "products/is-pin-s1025/workshop/iron-sprue-workshop-v1-5282e618ff19.png",
+      "mediaId": "cmsm2tun4000wnovzckq5mhrj",
+      "byteSize": 1795752
+    }
+  ]
+}
