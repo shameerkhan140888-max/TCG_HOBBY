@@ -1,0 +1,1023 @@
+{
+  "generatedAt": "2026-08-11T11:00:27.043Z",
+  "applied": true,
+  "fieldsPopulated": [
+    "shortDescription",
+    "description",
+    "features",
+    "specifications",
+    "seoTitle",
+    "metaDescription",
+    "descriptionReview"
+  ],
+  "before": {
+    "totalProducts": 81,
+    "meaningfulExistingDescriptions": 0,
+    "noDescription": 0,
+    "placeholderOrMinimal": 81,
+    "sufficientSourceInformation": 81,
+    "insufficientSourceInformation": 0,
+    "insufficientSourceSkus": []
+  },
+  "after": {
+    "totalProducts": 81,
+    "meaningfulExistingDescriptions": 81,
+    "noDescription": 0,
+    "placeholderOrMinimal": 0,
+    "sufficientSourceInformation": 81,
+    "insufficientSourceInformation": 0,
+    "insufficientSourceSkus": []
+  },
+  "enrichedCount": 81,
+  "quality": {
+    "duplicateDescriptions": [],
+    "emptyDescriptions": [],
+    "placeholderDescriptions": [],
+    "speculativeLanguage": []
+  },
+  "dbMirror": {
+    "attempted": true,
+    "updated": 0,
+    "errorCategory": "NEON_ADAPTER_IO_BLOCKED_IN_CURRENT_SANDBOX",
+    "error": "The Prisma Neon adapter failed before returning a database error; no credentials were printed and no Admin rows were changed."
+  },
+  "omittedUncertainSpecifications": [
+    {
+      "sku": "IS-AOS-05627",
+      "name": "Toyota 2000GT White",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-05628",
+      "name": "Toyota 2000GT Red",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-05629",
+      "name": "Toyota 2000GT Silver",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-05778",
+      "name": "Suzuki Jimny Blue",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06258",
+      "name": "Nissan Fairlady Z Silver",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06259",
+      "name": "Nissan Fairlady Z Blue",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06345",
+      "name": "Lamborghini Aventador White",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06347",
+      "name": "Lamborghini Aventador Red",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06349",
+      "name": "Lamborghini Aventador Blue",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06357",
+      "name": "Skyline GTR Red Pearl",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06459",
+      "name": "Toyota GR86 Spark Red",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06460",
+      "name": "Toyota GR86 White Pearl",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06474",
+      "name": "Nissan S30 Fairlady Z Red Custom Wheels",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06475",
+      "name": "Nissan S30 Fairlady Z Blue Custom Wheels",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06477",
+      "name": "Nissan S30 Fairlady Z Brown Custom Wheels",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06539",
+      "name": "Lamborghini Countach LPI 800-4 White",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06540",
+      "name": "Lamborghini Countach LPI 800-4 Red",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-05603",
+      "name": "Pagani Zonda F",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06290",
+      "name": "Honda Motocompo",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06437",
+      "name": "Back to the Future Part II",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-AOS-06438",
+      "name": "Back to the Future Part III",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AC9",
+      "name": "Micro Tips & Tube",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AC20",
+      "name": "Roket Glue Tips (6)",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AD10",
+      "name": "Speedbond",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AD21",
+      "name": "Super Phatic",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AD22",
+      "name": "Citrus Grip",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AD43",
+      "name": "Roket Hot Cyano 20g",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AD44",
+      "name": "Roket Rapid Medium 20g",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AD46",
+      "name": "Roket Odourless Cyano 20g",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AD48",
+      "name": "Glue Buster",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AD55",
+      "name": "Glue N Glaze",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AD67",
+      "name": "Speed Epoxy II 4 minutes 28g",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AD73",
+      "name": "Speed Epoxy II Syringe 28g (4mins)",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-AD78",
+      "name": "Fix N Flex 40g",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-BD84",
+      "name": "Masking Magic Opaque 40g",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-DLM-BD85",
+      "name": "Masking Magic Clear Tint 40g",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-TAS-HD01",
+      "name": "HSS Mini Drill Bit Set (30 pcs)",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-TAS-MG04",
+      "name": "Head Loupe with Lights (10x)",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-TAS-PV05",
+      "name": "Pin Vice with 6 Attachments & Diamond Burr",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-TAS-TW01",
+      "name": "Reverse Tweezers",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-TAS-JP0102",
+      "name": "Long Nose Pliers with Teeth",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-TAS-JP0106",
+      "name": "Bent Nose Pliers",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-TAS-11MMHOBBYKNIFE",
+      "name": "11mm Hobby Knife",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-TAS-CARTON24SNAPKNIFE",
+      "name": "Snap-Off Hobby Knife (sold individually)",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-TAS-RETRACTABLEHOBBYKNIFE",
+      "name": "Retractable Hobby Knife",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-TAS-RETRACTABLEBLADES5",
+      "name": "Retractable Hobby Knife Blades (5)",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-OCC-19103",
+      "name": "Basic Tool Case",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-OCC-19114",
+      "name": "Short Sander - New",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-OCC-19115",
+      "name": "Rigid Sander - New",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-OCC-19116",
+      "name": "Flexible Sander - New",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-OCC-19124",
+      "name": "Mini Calliper",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-EXP-70240",
+      "name": "Modelmakers Flexible File Set",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-S1009",
+      "name": "3D Jigsaw Vase - Children",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-S1024",
+      "name": "3D Jigsaw Vase - Koi Carp and Lotus",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-S1025",
+      "name": "3D Jigsaw Vase - Magpies on a Plum Tree",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-KC1005",
+      "name": "Jigsaw Clock - Classic Rose",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-KC1007",
+      "name": "Jigsaw Clock - Into the Woods",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-KC1046",
+      "name": "Jigsaw Clock - Singing Birds and Fragrant Flowers",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-K1001",
+      "name": "Jigsaw Flowerpot - Red Carpet of Life",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-K1002",
+      "name": "Jigsaw Flowerpot - Slow Down",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-K1006",
+      "name": "Jigsaw Flowerpot - Singing Birds & Flowers",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-Q1037",
+      "name": "Jigsaw Lantern - Famous Architecture",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-Q1038",
+      "name": "Jigsaw Lantern - Floral",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-Q1040",
+      "name": "Jigsaw Lantern - Derjen Dancing Girls",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-C007H",
+      "name": "Era of Navigation",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-T4008H",
+      "name": "Santa Maria",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-MC106H",
+      "name": "Queen Anne's Revenge",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-C119H",
+      "name": "Two Masted Schooner",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-MC133H",
+      "name": "Burj Khalifa",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-C712H",
+      "name": "Brandenburg Gate",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-MC092H",
+      "name": "St Peter's Basilica",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-MC093H",
+      "name": "St Basil's Cathedral",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-MC139H",
+      "name": "Chateau de Chenonceau",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-C108H",
+      "name": "Thomas Jefferson Memorial",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-C114H",
+      "name": "St Patrick's Cathedral",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-C112H",
+      "name": "Basilica of the National Shrine",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-OM3603",
+      "name": "Magic Box  Underwater World",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-CUB-OM3606",
+      "name": "Magic Box  London at Night",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-BLUEMARBLE",
+      "name": "Jigsaw Globe - The Blue Marble",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-Q1035",
+      "name": "Jigsaw Screen - Famous Architectures",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    },
+    {
+      "sku": "IS-PIN-Q1061",
+      "name": "Jigsaw Screen - Le Papillon et la Fleur",
+      "omitted": [
+        "dimensions",
+        "piece count",
+        "age rating",
+        "skill level",
+        "materials"
+      ],
+      "sourceConfidence": "sufficient"
+    }
+  ],
+  "repositoryTargets": {
+    "launchProductsJsonUpdated": true,
+    "finalLaunchCatalogueManifestUpdated": true,
+    "pricesStockVatSkuPublicationStateMediaUntouched": true
+  }
+}

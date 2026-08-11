@@ -4,6 +4,17 @@ import { featuredProducts, formatPrice, productAvailability, productImage } from
 
 const products = launchProducts as IronSprueProduct[];
 
+const specificationLabels: Record<string, string> = {
+  manufacturer: 'Manufacturer',
+  category: 'Category',
+  productType: 'Product type',
+  supplierCode: 'Supplier code',
+  manufacturerReference: 'Manufacturer reference',
+  scale: 'Scale',
+  glueRequired: 'Glue required',
+  paintRequired: 'Paint required',
+};
+
 export function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
 }
@@ -65,16 +76,30 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <article>
           <h2>Description</h2>
           <p>{product.description ?? product.shortDescription}</p>
+          {product.features?.length ? (
+            <>
+              <h3>Key details</h3>
+              <ul>
+                {product.features.map((feature) => (
+                  <li key={feature}>{feature}</li>
+                ))}
+              </ul>
+            </>
+          ) : null}
         </article>
         <article>
           <h2>Build information</h2>
           <dl className="spec-grid">
-            <div><dt>Manufacturer</dt><dd>{product.brand}</dd></div>
-            <div><dt>Scale</dt><dd>{product.scale ?? 'To be confirmed'}</dd></div>
-            <div><dt>Build type</dt><dd>{product.productType}</dd></div>
-            <div><dt>Difficulty</dt><dd>{product.skillLevel ?? 'To be confirmed'}</dd></div>
-            <div><dt>Glue required</dt><dd>{typeof product.glueRequired === 'boolean' ? (product.glueRequired ? 'Yes' : 'No') : 'To be confirmed'}</dd></div>
-            <div><dt>Paint required</dt><dd>{typeof product.paintRequired === 'boolean' ? (product.paintRequired ? 'Yes' : 'No') : 'To be confirmed'}</dd></div>
+            {Object.entries(product.specifications ?? {
+              manufacturer: product.brand,
+              productType: product.productType,
+              supplierCode: product.supplierSku,
+            }).map(([key, value]) => (
+              <div key={key}>
+                <dt>{specificationLabels[key] ?? key.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase())}</dt>
+                <dd>{String(value)}</dd>
+              </div>
+            ))}
           </dl>
         </article>
       </div>
