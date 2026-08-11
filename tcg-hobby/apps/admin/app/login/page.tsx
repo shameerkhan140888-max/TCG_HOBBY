@@ -10,13 +10,13 @@ export default async function LoginPage({
 }: {
   searchParams: SearchParams;
 }) {
-  if (await getCurrentAdminSession()) redirect('/admin');
   const params = await searchParams;
   const raw = Array.isArray(params.callbackUrl)
     ? params.callbackUrl[0]
     : params.callbackUrl;
   const callbackUrl =
     raw?.startsWith('/') && !raw.startsWith('//') ? raw : '/admin';
+  if (await getCurrentAdminSession()) redirect(callbackUrl);
 
   return (
     <PageShell className="grid place-items-center px-4 py-10">

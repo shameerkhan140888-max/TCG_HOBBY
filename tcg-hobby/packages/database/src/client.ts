@@ -4,6 +4,7 @@ import { PrismaNeon, PrismaNeonHTTP } from '@prisma/adapter-neon';
 
 type PrismaGlobal = typeof globalThis & {
   prisma?: PrismaClient;
+  ironSprueAdminPrisma?: PrismaClient;
 };
 
 const globalForPrisma = globalThis as PrismaGlobal;
@@ -55,11 +56,10 @@ function createFallbackClient() {
   ) as PrismaClient;
 }
 
-function createPrismaClient() {
+function createPrismaClient(connectionString = process.env.DATABASE_URL?.trim()) {
   try {
     const logLevels: Array<'error' | 'warn'> = ['error', 'warn'];
     const log = process.env.NODE_ENV === 'production' ? logLevels : undefined;
-    const connectionString = process.env.DATABASE_URL?.trim();
 
     if (!connectionString) {
       throw new Error('DATABASE_URL is required for the Prisma driver adapter runtime.');
@@ -107,4 +107,12 @@ export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (!globalForPrisma.prisma) {
   globalForPrisma.prisma = prisma;
+}
+
+export function getIronSprueAdminPrisma() {
+  if (!globalForPrisma.ironSprueAdminPrisma) {
+    globalForPrisma.ironSprueAdminPrisma = createPrismaClient(process.env.IRON_SPRUE_DATABASE_URL?.trim());
+  }
+
+  return globalForPrisma.ironSprueAdminPrisma;
 }

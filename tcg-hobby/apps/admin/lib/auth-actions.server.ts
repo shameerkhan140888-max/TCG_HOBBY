@@ -42,3 +42,10 @@ export async function logoutAdminAction(): Promise<never> {
   (await cookies()).delete(SESSION_COOKIE_NAME);
   redirect('/login');
 }
+
+export async function logoutIronSprueAdminAction(): Promise<never> {
+  const session = await requireAdminSession('/iron-sprue-admin', '/iron-sprue-admin/login');
+  await prisma.session.deleteMany({ where: { sessionToken: session.sessionToken } });
+  (await cookies()).delete(SESSION_COOKIE_NAME);
+  redirect('/iron-sprue-admin/login');
+}

@@ -35,9 +35,9 @@ export const getCurrentAdminSession = cache(async (): Promise<AdminSession | nul
   return { user, sessionToken: session.sessionToken, expires: session.expires };
 });
 
-export async function requireAdminSession(callbackUrl = '/admin'): Promise<AdminSession> {
+export async function requireAdminSession(callbackUrl = '/admin', loginPath = '/login'): Promise<AdminSession> {
   const session = await getCurrentAdminSession();
-  if (!session) redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+  if (!session) redirect(`${loginPath}?callbackUrl=${encodeURIComponent(callbackUrl)}`);
   return session;
 }
 

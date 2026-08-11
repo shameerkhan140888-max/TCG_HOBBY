@@ -13,13 +13,13 @@ describe('Iron Sprue Admin controls', () => {
     ]);
 
     expect(getIronSprueAdminControl('products')).toMatchObject({
-      href: '/admin/iron-sprue/products',
+      href: '/iron-sprue-admin/products',
       requiresIronSprueRuntime: true,
     });
-    expect(getIronSprueAdminControl('inventory')?.href).toBe('/admin/iron-sprue/inventory');
+    expect(getIronSprueAdminControl('inventory')?.href).toBe('/iron-sprue-admin/inventory');
     expect(getIronSprueAdminControl('media')?.capability).toMatch(/Image 2/i);
     expect(getIronSprueAdminControl('stocked-brands')?.description).toMatch(/carousel/i);
-    expect(ironSprueAdminControls.map((control) => control.href).join(' ')).not.toMatch(/\/admin\/products\?game=iron-sprue|\/admin\/storefront|\/admin\/catalogue/);
+    expect(ironSprueAdminControls.map((control) => control.href).join(' ')).not.toMatch(/\/admin\/iron-sprue|\/admin\/products\?game=iron-sprue|\/admin\/storefront|\/admin\/catalogue/);
   });
 
   it('requires the Iron Sprue Admin runtime for every mutable launch control', () => {

@@ -18,7 +18,7 @@ export const ironSprueAdminControls: IronSprueAdminControl[] = [
   {
     key: 'products',
     label: 'Products',
-    href: '/admin/iron-sprue/products',
+    href: '/iron-sprue-admin/products',
     description: 'Create, edit, review and publish Iron Sprue product drafts without touching TCG Hobby products.',
     capability: 'Manage Iron Sprue titles, SKUs, prices, VAT, categories, brand attribution and publication readiness.',
     requiresIronSprueRuntime: true,
@@ -26,7 +26,7 @@ export const ironSprueAdminControls: IronSprueAdminControl[] = [
   {
     key: 'inventory',
     label: 'Inventory',
-    href: '/admin/iron-sprue/inventory',
+    href: '/iron-sprue-admin/inventory',
     description: 'Track Iron Sprue expected, received, damaged, missing and available quantities.',
     capability: 'Adjust Iron Sprue inventory and preserve movement history.',
     requiresIronSprueRuntime: true,
@@ -34,7 +34,7 @@ export const ironSprueAdminControls: IronSprueAdminControl[] = [
   {
     key: 'media',
     label: 'Media',
-    href: '/admin/iron-sprue/media',
+    href: '/iron-sprue-admin/media',
     description: 'Approve Image 2, gallery, hero and workshop media in the Iron Sprue R2 bucket.',
     capability: 'Enforce catalogue-primary Image 2 before a product can become storefront-ready.',
     requiresIronSprueRuntime: true,
@@ -42,7 +42,7 @@ export const ironSprueAdminControls: IronSprueAdminControl[] = [
   {
     key: 'stocked-brands',
     label: 'Stocked brand carousel',
-    href: '/admin/iron-sprue/brands',
+    href: '/iron-sprue-admin/brands',
     description: 'Maintain official Iron Sprue stocked-brand records and carousel ordering.',
     capability: 'Attach approved brand logos and keep placeholder or unofficial logos unpublished.',
     requiresIronSprueRuntime: true,
@@ -50,7 +50,7 @@ export const ironSprueAdminControls: IronSprueAdminControl[] = [
   {
     key: 'categories',
     label: 'Categories and filters',
-    href: '/admin/iron-sprue/categories',
+    href: '/iron-sprue-admin/categories',
     description: 'Maintain the modelling categories that drive navigation and catalogue filtering.',
     capability: 'Manage Model Kits, 3D Puzzles and Builds, Tools, Adhesives and Finishing, and Workshop Essentials.',
     requiresIronSprueRuntime: true,
@@ -58,7 +58,7 @@ export const ironSprueAdminControls: IronSprueAdminControl[] = [
   {
     key: 'homepage',
     label: 'Homepage and heroes',
-    href: '/admin/iron-sprue/homepage',
+    href: '/iron-sprue-admin/homepage',
     description: 'Manage Iron Sprue homepage placements, hero slides, banners and special-offer slots.',
     capability: 'Keep storefront marketing editable without reusing TCG Hobby storefront records.',
     requiresIronSprueRuntime: true,

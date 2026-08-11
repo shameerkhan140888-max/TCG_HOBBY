@@ -29,7 +29,7 @@ export function getSafeDatabaseTarget(value) {
   }
 }
 
-function readEnvFile(filePath) {
+export function readEnvFile(filePath) {
   if (!existsSync(filePath)) {
     return [];
   }
@@ -63,7 +63,7 @@ function readEnvFile(filePath) {
   return entries;
 }
 
-function applyEnvFile(filePath, env) {
+export function applyEnvFile(filePath, env) {
   for (const [key, value] of readEnvFile(filePath)) {
     if (env[key] === undefined || env[key] === '') {
       env[key] = value;

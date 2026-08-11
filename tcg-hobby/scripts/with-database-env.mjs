@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
-import { configureWindowsPrismaEngine, defaultWorkspaceRoot, loadRootDatabaseEnv } from './lib/database-env.mjs';
+import { applyEnvFile, configureWindowsPrismaEngine, defaultWorkspaceRoot, loadRootDatabaseEnv } from './lib/database-env.mjs';
+import { resolve } from 'node:path';
 
 const [command, ...args] = process.argv.slice(2);
 
@@ -13,6 +14,7 @@ const env = { ...process.env };
 
 try {
   loadRootDatabaseEnv({ rootDir: defaultWorkspaceRoot, env, logger: console.log });
+  applyEnvFile(resolve(defaultWorkspaceRoot, 'apps/iron-sprue/.env.local'), env);
   configureWindowsPrismaEngine({ rootDir: defaultWorkspaceRoot, env });
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
