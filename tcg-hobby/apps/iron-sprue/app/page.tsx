@@ -1,46 +1,84 @@
 import launchProducts from '../data/launch-products.json';
+import {
+  getIronSprueBrandPresentation,
+  getIronSprueHeroSlides,
+  getIronSprueHomepagePlacements,
+  getIronSprueStorefrontProducts,
+  placementByKey,
+  promoPanelsFromPlacements,
+  productsFromFeaturedPlacements,
+} from '../lib/admin-storefront-controls';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
-import { featuredProducts, formatPrice, heroSlides, productAvailability, productImage, promoPanels, withOfficialBrandLogos } from '../lib/storefront';
+import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productImage, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 
 const products = launchProducts as IronSprueProduct[];
-const previewProducts = products.map((product) => ({ ...product, published: true }));
-const brandsWeStock = withOfficialBrandLogos(deriveBrandsWeStock(previewProducts));
-const newArrivals = featuredProducts(products, 4, { includeUnpublishedPreview: true });
 
-export default function HomePage() {
+export const dynamic = 'force-dynamic';
+
+function heroFitMode(slide: Awaited<ReturnType<typeof getIronSprueHeroSlides>>[number]) {
+  const identity = `${slide.brandName ?? ''} ${slide.sourceProductSlug} ${slide.image}`.toLowerCase();
+  return identity.includes('aoshima') ? 'cover' : 'contain';
+}
+
+export default async function HomePage() {
+  const [activeHeroSlides, homepagePlacements, storefrontProducts] = await Promise.all([
+    getIronSprueHeroSlides(),
+    getIronSprueHomepagePlacements(),
+    getIronSprueStorefrontProducts(products),
+  ]);
+  const previewProducts = storefrontProducts.map((product) => ({ ...product, published: true }));
+  const brandsWeStock = await getIronSprueBrandPresentation(previewProducts)
+    .then((brands) => brands.length ? brands : withOfficialBrandLogos(deriveBrandsWeStock(previewProducts)));
+  const newArrivals = productsFromFeaturedPlacements(storefrontProducts, homepagePlacements, 4);
+  const homepagePromoPanels = promoPanelsFromPlacements(homepagePlacements, 3);
+  const featuredPlacement = placementByKey(homepagePlacements, 'featured-products');
+  const brandPlacement = placementByKey(homepagePlacements, 'brand-carousel');
+
   return (
     <>
       <section className="hero">
-        <div className="hero-carousel" aria-label="Featured Iron Sprue hero products">
-          {heroSlides.map((slide, index) => (
-            <article className="hero-slide" style={{ '--slide-index': index } as CSSProperties} key={slide.title}>
-              <img className="hero-art" src={slide.image} alt={slide.alt} width="1536" height="864" />
-              <div className="hero-brand">
-                <img src={slide.brandLogo} alt={`${slide.brandName} logo`} width="180" height="70" />
-                <small>{slide.brandName}</small>
+        <div
+          className="hero-carousel"
+          aria-label="Featured Iron Sprue hero products"
+          style={{ '--hero-count': Math.max(1, activeHeroSlides.length) } as CSSProperties}
+        >
+          {activeHeroSlides.map((slide, index) => (
+            <article
+              className="hero-slide"
+              data-fit={heroFitMode(slide)}
+              style={{ '--slide-index': index } as CSSProperties}
+              key={`${slide.id ?? slide.image}-${slide.title}`}
+            >
+              <a className="hero-art-link" href={slide.ctaHref} aria-label={`View ${slide.title}`}>
+                <img className="hero-art" src={slide.image} alt={slide.alt} width="1536" height="864" />
+              </a>
+              {slide.brandLogo ? (
+                <div className="hero-brand">
+                  <img src={slide.brandLogo} alt={`${slide.brandName ?? 'Brand'} logo`} width="180" height="70" />
+                </div>
+              ) : null}
+              <div className="hero-message">
+                <div className="hero-availability-sticker" aria-label={slide.availabilityLabel}>
+                  <span aria-hidden="true" />
+                  <strong>{slide.availabilityLabel}</strong>
+                </div>
+                <h1>{slide.title}</h1>
+                <p className="script-line">{slide.script}</p>
+                {slide.copy ? <p className="lead">{slide.copy}</p> : null}
+                <a className="hero-shop-now" href={slide.ctaHref}>{slide.ctaLabel ?? 'Shop now'}</a>
               </div>
               <ul className="hero-dots" aria-hidden="true">
-                {heroSlides.map((dot) => <li key={dot.title} />)}
+                {activeHeroSlides.map((dot) => <li key={dot.title} />)}
               </ul>
             </article>
           ))}
         </div>
-        <div className="hero-message">
-          <div className="hero-availability-sticker" aria-label="In stock now">
-            <span aria-hidden="true" />
-            <strong>In stock now</strong>
-          </div>
-          <h1>Built for the bench.</h1>
-          <p className="script-line">Kits. Tools. Finishing.</p>
-          <p className="lead">Everything a modeller needs, from display-ready builds to the essentials that make the finish sharper.</p>
-          <a className="hero-shop-now" href="/shop">Shop now</a>
-        </div>
       </section>
 
       <section className="category-strip" aria-label="Shop categories">
-        {heroSlides[0].meta.map((item, index) => (
-          <a href={`/shop?category=${item.toLowerCase().replaceAll(' ', '-').replaceAll('&', 'and')}`} key={item}>
+        {(activeHeroSlides[0]?.meta ?? heroSlides[0].meta).map((item, index) => (
+          <a href={hrefForCategoryLabel(item)} key={item}>
             <svg viewBox="0 0 32 32" aria-hidden="true">
               {index === 0 ? <path d="M4 20c3-5 8-8 14-8h5l5 5v6H4v-3Zm4 3a3 3 0 1 0 6 0m8 0a3 3 0 1 0 6 0" /> : null}
               {index === 1 ? <path d="m16 4 10 6v12l-10 6-10-6V10l10-6Zm0 0v12m10-6-10 6L6 10" /> : null}
@@ -55,7 +93,7 @@ export default function HomePage() {
       </section>
 
       <section className="promo-grid" aria-label="Special offers">
-        {promoPanels.map((panel) => (
+        {homepagePromoPanels.map((panel) => (
           <article className="promo-card" key={panel.title}>
             <img src={panel.image} alt={panel.alt} width="900" height="600" />
             <div>
@@ -72,16 +110,21 @@ export default function HomePage() {
         <div className="section-head split">
           <div>
             <p className="eyebrow">New arrivals</p>
-            <h2>Opening bench picks.</h2>
+            <h2>{featuredPlacement?.title || 'Opening bench picks.'}</h2>
           </div>
-          <a className="text-link" href="/shop?sort=new">See new arrivals</a>
+          <a className="text-link" href={featuredPlacement?.ctaHref || '/shop?sort=new'}>
+            {featuredPlacement?.ctaLabel || 'See new arrivals'}
+          </a>
         </div>
         <div className="product-grid">
-          {newArrivals.map((product) => (
+          {newArrivals.map((product) => {
+            const imageUrl = productImage(product);
+
+            return (
             <article className="product-card" key={product.sku}>
-              <div className="product-image">
-                {productImage(product) ? <img src={productImage(product) ?? ''} alt={product.name} width="1000" height="1000" /> : <span>{product.brand}</span>}
-              </div>
+              <a className="product-image" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
+                {imageUrl ? <img src={imageUrl} alt={product.name} width="1000" height="1000" /> : <span>{product.brand}</span>}
+              </a>
               <div className="product-card-body">
                 <p className="product-brand">{product.brand}</p>
                 <h3>{product.name}</h3>
@@ -94,12 +137,13 @@ export default function HomePage() {
                 </div>
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       </section>
 
       <section className="brand-carousel" aria-label="Brands we stock">
-        <h2>Brands we stock</h2>
+        <h2>{brandPlacement?.title || 'Brands we stock'}</h2>
         <div className="brand-stage">
           <button type="button" aria-label="Previous brand"><span aria-hidden="true">&lt;</span></button>
           <div className="brand-viewport" aria-live="off">

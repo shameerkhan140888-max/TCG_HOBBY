@@ -20,8 +20,16 @@ export default function TermsPage() {
           <p>Payment options and delivery charges will be shown before you complete checkout. We do not ask you to send card details by email or support message.</p>
         </article>
         <article>
+          <h2>Accounts and security</h2>
+          <p>You are responsible for keeping account access secure. We may restrict, suspend or cancel access where needed to protect customers, prevent fraud or comply with legal obligations.</p>
+        </article>
+        <article>
+          <h2>Returns and cancellations</h2>
+          <p>Eligible returns, cancellations and damaged-item reports are handled under the Returns information published by Iron Sprue and applicable UK consumer-rights requirements.</p>
+        </article>
+        <article>
           <h2>Contact</h2>
-          <p>For questions about these terms, contact info@ironsprue.co.uk.</p>
+          <p>Iron Sprue is a trading division of Capital Hobby Group Ltd, company number 17336948. Registered office: 4-6 Greatorex Street, London, United Kingdom, E1 5NF. For questions about these terms, contact info@ironsprue.co.uk.</p>
         </article>
       </div>
     </section>

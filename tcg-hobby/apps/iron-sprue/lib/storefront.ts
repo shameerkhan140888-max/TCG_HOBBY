@@ -1,8 +1,8 @@
 import { brandSlug, productPriceMinor, type IronSprueBrandRecord, type IronSprueProduct } from './catalogue';
 
 export const categoryNavigation = [
-  { label: 'Model Kits', href: '/shop?category=model-kits' },
-  { label: '3D Puzzles & Builds', href: '/shop?category=3d-puzzles' },
+  { label: 'Model Kits', href: '/shop/model-kits' },
+  { label: '3D Puzzles & Builds', href: '/shop/3d-puzzles-and-builds' },
   { label: 'Tools', href: '/shop?category=tools' },
   { label: 'Adhesives & Finishing', href: '/shop?category=adhesives-finishing' },
   { label: 'Brands', href: '/brands' },
@@ -15,45 +15,48 @@ export const heroSlides = [
   {
     label: 'In stock',
     availabilityLabel: 'Now available',
-    title: 'Built for the bench.',
-    script: 'Kits. Tools. Finishing.',
-    copy: 'Everything a modeller needs, from display-ready builds to the essentials that make the finish sharper.',
+    title: 'Aventador energy, snap-kit ease.',
+    script: 'Bright, sharp, bench-ready.',
+    copy: 'Aoshima snap-fit car kits bring bold display subjects to the modelling bench without overcomplicating the first build.',
     image: '/assets/hero-aoshima-lamborghini-workshop.png',
     sourceProductSlug: 'aoshima-06348-lamborghini-adventador-green',
     brandName: 'Aoshima',
     brandLogo: '/assets/brands/aoshima.webp',
     alt: 'Green Lamborghini Aventador model on an Iron Sprue workshop cutting mat',
     ctaHref: '/products/aoshima-06348-lamborghini-adventador-green',
+    ctaLabel: 'Shop now',
     secondaryHref: '/brands',
     meta: ['Model Kits', '3D Puzzles & Builds', 'Tools', 'Adhesives & Finishing', 'Paints & Weathering', 'Accessories'],
   },
   {
     label: 'Display build',
     availabilityLabel: 'Coming soon',
-    title: 'Make the shelf the finish line.',
-    script: 'Build to display.',
-    copy: 'Architectural builds and puzzle objects with enough presence to earn their place after assembly.',
+    title: 'Build the skyline for the shelf.',
+    script: 'Architecture with presence.',
+    copy: 'CubicFun landmark builds turn recognisable structures into calm, display-led projects for the home workshop.',
     image: '/assets/promo-cubicfun-landmark-workshop.png',
     sourceProductSlug: 'cubicfun-mc101h-burj-al-arab',
     brandName: 'CubicFun',
     brandLogo: '/assets/brands/cubicfun.webp',
     alt: 'Blue and white architectural display model on warm workshop assembly paper',
     ctaHref: '/products/cubicfun-mc101h-burj-al-arab',
+    ctaLabel: 'Shop now',
     secondaryHref: '/shop?category=3d-puzzles',
     meta: ['Display Builds', 'Architectural Kits', 'Giftable Projects', 'Clean Assembly'],
   },
   {
     label: 'Puzzle object',
-    availabilityLabel: 'Launch list',
-    title: 'Small parts. Calm hours.',
-    script: 'Built for focus.',
-    copy: 'Pintoo puzzle projects and modelling staples for slower builds, tidy benches and better finishes.',
+    availabilityLabel: 'Now available',
+    title: 'A puzzle vase made to stay out.',
+    script: 'Piece by piece, then display.',
+    copy: 'Pintoo 3D puzzle objects reward slower assembly with decorative finished forms worth keeping on show.',
     image: '/assets/promo-pintoo-vase-workshop.png',
-    sourceProductSlug: 'pintoo-s1024-3d-jigsaw-vase-koi-carp-lotus',
+    sourceProductSlug: 'pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus',
     brandName: 'Pintoo',
     brandLogo: '/assets/brands/pintoo.webp',
     alt: 'Koi carp and lotus vase puzzle object on warm workshop paper',
-    ctaHref: '/products/pintoo-s1024-3d-jigsaw-vase-koi-carp-lotus',
+    ctaHref: '/products/pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus',
+    ctaLabel: 'Shop now',
     secondaryHref: '/shop?brand=Pintoo',
     meta: ['3D Puzzle Objects', 'Display-First Results', 'Focused Builds', 'Gift Ready'],
   },
@@ -82,7 +85,7 @@ export const promoPanels = [
     eyebrow: 'Pintoo puzzle objects',
     title: 'Built to display',
     copy: 'Puzzle builds with decorative finished forms.',
-    href: '/products/pintoo-s1024-3d-jigsaw-vase-koi-carp-lotus',
+    href: '/products/pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus',
     cta: 'Explore',
     image: '/assets/promo-pintoo-vase-workshop.png',
     alt: 'Decorative koi and lotus vase puzzle object on a workbench',
@@ -90,8 +93,8 @@ export const promoPanels = [
 ] as const;
 
 export const categoryTiles = [
-  { title: 'Plastic Model Kits', href: '/shop?category=model-kits', description: 'Cars, character kits and display builds selected for clean assembly.', tone: 'large' },
-  { title: '3D Puzzles & Builds', href: '/shop?category=3d-puzzles', description: 'Architectural models, puzzle objects and giftable weekend projects.', tone: 'warm' },
+  { title: 'Plastic Model Kits', href: '/shop/model-kits', description: 'Cars, character kits and display builds selected for clean assembly.', tone: 'large' },
+  { title: '3D Puzzles & Builds', href: '/shop/3d-puzzles-and-builds', description: 'Architectural models, puzzle objects and giftable weekend projects.', tone: 'warm' },
   { title: 'Tools', href: '/shop?category=tools', description: 'Cutting, sanding, measuring and useful bench support.', tone: 'steel' },
   { title: 'Adhesives & Finishing', href: '/shop?category=adhesives-finishing', description: 'Glues, applicators, surface prep and finish helpers.', tone: 'brass' },
   { title: 'Workshop Essentials', href: '/shop?category=workshop-essentials', description: 'Reliable add-ons for cleaner first-pass builds.', tone: 'graphite' },
@@ -122,11 +125,21 @@ const productImageRegistry: Record<string, string> = {
   'aoshima-06357-skyline-gtr-red-pearl': '/assets/products/aoshima-skyline-gtr-red-pearl.jpg',
   'aoshima-06459-toyota-gr86-spark-red': '/assets/products/aoshima-toyota-gr86-spark-red.jpg',
   'cubicfun-mc101h-burj-al-arab': '/assets/products/cubicfun-burj-al-arab.jpg',
-  'pintoo-s1024-3d-jigsaw-vase-koi-carp-lotus': '/assets/products/pintoo-koi-carp-lotus-vase.jpg',
+  'pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus': '/assets/products/pintoo-koi-carp-lotus-vase.jpg',
 };
 
 export function productImage(product: IronSprueProduct) {
   return product.imageUrl || productImageRegistry[product.slug] || null;
+}
+
+export function productGalleryImages(product: IronSprueProduct) {
+  const images = [
+    productImage(product),
+    ...(product.imageReferences ?? []),
+    productImageRegistry[product.slug] ?? null,
+  ].filter((image): image is string => Boolean(image?.trim()));
+
+  return Array.from(new Set(images));
 }
 
 export function productAvailability(product: IronSprueProduct) {
@@ -158,4 +171,15 @@ export function formatPrice(product: IronSprueProduct) {
 
 export function slugForCategory(category: string) {
   return brandSlug(category);
+}
+
+export function hrefForCategoryLabel(label: string) {
+  const normalised = label.toLowerCase();
+  if (normalised.includes('model') || normalised.includes('japanese')) return '/shop/model-kits';
+  if (normalised.includes('puzzle') || normalised.includes('architecture') || normalised.includes('display build') || normalised.includes('giftable')) return '/shop/3d-puzzles-and-builds';
+  if (normalised.includes('tool')) return '/shop?category=tools';
+  if (normalised.includes('adhesive') || normalised.includes('finishing')) return '/shop?category=adhesives-finishing';
+  if (normalised.includes('brand')) return '/brands';
+  if (normalised.includes('new')) return '/shop?sort=new';
+  return `/shop?category=${encodeURIComponent(slugForCategory(label))}`;
 }

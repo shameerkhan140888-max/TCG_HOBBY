@@ -27,7 +27,7 @@ export function validateLaunchListSignup(input: LaunchListSignupInput): LaunchLi
     return { ok: false, status: 400, message: 'Enter a valid email address.' };
   }
 
-  if (input.consent !== true) {
+  if (input.consent !== true && input.consent !== 'true' && input.consent !== 'on') {
     return { ok: false, status: 400, message: 'Consent is required to join the Iron Sprue launch list.' };
   }
 

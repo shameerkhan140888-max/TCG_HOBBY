@@ -250,6 +250,10 @@ export async function getIronSprueAdminDashboard(client = getIronSprueAdminPrism
     inventory,
     activeOffers,
     activeHeroes,
+    contentApprovalRequired,
+    contentApproved,
+    mediaApprovalRequired,
+    mediaApproved,
     failedImports,
     failedMedia,
   ] = await Promise.all([
@@ -266,6 +270,10 @@ export async function getIronSprueAdminDashboard(client = getIronSprueAdminPrism
     }),
     client.ironSprueAdminSpecialOffer.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, active: true } }),
     client.ironSprueAdminHero.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, active: true } }),
+    client.ironSprueAdminContentReview.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, status: { in: ['PENDING', 'CONFLICT'] } } }),
+    client.ironSprueAdminContentReview.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, status: 'APPROVED' } }),
+    client.ironSprueAdminMediaAsset.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, approvalState: { in: ['REVIEW_REQUIRED', 'PENDING'] } } }),
+    client.ironSprueAdminMediaAsset.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, approvalState: 'APPROVED' } }),
     client.ironSprueAdminImportBatch.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, failedRows: { gt: 0 } } }),
     client.ironSprueAdminMediaAsset.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, approvalState: 'FAILED' } }),
   ]);
@@ -300,6 +308,10 @@ export async function getIronSprueAdminDashboard(client = getIronSprueAdminPrism
       { label: 'Review required', value: reviewRequired, detail: 'Products with unresolved readiness checks.' },
       { label: 'Ready', value: readyProducts, detail: 'Products eligible for explicit publication.' },
       { label: 'Published', value: publishedProducts, detail: 'Products visible after launch approval.' },
+      { label: 'Content approvals required', value: contentApprovalRequired, detail: 'Pending or conflicted customer-facing copy/specification reviews.' },
+      { label: 'Content approved', value: contentApproved, detail: 'Customer-facing copy/specification reviews already approved.' },
+      { label: 'Media approvals required', value: mediaApprovalRequired, detail: 'Image 2, workshop or source media awaiting approval.' },
+      { label: 'Media approved', value: mediaApproved, detail: 'Approved Iron Sprue media assets.' },
       { label: 'Expected stock', value: expectedStock, detail: 'Units expected from import/goods received.' },
       { label: 'Received stock', value: receivedStock, detail: 'Units received into Iron Sprue inventory.' },
       { label: 'Missing/damaged stock', value: missingStock + damagedStock, detail: 'Goods received exceptions.' },
@@ -315,21 +327,21 @@ export async function getIronSprueAdminDashboard(client = getIronSprueAdminPrism
 
 export function getIronSprueAdminWorkspaceCards(): IronSprueAdminWorkspaceCard[] {
   return [
-    { key: 'products', label: 'Products', href: '/iron-sprue-admin/products', status: 'empty', requiredPermission: 'products:view', description: 'Search, create, edit and publish Iron Sprue products after import.' },
-    { key: 'inventory', label: 'Inventory', href: '/iron-sprue-admin/inventory', status: 'empty', requiredPermission: 'inventory:adjust', description: 'Expected stock, receipts, adjustments and movement history.' },
-    { key: 'goods-received', label: 'Goods Received', href: '/iron-sprue-admin/goods-received', status: 'empty', requiredPermission: 'inventory:receive', description: 'Full, partial, missing and damaged stock receipt workflows.' },
-    { key: 'categories', label: 'Categories', href: '/iron-sprue-admin/categories', status: 'empty', requiredPermission: 'products:edit', description: 'Model kits, puzzles, tools and finishing navigation.' },
-    { key: 'brands', label: 'Brands', href: '/iron-sprue-admin/brands', status: 'empty', requiredPermission: 'products:edit', description: 'Official stocked-brand records and carousel ordering.' },
-    { key: 'suppliers', label: 'Suppliers', href: '/iron-sprue-admin/suppliers', status: 'empty', requiredPermission: 'supplier-costs:view', description: 'Supplier records and protected cost context.' },
-    { key: 'media', label: 'Media', href: '/iron-sprue-admin/media', status: 'empty', requiredPermission: 'media:approve', description: 'Image 2, original, workshop and hero media review.' },
-    { key: 'content-review', label: 'Content Review', href: '/iron-sprue-admin/content-review', status: 'empty', requiredPermission: 'content:approve', description: 'Factual copy/specification review and conflict blocking.' },
-    { key: 'import-batches', label: 'Import Batches', href: '/iron-sprue-admin/import-batches', status: 'empty', requiredPermission: 'products:edit', description: 'Import validation, retry, skip and zero-quantity handling.' },
-    { key: 'homepage', label: 'Homepage', href: '/iron-sprue-admin/homepage', status: 'empty', requiredPermission: 'homepage:manage', description: 'Homepage placements, category order and brand carousel controls.' },
-    { key: 'heroes', label: 'Heroes', href: '/iron-sprue-admin/heroes', status: 'empty', requiredPermission: 'heroes:manage', description: 'Hero carousel artwork, CTA route and display ordering.' },
-    { key: 'special-offers', label: 'Special Offers', href: '/iron-sprue-admin/special-offers', status: 'empty', requiredPermission: 'promotions:manage', description: 'Offer price, schedule, badge and homepage inclusion.' },
+    { key: 'products', label: 'Products', href: '/iron-sprue-admin/products', status: 'ready', requiredPermission: 'products:view', description: 'Search, flag and update publication state for Iron Sprue products.' },
+    { key: 'inventory', label: 'Inventory', href: '/iron-sprue-admin/inventory', status: 'ready', requiredPermission: 'inventory:adjust', description: 'Expected stock, receipts, adjustments and movement history.' },
+    { key: 'goods-received', label: 'Goods Received', href: '/iron-sprue-admin/goods-received', status: 'ready', requiredPermission: 'inventory:receive', description: 'Full, partial, missing and damaged stock receipt workflows.' },
+    { key: 'categories', label: 'Categories', href: '/iron-sprue-admin/categories', status: 'ready', requiredPermission: 'products:edit', description: 'Model kits, puzzles, tools and finishing navigation.' },
+    { key: 'brands', label: 'Brands', href: '/iron-sprue-admin/brands', status: 'ready', requiredPermission: 'products:edit', description: 'Official stocked-brand records and carousel ordering.' },
+    { key: 'suppliers', label: 'Suppliers', href: '/iron-sprue-admin/suppliers', status: 'ready', requiredPermission: 'supplier-costs:view', description: 'Supplier records and protected cost context.' },
+    { key: 'media', label: 'Media', href: '/iron-sprue-admin/media', status: 'ready', requiredPermission: 'media:approve', description: 'Image 2, original, workshop and hero media review.' },
+    { key: 'content-review', label: 'Content Review', href: '/iron-sprue-admin/content-review', status: 'ready', requiredPermission: 'content:approve', description: 'Customer copy/specification review and conflict blocking.' },
+    { key: 'import-batches', label: 'Import Batches', href: '/iron-sprue-admin/import-batches', status: 'ready', requiredPermission: 'products:edit', description: 'Import validation, retry, skip and zero-quantity handling.' },
+    { key: 'homepage', label: 'Homepage', href: '/iron-sprue-admin/homepage', status: 'ready', requiredPermission: 'homepage:manage', description: 'Homepage placements, category order and brand carousel controls.' },
+    { key: 'heroes', label: 'Heroes', href: '/iron-sprue-admin/heroes', status: 'ready', requiredPermission: 'heroes:manage', description: 'Hero carousel artwork, CTA route and display ordering.' },
+    { key: 'special-offers', label: 'Special Offers', href: '/iron-sprue-admin/special-offers', status: 'ready', requiredPermission: 'promotions:manage', description: 'Offer price, schedule, badge and homepage inclusion.' },
     { key: 'orders', label: 'Orders', href: '/iron-sprue-admin/orders', status: 'deferred', requiredPermission: 'orders:view', description: 'Read-only scoped order empty state until commerce activation.' },
     { key: 'settings', label: 'Settings', href: '/iron-sprue-admin/settings', status: 'ready', requiredPermission: 'roles:manage', description: 'Environment, permissions and operational readiness.' },
-    { key: 'audit-log', label: 'Audit Log', href: '/iron-sprue-admin/audit-log', status: 'empty', requiredPermission: 'audit:view', description: 'Store-scoped security and catalogue action history.' },
+    { key: 'audit-log', label: 'Audit Log', href: '/iron-sprue-admin/audit-log', status: 'ready', requiredPermission: 'audit:view', description: 'Store-scoped security and catalogue action history.' },
   ];
 }
 
@@ -734,44 +746,43 @@ export async function updateIronSprueAdminMediaApproval(
   if (!media) throw new Error('Iron Sprue media asset not found.');
 
   const now = new Date();
-  return client.$transaction(async (tx) => {
-    if (nextState === 'APPROVED' && media.productId && media.role === 'catalogue-primary') {
-      await tx.ironSprueAdminMediaAsset.updateMany({
-        where: {
-          storeCode: IRON_SPRUE_STORE_CODE,
-          productId: media.productId,
-          id: { not: media.id },
-        },
-        data: { isPrimary: false },
-      });
-    }
-
-    const updated = await tx.ironSprueAdminMediaAsset.update({
-      where: { id: media.id },
-      data: {
-        approvalState: nextState,
-        approvedById: nextState === 'APPROVED' ? actor.id : null,
-        approvedAt: nextState === 'APPROVED' ? now : null,
-        isPrimary: nextState === 'APPROVED' && media.role === 'catalogue-primary',
-      },
-    });
-
-    await tx.ironSprueAdminAuditLog.create({
-      data: {
+  if (nextState === 'APPROVED' && media.productId && media.role === 'catalogue-primary') {
+    await client.ironSprueAdminMediaAsset.updateMany({
+      where: {
         storeCode: IRON_SPRUE_STORE_CODE,
-        actorId: actor.id,
-        action: 'media.approval_state.change',
-        entityType: 'media',
-        entityId: media.id,
         productId: media.productId,
-        summary: `Changed Iron Sprue media ${media.role} to ${nextState}.`,
-        before: { approvalState: media.approvalState, isPrimary: media.isPrimary },
-        after: { approvalState: nextState, isPrimary: updated.isPrimary },
+        role: 'catalogue-primary',
+        id: { not: media.id },
       },
+      data: { isPrimary: false },
     });
+  }
 
-    return updated;
+  const updated = await client.ironSprueAdminMediaAsset.update({
+    where: { id: media.id },
+    data: {
+      approvalState: nextState,
+      approvedById: nextState === 'APPROVED' ? actor.id : null,
+      approvedAt: nextState === 'APPROVED' ? now : null,
+      isPrimary: nextState === 'APPROVED' && media.role === 'catalogue-primary',
+    },
   });
+
+  await client.ironSprueAdminAuditLog.create({
+    data: {
+      storeCode: IRON_SPRUE_STORE_CODE,
+      actorId: actor.id,
+      action: 'media.approval_state.change',
+      entityType: 'media',
+      entityId: media.id,
+      productId: media.productId,
+      summary: `Changed Iron Sprue media ${media.role} to ${nextState}.`,
+      before: { approvalState: media.approvalState, isPrimary: media.isPrimary },
+      after: { approvalState: nextState, isPrimary: updated.isPrimary },
+    },
+  });
+
+  return updated;
 }
 
 export async function updateIronSprueAdminContentReviewStatus(

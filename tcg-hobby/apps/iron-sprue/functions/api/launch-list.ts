@@ -50,7 +50,11 @@ export const onRequestPost = async (context: { request: Request; env: Record<str
   const length = Number(context.request.headers.get('content-length') ?? '0');
   if (length > MAX_BODY_BYTES) return json({ message: 'Request body too large.' }, { status: 413 });
 
-  const validation = validateLaunchListSignup(await context.request.json().catch(() => ({})));
+  const contentType = context.request.headers.get('content-type') ?? '';
+  const body = contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')
+    ? Object.fromEntries(await context.request.formData().catch(() => new FormData()))
+    : await context.request.json().catch(() => ({}));
+  const validation = validateLaunchListSignup(body);
   if (!validation.ok) return json({ ok: validation.bot === true, message: validation.message }, { status: validation.status });
 
   const databaseUrl = context.env.IRON_SPRUE_DATABASE_URL?.trim();

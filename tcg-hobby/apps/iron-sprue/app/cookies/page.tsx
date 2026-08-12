@@ -16,6 +16,14 @@ export default function CookiesPage() {
           <p>If Iron Sprue introduces analytics or marketing cookies, we will explain what they do and provide any required choice before using them for non-essential purposes.</p>
         </article>
         <article>
+          <h2>Launch-list forms</h2>
+          <p>The launch-list form records explicit marketing consent but does not require non-essential marketing cookies to submit your email address.</p>
+        </article>
+        <article>
+          <h2>Third-party services</h2>
+          <p>Checkout, email, hosting and security providers may set essential technical cookies or similar identifiers where needed to deliver the service securely.</p>
+        </article>
+        <article>
           <h2>Managing cookies</h2>
           <p>You can restrict or delete cookies in your browser settings. Some account, basket or checkout features may not work correctly if essential cookies are blocked.</p>
         </article>

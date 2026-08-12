@@ -160,14 +160,48 @@ export function productPriceMinor(product: IronSprueProduct) {
   return product.retailPriceMinor ?? product.priceMinor ?? 0;
 }
 
-export function filterIronSprueProducts(products: IronSprueProduct[], query: { brand?: string | undefined; category?: string | undefined; search?: string | undefined }) {
+const vehicleManufacturerCandidates = [
+  'Toyota',
+  'Lamborghini',
+  'Nissan',
+  'Pagani',
+  'Suzuki',
+  'Honda',
+  'Mazda',
+  'Subaru',
+  'Mitsubishi',
+  'Volkswagen',
+  'Ford',
+  'Porsche',
+  'BMW',
+  'Mercedes',
+] as const;
+
+type VehicleManufacturer = typeof vehicleManufacturerCandidates[number];
+
+export function vehicleManufacturerForProduct(product: IronSprueProduct): VehicleManufacturer | null {
+  if (product.brand !== 'Aoshima') return null;
+  const searchable = `${product.name} ${product.customerTitle ?? ''} ${product.sourceTitle ?? ''}`.toLowerCase();
+  return vehicleManufacturerCandidates.find((manufacturer) => {
+    const pattern = new RegExp(`\\b${manufacturer.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+    return pattern.test(searchable);
+  }) ?? null;
+}
+
+export function vehicleManufacturerOptions(products: IronSprueProduct[]) {
+  return Array.from(new Set(products.map(vehicleManufacturerForProduct).filter((value): value is VehicleManufacturer => Boolean(value)))).sort();
+}
+
+export function filterIronSprueProducts(products: IronSprueProduct[], query: { brand?: string | undefined; category?: string | undefined; search?: string | undefined; vehicleManufacturer?: string | undefined }) {
   const brand = query.brand?.trim().toLowerCase();
   const category = query.category?.trim().toLowerCase();
   const search = query.search?.trim().toLowerCase();
+  const vehicleManufacturer = query.vehicleManufacturer?.trim().toLowerCase();
 
   return products.filter((product) => {
     if (brand && product.brand.toLowerCase() !== brand) return false;
     if (category && product.category.toLowerCase().replace(/[^a-z0-9]+/g, '-') !== category) return false;
+    if (vehicleManufacturer && vehicleManufacturerForProduct(product)?.toLowerCase() !== vehicleManufacturer) return false;
     if (search) {
       const haystack = `${product.name} ${product.brand} ${product.category} ${product.productType}`.toLowerCase();
       if (!haystack.includes(search)) return false;

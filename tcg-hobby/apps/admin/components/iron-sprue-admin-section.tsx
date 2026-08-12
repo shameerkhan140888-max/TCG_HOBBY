@@ -13,6 +13,7 @@ import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import {
   saveIronSprueHeroAction,
+  saveIronSprueFeaturedProductPlacementAction,
   saveIronSprueHomepagePlacementAction,
   saveIronSprueSpecialOfferAction,
   updateIronSprueBrandControlsAction,
@@ -56,9 +57,50 @@ function EmptyNote({ children }: { children: ReactNode }) {
   return <p className="rounded-md border border-surface-line bg-surface-ink p-4 text-sm text-neutral-400">{children}</p>;
 }
 
+function AdminDisclosure({
+  children,
+  defaultOpen = false,
+  summary,
+}: {
+  children: ReactNode;
+  defaultOpen?: boolean;
+  summary: ReactNode;
+}) {
+  return (
+    <details open={defaultOpen || undefined} className="group rounded-md border border-surface-line bg-surface-ink">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-sm font-bold text-neutral-100 outline-none focus:ring-2 focus:ring-accent">
+        <span>{summary}</span>
+        <span className="text-xs uppercase tracking-wide text-accent group-open:hidden">Open</span>
+        <span className="hidden text-xs uppercase tracking-wide text-accent group-open:inline">Close</span>
+      </summary>
+      <div className="border-t border-surface-line p-4">{children}</div>
+    </details>
+  );
+}
+
 function param(searchParams: SearchParams | undefined, name: string) {
   const value = searchParams?.[name];
   return Array.isArray(value) ? value[0] : value;
+}
+
+function StatusMessage({ searchParams }: { searchParams?: SearchParams }) {
+  const saved = param(searchParams, 'saved');
+  const error = param(searchParams, 'error');
+  const message = error ?? saved;
+  if (!message) return null;
+
+  return (
+    <div
+      className={`rounded-md border px-4 py-3 text-sm font-semibold ${
+        error
+          ? 'border-red-500/40 bg-red-950/40 text-red-100'
+          : 'border-emerald-500/40 bg-emerald-950/30 text-emerald-100'
+      }`}
+      role={error ? 'alert' : 'status'}
+    >
+      {message}
+    </div>
+  );
 }
 
 function Field({ children, label }: { children: ReactNode; label: string }) {
@@ -72,7 +114,52 @@ function Field({ children, label }: { children: ReactNode; label: string }) {
 
 const fieldClass = 'rounded-md border border-surface-line bg-surface-ink px-3 py-2 text-sm text-neutral-100';
 
-function reviewableIronSprueMediaAssets(media: Awaited<ReturnType<typeof listIronSprueAdminMediaAssets>>) {
+type FullReviewMode = 'pending' | 'approved' | 'rejected' | 'all';
+
+function fullReviewModeFromSearch(searchParams: SearchParams | undefined): FullReviewMode {
+  const status = param(searchParams, 'status');
+  if (status === 'approved' || status === 'rejected' || status === 'all') return status;
+  return 'pending';
+}
+
+function ReviewTabs({
+  baseHref,
+  pendingCount,
+  approvedCount,
+  rejectedCount = 0,
+  allCount,
+  mode,
+}: {
+  baseHref: string;
+  pendingCount: number;
+  approvedCount: number;
+  rejectedCount?: number;
+  allCount?: number;
+  mode: FullReviewMode;
+}) {
+  const tabs = [
+    { key: 'pending' as const, href: baseHref, label: 'Approval Required', count: pendingCount, activeClass: 'border-accent bg-accent/20 text-accent' },
+    { key: 'approved' as const, href: `${baseHref}?status=approved`, label: 'Approved', count: approvedCount, activeClass: 'border-emerald-500 bg-emerald-950/30 text-emerald-200' },
+    { key: 'rejected' as const, href: `${baseHref}?status=rejected`, label: 'Rejected', count: rejectedCount, activeClass: 'border-red-500 bg-red-950/30 text-red-100' },
+    ...(typeof allCount === 'number' ? [{ key: 'all' as const, href: `${baseHref}?status=all`, label: 'All', count: allCount, activeClass: 'border-neutral-400 bg-neutral-900 text-neutral-100' }] : []),
+  ];
+  return (
+    <div className="flex flex-wrap gap-2" role="tablist" aria-label="Review status">
+      {tabs.map((tab) => (
+        <a
+          key={tab.key}
+          href={tab.href}
+          aria-current={mode === tab.key ? 'page' : undefined}
+          className={`rounded-md border px-3 py-2 text-sm font-semibold ${mode === tab.key ? tab.activeClass : 'border-surface-line text-neutral-300'}`}
+        >
+          {tab.label} ({tab.count})
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function reviewableIronSprueMediaAssets(media: Awaited<ReturnType<typeof listIronSprueAdminMediaAssets>>, mode: FullReviewMode) {
   const currentByProductStage = new Map<string, (typeof media)[number]>();
   const rank = (asset: (typeof media)[number]) => {
     if (asset.approvalState === 'APPROVED' && asset.isPrimary) return 0;
@@ -83,7 +170,10 @@ function reviewableIronSprueMediaAssets(media: Awaited<ReturnType<typeof listIro
   };
 
   for (const asset of media) {
-    if (asset.approvalState === 'REJECTED' || asset.approvalState === 'FAILED') continue;
+    if (asset.approvalState === 'FAILED') continue;
+    if (mode === 'pending' && !['REVIEW_REQUIRED', 'PENDING'].includes(asset.approvalState)) continue;
+    if (mode === 'approved' && asset.approvalState !== 'APPROVED') continue;
+    if (mode === 'rejected' && asset.approvalState !== 'REJECTED') continue;
     const key = `${asset.product?.id ?? asset.id}:${asset.role}`;
     const current = currentByProductStage.get(key);
     if (!current || rank(asset) < rank(current) || (rank(asset) === rank(current) && asset.updatedAt > current.updatedAt)) {
@@ -105,13 +195,46 @@ function reviewableIronSprueMediaAssets(media: Awaited<ReturnType<typeof listIro
   });
 }
 
-function groupMediaByProduct(media: ReturnType<typeof reviewableIronSprueMediaAssets>) {
-  const groups = new Map<string, { product: (typeof media)[number]['product']; assets: typeof media }>();
+function bestMediaForRole(media: Awaited<ReturnType<typeof listIronSprueAdminMediaAssets>>, productId: string | undefined, role: string, mode: FullReviewMode) {
+  const stateRank = (asset: (typeof media)[number]) => {
+    if (asset.approvalState === 'APPROVED' && asset.isPrimary) return 0;
+    if (asset.approvalState === 'APPROVED') return 1;
+    if (asset.approvalState === 'REVIEW_REQUIRED') return 2;
+    if (asset.approvalState === 'PENDING') return 3;
+    return 4;
+  };
 
-  for (const asset of media) {
+  return media
+    .filter((asset) => {
+      if (asset.product?.id !== productId || asset.role !== role || asset.approvalState === 'FAILED') return false;
+      if (mode === 'pending') return ['REVIEW_REQUIRED', 'PENDING'].includes(asset.approvalState);
+      if (mode === 'approved') return asset.approvalState === 'APPROVED';
+      if (mode === 'rejected') return asset.approvalState === 'REJECTED';
+      return true;
+    })
+    .sort((left, right) => stateRank(left) - stateRank(right) || right.updatedAt.getTime() - left.updatedAt.getTime())[0] ?? null;
+}
+
+function groupMediaByProduct(
+  visibleMedia: ReturnType<typeof reviewableIronSprueMediaAssets>,
+  allMedia: Awaited<ReturnType<typeof listIronSprueAdminMediaAssets>>,
+  mode: FullReviewMode,
+) {
+  const groups = new Map<string, { product: (typeof visibleMedia)[number]['product']; assets: typeof visibleMedia }>();
+
+  for (const asset of visibleMedia) {
     const key = asset.product?.id ?? `unassigned:${asset.id}`;
     const group = groups.get(key) ?? { product: asset.product, assets: [] };
-    group.assets.push(asset);
+    if (mode === 'all') {
+      for (const role of ['catalogue-primary', 'workshop-photography', 'manufacturer-original', 'completed-result'] as const) {
+        const roleAsset = bestMediaForRole(allMedia, asset.product?.id, role, mode);
+        if (roleAsset && !group.assets.some((item) => item.id === roleAsset.id)) {
+          group.assets.push(roleAsset);
+        }
+      }
+    } else if (!group.assets.some((item) => item.id === asset.id)) {
+      group.assets.push(asset);
+    }
     groups.set(key, group);
   }
 
@@ -140,6 +263,42 @@ function ProductFlagForm({ product }: { product: Awaited<ReturnType<typeof listI
       ))}
       <Button type="submit" size="sm" variant="outline" className="sm:col-span-5">Save flags</Button>
     </form>
+  );
+}
+
+function ProductAdminCard({ product }: { product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number] }) {
+  return (
+    <details className="group rounded-md border border-surface-line bg-surface-ink">
+      <summary className="grid cursor-pointer list-none gap-3 px-4 py-3 outline-none focus:ring-2 focus:ring-accent lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-bold">{product.customerTitle}</h2>
+            <StatePill>{product.publicationState}</StatePill>
+          </div>
+          <p className="mt-1 text-sm text-neutral-400">{product.sku} - {product.brand?.name ?? 'No brand'} - {product.category?.name ?? 'No category'} - {money(product.grossPriceMinor, product.currency)}</p>
+        </div>
+        <div className="grid grid-cols-3 gap-3 text-right text-sm text-neutral-400">
+          <p>Stock <strong className="block text-neutral-100">{product.inventory?.availableStock ?? 0}</strong></p>
+          <p>Media <strong className="block text-neutral-100">{product.mediaAssets.length}</strong></p>
+          <p>Reviews <strong className="block text-neutral-100">{product.contentReviews.length}</strong></p>
+        </div>
+      </summary>
+      <div className="grid gap-4 border-t border-surface-line p-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <div className="space-y-3">
+          <p className="max-w-4xl text-sm leading-6 text-neutral-300">{product.shortDescription ?? 'No short description recorded.'}</p>
+          <ProductFlagForm product={product} />
+        </div>
+        <form action={updateIronSpruePublicationStateAction} className="grid content-start gap-3">
+          <input type="hidden" name="productId" value={product.id} />
+          <Field label="Publication state">
+            <select name="publicationState" defaultValue={product.publicationState} className={fieldClass}>
+              {['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY', 'PUBLISHED', 'ARCHIVED'].map((state) => <option key={state} value={state}>{state}</option>)}
+            </select>
+          </Field>
+          <Button type="submit" variant="outline">Update state</Button>
+        </form>
+      </div>
+    </details>
   );
 }
 
@@ -199,37 +358,18 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
           <p className="mt-3 text-sm text-neutral-400">{result.pagination.total} product{result.pagination.total === 1 ? '' : 's'} match the current filters.</p>
         </CardContent>
       </Card>
-      {result.products.map((product) => (
-        <Card key={product.id}>
-          <CardContent className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
-            <div className="space-y-3">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-xl font-bold">{product.customerTitle}</h2>
-                  <StatePill>{product.publicationState}</StatePill>
-                </div>
-                <p className="mt-1 text-sm text-neutral-400">{product.sku} - {product.brand?.name ?? 'No brand'} - {product.category?.name ?? 'No category'} - {money(product.grossPriceMinor, product.currency)}</p>
-                <p className="mt-2 max-w-4xl text-sm leading-6 text-neutral-300">{product.shortDescription ?? 'No short description recorded.'}</p>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-sm text-neutral-400">
-                <p>Stock: <strong className="text-neutral-100">{product.inventory?.availableStock ?? 0}</strong></p>
-                <p>Media: <strong className="text-neutral-100">{product.mediaAssets.length}</strong></p>
-                <p>Reviews: <strong className="text-neutral-100">{product.contentReviews.length}</strong></p>
-              </div>
-              <ProductFlagForm product={product} />
-            </div>
-            <form action={updateIronSpruePublicationStateAction} className="grid content-start gap-3">
-              <input type="hidden" name="productId" value={product.id} />
-              <Field label="Publication state">
-                <select name="publicationState" defaultValue={product.publicationState} className={fieldClass}>
-                  {['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY', 'PUBLISHED', 'ARCHIVED'].map((state) => <option key={state} value={state}>{state}</option>)}
-                </select>
-              </Field>
-              <Button type="submit" variant="outline">Update state</Button>
-            </form>
-          </CardContent>
-        </Card>
-      ))}
+      <AdminDisclosure
+        defaultOpen
+        summary={
+          <span>
+            Product results <span className="text-neutral-500">({result.pagination.total})</span>
+          </span>
+        }
+      >
+        <div className="space-y-3">
+          {result.products.map((product) => <ProductAdminCard key={product.id} product={product} />)}
+        </div>
+      </AdminDisclosure>
     </div>
   );
 }
@@ -270,10 +410,13 @@ async function ReferenceSection({ section }: { section: string }) {
 
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-      {rows.map((row) => (
+      {rows.map((row) => {
+        const logoPreview = 'logoUrl' in row ? ironSprueAdminPreviewUrl(row.logoUrl) : null;
+        const logoAltText = 'logoAltText' in row ? row.logoAltText : row.name;
+        return (
         <Card key={row.id}>
           <CardContent className="space-y-2">
-            {'logoUrl' in row && row.logoUrl ? <img src={row.logoUrl} alt={row.logoAltText ?? row.name} className="max-h-16 max-w-48 object-contain" /> : null}
+            {logoPreview ? <img src={logoPreview} alt={logoAltText ?? row.name} className="max-h-16 max-w-48 object-contain" /> : null}
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-bold">{row.name}</h2>
               <StatePill>{row.active ? 'ACTIVE' : 'INACTIVE'}</StatePill>
@@ -284,7 +427,8 @@ async function ReferenceSection({ section }: { section: string }) {
             <p className="text-sm text-neutral-400">{row._count.products} products</p>
           </CardContent>
         </Card>
-      ))}
+      );
+      })}
     </div>
   );
 }
@@ -327,18 +471,25 @@ function ProductMediaUploadForm({
   );
 }
 
-async function MediaSection() {
+async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
   const media = await listIronSprueAdminMediaAssets({ pageSize: 500 });
-  const reviewableMedia = reviewableIronSprueMediaAssets(media);
-  const productGroups = groupMediaByProduct(reviewableMedia);
+  const mode = fullReviewModeFromSearch(searchParams);
+  const pendingCount = reviewableIronSprueMediaAssets(media, 'pending').length;
+  const approvedCount = media.filter((asset) => asset.approvalState === 'APPROVED').length;
+  const rejectedCount = media.filter((asset) => asset.approvalState === 'REJECTED').length;
+  const reviewableMedia = reviewableIronSprueMediaAssets(media, mode);
+  const productGroups = groupMediaByProduct(reviewableMedia, media, mode);
   const hiddenCount = media.length - reviewableMedia.length;
-  if (!reviewableMedia.length) return <EmptyNote>No reviewable Iron Sprue media assets found.</EmptyNote>;
 
   return (
     <div className="space-y-4">
+      <ReviewTabs baseHref="/iron-sprue-admin/media" mode={mode} pendingCount={pendingCount} approvedCount={approvedCount} rejectedCount={rejectedCount} allCount={media.length} />
+      {!reviewableMedia.length ? (
+        <EmptyNote>{mode === 'approved' ? 'No approved Iron Sprue media assets found.' : mode === 'rejected' ? 'No rejected Iron Sprue media assets found.' : mode === 'all' ? 'No Iron Sprue media assets found.' : 'No Iron Sprue media assets currently require approval.'}</EmptyNote>
+      ) : null}
       {hiddenCount > 0 ? (
         <p className="rounded-md border border-surface-line bg-surface-ink p-3 text-sm text-neutral-400">
-          Hidden from this review queue: {hiddenCount} rejected, failed or superseded media record{hiddenCount === 1 ? '' : 's'}.
+          Hidden from this review tab: {hiddenCount} record{hiddenCount === 1 ? '' : 's'} outside the selected approval state.
         </p>
       ) : null}
       {productGroups.map((group) => (
@@ -349,7 +500,10 @@ async function MediaSection() {
               <p className="text-sm text-neutral-400">{group.product?.sku ?? 'No SKU'} - {group.product?.publicationState ?? 'No product state'}</p>
             </div>
             <div className="grid gap-4 xl:grid-cols-2">
-              {(['catalogue-primary', 'workshop-photography'] as const).map((role) => {
+              {(mode === 'all'
+                ? (['catalogue-primary', 'workshop-photography', 'manufacturer-original', 'completed-result'] as const)
+                : Array.from(new Set(group.assets.map((asset) => asset.role))) as Array<'catalogue-primary' | 'workshop-photography' | 'manufacturer-original' | 'completed-result'>
+              ).map((role) => {
                 const asset = group.assets.find((item) => item.role === role);
                 if (!asset) {
                   return (
@@ -390,12 +544,24 @@ async function MediaSection() {
   );
 }
 
-async function ContentReviewSection() {
-  const reviews = await listIronSprueAdminContentReviews({ pageSize: 80 });
-  if (!reviews.length) return <EmptyNote>No content reviews found.</EmptyNote>;
+async function ContentReviewSection({ searchParams }: { searchParams?: SearchParams }) {
+  const mode = fullReviewModeFromSearch(searchParams);
+  const allReviews = await listIronSprueAdminContentReviews({ pageSize: 100 });
+  const pendingReviews = allReviews.filter((review) => review.status === 'PENDING' || review.status === 'CONFLICT');
+  const approvedReviews = allReviews.filter((review) => review.status === 'APPROVED');
+  const rejectedReviews = allReviews.filter((review) => review.status === 'REJECTED');
+  const reviews = mode === 'approved'
+    ? approvedReviews
+    : mode === 'rejected'
+      ? rejectedReviews
+      : mode === 'all'
+        ? allReviews
+        : pendingReviews;
 
   return (
     <div className="space-y-3">
+      <ReviewTabs baseHref="/iron-sprue-admin/content-review" mode={mode} pendingCount={pendingReviews.length} approvedCount={approvedReviews.length} rejectedCount={rejectedReviews.length} allCount={allReviews.length} />
+      {!reviews.length ? <EmptyNote>{mode === 'approved' ? 'No approved Iron Sprue content reviews found.' : mode === 'rejected' ? 'No rejected Iron Sprue content reviews found.' : mode === 'all' ? 'No Iron Sprue content review records found.' : 'No Iron Sprue content reviews currently require approval.'}</EmptyNote> : null}
       {reviews.map((review) => (
         <Card key={review.id}>
           <CardContent className="space-y-3">
@@ -421,41 +587,92 @@ async function ContentReviewSection() {
   );
 }
 
-function HomepagePlacementForm({ record }: { record?: Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['homepagePlacements'][number] }) {
+function HomepagePlacementForm({
+  defaultPlacementKey = 'homepage-main',
+  record,
+  submitLabel,
+}: {
+  defaultPlacementKey?: string;
+  record?: Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['homepagePlacements'][number];
+  submitLabel?: string;
+}) {
   const previewUrl = ironSprueAdminPreviewUrl(record?.imageUrl ?? null);
   return (
     <form action={saveIronSprueHomepagePlacementAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-2">
       <input type="hidden" name="id" value={record?.id ?? ''} />
+      <div className="md:col-span-2">
+        <h3 className="font-bold">{record ? `Edit placement: ${record.placementKey}` : 'Create a new storefront placement'}</h3>
+        <p className="mt-1 text-sm text-neutral-500">
+          {record ? 'Changes update this existing Iron Sprue storefront record.' : 'Use this only when a new promo strip, newsletter, brand carousel or homepage module is needed.'}
+        </p>
+      </div>
       {previewUrl ? <img src={previewUrl} alt={record?.title ?? 'Homepage placement'} className="h-40 w-full rounded-md border border-surface-line object-cover md:col-span-2" /> : null}
-      <Field label="Placement key"><input name="placementKey" defaultValue={record?.placementKey ?? 'homepage-main'} className={fieldClass} /></Field>
+      <Field label="Placement key"><input name="placementKey" defaultValue={record?.placementKey ?? defaultPlacementKey} className={fieldClass} /></Field>
       <Field label="Title"><input name="title" defaultValue={record?.title ?? ''} required className={fieldClass} /></Field>
       <Field label="CTA label"><input name="ctaLabel" defaultValue={record?.ctaLabel ?? ''} className={fieldClass} /></Field>
       <Field label="CTA href"><input name="ctaHref" defaultValue={record?.ctaHref ?? ''} className={fieldClass} /></Field>
       <Field label="Image URL"><input name="imageUrl" defaultValue={record?.imageUrl ?? ''} className={fieldClass} /></Field>
       <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={record?.sortOrder ?? 0} className={fieldClass} /></Field>
       <label className="flex items-center gap-2 text-sm"><input name="active" type="checkbox" defaultChecked={record?.active ?? false} /> Active</label>
-      <Button type="submit">{record ? 'Save placement' : 'Create placement'}</Button>
+      <Button type="submit">{submitLabel ?? (record ? 'Save placement' : 'Create placement')}</Button>
     </form>
   );
 }
 
 type HeroLibraryItem = Awaited<ReturnType<typeof listIronSprueR2Objects>>[number];
+type HomepagePlacementRecord = Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['homepagePlacements'][number];
+type HeroRecord = Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['heroes'][number];
+
+function RecordMeta({ active, sortOrder }: { active: boolean; sortOrder: number | null | undefined }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <StatePill>{active ? 'ACTIVE' : 'INACTIVE'}</StatePill>
+      <StatusBadge tone="neutral">ORDER {sortOrder ?? 0}</StatusBadge>
+    </div>
+  );
+}
+
+function isR2Reference(value: string | null | undefined) {
+  return Boolean(value?.trim().startsWith('r2://'));
+}
+
+function canRenderOnPublicStorefront(value: string | null | undefined) {
+  const raw = value?.trim();
+  if (!raw) return false;
+  if (raw.startsWith('r2://')) return true;
+  return raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('/');
+}
 
 function HeroForm({
   heroLibrary,
+  products,
   record,
 }: {
   heroLibrary: HeroLibraryItem[];
-  record?: Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['heroes'][number];
+  products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'];
+  record?: HeroRecord;
 }) {
   const previewUrl = ironSprueAdminPreviewUrl(record?.imageUrl ?? null);
+  const linkedProductSlug = record?.ctaHref?.match(/\/products\/([^/?#]+)/)?.[1] ?? '';
   return (
     <form action={saveIronSprueHeroAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-2">
       <input type="hidden" name="id" value={record?.id ?? ''} />
+      <div className="md:col-span-2">
+        <h3 className="font-bold">{record ? `Edit hero: ${record.headline}` : 'Create a new hero'}</h3>
+        <p className="mt-1 text-sm text-neutral-500">
+          {record ? 'This form edits an existing carousel record, including active state and display order.' : 'Create a new hero only after selecting approved artwork from the library or uploading a new approved asset.'}
+        </p>
+      </div>
       {previewUrl ? <img src={previewUrl} alt={record?.headline ?? 'Iron Sprue hero'} className="h-64 w-full rounded-md border border-surface-line object-cover md:col-span-2" /> : null}
       <Field label="Headline"><input name="headline" defaultValue={record?.headline ?? ''} required className={fieldClass} /></Field>
       <Field label="Strapline"><input name="strapline" defaultValue={record?.strapline ?? ''} className={fieldClass} /></Field>
       <Field label="CTA label"><input name="ctaLabel" defaultValue={record?.ctaLabel ?? ''} className={fieldClass} /></Field>
+      <Field label="Hero product target">
+        <select name="productSlug" defaultValue={linkedProductSlug} className={fieldClass}>
+          <option value="">Use CTA href below</option>
+          {products.map((product) => <option key={product.id} value={product.slug}>{product.sku} - {product.customerTitle}</option>)}
+        </select>
+      </Field>
       <Field label="CTA href"><input name="ctaHref" defaultValue={record?.ctaHref ?? ''} className={fieldClass} /></Field>
       <Field label="Image URL"><input name="imageUrl" defaultValue={record?.imageUrl ?? ''} className={fieldClass} placeholder="Optional public URL or r2:// key" /></Field>
       <Field label="Existing hero artwork">
@@ -467,10 +684,87 @@ function HeroForm({
       <Field label="Upload hero artwork">
         <input name="image" type="file" accept="image/png,image/jpeg,image/webp" className={fieldClass} />
       </Field>
+      <Field label="Text style">
+        <select className={fieldClass} disabled defaultValue="">
+          <option value="">Uses Iron Sprue storefront default</option>
+        </select>
+        <span className="text-xs text-neutral-500">
+          Font style is not currently persisted in the hero schema. Add headline/strapline style fields before exposing this as an editable control.
+        </span>
+      </Field>
       <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={record?.sortOrder ?? 0} className={fieldClass} /></Field>
       <label className="flex items-center gap-2 text-sm"><input name="active" type="checkbox" defaultChecked={record?.active ?? false} /> Active</label>
       <Button type="submit">{record ? 'Save hero' : 'Create hero'}</Button>
     </form>
+  );
+}
+
+function heroProductSlug(hero: HeroRecord) {
+  return hero.ctaHref?.match(/\/products\/([^/?#]+)/)?.[1] ?? null;
+}
+
+function heroHasValidTarget(hero: HeroRecord, products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products']) {
+  const slug = heroProductSlug(hero);
+  if (!slug) return Boolean(hero.ctaHref);
+  return products.some((product) => product.slug === slug);
+}
+
+function CurrentHeroOverview({
+  heroes,
+  products,
+}: {
+  heroes: HeroRecord[];
+  products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'];
+}) {
+  const ordered = [...heroes].sort((left, right) => Number(right.active) - Number(left.active) || (left.sortOrder ?? 0) - (right.sortOrder ?? 0));
+  const activeHeroes = ordered.filter((hero) => hero.active);
+  const publicRenderableHeroes = activeHeroes.filter((hero) => canRenderOnPublicStorefront(hero.imageUrl) && heroHasValidTarget(hero, products));
+
+  return (
+    <Card>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="font-bold">Current hero carousel</h2>
+            <p className="text-sm text-neutral-400">Active heroes render first only when their image URL is public-renderable. Edit the cards below to change copy, CTA, image source or active state.</p>
+          </div>
+          <div className="flex flex-wrap justify-end gap-2">
+            <StatusBadge tone={activeHeroes.length ? 'success' : 'warning'}>{activeHeroes.length} DATABASE ACTIVE</StatusBadge>
+            <StatusBadge tone={publicRenderableHeroes.length ? 'success' : 'warning'}>{publicRenderableHeroes.length} PUBLIC EFFECTIVE</StatusBadge>
+          </div>
+        </div>
+        {!publicRenderableHeroes.length ? (
+          <EmptyNote>The public storefront is using the approved static fallback hero carousel because no active Admin hero has both a renderable image and a valid Iron Sprue product target.</EmptyNote>
+        ) : null}
+        {ordered.length ? (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {ordered.map((hero) => {
+              const previewUrl = ironSprueAdminPreviewUrl(hero.imageUrl);
+              const publicRenderable = canRenderOnPublicStorefront(hero.imageUrl);
+              const validTarget = heroHasValidTarget(hero, products);
+              return (
+                <div key={hero.id} className="rounded-md border border-surface-line bg-surface-ink p-3">
+                  {previewUrl ? <img src={previewUrl} alt={hero.headline} className="h-32 w-full rounded-md border border-surface-line object-cover" /> : null}
+                  <div className="mt-3 flex items-start justify-between gap-3">
+                    <h3 className="font-bold">{hero.headline}</h3>
+                    <RecordMeta active={hero.active} sortOrder={hero.sortOrder} />
+                  </div>
+                  {hero.active && (!publicRenderable || !validTarget) ? (
+                    <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-xs font-semibold text-amber-200">
+                      Not public-effective: {!validTarget ? 'CTA product target is missing from the Iron Sprue catalogue.' : isR2Reference(hero.imageUrl) ? 'R2 object key is not valid for Iron Sprue media delivery.' : 'Image URL is missing or invalid.'}
+                    </p>
+                  ) : null}
+                  <p className="mt-2 text-sm text-neutral-400">{hero.strapline || 'No strapline set.'}</p>
+                  <p className="mt-2 text-xs text-neutral-500">CTA: {hero.ctaLabel || 'No CTA label'} {hero.ctaHref ? `-> ${hero.ctaHref}` : ''}</p>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyNote>No Iron Sprue hero records exist yet. Use the create form after the hero artwork library.</EmptyNote>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -495,6 +789,53 @@ function HeroLibrary({ items }: { items: HeroLibraryItem[] }) {
             </div>
           ))}
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CurrentPromoBannerOverview({ placements }: { placements: HomepagePlacementRecord[] }) {
+  const promoPlacements = placements
+    .filter((placement) => /promo|banner|strip/i.test(placement.placementKey))
+    .sort((left, right) => Number(right.active) - Number(left.active) || (left.sortOrder ?? 0) - (right.sortOrder ?? 0));
+  const activePromo = promoPlacements.filter((placement) => placement.active);
+  const fallbackStrip = ['Free UK delivery on orders over £75', 'Fast dispatch on stocked lines', 'Safe and secure checkout'];
+
+  return (
+    <Card>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="font-bold">Current promo banner state</h2>
+            <p className="text-sm text-neutral-400">Database-backed promo/banner records are shown here. Active promo, banner or strip placements feed the public storefront strip in sort order.</p>
+          </div>
+          <StatusBadge tone={activePromo.length ? 'success' : 'warning'}>{activePromo.length ? `${activePromo.length} ADMIN ACTIVE` : 'FALLBACK ACTIVE'}</StatusBadge>
+        </div>
+        {promoPlacements.length ? (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {promoPlacements.map((placement) => (
+              <div key={placement.id} className="rounded-md border border-surface-line bg-surface-ink p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-bold">{placement.title}</h3>
+                    <p className="text-xs text-neutral-500">{placement.placementKey}</p>
+                  </div>
+                  <RecordMeta active={placement.active} sortOrder={placement.sortOrder} />
+                </div>
+                <p className="mt-2 text-sm text-neutral-400">CTA: {placement.ctaLabel || 'No CTA label'} {placement.ctaHref ? `-> ${placement.ctaHref}` : ''}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-md border border-amber-500/30 bg-amber-950/15 p-3">
+            <p className="text-sm font-semibold text-amber-100">No Admin-backed promo/banner placement currently exists. The public storefront is using the fallback promo strip below.</p>
+            <div className="mt-3 grid gap-2 md:grid-cols-3">
+              {fallbackStrip.map((item) => (
+                <div key={item} className="rounded-md border border-surface-line bg-surface-ink px-3 py-2 text-sm font-semibold">{item}</div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -540,6 +881,84 @@ function BrandCarouselManager({ brands }: { brands: Awaited<ReturnType<typeof ge
   );
 }
 
+function FeaturedProductsManager({
+  placements,
+  products,
+}: {
+  placements: HomepagePlacementRecord[];
+  products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'];
+}) {
+  const productBySlug = new Map(products.map((product) => [product.slug, product]));
+  const featuredPlacements = placements
+    .filter((placement) => placement.placementKey.startsWith('featured-product:'))
+    .sort((left, right) => Number(right.active) - Number(left.active) || (left.sortOrder ?? 0) - (right.sortOrder ?? 0));
+
+  return (
+    <Card>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="font-bold">Featured products</h2>
+          <p className="text-sm text-neutral-400">These records control the product cards shown in the public homepage featured section. Active rows are shown in sort order and the public storefront consumes the same saved records.</p>
+          </div>
+          <StatusBadge tone={featuredPlacements.some((placement) => placement.active) ? 'success' : 'warning'}>
+            {featuredPlacements.filter((placement) => placement.active).length} ACTIVE
+          </StatusBadge>
+        </div>
+
+        {featuredPlacements.length ? (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {featuredPlacements.map((placement) => {
+              const slug = placement.ctaHref?.replace('/products/', '').split(/[?#]/)[0] ?? placement.placementKey.replace('featured-product:', '');
+              const product = productBySlug.get(slug);
+              const image = product?.mediaAssets.find((asset) => asset.approvalState === 'APPROVED' && asset.role === 'catalogue-primary') ?? product?.mediaAssets.find((asset) => asset.role === 'catalogue-primary');
+              const previewUrl = image ? ironSprueMediaPreviewUrl(image) : ironSprueAdminPreviewUrl(placement.imageUrl);
+
+              return (
+                <form key={placement.id} action={saveIronSprueFeaturedProductPlacementAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-3">
+                  <input type="hidden" name="id" value={placement.id} />
+                  <input type="hidden" name="productSlug" value={slug} />
+                  <input type="hidden" name="productTitle" value={product?.customerTitle ?? placement.title} />
+                  <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
+                    <div className="rounded-md border border-surface-line bg-white p-2">
+                      {previewUrl ? <img src={previewUrl} alt={product?.customerTitle ?? placement.title} className="h-28 w-full object-contain" /> : <div className="grid h-28 place-items-center text-xs text-neutral-500">No preview</div>}
+                    </div>
+                    <div>
+                      <h3 className="font-bold">{product?.customerTitle ?? placement.title}</h3>
+                      <p className="mt-1 text-xs text-neutral-500">{slug}</p>
+                      <RecordMeta active={placement.active} sortOrder={placement.sortOrder} />
+                    </div>
+                  </div>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={placement.sortOrder ?? 0} className={fieldClass} /></Field>
+                    <label className="flex items-end gap-2 pb-2 text-sm"><input name="active" type="checkbox" defaultChecked={placement.active} /> Active on homepage</label>
+                  </div>
+                  <Button type="submit" size="sm" variant="outline">Save featured product</Button>
+                </form>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyNote>No Admin-backed featured products currently exist. The public storefront will use the safe catalogue fallback until rows are added below.</EmptyNote>
+        )}
+
+        <form action={saveIronSprueFeaturedProductPlacementAction} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-3 md:grid-cols-[minmax(220px,1fr)_120px_140px]">
+          <Field label="Add product">
+            <select name="productSlug" className={fieldClass} required>
+              <option value="">Select a product</option>
+              {products.map((product) => <option key={product.id} value={product.slug}>{product.sku} - {product.customerTitle}</option>)}
+            </select>
+          </Field>
+          <input type="hidden" name="productTitle" value="" />
+          <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={featuredPlacements.length} className={fieldClass} /></Field>
+          <label className="flex items-end gap-2 pb-2 text-sm"><input name="active" type="checkbox" defaultChecked /> Active</label>
+          <Button type="submit" className="md:col-span-3">Add featured product</Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
 function SpecialOfferForm({
   products,
   record,
@@ -567,7 +986,7 @@ function SpecialOfferForm({
 async function StorefrontSection({ section }: { section: string }) {
   const { homepagePlacements, heroes, specialOffers, auditLog } = await getIronSprueAdminStorefrontControls();
   const { brands } = await getIronSprueAdminReferenceData();
-  const productOptions = section === 'special-offers' ? (await listIronSprueAdminProducts({ pageSize: 100 })).products : [];
+  const productOptions = ['homepage', 'heroes', 'special-offers'].includes(section) ? (await listIronSprueAdminProducts({ pageSize: 100 })).products : [];
   const heroLibrary = section === 'heroes'
     ? await listIronSprueR2Objects('marketing/heroes/', 80).catch(() => [] as HeroLibraryItem[])
     : [];
@@ -575,15 +994,17 @@ async function StorefrontSection({ section }: { section: string }) {
   if (section === 'homepage') {
     return (
       <div className="space-y-4">
+        <div id="promotions"><CurrentPromoBannerOverview placements={homepagePlacements} /></div>
         <Card>
           <CardContent>
-            <h2 className="font-bold">Create storefront placement</h2>
-            <p className="mt-1 text-sm text-neutral-400">Use this for the promo strip, homepage modules, newsletter banner or other explicitly approved storefront placements.</p>
+            <h2 className="font-bold">Promo banner and storefront placements</h2>
+            <p className="mt-1 text-sm text-neutral-400">Create or edit the Iron Sprue promo strip, homepage modules, newsletter banner and brand carousel controls. Saved changes are persisted as Iron Sprue-scoped storefront records.</p>
           </CardContent>
         </Card>
-        <HomepagePlacementForm />
         {homepagePlacements.map((record) => <HomepagePlacementForm key={record.id} record={record} />)}
-        <BrandCarouselManager brands={brands} />
+        <HomepagePlacementForm defaultPlacementKey="promo-banner" submitLabel="Create promo/banner placement" />
+        <div id="featured-products"><FeaturedProductsManager placements={homepagePlacements} products={productOptions} /></div>
+        <div id="brand-presentation"><BrandCarouselManager brands={brands} /></div>
       </div>
     );
   }
@@ -591,9 +1012,26 @@ async function StorefrontSection({ section }: { section: string }) {
   if (section === 'heroes') {
     return (
       <div className="space-y-4">
-        <HeroForm heroLibrary={heroLibrary} />
-        {heroes.map((record) => <HeroForm key={record.id} record={record} heroLibrary={heroLibrary} />)}
-        <HeroLibrary items={heroLibrary} />
+        <CurrentHeroOverview heroes={heroes} products={productOptions} />
+        <AdminDisclosure
+          defaultOpen={heroes.length <= 3}
+          summary={
+            <span>
+              Edit existing hero records <span className="text-neutral-500">({heroes.length})</span>
+            </span>
+          }
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-400">These are the saved Iron Sprue carousel records. Active state and sort order control what appears first.</p>
+            {heroes.length ? heroes.map((record) => <HeroForm key={record.id} record={record} heroLibrary={heroLibrary} products={productOptions} />) : <EmptyNote>No saved hero records exist.</EmptyNote>}
+          </div>
+        </AdminDisclosure>
+        <AdminDisclosure summary={<span>Available hero artwork <span className="text-neutral-500">({heroLibrary.length})</span></span>}>
+          <HeroLibrary items={heroLibrary} />
+        </AdminDisclosure>
+        <AdminDisclosure summary="Create a new hero">
+          <HeroForm heroLibrary={heroLibrary} products={productOptions} />
+        </AdminDisclosure>
       </div>
     );
   }
@@ -605,6 +1043,10 @@ async function StorefrontSection({ section }: { section: string }) {
         {specialOffers.map((record) => <SpecialOfferForm key={record.id} record={record} products={productOptions} />)}
       </div>
     );
+  }
+
+  if (section === 'import-batches') {
+    return <EmptyNote>Import batch history is counted on the dashboard, but detailed retry/skip controls are not implemented in this Admin surface yet.</EmptyNote>;
   }
 
   const rows = section === 'heroes' ? heroes : section === 'special-offers' ? specialOffers : section === 'audit-log' ? auditLog : homepagePlacements;
@@ -655,11 +1097,12 @@ export async function IronSprueAdminSection({ section, searchParams }: { section
     <Section className="py-8">
       <Container className="space-y-6">
         <PageHeader eyebrow="Iron Sprue Admin" title={card.label} description={card.description} />
+        <StatusMessage {...(searchParams ? { searchParams } : {})} />
         {section === 'products' ? <ProductsSection {...(searchParams ? { searchParams } : {})} /> : null}
         {section === 'inventory' || section === 'goods-received' ? <InventorySection /> : null}
         {['categories', 'brands', 'suppliers'].includes(section) ? <ReferenceSection section={section} /> : null}
-        {section === 'media' ? <MediaSection /> : null}
-        {section === 'content-review' ? <ContentReviewSection /> : null}
+        {section === 'media' ? <MediaSection {...(searchParams ? { searchParams } : {})} /> : null}
+        {section === 'content-review' ? <ContentReviewSection {...(searchParams ? { searchParams } : {})} /> : null}
         {['homepage', 'heroes', 'special-offers', 'audit-log', 'import-batches'].includes(section) ? <StorefrontSection section={section} /> : null}
         {section === 'settings' ? <SettingsSection /> : null}
         {section === 'orders' ? <EmptyNote>Iron Sprue commerce is not activated yet, so order actions remain intentionally unavailable.</EmptyNote> : null}

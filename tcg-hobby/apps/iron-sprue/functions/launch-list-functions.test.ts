@@ -36,6 +36,13 @@ function signupRequest(body: unknown) {
   });
 }
 
+function signupFormRequest(body: Record<string, string>) {
+  return new Request('https://www.ironsprue.co.uk/api/launch-list', {
+    method: 'POST',
+    body: new URLSearchParams(body),
+  });
+}
+
 beforeEach(() => {
   mockState.existingRows = [];
   mockState.updateRows = [{ id: 'subscriber_1' }];
@@ -68,6 +75,30 @@ describe('Iron Sprue launch-list Pages Functions', () => {
     expect(mockState.neon).toHaveBeenCalledWith('postgresql://iron-sprue-dev.example/launch');
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(mockState.calls.some(({ text }) => /email_status = 'SENT'/i.test(text))).toBe(true);
+  });
+
+  it('records consent from the storefront form post shape', async () => {
+    const response = await onRequestPost({
+      request: signupFormRequest({ email: 'forms@example.com', consent: 'on' }),
+      env: env(),
+    });
+
+    expect(response.status).toBe(200);
+    expect(mockState.neon).toHaveBeenCalledWith('postgresql://iron-sprue-dev.example/launch');
+    expect(mockState.calls.some(({ text }) => /insert into iron_sprue_launch_subscribers/i.test(text))).toBe(true);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects signup without affirmative marketing consent', async () => {
+    const response = await onRequestPost({
+      request: signupRequest({ email: 'test@example.com' }),
+      env: env(),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({ message: expect.stringMatching(/consent/i) });
+    expect(mockState.neon).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('returns duplicate success without sending another email', async () => {

@@ -1,19 +1,35 @@
 import launchProducts from '../../../data/launch-products.json';
+import { ProductGallery } from '../../../components/product-gallery';
+import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
 import { type IronSprueProduct } from '../../../lib/catalogue';
-import { featuredProducts, formatPrice, productAvailability, productImage } from '../../../lib/storefront';
+import { featuredProducts, formatPrice, productAvailability, productGalleryImages } from '../../../lib/storefront';
 
 const products = launchProducts as IronSprueProduct[];
+
+export const dynamic = 'force-dynamic';
 
 const specificationLabels: Record<string, string> = {
   manufacturer: 'Manufacturer',
   category: 'Category',
   productType: 'Product type',
-  supplierCode: 'Supplier code',
   manufacturerReference: 'Manufacturer reference',
   scale: 'Scale',
   glueRequired: 'Glue required',
   paintRequired: 'Paint required',
 };
+
+function publicSpecifications(product: IronSprueProduct) {
+  const source = product.specifications ?? {
+    manufacturer: product.brand,
+    category: product.category,
+    productType: product.productType,
+    manufacturerReference: product.manufacturerReference,
+  };
+
+  return Object.entries(source)
+    .filter(([key, value]) => key in specificationLabels && value != null && String(value).trim().length > 0)
+    .map(([key, value]) => [key, String(value)] as const);
+}
 
 export function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
@@ -21,7 +37,8 @@ export function generateStaticParams() {
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = products.find((candidate) => candidate.slug === slug);
+  const storefrontProducts = await getIronSprueStorefrontProducts(products);
+  const product = storefrontProducts.find((candidate) => candidate.slug === slug);
 
   if (!product) {
     return (
@@ -32,26 +49,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </section>
     );
   }
+  const galleryImages = productGalleryImages(product);
 
   return (
     <section className="section-block product-detail-page">
       <div className="product-detail">
-        <div className="product-gallery">
-          <div className="primary-product-image">
-            {productImage(product) ? <img src={productImage(product) ?? ''} alt={product.name} width="1000" height="1000" /> : <span>{product.brand}</span>}
-          </div>
-          <div className="thumbnail-row">
-            <button type="button" aria-label="Primary image" disabled />
-            <button type="button" aria-label="Future gallery image" disabled />
-            <button type="button" aria-label="Future specification image" disabled />
-          </div>
-        </div>
+        <ProductGallery images={galleryImages} productName={product.name} fallbackLabel={product.brand} />
 
         <article className="product-buy-panel">
           <p className="eyebrow">{product.brand} / {product.category}</p>
           <h1>{product.name}</h1>
           <p className="lead">{product.shortDescription}</p>
-          <p className="sku-line">SKU {product.sku} / Supplier SKU {product.supplierSku}</p>
+          <p className="sku-line">SKU {product.sku} / Manufacturer Reference {product.manufacturerReference ?? product.supplierSku}</p>
           <div className="price-row">
             <strong>{formatPrice(product)}</strong>
             <span>inc VAT</span>
@@ -90,11 +99,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <article>
           <h2>Build information</h2>
           <dl className="spec-grid">
-            {Object.entries(product.specifications ?? {
-              manufacturer: product.brand,
-              productType: product.productType,
-              supplierCode: product.supplierSku,
-            }).map(([key, value]) => (
+            {publicSpecifications(product).map(([key, value]) => (
               <div key={key}>
                 <dt>{specificationLabels[key] ?? key.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase())}</dt>
                 <dd>{String(value)}</dd>
@@ -113,7 +118,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <a className="text-link" href="/shop?category=workshop-essentials">View add-ons</a>
         </div>
         <div className="addon-grid">
-          {featuredProducts(products.slice().reverse(), 4).map((item) => (
+          {featuredProducts(storefrontProducts.slice().reverse(), 4).map((item) => (
             <a className="addon-card" href={`/products/${item.slug}`} key={item.sku}>
               <span>{item.brand}</span>
               <strong>{item.name}</strong>

@@ -71,7 +71,7 @@ describe('Iron Sprue product description pipeline', () => {
     expect(copy.shortDescription).toContain('Toyota 2000GT Red');
     expect(copy.description).toContain('Aoshima');
     expect(copy.features).toContain('Toyota 2000GT colour variant: Red');
-    expect(copy.specifications).toMatchObject({ manufacturer: 'Aoshima', supplierCode: '05628' });
+    expect(copy.specifications).toMatchObject({ manufacturer: 'Aoshima', manufacturerReference: '05628' });
     expect(copy.omittedUncertainSpecifications).toContain('piece count');
     expect(copy.description).not.toMatch(/perfect for collectors and hobbyists/i);
   });
@@ -89,5 +89,6 @@ describe('Iron Sprue product description pipeline', () => {
     expect(copy.shortDescription).toContain('adhesive and assembly work');
     expect(copy.description).toContain('manufacturer packaging');
     expect(copy.description).not.toMatch(/cures in|bonds all|waterproof|non-toxic/i);
+    expect(copy.description).not.toMatch(/source data|launch catalogue|not listed unless/i);
   });
 });

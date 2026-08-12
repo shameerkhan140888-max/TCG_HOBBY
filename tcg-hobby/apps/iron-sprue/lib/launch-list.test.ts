@@ -12,6 +12,10 @@ describe('Iron Sprue launch-list helpers', () => {
       ok: true,
       email: 'test@example.com',
     });
+    expect(validateLaunchListSignup({ email: 'test@example.com', consent: 'on' })).toMatchObject({
+      ok: true,
+      email: 'test@example.com',
+    });
   });
 
   it('accepts honeypot submissions without recording them', () => {

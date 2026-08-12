@@ -8,7 +8,7 @@ export default function WishlistPage() {
       </div>
       <div className="empty-state">
         <h2>No saved products yet.</h2>
-        <p>Browse the launch range and save kits for later once accounts are enabled.</p>
+        <p>Browse the range and save kits for later once accounts are enabled.</p>
         <a className="button" href="/shop">Browse products</a>
       </div>
     </section>

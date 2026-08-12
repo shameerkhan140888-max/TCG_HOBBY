@@ -1,22 +1,58 @@
 import 'server-only';
 
 import { HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import sharp from 'sharp';
 
 const IRON_SPRUE_BUCKET = 'iron-sprue-product-media';
 const ALLOWED_PREFIXES = ['archive/', 'products/', 'processed/', 'published/', 'marketing/', 'brands/'];
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+let localIronSprueEnv: Record<string, string> | null = null;
+
+function parseEnvValue(value: string) {
+  return value.trim().replace(/^['"]|['"]$/g, '');
+}
+
+function readLocalIronSprueEnv() {
+  if (localIronSprueEnv) return localIronSprueEnv;
+
+  localIronSprueEnv = {};
+  const candidates = [
+    join(process.cwd(), 'apps', 'iron-sprue', '.env.local'),
+    join(process.cwd(), '.env.local'),
+  ];
+
+  for (const candidate of candidates) {
+    if (!existsSync(candidate)) continue;
+
+    for (const line of readFileSync(candidate, 'utf8').split(/\r?\n/)) {
+      const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+      const name = match?.[1];
+      const value = match?.[2];
+      if (name && typeof value === 'string' && !localIronSprueEnv[name]) {
+        localIronSprueEnv[name] = parseEnvValue(value);
+      }
+    }
+  }
+
+  return localIronSprueEnv;
+}
+
+function ironSprueEnv(name: string) {
+  return process.env[name]?.trim() || readLocalIronSprueEnv()[name]?.trim() || '';
+}
 
 function r2Config() {
-  const bucket = process.env.IRON_SPRUE_R2_BUCKET_NAME?.trim();
+  const bucket = ironSprueEnv('IRON_SPRUE_R2_BUCKET_NAME');
   const endpoint =
-    process.env.IRON_SPRUE_R2_ENDPOINT?.trim() ||
-    (process.env.IRON_SPRUE_R2_ACCOUNT_ID?.trim()
-      ? `https://${process.env.IRON_SPRUE_R2_ACCOUNT_ID.trim()}.r2.cloudflarestorage.com`
+    ironSprueEnv('IRON_SPRUE_R2_ENDPOINT') ||
+    (ironSprueEnv('IRON_SPRUE_R2_ACCOUNT_ID')
+      ? `https://${ironSprueEnv('IRON_SPRUE_R2_ACCOUNT_ID')}.r2.cloudflarestorage.com`
       : '');
-  const accessKeyId = process.env.IRON_SPRUE_R2_ACCESS_KEY_ID?.trim();
-  const secretAccessKey = process.env.IRON_SPRUE_R2_SECRET_ACCESS_KEY?.trim();
-  const region = process.env.IRON_SPRUE_R2_REGION?.trim() || 'auto';
+  const accessKeyId = ironSprueEnv('IRON_SPRUE_R2_ACCESS_KEY_ID');
+  const secretAccessKey = ironSprueEnv('IRON_SPRUE_R2_SECRET_ACCESS_KEY');
+  const region = ironSprueEnv('IRON_SPRUE_R2_REGION') || 'auto';
 
   if (bucket !== IRON_SPRUE_BUCKET) throw new Error('Iron Sprue Admin uploads must use iron-sprue-product-media.');
   if (!endpoint || !accessKeyId || !secretAccessKey) throw new Error('Iron Sprue R2 upload configuration is incomplete.');
@@ -50,7 +86,7 @@ export function ironSprueStorageKeyFromImageUrl(value: string | null | undefined
   if (!trimmed) return null;
   if (trimmed.startsWith('r2://')) return trimmed.slice('r2://'.length);
 
-  const publicBase = process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL?.trim().replace(/\/$/, '');
+  const publicBase = ironSprueEnv('IRON_SPRUE_R2_PUBLIC_BASE_URL').replace(/\/$/, '');
   if (publicBase && trimmed.startsWith(`${publicBase}/`)) {
     return trimmed.slice(publicBase.length + 1);
   }
@@ -60,7 +96,16 @@ export function ironSprueStorageKeyFromImageUrl(value: string | null | undefined
 export function ironSprueAdminPreviewUrl(value: string | null | undefined, fallbackKey?: string | null) {
   const key = ironSprueStorageKeyFromImageUrl(value) ?? fallbackKey ?? null;
   if (key) return `/iron-sprue-admin/media/preview?key=${encodeURIComponent(key)}`;
-  return value?.trim() || null;
+  const raw = value?.trim();
+  if (!raw) return null;
+  if (raw.startsWith('/assets/') || raw === '/icon.svg') {
+    const base =
+      process.env.IRON_SPRUE_STOREFRONT_PREVIEW_BASE?.trim().replace(/\/$/, '') ||
+      process.env.NEXT_PUBLIC_IRON_SPRUE_STOREFRONT_URL?.trim().replace(/\/$/, '') ||
+      'http://localhost:3004';
+    return `${base}${raw}`;
+  }
+  return raw;
 }
 
 export async function uploadIronSprueAdminImage(input: {

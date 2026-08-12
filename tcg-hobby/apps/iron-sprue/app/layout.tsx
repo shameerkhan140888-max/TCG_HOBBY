@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { ironSprueBrand, ironSprueNavigation } from '../lib/brand';
+import { ironSprueBrand } from '../lib/brand';
+import { getIronSpruePromoStripItems } from '../lib/admin-storefront-controls';
 import { categoryNavigation } from '../lib/storefront';
+import { LaunchListForm } from '../components/launch-list-form';
 
 export const metadata: Metadata = {
   title: {
@@ -11,14 +13,16 @@ export const metadata: Metadata = {
   description: 'A premium modelling workshop and curated model-building retailer from Capital Hobby Group Ltd.',
   metadataBase: new URL(ironSprueBrand.siteUrl),
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
   },
   robots: process.env.STOREFRONT_ACCESS_MODE === 'protected' ? { index: false, follow: false } : undefined,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const promoStripItems = await getIronSpruePromoStripItems();
+
   return (
     <html lang="en-GB">
       <body>
@@ -85,9 +89,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
           <div className="promo-strip" role="status">
-            <span>Free UK delivery on orders over &pound;75</span>
-            <span>Fast dispatch on stocked lines</span>
-            <span>Safe and secure checkout</span>
+            {promoStripItems.map((item) => <span key={item}>{item}</span>)}
           </div>
         </header>
         <main className="page-frame">{children}</main>
@@ -97,11 +99,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <h2 id="newsletter-title">Join the workshop</h2>
               <p>Be first to know about new kits, stock updates, special offers and exclusive content.</p>
             </div>
-            <form action="/api/launch-list" method="post">
-              <label htmlFor="footer-email">Email address</label>
-              <input id="footer-email" name="email" type="email" placeholder="Enter your email address" required />
-              <button type="submit">Join the list</button>
-            </form>
+            <LaunchListForm />
             <ul aria-label="Launch-list benefits">
               <li><strong>New arrivals</strong><span>Straight to your inbox</span></li>
               <li><strong>Exclusive offers</strong><span>Subscribers only</span></li>

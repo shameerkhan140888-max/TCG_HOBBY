@@ -11,6 +11,7 @@ import {
   receiveIronSprueStock,
   resolveIronSprueAdminPermissions,
   setIronSprueProductPublicationState,
+  updateIronSprueAdminMediaApproval,
 } from './iron-sprue-admin';
 
 const originalEnv = { ...process.env };
@@ -157,6 +158,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       ironSprueAdminInventory: { aggregate: vi.fn().mockResolvedValue({ _sum: {} }) },
       ironSprueAdminSpecialOffer: { count },
       ironSprueAdminHero: { count },
+      ironSprueAdminContentReview: { count },
       ironSprueAdminImportBatch: { count },
       ironSprueAdminMediaAsset: { count },
     };
@@ -187,6 +189,85 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     expect(client.ironSprueAdminProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ storeCode: 'IRON_SPRUE' }),
       take: 10,
+    }));
+  });
+
+  it('persists media approval and makes rejected media non-primary', async () => {
+    const media = {
+      id: 'media-1',
+      storeCode: 'IRON_SPRUE',
+      productId: 'product-1',
+      role: 'catalogue-primary',
+      approvalState: 'APPROVED',
+      isPrimary: true,
+      product: { id: 'product-1' },
+    };
+    const client = {
+      ironSprueAdminMediaAsset: {
+        findFirst: vi.fn().mockResolvedValue(media),
+        updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+        update: vi.fn().mockResolvedValue({ ...media, approvalState: 'REJECTED', isPrimary: false }),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+
+    await updateIronSprueAdminMediaApproval('media-1', 'REJECTED', actor, client as never);
+
+    expect(client.ironSprueAdminMediaAsset.updateMany).not.toHaveBeenCalled();
+    expect(client.ironSprueAdminMediaAsset.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'media-1' },
+      data: expect.objectContaining({
+        approvalState: 'REJECTED',
+        approvedById: null,
+        approvedAt: null,
+        isPrimary: false,
+      }),
+    }));
+    expect(client.ironSprueAdminAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        storeCode: 'IRON_SPRUE',
+        action: 'media.approval_state.change',
+        after: expect.objectContaining({ approvalState: 'REJECTED', isPrimary: false }),
+      }),
+    }));
+  });
+
+  it('approves a catalogue-primary asset without clearing workshop media', async () => {
+    const media = {
+      id: 'media-2',
+      storeCode: 'IRON_SPRUE',
+      productId: 'product-1',
+      role: 'catalogue-primary',
+      approvalState: 'REVIEW_REQUIRED',
+      isPrimary: false,
+      product: { id: 'product-1' },
+    };
+    const client = {
+      ironSprueAdminMediaAsset: {
+        findFirst: vi.fn().mockResolvedValue(media),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+        update: vi.fn().mockResolvedValue({ ...media, approvalState: 'APPROVED', isPrimary: true }),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+
+    await updateIronSprueAdminMediaApproval('media-2', 'APPROVED', actor, client as never);
+
+    expect(client.ironSprueAdminMediaAsset.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        storeCode: 'IRON_SPRUE',
+        productId: 'product-1',
+        role: 'catalogue-primary',
+        id: { not: 'media-2' },
+      }),
+      data: { isPrimary: false },
+    }));
+    expect(client.ironSprueAdminMediaAsset.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        approvalState: 'APPROVED',
+        approvedById: actor.id,
+        isPrimary: true,
+      }),
     }));
   });
 });

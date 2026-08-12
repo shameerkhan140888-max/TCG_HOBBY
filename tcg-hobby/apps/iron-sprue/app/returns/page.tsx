@@ -19,6 +19,14 @@ export default function ReturnsPage() {
           <h2>Model kit contents</h2>
           <p>For missing parts or manufacturer defects, we may ask for box, batch or sprue information so the issue can be resolved with the correct supplier or manufacturer.</p>
         </article>
+        <article>
+          <h2>Refund method</h2>
+          <p>Where a refund is due, it will normally be returned to the original payment method after the return or issue has been checked. Any deductions or exclusions will be explained before processing.</p>
+        </article>
+        <article>
+          <h2>Before sending items back</h2>
+          <p>Please contact info@ironsprue.co.uk before returning an item so we can confirm the correct return steps and avoid unnecessary delays.</p>
+        </article>
       </div>
     </section>
   );

@@ -136,8 +136,7 @@ function buildFactualSpecifications(product: IronSprueDescriptionProduct) {
   if (product.brand) specs.manufacturer = product.brand;
   if (product.category) specs.category = product.category;
   if (product.productType) specs.productType = product.productType;
-  if (product.supplierSku) specs.supplierCode = product.supplierSku;
-  if (product.manufacturerReference) specs.manufacturerReference = product.manufacturerReference;
+  if (product.manufacturerReference || product.supplierSku) specs.manufacturerReference = product.manufacturerReference ?? product.supplierSku ?? '';
   if (product.scale) specs.scale = product.scale;
   if (typeof product.glueRequired === 'boolean') specs.glueRequired = product.glueRequired ? 'Yes' : 'No';
   if (typeof product.paintRequired === 'boolean') specs.paintRequired = product.paintRequired ? 'Yes' : 'No';
@@ -163,12 +162,6 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function sourceSentence(confidence: IronSprueGeneratedDescription['sourceConfidence']) {
-  return confidence === 'sufficient'
-    ? 'The listing is built from the launch catalogue and associated supplier or manufacturer source material already captured for Iron Sprue.'
-    : 'The listing uses the verified launch catalogue fields currently available; unsupported technical specifications have been deliberately left out.';
-}
-
 function createBaseResponse(
   product: IronSprueDescriptionProduct,
   shortDescription: string,
@@ -180,7 +173,7 @@ function createBaseResponse(
 ): IronSprueGeneratedDescription {
   return {
     shortDescription,
-    description: [...paragraphs, sourceSentence(sourceConfidence)].join('\n\n'),
+    description: paragraphs.join('\n\n'),
     features,
     specifications: factualSpecs,
     seoTitle: `${product.name} | ${product.brand} | Iron Sprue`,
@@ -201,15 +194,15 @@ function createAoshimaCopy(
   const colourText = colour ? ` in ${colour}` : '';
   const shortDescription = `${product.name} is an Aoshima ${product.productType.toLowerCase()} of the ${subject}${colourText}, selected for builders who want a sharp vehicle subject with strong display presence.`;
   const paragraphs = [
-    `This Aoshima release focuses on the ${subject}${colourText}, making it a clean choice for an automotive modelling bench or a finished shelf display. The catalogue title, brand and supplier reference are preserved exactly so the kit can be matched back to the launch stock record.`,
+    `This Aoshima release focuses on the ${subject}${colourText}, making it a clean choice for an automotive modelling bench or a finished shelf display.`,
     factualSpecs.scale
-      ? `The recorded scale is ${factualSpecs.scale}. Beyond the confirmed catalogue data, Iron Sprue has not added unsupported claims about contents, dimensions, paint requirements or assembly method.`
-      : 'Scale, contents and assembly requirements are not stated in the current verified catalogue fields, so those details are intentionally omitted until the product packaging or manufacturer data is reviewed.',
+      ? `The recorded scale is ${factualSpecs.scale}. It suits modellers looking for a compact vehicle subject with strong visual appeal once completed.`
+      : 'It suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.',
   ];
   const features = [
     `${product.brand} vehicle model kit`,
     `${subject}${colour ? ` colour variant: ${colour}` : ''}`,
-    product.supplierSku ? `Supplier code ${product.supplierSku}` : 'Supplier code to be confirmed',
+    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
   ];
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
@@ -223,13 +216,13 @@ function createCubicFunCopy(
 ) {
   const shortDescription = `${product.name} is a CubicFun display build for customers who enjoy recognisable architectural or object-based 3D projects with a finished-piece focus.`;
   const paragraphs = [
-    `This CubicFun model centres on ${product.name}, giving the launch range a structured display build rather than another vehicle or bench accessory. It suits customers browsing for a contained project with a recognisable subject and a decorative result.`,
-    'Only catalogue-confirmed details have been used here. Piece count, finished dimensions and age guidance are not listed unless they are present in the verified Iron Sprue source data.',
+    `This CubicFun model centres on ${product.name}, giving customers a structured display build rather than another vehicle or bench accessory.`,
+    'The finished subject gives the project a clear display purpose, making it a good fit for customers who want an architectural build with a recognisable result.',
   ];
   const features = [
     'CubicFun 3D display build',
     `${product.name} subject`,
-    product.supplierSku ? `Supplier code ${product.supplierSku}` : 'Supplier code to be confirmed',
+    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
   ];
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
@@ -254,13 +247,13 @@ function createPintooCopy(
             : 'decorative puzzle object';
   const shortDescription = `${product.name} is a Pintoo ${format} puzzle selected for customers who want a decorative 3D build with a finished-object feel.`;
   const paragraphs = [
-    `This Pintoo piece is built around the ${product.name} design, offering a more giftable and display-led alternative to a conventional flat puzzle. The subject and format are kept specific so customers can compare it properly against the rest of the Pintoo launch range.`,
-    'The catalogue currently confirms the brand, product title and supplier reference. Unsupported claims such as piece count, dimensions, materials and age grading have been left out until they are verified from manufacturer packaging or source data.',
+    `This Pintoo piece is built around the ${product.name} design, offering a more giftable and display-led alternative to a conventional flat puzzle.`,
+    'The appeal is in the completed decorative form: a puzzle build that can remain on show rather than being packed away after assembly.',
   ];
   const features = [
     `Pintoo ${format} puzzle`,
     `${product.name} design`,
-    product.supplierSku ? `Supplier code ${product.supplierSku}` : 'Supplier code to be confirmed',
+    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
   ];
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
@@ -282,13 +275,13 @@ function createDeluxeMaterialsCopy(
         : 'bench finishing work';
   const shortDescription = `${product.name} from Deluxe Materials is a specialist bench product for ${use}, selected to support model kit assembly and finishing.`;
   const paragraphs = [
-    `${product.name} gives Iron Sprue customers a named Deluxe Materials option for ${use}. It is positioned as a practical workshop companion rather than a display kit, so the copy focuses on the product's bench role and verified catalogue identity.`,
-    'Handling, curing, compatibility and safety details are not expanded beyond the confirmed source fields. Customers should follow the manufacturer packaging for application and safety guidance.',
+    `${product.name} gives Iron Sprue customers a named Deluxe Materials option for ${use}. It is positioned as a practical workshop companion rather than a display kit.`,
+    'Customers should follow the manufacturer packaging for application and safety guidance.',
   ];
   const features = [
     'Deluxe Materials bench product',
     sentenceCase(use),
-    product.supplierSku ? `Supplier code ${product.supplierSku}` : 'Supplier code to be confirmed',
+    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
   ];
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
@@ -303,12 +296,12 @@ function createOccreCopy(
   const shortDescription = `${product.name} from OcCre Creations is a workshop accessory selected for careful modelling preparation, finishing or storage tasks.`;
   const paragraphs = [
     `${product.name} adds an OcCre Creations support item to the Iron Sprue bench range. It is listed for customers building out a more organised modelling setup alongside kits, adhesives and finishing tools.`,
-    'The catalogue record confirms the title, brand and supplier code. Specific dimensions, material details and compatibility claims are omitted unless present in the verified product source.',
+    'It is aimed at builders who value a satisfying project and a finished piece with display character.',
   ];
   const features = [
     'OcCre Creations workshop accessory',
     'Supports modelling bench organisation or preparation',
-    product.supplierSku ? `Supplier code ${product.supplierSku}` : 'Supplier code to be confirmed',
+    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
   ];
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
@@ -338,13 +331,13 @@ function createToolCopy(
                 : 'general modelling bench work';
   const shortDescription = `${product.name} is an Iron Sprue bench essential for ${use}, chosen for model makers building a practical tool setup.`;
   const paragraphs = [
-    `${product.name} sits in the launch range as a functional tool rather than a kit. The listing is written around its confirmed catalogue role: helping with ${use} during model, puzzle or display-build preparation.`,
-    'Exact materials, blade sizes, tolerances and compatibility claims are not added unless they already exist in the verified source data. This keeps the product page useful without overstating the tool specification.',
+    `${product.name} is a functional tool rather than a kit, helping with ${use} during model, puzzle or display-build preparation.`,
+    'It is a straightforward addition to the workbench for modellers building out a reliable set of everyday tools and accessories.',
   ];
   const features = [
     'Bench tool or accessory',
     sentenceCase(use),
-    product.supplierSku ? `Supplier code ${product.supplierSku}` : 'Supplier code to be confirmed',
+    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
   ];
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
@@ -356,15 +349,15 @@ function createGenericCopy(
   omittedUncertainSpecifications: string[],
   sourceConfidence: IronSprueGeneratedDescription['sourceConfidence'],
 ) {
-  const shortDescription = `${product.name} is a ${product.brand} ${product.productType.toLowerCase()} selected for the Iron Sprue launch catalogue.`;
+  const shortDescription = `${product.name} is a ${product.brand} ${product.productType.toLowerCase()} selected for builders, modellers and hobbyists.`;
   const paragraphs = [
-    `${product.name} is included as part of Iron Sprue's launch range for customers looking across model kits, display builds and workshop essentials. The product identity has been kept tied to the verified catalogue title and supplier reference.`,
-    'Additional specifications are omitted where they are not present in the current source material.',
+    `${product.name} supports customers looking across model kits, display builds and workshop essentials.`,
+    'It has a clear place in the Iron Sprue modelling and hobby range.',
   ];
   const features = [
     `${product.brand} product`,
     product.productType,
-    product.supplierSku ? `Supplier code ${product.supplierSku}` : 'Supplier code to be confirmed',
+    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
   ];
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
