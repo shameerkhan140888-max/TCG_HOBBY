@@ -1,12 +1,14 @@
 import launchProducts from '../data/launch-products.json';
 import { filterIronSprueProducts, launchCatalogueStatus, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
 import { getIronSprueStorefrontProducts } from '../lib/admin-storefront-controls';
+import { AddToBasketButton } from './basket-client';
 import {
   brandOptions,
   categoryOptions,
   formatPrice,
   productAvailability,
   productImage,
+  productSellableQuantity,
   slugForCategory,
 } from '../lib/storefront';
 
@@ -147,8 +149,10 @@ export async function CatalogueListing({
             <div className="product-grid catalogue-grid">
               {products.map((product) => {
                 const imageUrl = productImage(product);
+                const availableQuantity = productSellableQuantity(product);
+                const isOutOfStock = availableQuantity <= 0;
                 return (
-                  <article className="product-card" key={product.sku}>
+                  <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
                     <a className="product-image" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
                       {imageUrl ? <img src={imageUrl} alt={product.name} width="1000" height="1000" /> : <span>{product.brand}</span>}
                     </a>
@@ -157,11 +161,21 @@ export async function CatalogueListing({
                       <h2>{product.name}</h2>
                       <p>{product.category}</p>
                       <strong>{formatPrice(product)} inc VAT</strong>
-                      <span className="stock-badge">{productAvailability(product)}</span>
+                      <span className={`stock-badge${isOutOfStock ? ' out-of-stock' : ''}`}>{productAvailability(product)}</span>
                       <p className="meta">Manufacturer Reference {product.manufacturerReference ?? product.supplierSku}</p>
                       <div className="product-actions">
                         <a href={`/products/${product.slug}`}>View details</a>
-                        <button type="button" disabled>Add to basket</button>
+                        <AddToBasketButton
+                          item={{
+                            productId: product.sku,
+                            productName: product.name,
+                            productSlug: product.slug,
+                            unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,
+                            availableQuantity,
+                            imageUrl,
+                            imageAlt: product.name,
+                          }}
+                        />
                       </div>
                     </div>
                   </article>

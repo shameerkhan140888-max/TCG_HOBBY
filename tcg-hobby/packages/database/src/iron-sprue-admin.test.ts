@@ -3,14 +3,17 @@ import {
   assertIronSpruePrimaryMediaRole,
   assertIronSprueR2Bucket,
   assertNoClientStoreOverride,
+  calculateIronSprueOnHandStock,
   createIronSprueAdminProduct,
   evaluateIronSprueProductReadiness,
   getIronSprueAdminDashboard,
   getIronSprueAdminPermissionMatrix,
   listIronSprueAdminProducts,
   receiveIronSprueStock,
+  reconcileIronSprueInventoryAvailableStock,
   resolveIronSprueAdminPermissions,
   setIronSprueProductPublicationState,
+  updateIronSprueAdminOrderFulfilmentStatus,
   updateIronSprueAdminMediaApproval,
 } from './iron-sprue-admin';
 
@@ -145,6 +148,71 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     }));
   });
 
+  it('derives on-hand stock from received stock and non-receipt movements', () => {
+    expect(calculateIronSprueOnHandStock({ receivedQuantity: 5 })).toBe(5);
+    expect(calculateIronSprueOnHandStock({ receivedQuantity: 5, damagedQuantity: 1, missingQuantity: 1 })).toBe(3);
+    expect(calculateIronSprueOnHandStock({ receivedQuantity: 5, movementQuantity: -1 })).toBe(4);
+    expect(calculateIronSprueOnHandStock({ receivedQuantity: 0, movementQuantity: -2 })).toBe(0);
+  });
+
+  it('reconciles stale available stock without undoing genuine sales movements', async () => {
+    const update = vi.fn().mockResolvedValue({});
+    const client = {
+      ironSprueAdminInventory: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: 'inventory-stale',
+            productId: 'product-stale',
+            expectedQuantity: 5,
+            receivedQuantity: 5,
+            damagedQuantity: 0,
+            missingQuantity: 0,
+            availableStock: 0,
+            reservedStock: 0,
+            product: { id: 'product-stale', sku: 'IS-CUB-MC093H', customerTitle: "St Basil's Cathedral" },
+          },
+          {
+            id: 'inventory-sold',
+            productId: 'product-sold',
+            expectedQuantity: 5,
+            receivedQuantity: 5,
+            damagedQuantity: 0,
+            missingQuantity: 0,
+            availableStock: 4,
+            reservedStock: 0,
+            product: { id: 'product-sold', sku: 'IS-OCC-13000', customerTitle: "Queen Anne's Revenge" },
+          },
+        ]),
+        update,
+      },
+      ironSprueAdminStockMovement: {
+        groupBy: vi.fn().mockResolvedValue([
+          { productId: 'product-sold', _sum: { quantity: -1 } },
+        ]),
+      },
+    };
+
+    const result = await reconcileIronSprueInventoryAvailableStock(client as never);
+
+    expect(client.ironSprueAdminStockMovement.groupBy).toHaveBeenCalledWith(expect.objectContaining({
+      where: {
+        storeCode: 'IRON_SPRUE',
+        movementType: { not: 'GOODS_RECEIVED' },
+      },
+    }));
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'inventory-stale' },
+      data: { availableStock: 5 },
+    });
+    expect(result.updated).toBe(1);
+    expect(result.corrections[0]).toEqual(expect.objectContaining({
+      sku: 'IS-CUB-MC093H',
+      previousAvailableStock: 0,
+      nextAvailableStock: 5,
+    }));
+  });
+
   it('counts dashboard data only through Iron Sprue scoped tables', async () => {
     process.env.IRON_SPRUE_WORKER_READ_DATABASE_URL = 'postgresql://redacted.example/iron';
     process.env.IRON_SPRUE_R2_BUCKET_NAME = 'iron-sprue-product-media';
@@ -269,5 +337,34 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         isPrimary: true,
       }),
     }));
+  });
+
+  it('blocks fulfilment changes for unpaid or cancelled Iron Sprue orders', async () => {
+    const client = {
+      ironSprueOrder: {
+        findFirst: vi.fn()
+          .mockResolvedValueOnce({
+            id: 'order-1',
+            storeCode: 'IRON_SPRUE',
+            paymentStatus: 'REQUIRES_PAYMENT',
+            status: 'REQUIRES_PAYMENT',
+            fulfilmentStatus: 'PENDING',
+            cancelledAt: null,
+          })
+          .mockResolvedValueOnce({
+            id: 'order-2',
+            storeCode: 'IRON_SPRUE',
+            paymentStatus: 'SUCCEEDED',
+            status: 'SUCCEEDED',
+            fulfilmentStatus: 'CANCELLED',
+            cancelledAt: new Date(),
+          }),
+      },
+      $transaction: vi.fn(),
+    };
+
+    await expect(updateIronSprueAdminOrderFulfilmentStatus('order-1', 'SHIPPED', actor, client as never)).rejects.toThrow(/paid/);
+    await expect(updateIronSprueAdminOrderFulfilmentStatus('order-2', 'SHIPPED', actor, client as never)).rejects.toThrow(/paid/);
+    expect(client.$transaction).not.toHaveBeenCalled();
   });
 });

@@ -142,8 +142,12 @@ export function productGalleryImages(product: IronSprueProduct) {
   return Array.from(new Set(images));
 }
 
+export function productSellableQuantity(product: IronSprueProduct) {
+  return Math.max(0, product.availableQuantity ?? product.stockQuantity ?? 0);
+}
+
 export function productAvailability(product: IronSprueProduct) {
-  const availableQuantity = product.availableQuantity ?? product.stockQuantity;
+  const availableQuantity = productSellableQuantity(product);
   if (availableQuantity <= 0) return 'Out of stock';
   if (availableQuantity <= Math.max(1, product.reorderLevel ?? 1)) return 'Low stock';
   return 'In stock';

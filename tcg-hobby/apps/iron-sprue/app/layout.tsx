@@ -4,6 +4,7 @@ import { ironSprueBrand } from '../lib/brand';
 import { getIronSpruePromoStripItems } from '../lib/admin-storefront-controls';
 import { categoryNavigation } from '../lib/storefront';
 import { LaunchListForm } from '../components/launch-list-form';
+import { BasketLink } from '../components/basket-link';
 
 export const metadata: Metadata = {
   title: {
@@ -52,14 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     <path d="M4.5 21a7.5 7.5 0 0 1 15 0" />
                   </svg>
                 </a>
-                <a className="basket-link" href="/basket" aria-label="Basket with 0 items">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M7 9 9 4h6l2 5" />
-                    <path d="M5 9h14l-1.3 11H6.3L5 9Z" />
-                    <path d="M9 13v3M15 13v3" />
-                  </svg>
-                  <span>0</span>
-                </a>
+                <BasketLink />
               </nav>
               <details className="menu-shell">
                 <summary aria-label="Open navigation menu">

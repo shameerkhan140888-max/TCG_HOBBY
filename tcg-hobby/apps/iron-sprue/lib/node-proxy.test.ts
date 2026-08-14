@@ -5,7 +5,11 @@ describe('Iron Sprue Node proxy contract', () => {
   it('allows only explicit customer commerce routes', () => {
     expect(isAllowedProxyRoute('POST', '/api/customer/register')).toBe(true);
     expect(isAllowedProxyRoute('PATCH', '/api/cart/items/product_1')).toBe(true);
+    expect(isAllowedProxyRoute('POST', '/api/cart/resolve')).toBe(true);
     expect(isAllowedProxyRoute('POST', '/api/checkout/session')).toBe(true);
+    expect(isAllowedProxyRoute('POST', '/api/checkout/cancel')).toBe(true);
+    expect(isAllowedProxyRoute('GET', '/api/checkout/status/cs_test_123')).toBe(true);
+    expect(isAllowedProxyRoute('GET', '/api/shipping-methods')).toBe(true);
     expect(isAllowedProxyRoute('GET', '/api/catalogue')).toBe(false);
     expect(isAllowedProxyRoute('POST', '/api/admin/products')).toBe(false);
     expect(isAllowedProxyRoute('POST', '/api/stripe/webhook')).toBe(false);

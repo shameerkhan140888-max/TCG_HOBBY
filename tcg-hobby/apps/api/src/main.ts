@@ -4,7 +4,14 @@ import { resolve } from 'node:path';
 import { NestFactory } from '@nestjs/core';
 import { ApiExceptionFilter } from './api-exception.filter.js';
 
-for (const candidate of ['../../.env', '../../.env.local', '.env', '.env.local']) {
+for (const candidate of [
+  '../../.env',
+  '../../.env.local',
+  '../iron-sprue/.env.local',
+  '../../apps/iron-sprue/.env.local',
+  '.env',
+  '.env.local',
+]) {
   const path = resolve(process.cwd(), candidate);
   if (existsSync(path)) process.loadEnvFile(path);
 }

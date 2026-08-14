@@ -25,7 +25,7 @@ export function isAccessExemptPath(pathname: string) {
   if (pathname === '/robots.txt' || pathname === '/favicon.ico') return true;
   if (pathname.startsWith('/_next/') || pathname.startsWith('/brand/') || pathname.startsWith('/access-assets/')) return true;
   if (pathname === '/api/health' || pathname === '/api/readiness') return true;
-  if (pathname === '/api/stripe/webhook') return true;
+  if (pathname === '/api/stripe/webhook' || pathname === '/api/stripe/iron-sprue/webhook') return true;
   return false;
 }
 

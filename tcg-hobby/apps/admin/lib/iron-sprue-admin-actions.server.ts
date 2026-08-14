@@ -1,11 +1,14 @@
 'use server';
 
 import {
+  cancelIronSprueOrderForMerchant,
   createIronSprueAdminMediaAsset,
   setIronSprueProductPublicationState,
+  isIronSprueAdminFulfilmentState,
   updateIronSprueAdminBrandControls,
   updateIronSprueAdminContentReviewStatus,
   updateIronSprueAdminMediaApproval,
+  updateIronSprueAdminOrderFulfilmentStatus,
   updateIronSprueAdminProductFlags,
   upsertIronSprueAdminHero,
   upsertIronSprueAdminHomepagePlacement,
@@ -324,4 +327,44 @@ export async function saveIronSprueSpecialOfferAction(formData: FormData) {
   revalidatePath('/iron-sprue-admin/special-offers');
   revalidateIronSprueStorefront();
   redirect(adminStatusPath('special-offers', 'saved', 'Special offer saved.'));
+}
+
+export async function updateIronSprueOrderFulfilmentAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const orderId = stringFromForm(formData.get('orderId'));
+  const fulfilmentStatus = stringFromForm(formData.get('fulfilmentStatus'));
+  try {
+    if (!orderId) throw new Error('orderId is required.');
+    if (!isIronSprueAdminFulfilmentState(fulfilmentStatus)) throw new Error('Invalid fulfilment status.');
+    await updateIronSprueAdminOrderFulfilmentStatus(orderId, fulfilmentStatus, actor);
+  } catch (error) {
+    redirect(adminStatusPath('orders', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/orders');
+  redirect(adminStatusPath('orders', 'saved', 'Order fulfilment saved.'));
+}
+
+export async function cancelIronSprueOrderAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const orderId = stringFromForm(formData.get('orderId'));
+  const reason = stringFromForm(formData.get('reason')).trim();
+  const confirmed = boolFromForm(formData.get('confirmCancellation'));
+  try {
+    if (!orderId) throw new Error('orderId is required.');
+    if (!confirmed) throw new Error('Confirm the cancellation before continuing.');
+    await cancelIronSprueOrderForMerchant({
+      orderId,
+      actorId: actor.email ?? actor.id ?? 'iron-sprue-admin',
+      reason: reason || 'Merchant cancellation',
+      environment: process.env.NODE_ENV === 'production' ? 'live' : 'test',
+    });
+  } catch (error) {
+    redirect(adminStatusPath('orders', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/orders');
+  revalidatePath('/iron-sprue-admin/inventory');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('orders', 'saved', 'Order cancellation saved.'));
 }

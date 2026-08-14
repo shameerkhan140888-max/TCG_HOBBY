@@ -206,9 +206,45 @@ export {
   requireStripeWebhookSecret,
 } from './stripe-provider';
 export {
+  assertStripeEventMatchesStore,
+  getStoreStripeConfig,
+} from './store-stripe-config';
+export type {
+  CommerceEnvironment,
+  CommerceStoreCode,
+  StoreStripeConfig,
+} from './store-stripe-config';
+export {
   processStripeWebhookEvent,
 } from './stripe-webhook';
 export type { StripeWebhookProcessingResult } from './stripe-webhook';
+export {
+  addIronSprueProductToCart,
+  buildIronSprueStripeMetadata,
+  cancelIronSprueOrderForMerchant,
+  cancelIronSprueCheckoutSession,
+  clearIronSprueCart,
+  createIronSprueHostedCheckoutSession,
+  finalizePaidIronSprueCheckoutOrder,
+  generateIronSprueOrderNumber,
+  getIronSprueAvailableShippingMethods,
+  getIronSprueCustomerCartDetails,
+  getIronSprueCustomerOrderByNumber,
+  getIronSprueCustomerOrders,
+  getIronSprueOrderByStripeCheckoutSessionId,
+  IRON_SPRUE_STORE_CODE,
+  processIronSprueStripeWebhookEvent,
+  releaseExpiredIronSprueCheckoutOrderReservations,
+  releaseIronSprueCheckoutOrderReservation,
+  removeIronSprueCartItem,
+  resolveIronSprueGuestCart,
+  updateIronSprueCartItemQuantity,
+} from './iron-sprue-commerce';
+export type {
+  IronSprueCheckoutSessionResult,
+  IronSprueOrderWithItems,
+  IronSprueStripeWebhookProcessingResult,
+} from './iron-sprue-commerce';
 export type {
   CheckoutReservation,
   CheckoutReservationItem,

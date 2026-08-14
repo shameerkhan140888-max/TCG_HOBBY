@@ -5,10 +5,12 @@ import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { PublicCommerceController } from './public-commerce.controller.js';
 import { PublicCommerceService } from './public-commerce.service.js';
+import { IronSprueCommerceController } from './iron-sprue-commerce.controller.js';
+import { IronSprueCommerceService } from './iron-sprue-commerce.service.js';
 
 @Module({
   imports: [],
-  controllers: [AppController, AuthController, PublicCommerceController],
-  providers: [AppService, AuthService, PublicCommerceService],
+  controllers: [AppController, AuthController, PublicCommerceController, IronSprueCommerceController],
+  providers: [AppService, AuthService, PublicCommerceService, IronSprueCommerceService],
 })
 export class AppModule {}

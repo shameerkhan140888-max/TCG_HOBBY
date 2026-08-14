@@ -6,12 +6,14 @@ import {
   listIronSprueAdminContentReviews,
   listIronSprueAdminInventory,
   listIronSprueAdminMediaAssets,
+  listIronSprueAdminOrders,
   listIronSprueAdminProducts,
 } from '@tcg-hobby/database';
 import { Button, Card, CardContent, Container, PageHeader, Section, StatusBadge } from '@tcg-hobby/ui';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import {
+  cancelIronSprueOrderAction,
   saveIronSprueHeroAction,
   saveIronSprueFeaturedProductPlacementAction,
   saveIronSprueHomepagePlacementAction,
@@ -19,6 +21,7 @@ import {
   updateIronSprueBrandControlsAction,
   updateIronSprueContentReviewAction,
   updateIronSprueMediaApprovalAction,
+  updateIronSprueOrderFulfilmentAction,
   updateIronSprueProductFlagsAction,
   updateIronSpruePublicationStateAction,
   uploadIronSprueProductMediaAction,
@@ -55,6 +58,10 @@ function StatePill({ children }: { children: string }) {
 
 function EmptyNote({ children }: { children: ReactNode }) {
   return <p className="rounded-md border border-surface-line bg-surface-ink p-4 text-sm text-neutral-400">{children}</p>;
+}
+
+function paramValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 function AdminDisclosure({
@@ -381,7 +388,7 @@ async function InventorySection() {
       <CardContent className="overflow-x-auto">
         <table className="w-full min-w-[900px] text-left text-sm">
           <thead className="text-xs uppercase tracking-wide text-neutral-500">
-            <tr><th className="p-2">SKU</th><th className="p-2">Product</th><th className="p-2">Expected</th><th className="p-2">Received</th><th className="p-2">Damaged</th><th className="p-2">Missing</th><th className="p-2">Available</th><th className="p-2">Location</th></tr>
+            <tr><th className="p-2">SKU</th><th className="p-2">Product</th><th className="p-2">Expected</th><th className="p-2">Received</th><th className="p-2">Damaged</th><th className="p-2">Missing</th><th className="p-2">On hand</th><th className="p-2">Reserved</th><th className="p-2">Available to sell</th><th className="p-2">Location</th></tr>
           </thead>
           <tbody>
             {rows.map((row) => (
@@ -392,7 +399,9 @@ async function InventorySection() {
                 <td className="p-2">{row.receivedQuantity}</td>
                 <td className="p-2">{row.damagedQuantity}</td>
                 <td className="p-2">{row.missingQuantity}</td>
-                <td className="p-2 font-semibold">{row.availableStock}</td>
+                <td className="p-2">{row.availableStock}</td>
+                <td className="p-2">{row.reservedStock}</td>
+                <td className="p-2 font-semibold">{Math.max(row.availableStock - row.reservedStock, 0)}</td>
                 <td className="p-2">{row.locationCode}</td>
               </tr>
             ))}
@@ -1088,6 +1097,204 @@ async function SettingsSection() {
   );
 }
 
+type IronSprueAdminOrder = Awaited<ReturnType<typeof listIronSprueAdminOrders>>[number];
+type OrderView = 'action-required' | 'processing' | 'dispatched' | 'completed' | 'unpaid' | 'cancelled' | 'refunded' | 'failed' | 'all';
+
+const orderViews: { key: OrderView; label: string }[] = [
+  { key: 'action-required', label: 'Action required' },
+  { key: 'processing', label: 'Processing' },
+  { key: 'dispatched', label: 'Dispatched' },
+  { key: 'completed', label: 'Completed' },
+  { key: 'unpaid', label: 'Unpaid / pending' },
+  { key: 'cancelled', label: 'Cancelled' },
+  { key: 'refunded', label: 'Refunded' },
+  { key: 'failed', label: 'Failed / expired' },
+  { key: 'all', label: 'All' },
+];
+
+function isPaidOrder(order: IronSprueAdminOrder) {
+  return order.paymentStatus === 'SUCCEEDED'
+    && !['CANCELLED', 'CANCELED', 'FAILED', 'REFUNDED'].includes(order.status)
+    && order.fulfilmentStatus !== 'CANCELLED'
+    && !order.cancelledAt;
+}
+
+function orderMatchesView(order: IronSprueAdminOrder, view: OrderView) {
+  if (view === 'all') return true;
+  if (view === 'action-required') return isPaidOrder(order) && ['PENDING', 'PICKING', 'PACKED'].includes(order.fulfilmentStatus);
+  if (view === 'processing') return isPaidOrder(order) && ['PICKING', 'PACKED'].includes(order.fulfilmentStatus);
+  if (view === 'dispatched') return isPaidOrder(order) && order.fulfilmentStatus === 'SHIPPED';
+  if (view === 'completed') return isPaidOrder(order) && order.status === 'COMPLETED';
+  if (view === 'unpaid') return ['REQUIRES_PAYMENT', 'PROCESSING'].includes(order.paymentStatus) && !order.cancelledAt;
+  if (view === 'cancelled') return order.paymentStatus === 'CANCELED' || ['CANCELLED', 'CANCELED'].includes(order.status) || order.fulfilmentStatus === 'CANCELLED' || Boolean(order.cancelledAt);
+  if (view === 'refunded') return order.paymentStatus === 'REFUNDED' || order.status === 'REFUNDED';
+  return order.paymentStatus === 'FAILED' || order.status === 'FAILED';
+}
+
+function inactiveOrderReason(order: IronSprueAdminOrder) {
+  if (order.paymentStatus === 'SUCCEEDED'
+    && order.fulfilmentStatus !== 'CANCELLED'
+    && !order.cancelledAt
+    && !['CANCELLED', 'CANCELED', 'FAILED', 'REFUNDED'].includes(order.status)) return null;
+  if (order.paymentStatus === 'CANCELED' || ['CANCELLED', 'CANCELED'].includes(order.status) || order.fulfilmentStatus === 'CANCELLED' || order.cancelledAt) return 'Cancelled or abandoned orders are not fulfilment-actionable.';
+  if (order.paymentStatus === 'FAILED' || order.status === 'FAILED') return 'Failed payments are not fulfilment-actionable.';
+  if (order.paymentStatus === 'REFUNDED' || order.status === 'REFUNDED') return 'Refunded orders are not fulfilment-actionable.';
+  return 'Payment has not completed, so fulfilment controls are disabled.';
+}
+
+function canCancelOrder(order: IronSprueAdminOrder) {
+  if (['CANCELLED', 'CANCELED', 'REFUNDED'].includes(order.status)) return false;
+  if (['CANCELED', 'REFUNDED'].includes(order.paymentStatus)) return false;
+  if (order.fulfilmentStatus === 'CANCELLED') return false;
+  if (['SHIPPED', 'DISPATCHED', 'DELIVERED', 'COMPLETED'].includes(order.fulfilmentStatus)) return false;
+  return true;
+}
+
+function cancellationActionLabel(order: IronSprueAdminOrder) {
+  return order.paymentStatus === 'SUCCEEDED' ? 'Refund and cancel order' : 'Cancel checkout attempt';
+}
+
+async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) {
+  const orders = await listIronSprueAdminOrders();
+  if (!orders.length) {
+    return <EmptyNote>No Iron Sprue orders have been placed yet.</EmptyNote>;
+  }
+
+  const fulfilmentStates = ['PENDING', 'PICKING', 'PACKED', 'SHIPPED'];
+  const selectedView = orderViews.some((view) => view.key === paramValue(searchParams?.orderView))
+    ? paramValue(searchParams?.orderView) as OrderView
+    : 'action-required';
+  const counts = Object.fromEntries(orderViews.map((view) => [view.key, orders.filter((order) => orderMatchesView(order, view.key)).length])) as Record<OrderView, number>;
+  const visibleOrders = orders.filter((order) => orderMatchesView(order, selectedView));
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        {orderViews.map((view) => (
+          <a
+            key={view.key}
+            href={`/iron-sprue-admin/orders?orderView=${view.key}`}
+            className={`rounded-md border px-3 py-2 text-sm font-bold ${selectedView === view.key ? 'border-accent bg-accent/20 text-accent' : 'border-surface-line text-neutral-300 hover:border-accent'}`}
+          >
+            {view.label} ({counts[view.key]})
+          </a>
+        ))}
+      </div>
+      {!visibleOrders.length ? <EmptyNote>No Iron Sprue orders in this state.</EmptyNote> : null}
+      {visibleOrders.map((order) => {
+        const inactiveReason = inactiveOrderReason(order);
+        return (
+        <Card key={order.id}>
+          <CardContent className="space-y-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl font-bold">{order.orderNumber}</h2>
+                  <StatePill>{order.paymentStatus}</StatePill>
+                  <StatePill>{order.fulfilmentStatus}</StatePill>
+                </div>
+                <p className="mt-1 text-sm text-neutral-400">
+                  Created {date(order.createdAt)}
+                  {order.paidAt ? ` - Paid ${date(order.paidAt)}` : ''}
+                </p>
+              </div>
+              <div className="text-right text-sm text-neutral-300">
+                <p>Subtotal <strong>{money(order.subtotalMinor, order.currency)}</strong></p>
+                <p>Delivery <strong>{money(order.shippingMinor, order.currency)}</strong></p>
+                <p className="text-lg font-bold text-neutral-100">Total {money(order.totalMinor, order.currency)}</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="space-y-3">
+                {order.items.map((item) => {
+                  const preview = ironSprueAdminPreviewUrl(item.imageUrl, item.imageStorageKey);
+                  return (
+                    <div key={item.id} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-3 sm:grid-cols-[80px_1fr_auto]">
+                      <div className="flex h-20 w-20 items-center justify-center rounded-md border border-surface-line bg-white p-1">
+                        {preview ? <img src={preview} alt={item.imageAlt ?? item.productName} className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-neutral-500">No image</span>}
+                      </div>
+                      <div>
+                        <p className="font-semibold">{item.productName}</p>
+                        <p className="text-sm text-neutral-400">{item.productSku} - Qty {item.quantity}</p>
+                        <p className="text-sm text-neutral-400">{money(item.unitPriceMinor, order.currency)} each</p>
+                      </div>
+                      <p className="font-bold">{money(item.totalMinor, order.currency)}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-md border border-surface-line bg-black/30 p-3 text-sm">
+                  <h3 className="font-bold">Delivery</h3>
+                  <p className="mt-2 text-neutral-300">{order.shippingFullName}</p>
+                  <p className="text-neutral-400">{order.shippingEmail}</p>
+                  <p className="mt-2 text-neutral-400">
+                    {order.shippingLine1}
+                    {order.shippingLine2 ? <><br />{order.shippingLine2}</> : null}
+                    <br />{order.shippingCity}
+                    {order.shippingRegion ? <><br />{order.shippingRegion}</> : null}
+                    <br />{order.shippingPostalCode}
+                    <br />{order.shippingCountry}
+                  </p>
+                  <p className="mt-2 text-neutral-400">{order.shippingMethodName}</p>
+                </div>
+
+                {inactiveReason ? (
+                  <div className="rounded-md border border-surface-line bg-black/30 p-3 text-sm text-neutral-400">
+                    <h3 className="font-bold text-neutral-100">Fulfilment locked</h3>
+                    <p className="mt-2">{inactiveReason}</p>
+                  </div>
+                ) : (
+                  <form action={updateIronSprueOrderFulfilmentAction} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-3">
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <Field label="Fulfilment status">
+                      <select name="fulfilmentStatus" defaultValue={order.fulfilmentStatus} className={fieldClass}>
+                        {fulfilmentStates.map((state) => <option key={state} value={state}>{state}</option>)}
+                      </select>
+                    </Field>
+                    <Button type="submit" variant="outline">Save fulfilment</Button>
+                  </form>
+                )}
+
+                {order.paymentStatus === 'REFUNDED' || order.cancelledAt ? (
+                  <div className="rounded-md border border-surface-line bg-black/30 p-3 text-sm text-neutral-400">
+                    <h3 className="font-bold text-neutral-100">Cancellation / refund</h3>
+                    <p className="mt-2">Status: {order.paymentStatus === 'REFUNDED' ? 'Refunded' : 'Cancelled'}</p>
+                    {order.cancelledAt ? <p>Cancelled {date(order.cancelledAt)}</p> : null}
+                  </div>
+                ) : null}
+
+                {canCancelOrder(order) ? (
+                  <form action={cancelIronSprueOrderAction} className="grid gap-3 rounded-md border border-amber-500/30 bg-amber-950/10 p-3 text-sm">
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <h3 className="font-bold text-amber-200">Merchant cancellation</h3>
+                    <p className="text-neutral-400">
+                      {order.paymentStatus === 'SUCCEEDED'
+                        ? 'Cancelling a paid order will request a Stripe refund and restore stock once.'
+                        : 'Cancelling an unpaid checkout attempt releases any active reservation without requesting a refund.'}
+                    </p>
+                    <Field label="Reason">
+                      <textarea name="reason" className={fieldClass} rows={3} placeholder="Stock discrepancy, damaged stock, customer request..." />
+                    </Field>
+                    <label className="flex items-start gap-2 text-neutral-300">
+                      <input type="checkbox" name="confirmCancellation" className="mt-1" />
+                      <span>I confirm this order should be cancelled.</span>
+                    </label>
+                    <Button type="submit" variant={order.paymentStatus === 'SUCCEEDED' ? 'primary' : 'outline'}>{cancellationActionLabel(order)}</Button>
+                  </form>
+                ) : null}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+      })}
+    </div>
+  );
+}
+
 export async function IronSprueAdminSection({ section, searchParams }: { section: string; searchParams?: SearchParams }) {
   const cards = getIronSprueAdminWorkspaceCards();
   const card = cards.find((item) => item.key === section);
@@ -1105,7 +1312,7 @@ export async function IronSprueAdminSection({ section, searchParams }: { section
         {section === 'content-review' ? <ContentReviewSection {...(searchParams ? { searchParams } : {})} /> : null}
         {['homepage', 'heroes', 'special-offers', 'audit-log', 'import-batches'].includes(section) ? <StorefrontSection section={section} /> : null}
         {section === 'settings' ? <SettingsSection /> : null}
-        {section === 'orders' ? <EmptyNote>Iron Sprue commerce is not activated yet, so order actions remain intentionally unavailable.</EmptyNote> : null}
+        {section === 'orders' ? <OrdersSection {...(searchParams ? { searchParams } : {})} /> : null}
       </Container>
     </Section>
   );

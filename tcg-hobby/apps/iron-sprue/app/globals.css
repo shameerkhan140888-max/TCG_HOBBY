@@ -213,6 +213,7 @@ button,
 button:disabled {
   cursor: not-allowed;
   opacity: 0.58;
+  box-shadow: none;
 }
 
 .site-search button {
@@ -1043,6 +1044,30 @@ p {
   font-weight: 900;
 }
 
+.stock-badge.out-of-stock {
+  border-color: rgba(116, 112, 103, 0.42);
+  background: rgba(116, 112, 103, 0.12);
+  color: #615c52;
+}
+
+.product-card.is-out-of-stock {
+  opacity: 0.72;
+}
+
+.product-card.is-out-of-stock .product-image img {
+  filter: grayscale(0.45);
+  opacity: 0.72;
+}
+
+.product-card.is-out-of-stock .basket-action-stack button,
+.basket-action-stack button:disabled {
+  border-color: #747067;
+  background: #747067;
+  color: #fffaf1;
+  cursor: not-allowed;
+  opacity: 0.74;
+}
+
 .product-actions {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -1055,6 +1080,249 @@ p {
   color: var(--ink);
   font-size: 13px;
   font-weight: 900;
+}
+
+.basket-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.52fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.basket-page-stack {
+  display: grid;
+  gap: 24px;
+}
+
+.basket-lines {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.basket-line {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) 96px auto;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid rgba(17, 17, 15, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 250, 241, 0.92);
+  padding: 14px;
+  box-shadow: 0 12px 36px rgba(25, 20, 12, 0.06);
+}
+
+.basket-line.unavailable {
+  border-color: rgba(143, 47, 31, 0.32);
+  background: rgba(247, 241, 231, 0.78);
+  opacity: 0.78;
+}
+
+.basket-line img,
+.basket-image-fallback {
+  width: 104px;
+  height: 104px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  object-fit: contain;
+  padding: 8px;
+}
+
+.basket-image-fallback {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.basket-line a {
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 900;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.basket-line p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.basket-line-warning {
+  color: #8f2f1f !important;
+}
+
+.basket-line label {
+  display: grid;
+  gap: 6px;
+}
+
+.basket-line input {
+  width: 76px;
+}
+
+.checkout-panel {
+  display: grid;
+  gap: 16px;
+  border: 1px solid rgba(17, 17, 15, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 250, 241, 0.94);
+  padding: 20px;
+  box-shadow: 0 16px 48px rgba(25, 20, 12, 0.08);
+}
+
+.checkout-panel h2 {
+  font-size: 24px;
+}
+
+.basket-review-panel {
+  position: sticky;
+  top: 148px;
+}
+
+.basket-summary-copy {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.basket-payment-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(199, 150, 67, 0.42);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.58);
+  padding: 10px 12px;
+}
+
+.basket-payment-strip span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.basket-payment-strip strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.checkout-grid label {
+  display: grid;
+  gap: 6px;
+}
+
+.checkout-grid input,
+.checkout-grid select,
+.basket-line input {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  padding: 9px 11px;
+  font: inherit;
+}
+
+.checkout-totals {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 14px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+}
+
+.checkout-totals span,
+.checkout-totals strong {
+  font-size: 14px;
+}
+
+.checkout-totals span:last-of-type,
+.checkout-totals strong:last-of-type {
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.basket-action-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.basket-action-stack button {
+  width: 100%;
+}
+
+.basket-upsell-section {
+  display: grid;
+  gap: 16px;
+  border: 1px solid rgba(17, 17, 15, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 250, 241, 0.92);
+  padding: 20px;
+  box-shadow: 0 12px 36px rgba(25, 20, 12, 0.06);
+}
+
+.basket-upsell-section h2 {
+  font-size: clamp(28px, 4vw, 46px);
+}
+
+.basket-upsell-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.basket-upsell-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 12px;
+}
+
+.basket-upsell-card img,
+.basket-upsell-card .basket-image-fallback {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.basket-upsell-card a {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.basket-upsell-card p {
+  margin: 6px 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.basket-loading {
+  min-height: 180px;
 }
 
 .feature-band {
@@ -1344,14 +1612,16 @@ p {
   grid-column: 1 / -1;
   margin: 6px 0 0;
   font-size: 11px;
+  color: var(--muted);
 }
 
-.form-status.success {
-  color: #7ef0bd;
+.form-status.success,
+.form-status.notice {
+  color: #9a6b2f;
 }
 
 .form-status.error {
-  color: #ffb199;
+  color: #8f2f1f;
 }
 
 .newsletter-panel ul {
@@ -1916,6 +2186,7 @@ label {
   .catalogue-layout,
   .product-detail,
   .detail-panels,
+  .basket-layout,
   .feature-band,
   .instagram-band,
   .payment-trust-banner,
@@ -2040,6 +2311,29 @@ label {
   .footer-company {
     justify-items: start;
     text-align: left;
+  }
+
+  .basket-line {
+    grid-template-columns: 88px minmax(0, 1fr);
+  }
+
+  .basket-line img,
+  .basket-image-fallback {
+    width: 88px;
+    height: 88px;
+  }
+
+  .checkout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .basket-layout,
+  .basket-upsell-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .basket-review-panel {
+    position: static;
   }
 }
 

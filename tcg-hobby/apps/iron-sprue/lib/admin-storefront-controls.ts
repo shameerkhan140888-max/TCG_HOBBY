@@ -55,6 +55,12 @@ type ApprovedMediaRow = {
   updatedAt: string;
 };
 
+type InventoryProjectionRow = {
+  sku: string;
+  availableStock: number | string | null;
+  reorderPoint: number | string | null;
+};
+
 export type IronSprueHeroSlide = {
   id?: string;
   label: string;
@@ -205,6 +211,20 @@ async function queryStorefrontRows<T>(query: (sql: any) => Promise<unknown>) {
   }
 }
 
+async function queryRequiredStorefrontRows<T>(query: (sql: any) => Promise<unknown>) {
+  const connectionString = storefrontConnectionString();
+  if (!connectionString) return null;
+
+  try {
+    const sql = neon(connectionString);
+    const rows = await query(sql);
+    return Array.isArray(rows) ? rows as T[] : [];
+  } catch (error) {
+    console.warn('Iron Sprue required storefront data is unavailable.', error);
+    return null;
+  }
+}
+
 export async function getIronSprueHeroSlides(): Promise<IronSprueHeroSlide[]> {
   const rows = await queryStorefrontRows<AdminHeroRow>((sql) => sql`
     select id, headline, strapline, "ctaLabel", "ctaHref", "imageUrl", "sortOrder"
@@ -321,9 +341,55 @@ export function applyApprovedMediaToProducts(products: IronSprueProduct[], appro
   });
 }
 
+function numericValue(value: unknown, fallback = 0) {
+  const parsed = Number(value ?? fallback);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+export async function getIronSprueInventoryBySku() {
+  const rows = await queryRequiredStorefrontRows<InventoryProjectionRow>((sql) => sql`
+    select
+      p.sku,
+      coalesce(i."availableStock", 0) as "availableStock",
+      coalesce(i."reorderPoint", 1) as "reorderPoint"
+    from "IronSprueAdminProduct" p
+    left join "IronSprueAdminInventory" i
+      on i."productId" = p.id
+      and i."storeCode" = ${STORE_CODE}
+    where p."storeCode" = ${STORE_CODE}
+  `);
+
+  if (!rows) return null;
+  return new Map(rows.map((row) => [row.sku, row]));
+}
+
+export function applyInventoryToProducts(products: IronSprueProduct[], inventoryBySku: Map<string, InventoryProjectionRow> | null) {
+  return products.map((product) => {
+    const inventory = inventoryBySku?.get(product.sku);
+    if (!inventory) {
+      return {
+        ...product,
+        stockQuantity: 0,
+        availableQuantity: 0,
+      };
+    }
+    const sellableQuantity = Math.max(0, numericValue(inventory.availableStock));
+
+    return {
+      ...product,
+      stockQuantity: sellableQuantity,
+      availableQuantity: sellableQuantity,
+      reorderLevel: Math.max(0, numericValue(inventory.reorderPoint, product.reorderLevel ?? 1)),
+    };
+  });
+}
+
 export async function getIronSprueStorefrontProducts(products: IronSprueProduct[]) {
-  const approvedMediaBySku = await getApprovedIronSprueMediaBySku();
-  return applyApprovedMediaToProducts(products, approvedMediaBySku);
+  const [approvedMediaBySku, inventoryBySku] = await Promise.all([
+    getApprovedIronSprueMediaBySku(),
+    getIronSprueInventoryBySku(),
+  ]);
+  return applyInventoryToProducts(applyApprovedMediaToProducts(products, approvedMediaBySku), inventoryBySku);
 }
 
 export function featuredProductSlugsFromPlacements(placements: IronSprueHomepagePlacement[]) {

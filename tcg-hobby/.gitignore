@@ -19,3 +19,4 @@ test-results
 ios
 android
 *.tsbuildinfo
+tmp-*.log

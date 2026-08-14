@@ -248,6 +248,14 @@ export type PublicOrderDetail = PublicOrderSummary & {
   shippingMinor: number;
   taxMinor: number;
   shippingMethodName: string;
+  shippingFullName?: string;
+  shippingEmail?: string;
+  shippingLine1?: string;
+  shippingLine2?: string | null;
+  shippingCity?: string;
+  shippingRegion?: string | null;
+  shippingPostalCode?: string;
+  shippingCountry?: string;
   items: OrderLineItem[];
 };
 
@@ -297,10 +305,12 @@ export type CartLineItem = {
   unitPriceMinor: number;
   totalMinor: number;
   inStock: boolean;
+  availableQuantity?: number | null;
   customerPurchaseLimit?: number | null;
   freeUkStandardShipping?: boolean;
   imageUrl?: string | null;
   imageAlt?: string | null;
+  imageStorageKey?: string | null;
 };
 
 export type CartSummary = {
@@ -326,11 +336,13 @@ export type OrderLineItem = {
   productId: string;
   productName: string;
   productSlug: string;
+  productSku?: string | null;
   quantity: number;
   unitPriceMinor: number;
   totalMinor: number;
   imageUrl?: string | null;
   imageAlt?: string | null;
+  imageStorageKey?: string | null;
 };
 
 export type OrderSummary = {

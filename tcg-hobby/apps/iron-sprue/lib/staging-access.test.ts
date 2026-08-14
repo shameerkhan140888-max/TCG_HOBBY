@@ -39,6 +39,7 @@ describe('Iron Sprue staging access', () => {
     expect(isAccessExemptPath('/api/staging-access')).toBe(true);
     expect(isAccessExemptPath('/brand/iron-sprue-horizontal.svg')).toBe(true);
     expect(isAccessExemptPath('/api/stripe/webhook')).toBe(true);
+    expect(isAccessExemptPath('/api/stripe/iron-sprue/webhook')).toBe(true);
     expect(isAccessExemptPath('/api/cart')).toBe(false);
     expect(isAccessExemptPath('/shop')).toBe(false);
   });

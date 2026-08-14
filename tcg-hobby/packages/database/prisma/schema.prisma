@@ -1401,6 +1401,8 @@ model IronSprueAdminProduct {
   contentReviews        IronSprueAdminContentReview[]
   offers                IronSprueAdminSpecialOffer[]
   auditLogs             IronSprueAdminAuditLog[]
+  cartItems             IronSprueCartItem[]
+  orderItems            IronSprueOrderItem[]
 
   @@unique([storeCode, sku])
   @@unique([storeCode, slug])
@@ -1412,6 +1414,116 @@ model IronSprueAdminProduct {
   @@index([storeCode, featured])
   @@index([storeCode, newArrival])
   @@index([storeCode, specialOffer])
+}
+
+model IronSprueCart {
+  id        String   @id @default(cuid())
+  storeCode String   @default("IRON_SPRUE")
+  userId    String   @unique
+  currency  String   @default("GBP")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  items     IronSprueCartItem[]
+
+  @@index([storeCode, updatedAt])
+}
+
+model IronSprueCartItem {
+  id             String                 @id @default(cuid())
+  cartId         String
+  productId      String
+  quantity       Int
+  unitPriceMinor Int
+  currency       String                 @default("GBP")
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  cart           IronSprueCart          @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product        IronSprueAdminProduct  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
+  @@index([productId])
+}
+
+model IronSprueOrder {
+  id                      String   @id @default(cuid())
+  storeCode               String   @default("IRON_SPRUE")
+  orderNumber             String   @unique
+  userId                  String?
+  status                  String   @default("REQUIRES_PAYMENT")
+  paymentStatus           String   @default("REQUIRES_PAYMENT")
+  fulfilmentStatus        String   @default("PENDING")
+  paymentProvider         String?
+  paymentIntentId         String?  @unique
+  stripeCheckoutSessionId String?  @unique
+  stripeCheckoutUrl       String?
+  checkoutAttemptId       String   @unique
+  subtotalMinor           Int
+  shippingMinor           Int
+  taxMinor                Int      @default(0)
+  totalMinor              Int
+  currency                String   @default("GBP")
+  shippingMethodCode      String
+  shippingMethodName      String
+  shippingMethodAmountMinor Int
+  shippingFullName        String
+  shippingEmail           String
+  shippingLine1           String
+  shippingLine2           String?
+  shippingCity            String
+  shippingRegion          String?
+  shippingPostalCode      String
+  shippingCountry         String
+  reservationExpiresAt    DateTime?
+  paidAt                  DateTime?
+  fulfilledAt             DateTime?
+  cancelledAt             DateTime?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  items                   IronSprueOrderItem[]
+  webhookEvents           IronSprueStripeWebhookEvent[]
+
+  @@index([storeCode, paymentStatus, createdAt])
+  @@index([storeCode, userId, createdAt])
+}
+
+model IronSprueOrderItem {
+  id              String                @id @default(cuid())
+  orderId         String
+  productId       String
+  productName     String
+  productSlug     String
+  productSku      String
+  quantity        Int
+  unitPriceMinor  Int
+  totalMinor      Int
+  imageUrl        String?
+  imageAlt        String?
+  imageStorageKey String?
+  createdAt       DateTime              @default(now())
+  order           IronSprueOrder        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         IronSprueAdminProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model IronSprueStripeWebhookEvent {
+  id              String           @id @default(cuid())
+  storeCode       String           @default("IRON_SPRUE")
+  stripeEventId   String           @unique
+  eventType       String
+  stripeObjectId  String?
+  processingState String           @default("RECEIVED")
+  outcome         String?
+  orderId         String?
+  errorCode       String?
+  processedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  order           IronSprueOrder?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([storeCode, processingState, createdAt])
+  @@index([orderId])
 }
 
 model IronSprueAdminInventory {

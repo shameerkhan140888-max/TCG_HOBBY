@@ -9,8 +9,9 @@ import {
   productsFromFeaturedPlacements,
 } from '../lib/admin-storefront-controls';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
-import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productImage, withOfficialBrandLogos } from '../lib/storefront';
+import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
+import { AddToBasketButton } from '../components/basket-client';
 
 const products = launchProducts as IronSprueProduct[];
 
@@ -119,9 +120,11 @@ export default async function HomePage() {
         <div className="product-grid">
           {newArrivals.map((product) => {
             const imageUrl = productImage(product);
+            const availableQuantity = productSellableQuantity(product);
+            const isOutOfStock = availableQuantity <= 0;
 
             return (
-            <article className="product-card" key={product.sku}>
+            <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
               <a className="product-image" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
                 {imageUrl ? <img src={imageUrl} alt={product.name} width="1000" height="1000" /> : <span>{product.brand}</span>}
               </a>
@@ -130,10 +133,20 @@ export default async function HomePage() {
                 <h3>{product.name}</h3>
                 <p>{product.category}</p>
                 <strong>{formatPrice(product)} inc VAT</strong>
-                <span className="stock-badge">{productAvailability(product)}</span>
+                <span className={`stock-badge${isOutOfStock ? ' out-of-stock' : ''}`}>{productAvailability(product)}</span>
                 <div className="product-actions">
                   <a href={`/products/${product.slug}`}>Details</a>
-                  <button type="button" disabled>Add to basket</button>
+                  <AddToBasketButton
+                    item={{
+                      productId: product.sku,
+                      productName: product.name,
+                      productSlug: product.slug,
+                      unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,
+                      availableQuantity,
+                      imageUrl,
+                      imageAlt: product.name,
+                    }}
+                  />
                 </div>
               </div>
             </article>

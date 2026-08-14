@@ -1,8 +1,9 @@
 import launchProducts from '../../../data/launch-products.json';
 import { ProductGallery } from '../../../components/product-gallery';
+import { AddToBasketButton } from '../../../components/basket-client';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
 import { type IronSprueProduct } from '../../../lib/catalogue';
-import { featuredProducts, formatPrice, productAvailability, productGalleryImages } from '../../../lib/storefront';
+import { featuredProducts, formatPrice, productAvailability, productGalleryImages, productSellableQuantity } from '../../../lib/storefront';
 
 const products = launchProducts as IronSprueProduct[];
 
@@ -50,6 +51,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     );
   }
   const galleryImages = productGalleryImages(product);
+  const availableQuantity = productSellableQuantity(product);
+  const isOutOfStock = availableQuantity <= 0;
 
   return (
     <section className="section-block product-detail-page">
@@ -65,13 +68,24 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <strong>{formatPrice(product)}</strong>
             <span>inc VAT</span>
           </div>
-          <span className="stock-badge">{productAvailability(product)}</span>
+          <span className={`stock-badge${isOutOfStock ? ' out-of-stock' : ''}`}>{productAvailability(product)}</span>
           <div className="quantity-row">
             <label htmlFor="quantity">Qty</label>
-            <input id="quantity" type="number" min="1" max={Math.max(1, product.stockQuantity)} defaultValue="1" />
+            <input id="quantity" type="number" min="1" max={Math.max(1, availableQuantity)} defaultValue="1" disabled={isOutOfStock} />
           </div>
           <div className="product-actions">
-            <button type="button" disabled>Add to basket</button>
+            <AddToBasketButton
+              quantityInputId="quantity"
+              item={{
+                productId: product.sku,
+                productName: product.name,
+                productSlug: product.slug,
+                unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,
+                availableQuantity,
+                imageUrl: galleryImages[0] ?? null,
+                imageAlt: product.name,
+              }}
+            />
           </div>
           <div className="service-summary">
             <p><strong>Delivery</strong> UK delivery options shown before checkout.</p>

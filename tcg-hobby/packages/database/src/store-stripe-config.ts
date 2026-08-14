@@ -4,7 +4,7 @@ export type CommerceEnvironment = 'test' | 'live';
 export type StoreStripeConfig = {
   store: CommerceStoreCode;
   environment: CommerceEnvironment;
-  accountId: string;
+  accountId?: string;
   secretKey: string;
   webhookSecret: string;
   publishableKey?: string;
@@ -38,6 +38,18 @@ function required(name: string) {
   return value;
 }
 
+function configured(name: string) {
+  return process.env[name]?.trim() || undefined;
+}
+
+function requiredWithFallback(primaryName: string, fallbackName: string) {
+  const primary = configured(primaryName);
+  if (primary) return primary;
+  const fallback = configured(fallbackName);
+  if (fallback) return fallback;
+  throw new Error(`${primaryName} or ${fallbackName} is required for Stripe configuration.`);
+}
+
 export function getStoreStripeConfig(input: { store: string; environment?: string }): StoreStripeConfig {
   const store = normalizeStore(input.store);
   const environment = normalizeEnvironment(input.environment);
@@ -46,25 +58,28 @@ export function getStoreStripeConfig(input: { store: string; environment?: strin
   const secretKeyName = `${prefix}_STRIPE_${envPrefix}_SECRET_KEY`;
   const webhookSecretName = `${prefix}_STRIPE_${envPrefix}_WEBHOOK_SECRET`;
 
-  const secretKey = required(secretKeyName);
-  if (store === 'IRON_SPRUE' && secretKey === process.env.STRIPE_SECRET_KEY?.trim()) {
-    throw new Error('Iron Sprue Stripe configuration must not reuse the unqualified STRIPE_SECRET_KEY.');
-  }
+  const accountIdName = `${prefix}_STRIPE_ACCOUNT_ID`;
+  const requiresDedicatedAccount = store === 'IRON_SPRUE';
+  const secretKey = requiresDedicatedAccount ? required(secretKeyName) : requiredWithFallback(secretKeyName, 'STRIPE_SECRET_KEY');
+  const webhookSecret = requiresDedicatedAccount ? required(webhookSecretName) : requiredWithFallback(webhookSecretName, 'STRIPE_WEBHOOK_SECRET');
+  const accountId = requiresDedicatedAccount ? required(accountIdName) : configured(accountIdName);
 
   const config: StoreStripeConfig = {
     store,
     environment,
-    accountId: required(`${prefix}_STRIPE_ACCOUNT_ID`),
+    ...(accountId ? { accountId } : {}),
     secretKey,
-    webhookSecret: required(webhookSecretName),
+    webhookSecret,
     statementDescriptor: required(`${prefix}_STRIPE_STATEMENT_DESCRIPTOR`),
     publicBusinessName: required(`${prefix}_STRIPE_PUBLIC_BUSINESS_NAME`),
     successUrl: required(`${prefix}_CHECKOUT_SUCCESS_URL`),
     cancelUrl: required(`${prefix}_CHECKOUT_CANCEL_URL`),
     webhookPath: store === 'IRON_SPRUE' ? '/api/stripe/iron-sprue/webhook' : '/api/stripe/webhook',
   };
-  const publishableKey = process.env[`${prefix}_STRIPE_${envPrefix}_PUBLISHABLE_KEY`]?.trim();
-  const supportEmail = process.env[`${prefix}_SUPPORT_EMAIL`]?.trim();
+  const publishableKey = requiresDedicatedAccount
+    ? configured(`${prefix}_STRIPE_${envPrefix}_PUBLISHABLE_KEY`)
+    : configured(`${prefix}_STRIPE_${envPrefix}_PUBLISHABLE_KEY`) ?? configured('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY');
+  const supportEmail = configured(`${prefix}_SUPPORT_EMAIL`);
   if (publishableKey) config.publishableKey = publishableKey;
   if (supportEmail) config.supportEmail = supportEmail;
   return config;
@@ -79,7 +94,7 @@ export function assertStripeEventMatchesStore(input: {
   if (input.orderStore !== input.expected.store) {
     throw new Error('Stripe event store does not match the order store.');
   }
-  if (input.eventAccountId && input.eventAccountId !== input.expected.accountId) {
+  if (input.expected.accountId && input.eventAccountId && input.eventAccountId !== input.expected.accountId) {
     throw new Error('Stripe event account does not match the configured store account.');
   }
   const eventEnvironment: CommerceEnvironment = input.eventLivemode ? 'live' : 'test';
