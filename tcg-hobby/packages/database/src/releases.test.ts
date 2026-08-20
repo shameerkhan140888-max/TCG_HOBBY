@@ -35,6 +35,8 @@ function createDbMock() {
 }
 
 afterEach(() => {
+  vi.useRealTimers();
+
   if (originalNodeEnv === undefined) {
     delete process.env.NODE_ENV;
   } else {
@@ -89,6 +91,8 @@ describe('release repository', () => {
   it('builds a coming soon hub from seeded release data', async () => {
     process.env.NODE_ENV = 'development';
     process.env.TCG_HOBBY_RELEASE_DATA_SOURCE = 'seed';
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-08T09:30:00.000Z'));
 
     const hub = await getComingSoonHubData();
 
