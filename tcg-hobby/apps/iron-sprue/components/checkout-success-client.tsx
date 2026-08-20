@@ -55,7 +55,7 @@ export function CheckoutSuccessClient({
   return (
     <section className="section-block checkout-result-page">
       <p className="eyebrow">Iron Sprue checkout</p>
-      <h1>{order?.paymentStatus === 'SUCCEEDED' ? 'Payment received.' : 'Payment is being confirmed.'}</h1>
+      <h1>{order?.paymentStatus === 'SUCCEEDED' ? 'Order confirmed.' : 'Confirming your order.'}</h1>
       {order ? (
         <div className="checkout-result-card">
           <p className="lead">Order {order.orderNumber}</p>
@@ -91,14 +91,12 @@ export function CheckoutSuccessClient({
               </li>
             ))}
           </ul>
-          {order.paymentStatus === 'SUCCEEDED' ? (
-            <p className="form-status success">Your basket has been cleared on this device.</p>
-          ) : (
-            <p className="form-status">Waiting for Stripe confirmation. This page updates automatically after the signed webhook completes.</p>
-          )}
+          {order.paymentStatus !== 'SUCCEEDED' ? (
+            <p className="form-status">We are confirming your payment. This page will update automatically.</p>
+          ) : null}
         </div>
       ) : (
-        <p className="lead">Stripe returned successfully. The order is not visible yet; this page will keep checking while the signed webhook is processed.</p>
+        <p className="lead">We are preparing your order confirmation. This page will update automatically.</p>
       )}
       <a className="button" href="/shop">Continue shopping</a>
     </section>

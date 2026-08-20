@@ -105,6 +105,31 @@ describe('Iron Sprue basket persistence', () => {
     expect(readIronSprueBasketCount()).toBe(0);
   });
 
+  it('accepts live stock confirmation when the resolver returns the canonical database product id for a SKU request', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        items: [{
+          ...toyota,
+          productId: 'iron-sprue-admin-product-db-id',
+          availableQuantity: 2,
+          inStock: true,
+        }],
+      }),
+    } as Response);
+
+    const result = await addIronSprueBasketItemWithLiveStock({ ...toyota, productId: 'IS-AOS-05628', availableQuantity: 2 });
+
+    expect(result).toEqual({ ok: true, message: 'Added to basket.' });
+    expect(JSON.parse(window.localStorage.getItem(IRON_SPRUE_BASKET_STORAGE_KEY) ?? '[]')).toEqual([{
+      ...toyota,
+      productId: 'IS-AOS-05628',
+      availableQuantity: 2,
+      imageAlt: toyota.productName,
+      imageUrl: null,
+    }]);
+  });
+
   it('caps a stale storefront add to live available stock', async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,

@@ -5,6 +5,7 @@ import { PrismaNeon, PrismaNeonHTTP } from '@prisma/adapter-neon';
 type PrismaGlobal = typeof globalThis & {
   prisma?: PrismaClient;
   ironSprueAdminPrisma?: PrismaClient;
+  ironSprueAdminPrismaUrl?: string;
 };
 
 const globalForPrisma = globalThis as PrismaGlobal;
@@ -103,6 +104,14 @@ function normalizeCloudflareWorkerConnectionString(connectionString: string) {
   return url.toString();
 }
 
+function getIronSprueDatabaseUrl() {
+  const connectionString = process.env.IRON_SPRUE_DATABASE_URL?.trim();
+  if (!connectionString) {
+    throw new Error('IRON_SPRUE_DATABASE_URL is required for Iron Sprue database access.');
+  }
+  return connectionString;
+}
+
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (!globalForPrisma.prisma) {
@@ -110,8 +119,10 @@ if (!globalForPrisma.prisma) {
 }
 
 export function getIronSprueAdminPrisma() {
-  if (!globalForPrisma.ironSprueAdminPrisma) {
-    globalForPrisma.ironSprueAdminPrisma = createPrismaClient(process.env.IRON_SPRUE_DATABASE_URL?.trim());
+  const connectionString = getIronSprueDatabaseUrl();
+  if (!globalForPrisma.ironSprueAdminPrisma || globalForPrisma.ironSprueAdminPrismaUrl !== connectionString) {
+    globalForPrisma.ironSprueAdminPrisma = createPrismaClient(connectionString);
+    globalForPrisma.ironSprueAdminPrismaUrl = connectionString;
   }
 
   return globalForPrisma.ironSprueAdminPrisma;

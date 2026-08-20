@@ -74,6 +74,34 @@ export type IronSprueAdminUser = {
   role: UserRole | string;
 };
 
+type IronSprueAdminDbClient = ReturnType<typeof getIronSprueAdminPrisma>;
+
+export type IronSprueFulfilmentTrackingInput = {
+  trackingCarrier?: string | null;
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
+};
+
+function isIronSprueAdminDbClient(value: unknown): value is IronSprueAdminDbClient {
+  return Boolean(value && typeof value === 'object' && 'ironSprueOrder' in value);
+}
+
+function cleanTrackingValue(value?: string | null) {
+  const trimmed = value?.trim();
+  return trimmed || null;
+}
+
+function normalizeTrackingUrl(value?: string | null) {
+  const trimmed = cleanTrackingValue(value);
+  if (!trimmed) return null;
+  try {
+    const url = new URL(trimmed);
+    return ['http:', 'https:'].includes(url.protocol) ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 export type IronSprueReadinessCheck = {
   key: string;
   label: string;
@@ -463,7 +491,7 @@ export async function createIronSprueAdminProduct(input: CreateIronSprueAdminPro
   const customerTitle = input.customerTitle?.trim() || input.sourceTitle.trim();
   const slug = safeSlug(input.slug ?? customerTitle);
 
-  return client.$transaction(async (tx) => {
+  return client.$transaction(async (tx: Prisma.TransactionClient) => {
     const product = await tx.ironSprueAdminProduct.create({
       data: {
         storeCode: IRON_SPRUE_STORE_CODE,
@@ -748,8 +776,13 @@ export async function updateIronSprueAdminOrderFulfilmentStatus(
   orderId: string,
   nextState: IronSprueAdminFulfilmentState,
   actor: IronSprueAdminUser,
-  client = getIronSprueAdminPrisma(),
+  trackingOrClient: IronSprueFulfilmentTrackingInput | IronSprueAdminDbClient = {},
+  maybeClient?: IronSprueAdminDbClient,
 ) {
+  const trackingInput = isIronSprueAdminDbClient(trackingOrClient) ? {} : trackingOrClient;
+  const client = isIronSprueAdminDbClient(trackingOrClient)
+    ? trackingOrClient
+    : maybeClient ?? getIronSprueAdminPrisma();
   const order = await client.ironSprueOrder.findFirst({
     where: { id: orderId, storeCode: IRON_SPRUE_STORE_CODE },
   });
@@ -761,12 +794,29 @@ export async function updateIronSprueAdminOrderFulfilmentStatus(
     && !['CANCELED', 'FAILED', 'REFUNDED'].includes(order.status);
   if (!canFulfil) throw new Error('Only paid Iron Sprue orders can be fulfilled.');
 
+  const trackingCarrier = cleanTrackingValue(trackingInput.trackingCarrier);
+  const trackingNumber = cleanTrackingValue(trackingInput.trackingNumber);
+  const trackingUrl = normalizeTrackingUrl(trackingInput.trackingUrl);
+  const resolvedTrackingCarrier = trackingCarrier ?? order.trackingCarrier;
+  const resolvedTrackingNumber = trackingNumber ?? order.trackingNumber;
+  const resolvedTrackingUrl = trackingUrl ?? order.trackingUrl;
+
+  if (nextState === 'SHIPPED' && (!resolvedTrackingCarrier || !resolvedTrackingNumber)) {
+    throw new Error('Courier and tracking number are required to mark an Iron Sprue order dispatched.');
+  }
+  const dispatchedAt = nextState === 'SHIPPED' ? (order.dispatchedAt ?? new Date()) : order.dispatchedAt;
+  const fulfilledAt = nextState === 'SHIPPED' ? (order.fulfilledAt ?? dispatchedAt ?? new Date()) : order.fulfilledAt;
+
   return client.$transaction(async (tx) => {
     const updated = await tx.ironSprueOrder.update({
       where: { id: order.id },
       data: {
         fulfilmentStatus: nextState,
-        fulfilledAt: nextState === 'SHIPPED' ? new Date() : null,
+        fulfilledAt,
+        dispatchedAt,
+        trackingCarrier: nextState === 'SHIPPED' ? resolvedTrackingCarrier : order.trackingCarrier,
+        trackingNumber: nextState === 'SHIPPED' ? resolvedTrackingNumber : order.trackingNumber,
+        trackingUrl: nextState === 'SHIPPED' ? resolvedTrackingUrl : order.trackingUrl,
       },
       include: { items: { orderBy: { createdAt: 'asc' } } },
     });
@@ -779,8 +829,19 @@ export async function updateIronSprueAdminOrderFulfilmentStatus(
         entityType: 'order',
         entityId: order.id,
         summary: `Changed Iron Sprue order ${order.orderNumber} fulfilment to ${nextState}.`,
-        before: { fulfilmentStatus: order.fulfilmentStatus },
-        after: { fulfilmentStatus: nextState },
+        before: {
+          fulfilmentStatus: order.fulfilmentStatus,
+          trackingCarrier: order.trackingCarrier,
+          trackingNumber: order.trackingNumber,
+          trackingUrl: order.trackingUrl,
+        },
+        after: {
+          fulfilmentStatus: nextState,
+          trackingCarrier: updated.trackingCarrier,
+          trackingNumber: updated.trackingNumber,
+          trackingUrl: updated.trackingUrl,
+          dispatchedAt: updated.dispatchedAt,
+        },
       },
     });
 

@@ -58,6 +58,7 @@ type ApprovedMediaRow = {
 type InventoryProjectionRow = {
   sku: string;
   availableStock: number | string | null;
+  reservedStock: number | string | null;
   reorderPoint: number | string | null;
 };
 
@@ -351,6 +352,7 @@ export async function getIronSprueInventoryBySku() {
     select
       p.sku,
       coalesce(i."availableStock", 0) as "availableStock",
+      coalesce(i."reservedStock", 0) as "reservedStock",
       coalesce(i."reorderPoint", 1) as "reorderPoint"
     from "IronSprueAdminProduct" p
     left join "IronSprueAdminInventory" i
@@ -373,7 +375,7 @@ export function applyInventoryToProducts(products: IronSprueProduct[], inventory
         availableQuantity: 0,
       };
     }
-    const sellableQuantity = Math.max(0, numericValue(inventory.availableStock));
+    const sellableQuantity = Math.max(0, numericValue(inventory.availableStock) - numericValue(inventory.reservedStock));
 
     return {
       ...product,

@@ -27,9 +27,11 @@ import { assertStripeEventMatchesStore, getStoreStripeConfig, type CommerceEnvir
 export const IRON_SPRUE_STORE_CODE = 'IRON_SPRUE';
 const CURRENCY: CurrencyCode = 'GBP';
 
-const ironSprueCommercePrisma = getIronSprueAdminPrisma();
+type DatabaseClient = ReturnType<typeof getIronSprueAdminPrisma>;
 
-type DatabaseClient = typeof ironSprueCommercePrisma;
+function getIronSprueCommercePrisma(): DatabaseClient {
+  return getIronSprueAdminPrisma();
+}
 
 type IronSprueProductForCart = Prisma.IronSprueAdminProductGetPayload<{
   include: {
@@ -51,6 +53,15 @@ type StripeCheckoutSession = {
   amount_total: number | null;
   currency: string | null;
   url: string | null;
+  metadata: Stripe.Metadata | null;
+};
+
+type StripePaymentIntentSnapshot = {
+  id: string;
+  amount: number;
+  amount_received?: number | null;
+  currency: string;
+  status: string;
   metadata: Stripe.Metadata | null;
 };
 
@@ -205,7 +216,7 @@ function summarizeCart(items: CartLineItem[]): CartSummary {
   };
 }
 
-export async function resolveIronSprueGuestCart(inputItems: Array<{ productId: string; quantity: number }>, db: DatabaseClient = ironSprueCommercePrisma) {
+export async function resolveIronSprueGuestCart(inputItems: Array<{ productId: string; quantity: number }>, db: DatabaseClient = getIronSprueCommercePrisma()) {
   await releaseExpiredIronSprueCheckoutOrderReservations(db);
   const quantities = new Map<string, number>();
   for (const item of inputItems) {
@@ -222,7 +233,7 @@ export async function resolveIronSprueGuestCart(inputItems: Array<{ productId: s
   return { cartId: null, ...summarizeCart(lines) };
 }
 
-export async function getIronSprueCustomerCartDetails(userId: string, db: DatabaseClient = ironSprueCommercePrisma) {
+export async function getIronSprueCustomerCartDetails(userId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   await releaseExpiredIronSprueCheckoutOrderReservations(db);
   const cart = await db.ironSprueCart.findUnique({
     where: { userId },
@@ -238,7 +249,7 @@ export async function getIronSprueCustomerCartDetails(userId: string, db: Databa
   return { cartId: cart.id, ...summarizeCart(lines) };
 }
 
-async function getOrCreateIronSprueCart(userId: string, db: DatabaseClient = ironSprueCommercePrisma) {
+async function getOrCreateIronSprueCart(userId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   return db.ironSprueCart.upsert({
     where: { userId },
     update: {},
@@ -246,7 +257,7 @@ async function getOrCreateIronSprueCart(userId: string, db: DatabaseClient = iro
   });
 }
 
-export async function addIronSprueProductToCart(userId: string, productId: string, quantity: number, db: DatabaseClient = ironSprueCommercePrisma) {
+export async function addIronSprueProductToCart(userId: string, productId: string, quantity: number, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const product = await db.ironSprueAdminProduct.findFirst({
     where: safeProductIdentifierWhere([productId]),
     include: { inventory: true, mediaAssets: true },
@@ -270,7 +281,7 @@ export async function addIronSprueProductToCart(userId: string, productId: strin
   });
 }
 
-export async function updateIronSprueCartItemQuantity(userId: string, productId: string, quantity: number, db: DatabaseClient = ironSprueCommercePrisma) {
+export async function updateIronSprueCartItemQuantity(userId: string, productId: string, quantity: number, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const cart = await getOrCreateIronSprueCart(userId, db);
   const nextQuantity = normalizeQuantity(quantity);
   const existing = await db.ironSprueCartItem.findUnique({
@@ -286,13 +297,13 @@ export async function updateIronSprueCartItemQuantity(userId: string, productId:
   });
 }
 
-export async function removeIronSprueCartItem(userId: string, productId: string, db: DatabaseClient = ironSprueCommercePrisma) {
+export async function removeIronSprueCartItem(userId: string, productId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const cart = await db.ironSprueCart.findUnique({ where: { userId } });
   if (!cart) return;
   await db.ironSprueCartItem.deleteMany({ where: { cartId: cart.id, productId } });
 }
 
-export async function clearIronSprueCart(userId: string, db: DatabaseClient = ironSprueCommercePrisma) {
+export async function clearIronSprueCart(userId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const cart = await db.ironSprueCart.findUnique({ where: { userId } });
   if (!cart) return;
   await db.ironSprueCartItem.deleteMany({ where: { cartId: cart.id } });
@@ -362,6 +373,10 @@ function stripeRequest<T>(secretKey: string, path: string, body?: URLSearchParam
     }
     return payload as T;
   });
+}
+
+async function retrieveIronSprueStripeCheckoutSession(secretKey: string, sessionId: string) {
+  return stripeRequest<StripeCheckoutSession>(secretKey, `checkout/sessions/${encodeURIComponent(sessionId)}`);
 }
 
 export function buildIronSprueStripeMetadata(params: { orderId: string; orderNumber: string; checkoutAttemptId: string }) {
@@ -477,7 +492,7 @@ export async function createIronSprueHostedCheckoutSession(input: {
   environment?: CommerceEnvironment;
   db?: DatabaseClient;
 }): Promise<IronSprueCheckoutSessionResult> {
-  const db = input.db ?? ironSprueCommercePrisma;
+  const db = input.db ?? getIronSprueCommercePrisma();
   await releaseExpiredIronSprueCheckoutOrderReservations(db);
   const shippingAddress = requireCheckoutAddress(input.shippingAddress);
   const subtotalMinor = input.cart.subtotalMinor;
@@ -584,23 +599,53 @@ function paymentIntentId(value: string | Stripe.PaymentIntent | null) {
   return typeof value === 'string' ? value : value?.id ?? null;
 }
 
+function readStripeMetadataValue(metadata: Stripe.Metadata | null | undefined, key: string) {
+  const value = metadata?.[key];
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function assertIronSprueStripeMetadata(metadata: Stripe.Metadata | null | undefined) {
+  const store = readStripeMetadataValue(metadata, 'store') ?? readStripeMetadataValue(metadata, 'commerceStore');
+  if (store !== IRON_SPRUE_STORE_CODE) throw new Error('STRIPE_STORE_METADATA_MISMATCH');
+}
+
+async function findIronSprueOrderFromStripeMetadata(metadata: Stripe.Metadata | null | undefined, db: DatabaseClient) {
+  const orderId = readStripeMetadataValue(metadata, 'orderId');
+  if (orderId) {
+    const order = await db.ironSprueOrder.findUnique({ where: { id: orderId }, include: { items: true } });
+    if (order) return order;
+  }
+
+  const checkoutAttemptId = readStripeMetadataValue(metadata, 'checkoutAttemptId');
+  if (checkoutAttemptId) {
+    const order = await db.ironSprueOrder.findUnique({ where: { checkoutAttemptId }, include: { items: true } });
+    if (order) return order;
+  }
+
+  const orderNumber = readStripeMetadataValue(metadata, 'orderNumber');
+  if (orderNumber) {
+    return db.ironSprueOrder.findFirst({
+      where: { storeCode: IRON_SPRUE_STORE_CODE, orderNumber },
+      include: { items: true },
+    });
+  }
+
+  return null;
+}
+
 async function findIronSprueOrderForSession(session: Stripe.Checkout.Session, db: DatabaseClient) {
   const bySession = await db.ironSprueOrder.findUnique({
     where: { stripeCheckoutSessionId: session.id },
     include: { items: true },
   });
   if (bySession) return bySession;
-  const orderId = typeof session.metadata?.orderId === 'string' ? session.metadata.orderId : null;
-  if (!orderId) return null;
-  return db.ironSprueOrder.findUnique({ where: { id: orderId }, include: { items: true } });
+  return findIronSprueOrderFromStripeMetadata(session.metadata, db);
 }
 
 async function findIronSprueOrderForPaymentIntent(intent: Stripe.PaymentIntent, db: DatabaseClient) {
   const byIntent = await db.ironSprueOrder.findUnique({ where: { paymentIntentId: intent.id }, include: { items: true } });
   if (byIntent) return byIntent;
-  const orderId = typeof intent.metadata?.orderId === 'string' ? intent.metadata.orderId : null;
-  if (!orderId) return null;
-  return db.ironSprueOrder.findUnique({ where: { id: orderId }, include: { items: true } });
+  return findIronSprueOrderFromStripeMetadata(intent.metadata, db);
 }
 
 function objectId(event: Stripe.Event) {
@@ -638,7 +683,7 @@ async function failIronSprueEventAudit(eventId: string, errorCode: string, db: D
   });
 }
 
-export async function releaseIronSprueCheckoutOrderReservation(orderId: string, db: DatabaseClient = ironSprueCommercePrisma, status: 'CANCELED' | 'FAILED' = 'CANCELED') {
+export async function releaseIronSprueCheckoutOrderReservation(orderId: string, db: DatabaseClient = getIronSprueCommercePrisma(), status: 'CANCELED' | 'FAILED' = 'CANCELED') {
   return db.$transaction(async (tx) => {
     const order = await tx.ironSprueOrder.findUnique({ where: { id: orderId }, include: { items: true } });
     if (!order || order.paymentStatus === 'SUCCEEDED' || order.cancelledAt) return null;
@@ -663,7 +708,7 @@ export async function releaseIronSprueCheckoutOrderReservation(orderId: string, 
   });
 }
 
-export async function releaseExpiredIronSprueCheckoutOrderReservations(db: DatabaseClient = ironSprueCommercePrisma, now = new Date()) {
+export async function releaseExpiredIronSprueCheckoutOrderReservations(db: DatabaseClient = getIronSprueCommercePrisma(), now = new Date()) {
   const expiredOrders = await db.ironSprueOrder.findMany({
     where: {
       storeCode: IRON_SPRUE_STORE_CODE,
@@ -684,7 +729,7 @@ export async function releaseExpiredIronSprueCheckoutOrderReservations(db: Datab
   return expiredOrders.length;
 }
 
-export async function cancelIronSprueCheckoutSession(sessionId: string, db: DatabaseClient = ironSprueCommercePrisma) {
+export async function cancelIronSprueCheckoutSession(sessionId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const normalizedSessionId = sessionId.trim();
   if (!normalizedSessionId) return null;
   const order = await db.ironSprueOrder.findFirst({
@@ -717,7 +762,7 @@ function isOrderAlreadyCancelledOrRefunded(order: IronSprueOrderRecord) {
     || order.fulfilmentStatus === 'CANCELLED';
 }
 
-function isMissingStripePaymentIntentError(error: unknown) {
+function isMissingStripePaymentResourceError(error: unknown) {
   const parts: string[] = [];
   if (error instanceof Error) parts.push(error.message);
   if (typeof error === 'object' && error !== null) {
@@ -735,7 +780,7 @@ function isMissingStripePaymentIntentError(error: unknown) {
     parts.push(error);
   }
   const fingerprint = parts.join(' ');
-  return /no such payment_intent|no such payment intent|payment intent is missing|payment_intent.*missing|resource_missing/i.test(fingerprint);
+  return /no such payment_intent|no such payment intent|payment intent is missing|payment_intent.*missing|no such checkout\.session|checkout session.*missing|resource_missing/i.test(fingerprint);
 }
 
 export async function cancelIronSprueOrderForMerchant(input: {
@@ -743,10 +788,10 @@ export async function cancelIronSprueOrderForMerchant(input: {
   reason?: string | null;
   actorId?: string | null;
   environment?: CommerceEnvironment;
-}, db: DatabaseClient = ironSprueCommercePrisma) {
+}, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const orderId = input.orderId.trim();
   if (!orderId) throw new Error('orderId is required.');
-  const order = await db.ironSprueOrder.findUnique({ where: { id: orderId }, include: { items: true } });
+  let order = await db.ironSprueOrder.findUnique({ where: { id: orderId }, include: { items: true } });
   if (!order || order.storeCode !== IRON_SPRUE_STORE_CODE) throw new Error('Iron Sprue order was not found.');
   if (isOrderAlreadyCancelledOrRefunded(order)) return mapOrderRecord(order);
   if (merchantCancellationLockedFulfilmentStates.has(order.fulfilmentStatus)) {
@@ -756,7 +801,7 @@ export async function cancelIronSprueOrderForMerchant(input: {
   const cancelAndRestock = async (params: { refunded: boolean; reasonPrefix: string }) => {
     const trimmedReason = input.reason?.trim();
     const updated = await db.$transaction(async (tx) => {
-      const current = await tx.ironSprueOrder.findUnique({ where: { id: order.id }, include: { items: true } });
+      const current = await tx.ironSprueOrder.findUnique({ where: { id: orderId }, include: { items: true } });
       if (!current) throw new Error('Iron Sprue order was not found.');
       if (isOrderAlreadyCancelledOrRefunded(current)) return current;
 
@@ -802,16 +847,61 @@ export async function cancelIronSprueOrderForMerchant(input: {
     return mapOrderRecord(updated);
   };
 
-  if (order.paymentStatus === 'SUCCEEDED') {
-    if (!order.paymentIntentId) {
-      return cancelAndRestock({ refunded: false, reasonPrefix: 'Cancelled order without refundable Stripe payment' });
-    }
+  const orderForStripeRefresh = order;
+  if (orderForStripeRefresh.paymentStatus !== 'SUCCEEDED' && orderForStripeRefresh.stripeCheckoutSessionId) {
     const config = getStoreStripeConfig({
       store: IRON_SPRUE_STORE_CODE,
       ...(input.environment ? { environment: input.environment } : {}),
     });
+
+    try {
+      const session = await retrieveIronSprueStripeCheckoutSession(config.secretKey, orderForStripeRefresh.stripeCheckoutSessionId);
+      if (session.payment_status === 'paid') {
+        assertIronSprueStripeMetadata(session.metadata);
+        if (session.amount_total !== orderForStripeRefresh.totalMinor || session.currency?.toUpperCase() !== orderForStripeRefresh.currency.toUpperCase()) {
+          throw new Error('STRIPE_TOTAL_MISMATCH');
+        }
+
+        await finalizePaidIronSprueCheckoutOrder({
+          orderId: orderForStripeRefresh.id,
+          paymentIntentId: paymentIntentId(session.payment_intent),
+          stripeCheckoutSessionId: session.id,
+        }, db);
+        const refreshed = await db.ironSprueOrder.findUnique({ where: { id: orderForStripeRefresh.id }, include: { items: true } });
+        if (refreshed) order = refreshed;
+      }
+    } catch (error) {
+      if (!isMissingStripePaymentResourceError(error)) throw error;
+    }
+  }
+
+  if (!order) throw new Error('Iron Sprue order was not found.');
+
+  if (order.paymentStatus === 'SUCCEEDED') {
+    const config = getStoreStripeConfig({
+      store: IRON_SPRUE_STORE_CODE,
+      ...(input.environment ? { environment: input.environment } : {}),
+    });
+    let refundablePaymentIntentId = order.paymentIntentId;
+    if (!refundablePaymentIntentId && order.stripeCheckoutSessionId) {
+      try {
+        const session = await retrieveIronSprueStripeCheckoutSession(config.secretKey, order.stripeCheckoutSessionId);
+        refundablePaymentIntentId = paymentIntentId(session.payment_intent);
+        if (refundablePaymentIntentId) {
+          await db.ironSprueOrder.update({
+            where: { id: order.id },
+            data: { paymentIntentId: refundablePaymentIntentId },
+          });
+        }
+      } catch (error) {
+        if (!isMissingStripePaymentResourceError(error)) throw error;
+      }
+    }
+    if (!refundablePaymentIntentId) {
+      return cancelAndRestock({ refunded: false, reasonPrefix: 'Cancelled order without refundable Stripe payment' });
+    }
     const refundBody = new URLSearchParams();
-    refundBody.set('payment_intent', order.paymentIntentId);
+    refundBody.set('payment_intent', refundablePaymentIntentId);
     refundBody.set('amount', String(order.totalMinor));
     refundBody.set('reason', 'requested_by_customer');
     refundBody.set('metadata[store]', IRON_SPRUE_STORE_CODE);
@@ -823,9 +913,9 @@ export async function cancelIronSprueOrderForMerchant(input: {
     try {
       await stripeRequest<StripeRefundResponse>(config.secretKey, 'refunds', refundBody, {
         idempotencyKey: `iron-sprue-order-cancel-${order.id}`,
-      });
+    });
     } catch (error) {
-      if (!isMissingStripePaymentIntentError(error)) throw error;
+      if (!isMissingStripePaymentResourceError(error)) throw error;
       return cancelAndRestock({ refunded: false, reasonPrefix: 'Cancelled order without refundable Stripe payment' });
     }
 
@@ -837,7 +927,7 @@ export async function cancelIronSprueOrderForMerchant(input: {
   return updated ? mapOrderRecord(updated) : null;
 }
 
-export async function reconcileIronSprueReservedStock(db: DatabaseClient = ironSprueCommercePrisma, now = new Date()) {
+export async function reconcileIronSprueReservedStock(db: DatabaseClient = getIronSprueCommercePrisma(), now = new Date()) {
   const [reservedRows, activeOrders] = await Promise.all([
     db.ironSprueAdminInventory.findMany({
       where: {
@@ -891,11 +981,23 @@ export async function reconcileIronSprueReservedStock(db: DatabaseClient = ironS
   return reconciled;
 }
 
-export async function finalizePaidIronSprueCheckoutOrder(input: { orderId: string; paymentIntentId: string | null; stripeCheckoutSessionId: string }, db: DatabaseClient = ironSprueCommercePrisma) {
+export async function finalizePaidIronSprueCheckoutOrder(input: { orderId: string; paymentIntentId: string | null; stripeCheckoutSessionId: string | null }, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const order = await db.$transaction(async (tx) => {
     const current = await tx.ironSprueOrder.findUnique({ where: { id: input.orderId }, include: { items: true } });
     if (!current) throw new Error('IRON_SPRUE_ORDER_NOT_FOUND');
-    if (current.paymentStatus === 'SUCCEEDED') return current;
+    if (current.paymentStatus === 'SUCCEEDED') {
+      if ((input.paymentIntentId && !current.paymentIntentId) || (input.stripeCheckoutSessionId && !current.stripeCheckoutSessionId)) {
+        return tx.ironSprueOrder.update({
+          where: { id: input.orderId },
+          data: {
+            ...(input.paymentIntentId && !current.paymentIntentId ? { paymentIntentId: input.paymentIntentId } : {}),
+            ...(input.stripeCheckoutSessionId && !current.stripeCheckoutSessionId ? { stripeCheckoutSessionId: input.stripeCheckoutSessionId } : {}),
+          },
+          include: { items: true },
+        });
+      }
+      return current;
+    }
     for (const item of current.items) {
       const inventory = await tx.ironSprueAdminInventory.findUnique({ where: { productId: item.productId } });
       if (!inventory) throw new Error('IRON_SPRUE_INVENTORY_NOT_FOUND');
@@ -928,7 +1030,7 @@ export async function finalizePaidIronSprueCheckoutOrder(input: { orderId: strin
         paymentStatus: 'SUCCEEDED',
         paymentProvider: 'STRIPE',
         paymentIntentId: input.paymentIntentId,
-        stripeCheckoutSessionId: input.stripeCheckoutSessionId,
+        ...(input.stripeCheckoutSessionId ? { stripeCheckoutSessionId: input.stripeCheckoutSessionId } : {}),
         paidAt: new Date(),
         reservationExpiresAt: null,
       },
@@ -948,7 +1050,7 @@ async function processIronSprueCompletedSession(session: Stripe.Checkout.Session
     eventAccountId: event.account ?? null,
     eventLivemode: event.livemode,
   });
-  if (session.metadata?.store !== IRON_SPRUE_STORE_CODE) throw new Error('STRIPE_STORE_METADATA_MISMATCH');
+  assertIronSprueStripeMetadata(session.metadata);
   if (session.payment_status !== 'paid') return { outcome: 'payment_not_paid', orderId: order.id };
   if (session.amount_total !== order.totalMinor || session.currency?.toUpperCase() !== order.currency.toUpperCase()) {
     throw new Error('STRIPE_TOTAL_MISMATCH');
@@ -982,7 +1084,33 @@ async function processIronSprueFailedPayment(intent: Stripe.PaymentIntent, db: D
   return { outcome: 'payment_failed', orderId: order.id };
 }
 
-export async function processIronSprueStripeWebhookEvent(event: Stripe.Event, db: DatabaseClient = ironSprueCommercePrisma): Promise<IronSprueStripeWebhookProcessingResult> {
+async function processIronSprueSucceededPayment(intent: StripePaymentIntentSnapshot, event: Stripe.Event, db: DatabaseClient) {
+  const order = await findIronSprueOrderForPaymentIntent(intent as Stripe.PaymentIntent, db);
+  if (!order) return { outcome: 'unknown_payment_intent', orderId: null };
+  const config = getStoreStripeConfig({ store: IRON_SPRUE_STORE_CODE, environment: event.livemode ? 'live' : 'test' });
+  assertStripeEventMatchesStore({
+    expected: config,
+    orderStore: order.storeCode,
+    eventAccountId: event.account ?? null,
+    eventLivemode: event.livemode,
+  });
+  assertIronSprueStripeMetadata(intent.metadata);
+  if (intent.status !== 'succeeded') return { outcome: 'payment_not_succeeded', orderId: order.id };
+  const paidMinor = typeof intent.amount_received === 'number' && intent.amount_received > 0
+    ? intent.amount_received
+    : intent.amount;
+  if (paidMinor !== order.totalMinor || intent.currency?.toUpperCase() !== order.currency.toUpperCase()) {
+    throw new Error('STRIPE_TOTAL_MISMATCH');
+  }
+  await finalizePaidIronSprueCheckoutOrder({
+    orderId: order.id,
+    paymentIntentId: intent.id,
+    stripeCheckoutSessionId: order.stripeCheckoutSessionId,
+  }, db);
+  return { outcome: 'payment_finalized', orderId: order.id };
+}
+
+export async function processIronSprueStripeWebhookEvent(event: Stripe.Event, db: DatabaseClient = getIronSprueCommercePrisma()): Promise<IronSprueStripeWebhookProcessingResult> {
   const audit = await beginIronSprueEventAudit(event, db);
   if (audit.processedAt) return { eventId: event.id, eventType: event.type, outcome: 'duplicate', orderId: audit.orderId };
   try {
@@ -993,6 +1121,8 @@ export async function processIronSprueStripeWebhookEvent(event: Stripe.Event, db
       result = await processIronSprueExpiredSession(event.data.object as Stripe.Checkout.Session, db);
     } else if (event.type === 'checkout.session.async_payment_failed') {
       result = await processIronSprueFailedSession(event.data.object as Stripe.Checkout.Session, db);
+    } else if (event.type === 'payment_intent.succeeded') {
+      result = await processIronSprueSucceededPayment(event.data.object as StripePaymentIntentSnapshot, event, db);
     } else if (event.type === 'payment_intent.payment_failed') {
       result = await processIronSprueFailedPayment(event.data.object as Stripe.PaymentIntent, db);
     }
@@ -1000,7 +1130,7 @@ export async function processIronSprueStripeWebhookEvent(event: Stripe.Event, db
       await finishIronSprueEventAudit(event.id, 'IGNORED', 'unsupported_event', null, db);
       return { eventId: event.id, eventType: event.type, outcome: 'ignored', orderId: null };
     }
-    const ignored = result.orderId === null || result.outcome === 'payment_not_paid';
+    const ignored = result.orderId === null || result.outcome === 'payment_not_paid' || result.outcome === 'payment_not_succeeded';
     await finishIronSprueEventAudit(event.id, ignored ? 'IGNORED' : 'PROCESSED', result.outcome, result.orderId, db);
     return { eventId: event.id, eventType: event.type, outcome: ignored ? 'ignored' : 'processed', orderId: result.orderId };
   } catch (error) {
@@ -1010,12 +1140,12 @@ export async function processIronSprueStripeWebhookEvent(event: Stripe.Event, db
   }
 }
 
-export async function getIronSprueOrderByStripeCheckoutSessionId(sessionId: string, db: DatabaseClient = ironSprueCommercePrisma) {
+export async function getIronSprueOrderByStripeCheckoutSessionId(sessionId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const order = await db.ironSprueOrder.findUnique({ where: { stripeCheckoutSessionId: sessionId }, include: { items: true } });
   return order ? mapOrderRecord(order) : null;
 }
 
-export async function getIronSprueCustomerOrders(userId: string, db: DatabaseClient = ironSprueCommercePrisma) {
+export async function getIronSprueCustomerOrders(userId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const orders = await db.ironSprueOrder.findMany({
     where: { storeCode: IRON_SPRUE_STORE_CODE, userId },
     include: { items: true },
@@ -1024,7 +1154,7 @@ export async function getIronSprueCustomerOrders(userId: string, db: DatabaseCli
   return orders.map(mapOrderRecord);
 }
 
-export async function getIronSprueCustomerOrderByNumber(userId: string, orderNumber: string, db: DatabaseClient = ironSprueCommercePrisma) {
+export async function getIronSprueCustomerOrderByNumber(userId: string, orderNumber: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const order = await db.ironSprueOrder.findFirst({
     where: { storeCode: IRON_SPRUE_STORE_CODE, userId, orderNumber },
     include: { items: true },

@@ -1,7 +1,11 @@
 import Stripe from 'stripe';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { getStoreStripeConfig, processIronSprueStripeWebhookEvent } from '@tcg-hobby/database';
+import {
+  getStoreStripeConfig,
+  processIronSprueStripeWebhookEvent,
+  sendIronSprueOrderConfirmationEmail,
+} from '@tcg-hobby/database';
 
 export const runtime = 'nodejs';
 
@@ -22,6 +26,13 @@ function loadLocalStripeEnvFallback() {
     'IRON_SPRUE_CHECKOUT_SUCCESS_URL',
     'IRON_SPRUE_CHECKOUT_CANCEL_URL',
     'IRON_SPRUE_SUPPORT_EMAIL',
+    'IRON_SPRUE_RESEND_API_KEY',
+    'IRON_SPRUE_EMAIL_FROM',
+    'IRON_SPRUE_EMAIL_REPLY_TO',
+    'IRON_SPRUE_EMAIL_LOGO_URL',
+    'IRON_SPRUE_SITE_URL',
+    'NEXT_PUBLIC_IRON_SPRUE_SITE_URL',
+    'IRON_SPRUE_DATABASE_URL',
     'COMMERCE_ENVIRONMENT',
   ]);
 
@@ -60,8 +71,38 @@ export async function POST(request: Request) {
 
   try {
     const result = await processIronSprueStripeWebhookEvent(event);
+    if (
+      result.outcome === 'processed'
+      && result.orderId
+      && [
+        'checkout.session.completed',
+        'checkout.session.async_payment_succeeded',
+        'payment_intent.succeeded',
+      ].includes(event.type)
+    ) {
+      try {
+        const emailResult = await sendIronSprueOrderConfirmationEmail(result.orderId);
+        if (emailResult.outcome === 'provider_unconfigured' || emailResult.outcome === 'failed') {
+          console.warn('iron_sprue_order_confirmation_email_not_sent', {
+            orderId: result.orderId,
+            outcome: emailResult.outcome,
+          });
+        }
+      } catch (emailError) {
+        console.warn('iron_sprue_order_confirmation_email_not_sent', {
+          orderId: result.orderId,
+          outcome: 'failed',
+          reason: emailError instanceof Error ? emailError.message : 'Unknown email error',
+        });
+      }
+    }
     return Response.json(result);
-  } catch {
+  } catch (error) {
+    console.error('iron_sprue_stripe_webhook_processing_failed', {
+      eventId: event.id,
+      eventType: event.type,
+      reason: error instanceof Error ? error.message : 'Unknown error',
+    });
     return Response.json({ error: 'Webhook processing failed.' }, { status: 500 });
   }
 }

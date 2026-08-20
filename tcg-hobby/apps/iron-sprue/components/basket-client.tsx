@@ -101,7 +101,14 @@ async function resolveLiveBasketLine(item: StoredBasketItem) {
   });
   if (!response.ok) return null;
   const payload = await response.json() as PublicBasket;
-  return payload.items.find((candidate) => candidate.productId === item.productId) ?? null;
+  return findResolvedBasketItem(payload.items, item) ?? null;
+}
+
+function findResolvedBasketItem(items: PublicBasket['items'], item: Pick<StoredBasketItem, 'productId' | 'productSlug'>) {
+  return items.find((candidate) => (
+    candidate.productId === item.productId
+    || candidate.productSlug === item.productSlug
+  ));
 }
 
 export async function addIronSprueBasketItemWithLiveStock(item: StoredBasketItem) {
@@ -229,12 +236,16 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     };
   }, [items, mounted]);
 
-  const resolvedByProductId = useMemo(() => {
-    return new Map((resolved?.items ?? []).map((item) => [item.productId, item]));
+  const resolvedByIdentity = useMemo(() => {
+    const entries: Array<[string, PublicBasket['items'][number]]> = [];
+    for (const item of resolved?.items ?? []) {
+      entries.push([item.productId, item], [item.productSlug, item]);
+    }
+    return new Map(entries);
   }, [resolved]);
   const basketLineItems = useMemo(() => {
     return items.map((item) => {
-      const live = resolvedByProductId.get(item.productId);
+      const live = resolvedByIdentity.get(item.productId) ?? resolvedByIdentity.get(item.productSlug);
       return {
         ...item,
         quantity: live?.quantity ?? item.quantity,
@@ -245,7 +256,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
         inStock: live?.inStock ?? availabilityLimit(item) >= item.quantity,
       };
     });
-  }, [items, resolvedByProductId]);
+  }, [items, resolvedByIdentity]);
   const basketProductIds = useMemo(() => new Set(basketLineItems.map((item) => item.productId)), [basketLineItems]);
   const visibleUpsells = useMemo(() => {
     return upsellProducts

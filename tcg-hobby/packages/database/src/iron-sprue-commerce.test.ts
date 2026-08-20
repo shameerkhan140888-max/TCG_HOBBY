@@ -173,6 +173,89 @@ describe('Iron Sprue Stripe commerce', () => {
     expect(db.ironSprueAdminInventory.update).not.toHaveBeenCalled();
   });
 
+  it('finalises a paid Checkout Session when Iron Sprue metadata uses commerceStore', async () => {
+    const db = databaseMock();
+    db.$transaction = vi.fn(async (callback) => callback(db));
+
+    const result = await processIronSprueStripeWebhookEvent(stripeEvent('checkout.session.completed', {
+      id: 'cs_iron_1',
+      payment_status: 'paid',
+      payment_intent: 'pi_iron_1',
+      amount_total: 5298,
+      currency: 'gbp',
+      metadata: { commerceStore: 'IRON_SPRUE', orderId: 'order-1' },
+    }, 'evt_iron_paid_session'), db);
+
+    expect(result).toMatchObject({ outcome: 'processed', orderId: 'order-1' });
+    expect(db.ironSprueOrder.update).toHaveBeenCalledWith({
+      where: { id: 'order-1' },
+      data: expect.objectContaining({
+        paymentIntentId: 'pi_iron_1',
+        stripeCheckoutSessionId: 'cs_iron_1',
+        status: 'PAID',
+        paymentStatus: 'SUCCEEDED',
+        reservationExpiresAt: null,
+      }),
+      include: { items: true },
+    });
+  });
+
+  it('finalises a succeeded PaymentIntent by checkout attempt metadata when the order has no payment intent yet', async () => {
+    const db = databaseMock();
+    const order = {
+      id: 'order-1',
+      storeCode: 'IRON_SPRUE',
+      checkoutAttemptId: 'attempt-1',
+      stripeCheckoutSessionId: 'cs_iron_1',
+      totalMinor: 5298,
+      currency: 'GBP',
+      paymentStatus: 'REQUIRES_PAYMENT',
+      items: [{
+        id: 'item-1',
+        productId: 'product-1',
+        productName: 'Toyota 2000GT Red',
+        productSlug: 'toyota-2000gt-red',
+        productSku: 'IS-AOS-05628',
+        quantity: 1,
+        unitPriceMinor: 4999,
+        totalMinor: 4999,
+        imageUrl: null,
+        imageAlt: null,
+        imageStorageKey: null,
+      }],
+    };
+    db.ironSprueOrder.findUnique = vi.fn(async ({ where }: { where: Record<string, string> }) => {
+      if ('paymentIntentId' in where) return null;
+      if (where.checkoutAttemptId === 'attempt-1') return order;
+      if (where.id === 'order-1') return order;
+      if (where.stripeCheckoutSessionId === 'cs_iron_1') return order;
+      return null;
+    });
+    db.$transaction = vi.fn(async (callback) => callback(db));
+
+    const result = await processIronSprueStripeWebhookEvent(stripeEvent('payment_intent.succeeded', {
+      id: 'pi_iron_2',
+      status: 'succeeded',
+      amount: 5298,
+      amount_received: 5298,
+      currency: 'gbp',
+      metadata: { commerceStore: 'IRON_SPRUE', checkoutAttemptId: 'attempt-1' },
+    }, 'evt_iron_succeeded_intent'), db);
+
+    expect(result).toMatchObject({ outcome: 'processed', orderId: 'order-1' });
+    expect(db.ironSprueOrder.update).toHaveBeenCalledWith({
+      where: { id: 'order-1' },
+      data: expect.objectContaining({
+        paymentIntentId: 'pi_iron_2',
+        stripeCheckoutSessionId: 'cs_iron_1',
+        status: 'PAID',
+        paymentStatus: 'SUCCEEDED',
+        reservationExpiresAt: null,
+      }),
+      include: { items: true },
+    });
+  });
+
   it('uses approved R2 catalogue-primary media for cart and checkout snapshots', async () => {
     const db = {
       ironSprueOrder: { findMany: vi.fn().mockResolvedValue([]) },

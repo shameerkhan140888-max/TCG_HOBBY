@@ -1254,6 +1254,33 @@ async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) 
                         {fulfilmentStates.map((state) => <option key={state} value={state}>{state}</option>)}
                       </select>
                     </Field>
+                    <div className="grid gap-3 md:grid-cols-3">
+                      <Field label="Courier">
+                        <input
+                          name="trackingCarrier"
+                          className={fieldClass}
+                          defaultValue={order.trackingCarrier ?? ''}
+                          placeholder="Royal Mail, Evri..."
+                        />
+                      </Field>
+                      <Field label="Tracking number">
+                        <input
+                          name="trackingNumber"
+                          className={fieldClass}
+                          defaultValue={order.trackingNumber ?? ''}
+                          placeholder="Tracking reference"
+                        />
+                      </Field>
+                      <Field label="Tracking URL">
+                        <input
+                          name="trackingUrl"
+                          className={fieldClass}
+                          defaultValue={order.trackingUrl ?? ''}
+                          placeholder="https://..."
+                        />
+                      </Field>
+                    </div>
+                    <p className="text-xs text-neutral-500">Courier and tracking number are required when marking an order shipped.</p>
                     <Button type="submit" variant="outline">Save fulfilment</Button>
                   </form>
                 )}

@@ -3,6 +3,8 @@
 import {
   cancelIronSprueOrderForMerchant,
   createIronSprueAdminMediaAsset,
+  sendIronSprueCancellationEmail,
+  sendIronSprueDispatchEmail,
   setIronSprueProductPublicationState,
   isIronSprueAdminFulfilmentState,
   updateIronSprueAdminBrandControls,
@@ -336,7 +338,17 @@ export async function updateIronSprueOrderFulfilmentAction(formData: FormData) {
   try {
     if (!orderId) throw new Error('orderId is required.');
     if (!isIronSprueAdminFulfilmentState(fulfilmentStatus)) throw new Error('Invalid fulfilment status.');
-    await updateIronSprueAdminOrderFulfilmentStatus(orderId, fulfilmentStatus, actor);
+    await updateIronSprueAdminOrderFulfilmentStatus(orderId, fulfilmentStatus, actor, {
+      trackingCarrier: stringFromForm(formData.get('trackingCarrier')),
+      trackingNumber: stringFromForm(formData.get('trackingNumber')),
+      trackingUrl: stringFromForm(formData.get('trackingUrl')),
+    });
+    if (fulfilmentStatus === 'SHIPPED') {
+      const emailResult = await sendIronSprueDispatchEmail(orderId);
+      if (emailResult.outcome === 'provider_unconfigured' || emailResult.outcome === 'failed') {
+        console.warn('iron_sprue_dispatch_email_not_sent', { orderId, outcome: emailResult.outcome });
+      }
+    }
   } catch (error) {
     redirect(adminStatusPath('orders', 'error', actionError(error)));
   }
@@ -359,6 +371,10 @@ export async function cancelIronSprueOrderAction(formData: FormData) {
       reason: reason || 'Merchant cancellation',
       environment: process.env.NODE_ENV === 'production' ? 'live' : 'test',
     });
+    const emailResult = await sendIronSprueCancellationEmail(orderId);
+    if (emailResult.outcome === 'provider_unconfigured' || emailResult.outcome === 'failed') {
+      console.warn('iron_sprue_cancellation_email_not_sent', { orderId, outcome: emailResult.outcome });
+    }
   } catch (error) {
     redirect(adminStatusPath('orders', 'error', actionError(error)));
   }

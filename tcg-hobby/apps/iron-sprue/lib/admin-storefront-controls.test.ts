@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   adminHeroRowsToSlides,
   applyApprovedMediaToProducts,
+  applyInventoryToProducts,
   approvedMediaRowsToProductMedia,
   getIronSprueHeroSlides,
   getIronSpruePromoStripItems,
@@ -114,6 +115,43 @@ describe('Iron Sprue Admin storefront controls', () => {
     ]);
 
     expect(slides).toEqual([]);
+  });
+
+  it('projects storefront availability from available stock minus reserved stock', () => {
+    const products = [
+      {
+        sku: 'IS-AOS-05628',
+        slug: 'aoshima-05628-toyota-2000gt-red',
+        name: 'Toyota 2000GT Red',
+        brand: 'Aoshima',
+        category: 'Model Kits',
+        productType: 'Model kit',
+        storeCode: 'IRON_SPRUE',
+        priceMinor: 1999,
+        retailPriceMinor: 1999,
+        stockQuantity: 1,
+        availableQuantity: 1,
+        reorderLevel: 1,
+        published: true,
+        shortDescription: 'Toyota model kit.',
+      },
+    ] as any[];
+    const inventory = new Map([
+      [
+        'IS-AOS-05628',
+        {
+          sku: 'IS-AOS-05628',
+          availableStock: 1,
+          reservedStock: 1,
+          reorderPoint: 1,
+        },
+      ],
+    ]);
+
+    const [product] = applyInventoryToProducts(products, inventory);
+
+    expect(product!.stockQuantity).toBe(0);
+    expect(product!.availableQuantity).toBe(0);
   });
 
   it('applies approved catalogue-primary media before static product imagery', () => {

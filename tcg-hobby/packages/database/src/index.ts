@@ -467,3 +467,5 @@ export * from './product-image-resolution';
 export * from './admin-identity';
 export * from './account-recovery';
 export * from './iron-sprue-admin';
+export * from './iron-sprue-email-templates';
+export * from './iron-sprue-transactional-email';

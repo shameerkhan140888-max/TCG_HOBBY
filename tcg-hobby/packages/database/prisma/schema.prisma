@@ -1476,14 +1476,36 @@ model IronSprueOrder {
   reservationExpiresAt    DateTime?
   paidAt                  DateTime?
   fulfilledAt             DateTime?
+  dispatchedAt            DateTime?
+  trackingCarrier         String?
+  trackingNumber          String?
+  trackingUrl             String?
   cancelledAt             DateTime?
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   items                   IronSprueOrderItem[]
   webhookEvents           IronSprueStripeWebhookEvent[]
+  transactionalEmailDeliveries IronSprueTransactionalEmailDelivery[]
 
   @@index([storeCode, paymentStatus, createdAt])
   @@index([storeCode, userId, createdAt])
+}
+
+model IronSprueTransactionalEmailDelivery {
+  id                String          @id @default(cuid())
+  orderId           String
+  purpose           String
+  status            String          @default("PENDING")
+  attempts          Int             @default(0)
+  providerMessageId String?
+  lastErrorCode     String?
+  sentAt            DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  order             IronSprueOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, purpose])
+  @@index([status, updatedAt])
 }
 
 model IronSprueOrderItem {
