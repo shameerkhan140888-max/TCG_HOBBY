@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { CheckoutAddress, PublicBasket, PublicBasketInputItem, ShippingMethodCode } from '@tcg-hobby/types';
+import { trackIronSprueEcommerceEvent } from '../lib/analytics';
 
 export const IRON_SPRUE_BASKET_STORAGE_KEY = 'iron-sprue-basket-v1';
 export const IRON_SPRUE_LEGACY_BASKET_STORAGE_KEYS = [
@@ -154,6 +155,13 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
             const result = await addIronSprueBasketItemWithLiveStock({ ...item, quantity });
             setMessage(result.message);
             setMessageOk(result.ok);
+            if (result.ok) {
+              trackIronSprueEcommerceEvent('add_to_cart', {
+                currency: 'GBP',
+                value: (item.unitPriceMinor * quantity) / 100,
+                items: [{ item_id: item.productId, item_name: item.productName, quantity, price: item.unitPriceMinor / 100 }],
+              });
+            }
           } catch {
             setMessage('Stock could not be confirmed. Please try again.');
             setMessageOk(false);
@@ -201,6 +209,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   const [resolved, setResolved] = useState<PublicBasket | null>(null);
   const [address, setAddress] = useState<CheckoutAddress>(defaultAddress);
   const [shippingMethodCode, setShippingMethodCode] = useState<ShippingMethodCode>('UK_STANDARD');
+  const [discountCode, setDiscountCode] = useState('');
   const [status, setStatus] = useState('');
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
@@ -410,6 +419,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
                 guestItems: toInputItems(items),
                 shippingAddress: address,
                 shippingMethodCode,
+                discountCode: discountCode.trim() || undefined,
               }),
             });
             const payload = await response.json();
@@ -439,6 +449,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
               <option value="UK_EXPRESS">Express delivery</option>
             </select>
           </label>
+          <label>Discount code<input value={discountCode} onChange={(event) => setDiscountCode(event.target.value.toUpperCase())} placeholder="WELCOME5" /></label>
         </div>
         <div className="checkout-totals">
           <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>

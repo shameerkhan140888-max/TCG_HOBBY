@@ -238,6 +238,7 @@ export {
   releaseIronSprueCheckoutOrderReservation,
   removeIronSprueCartItem,
   resolveIronSprueGuestCart,
+  refundIronSprueOrderForMerchant,
   updateIronSprueCartItemQuantity,
 } from './iron-sprue-commerce';
 export type {

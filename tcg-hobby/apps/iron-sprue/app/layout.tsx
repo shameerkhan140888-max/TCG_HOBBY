@@ -5,6 +5,7 @@ import { getIronSpruePromoStripItems } from '../lib/admin-storefront-controls';
 import { categoryNavigation } from '../lib/storefront';
 import { LaunchListForm } from '../components/launch-list-form';
 import { BasketLink } from '../components/basket-link';
+import { IronSprueAnalyticsProvider, IronSprueCookieConsentBanner, IronSprueCookiePreferenceLink } from '../components/analytics-consent';
 
 export const metadata: Metadata = {
   title: {
@@ -23,10 +24,13 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const promoStripItems = await getIronSpruePromoStripItems();
+  const ga4Id = process.env.NEXT_PUBLIC_IRON_SPRUE_GA4_MEASUREMENT_ID?.trim() || null;
+  const metaPixelId = process.env.NEXT_PUBLIC_IRON_SPRUE_META_PIXEL_ID?.trim() || null;
 
   return (
     <html lang="en-GB">
       <body>
+        <IronSprueAnalyticsProvider ga4Id={ga4Id} metaPixelId={metaPixelId} />
         <header className="site-header">
           <div className="header-main">
             <a className="brand-link" href="/" aria-label="Iron Sprue home">
@@ -137,6 +141,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <a href="/delivery">Delivery</a>
               <a href="/returns">Returns</a>
               <a href="/cookies">Cookies</a>
+              <IronSprueCookiePreferenceLink />
             </nav>
             <div className="footer-company">
               <h2>Iron Sprue</h2>
@@ -152,6 +157,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <p>Built for modellers, makers and the UK hobby community.</p>
           </div>
         </footer>
+        <IronSprueCookieConsentBanner />
       </body>
     </html>
   );

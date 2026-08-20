@@ -56,6 +56,12 @@ type StripeCheckoutSession = {
   metadata: Stripe.Metadata | null;
 };
 
+type IronSprueResolvedDiscount = {
+  id: string;
+  code: string;
+  discountMinor: number;
+};
+
 type StripePaymentIntentSnapshot = {
   id: string;
   amount: number;
@@ -79,6 +85,8 @@ export type IronSprueOrderWithItems = {
   subtotalMinor: number;
   shippingMinor: number;
   taxMinor: number;
+  discountCode: string | null;
+  discountMinor: number;
   totalMinor: number;
   currency: CurrencyCode;
   shippingMethodCode: ShippingMethodCode;
@@ -92,6 +100,9 @@ export type IronSprueOrderWithItems = {
   shippingRegion: string | null;
   shippingPostalCode: string;
   shippingCountry: string;
+  trackingCarrier: string | null;
+  trackingNumber: string | null;
+  trackingUrl: string | null;
   reservationExpiresAt: Date | null;
   paidAt: Date | null;
   fulfilledAt: Date | null;
@@ -379,6 +390,18 @@ async function retrieveIronSprueStripeCheckoutSession(secretKey: string, session
   return stripeRequest<StripeCheckoutSession>(secretKey, `checkout/sessions/${encodeURIComponent(sessionId)}`);
 }
 
+async function createIronSprueStripeCoupon(secretKey: string, params: { code: string; discountMinor: number; orderNumber: string }) {
+  const body = new URLSearchParams();
+  body.set('duration', 'once');
+  body.set('name', `Iron Sprue ${params.code} ${params.orderNumber}`);
+  body.set('amount_off', String(params.discountMinor));
+  body.set('currency', CURRENCY.toLowerCase());
+  body.set('metadata[store]', IRON_SPRUE_STORE_CODE);
+  body.set('metadata[code]', params.code);
+  body.set('metadata[orderNumber]', params.orderNumber);
+  return stripeRequest<{ id: string }>(secretKey, 'coupons', body);
+}
+
 export function buildIronSprueStripeMetadata(params: { orderId: string; orderNumber: string; checkoutAttemptId: string }) {
   return {
     store: IRON_SPRUE_STORE_CODE,
@@ -400,6 +423,7 @@ async function createIronSprueStripeCheckoutSession(params: {
   items: CartLineItem[];
   shippingMethod: ShippingMethod;
   shippingMinor: number;
+  discount?: IronSprueResolvedDiscount | null;
 }) {
   const body = new URLSearchParams();
   body.set('mode', 'payment');
@@ -430,6 +454,14 @@ async function createIronSprueStripeCheckoutSession(params: {
     body.set(`line_items[${index}][price_data][unit_amount]`, String(params.shippingMinor));
     body.set(`line_items[${index}][price_data][product_data][name]`, params.shippingMethod.name);
   }
+  if (params.discount && params.discount.discountMinor > 0) {
+    const coupon = await createIronSprueStripeCoupon(params.secretKey, {
+      code: params.discount.code,
+      discountMinor: params.discount.discountMinor,
+      orderNumber: params.orderNumber,
+    });
+    body.set('discounts[0][coupon]', coupon.id);
+  }
   return stripeRequest<StripeCheckoutSession>(params.secretKey, 'checkout/sessions', body);
 }
 
@@ -448,6 +480,8 @@ function mapOrderRecord(order: IronSprueOrderRecord): IronSprueOrderWithItems {
     subtotalMinor: order.subtotalMinor,
     shippingMinor: order.shippingMinor,
     taxMinor: order.taxMinor,
+    discountCode: order.discountCode,
+    discountMinor: order.discountMinor ?? 0,
     totalMinor: order.totalMinor,
     currency: order.currency as CurrencyCode,
     shippingMethodCode: order.shippingMethodCode as ShippingMethodCode,
@@ -461,6 +495,9 @@ function mapOrderRecord(order: IronSprueOrderRecord): IronSprueOrderWithItems {
     shippingRegion: order.shippingRegion,
     shippingPostalCode: order.shippingPostalCode,
     shippingCountry: order.shippingCountry,
+    trackingCarrier: order.trackingCarrier,
+    trackingNumber: order.trackingNumber,
+    trackingUrl: order.trackingUrl,
     reservationExpiresAt: order.reservationExpiresAt,
     paidAt: order.paidAt,
     fulfilledAt: order.fulfilledAt,
@@ -483,11 +520,56 @@ function mapOrderRecord(order: IronSprueOrderRecord): IronSprueOrderWithItems {
   };
 }
 
+function normalizeIronSprueDiscountCode(value: string | null | undefined) {
+  return value?.trim().toUpperCase().replace(/\s+/g, '') || null;
+}
+
+async function resolveIronSprueDiscount(input: {
+  code?: string | null;
+  subtotalMinor: number;
+  userId: string | null;
+  email: string;
+  db: DatabaseClient;
+}): Promise<IronSprueResolvedDiscount | null> {
+  const code = normalizeIronSprueDiscountCode(input.code);
+  if (!code) return null;
+  const record = await input.db.ironSprueDiscountCode.findUnique({
+    where: { storeCode_code: { storeCode: IRON_SPRUE_STORE_CODE, code } },
+  });
+  if (!record || !record.enabled) throw new Error('Discount code is not valid.');
+  if (record.expiresAt && record.expiresAt.getTime() < Date.now()) throw new Error('Discount code has expired.');
+  if (record.minimumSpendMinor != null && input.subtotalMinor < record.minimumSpendMinor) {
+    throw new Error(`Discount code requires a basket subtotal of at least £${(record.minimumSpendMinor / 100).toFixed(2)}.`);
+  }
+  if (record.oneUsePerCustomer) {
+    const email = input.email.trim().toLowerCase();
+    const existing = await input.db.ironSprueDiscountRedemption.findFirst({
+      where: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        discountCodeId: record.id,
+        OR: [
+          ...(input.userId ? [{ userId: input.userId }] : []),
+          { email },
+        ],
+      },
+      select: { id: true },
+    });
+    if (existing) throw new Error('Discount code has already been used.');
+  }
+  const rawDiscount = record.discountType === 'PERCENT'
+    ? Math.floor((input.subtotalMinor * record.amount) / 100)
+    : record.amount;
+  const discountMinor = Math.min(Math.max(rawDiscount, 0), input.subtotalMinor);
+  if (discountMinor <= 0) throw new Error('Discount code does not apply to this basket.');
+  return { id: record.id, code: record.code, discountMinor };
+}
+
 export async function createIronSprueHostedCheckoutSession(input: {
   userId: string | null;
   cart: CartSummary & { cartId?: string | null };
   shippingAddress: CheckoutAddress;
   shippingMethodCode: ShippingMethodCode;
+  discountCode?: string | null;
   checkoutAttemptId?: string | null;
   environment?: CommerceEnvironment;
   db?: DatabaseClient;
@@ -498,9 +580,17 @@ export async function createIronSprueHostedCheckoutSession(input: {
   const subtotalMinor = input.cart.subtotalMinor;
   const shippingMethod = getShippingMethodByCode(input.shippingMethodCode, shippingAddress.country, subtotalMinor);
   if (!shippingMethod) throw new Error('Selected delivery method is not available for this address.');
+  const discount = await resolveIronSprueDiscount({
+    code: input.discountCode ?? null,
+    subtotalMinor,
+    userId: input.userId,
+    email: shippingAddress.email,
+    db,
+  });
   const shippingMinor = calculatePromotionalShippingMinor(shippingMethod, input.cart.items, shippingAddress.country, subtotalMinor);
   const taxMinor = calculateVatEstimateMinor(subtotalMinor);
-  const totalMinor = subtotalMinor + shippingMinor;
+  const discountMinor = discount?.discountMinor ?? 0;
+  const totalMinor = subtotalMinor + shippingMinor - discountMinor;
   const checkoutAttemptId = input.checkoutAttemptId?.trim() || randomUUID();
   const orderNumber = generateIronSprueOrderNumber();
   const config = getStoreStripeConfig({
@@ -533,6 +623,8 @@ export async function createIronSprueHostedCheckoutSession(input: {
         subtotalMinor,
         shippingMinor,
         taxMinor,
+        discountCode: discount?.code ?? null,
+        discountMinor,
         totalMinor,
         currency: CURRENCY,
         shippingMethodCode: shippingMethod.code,
@@ -578,6 +670,7 @@ export async function createIronSprueHostedCheckoutSession(input: {
       items: input.cart.items,
       shippingMethod,
       shippingMinor,
+      discount,
     });
     if (!session.url) throw new Error('Stripe did not return a Checkout URL.');
     await db.ironSprueOrder.update({
@@ -927,6 +1020,77 @@ export async function cancelIronSprueOrderForMerchant(input: {
   return updated ? mapOrderRecord(updated) : null;
 }
 
+export async function refundIronSprueOrderForMerchant(input: {
+  orderId: string;
+  amountMinor: number;
+  reason?: string | null;
+  actorId?: string | null;
+  idempotencyKey?: string | null;
+  environment?: CommerceEnvironment;
+}, db: DatabaseClient = getIronSprueCommercePrisma()) {
+  const orderId = input.orderId.trim();
+  const amountMinor = Math.max(0, Math.trunc(input.amountMinor));
+  if (!orderId) throw new Error('orderId is required.');
+  if (amountMinor <= 0) throw new Error('Refund amount must be greater than zero.');
+  const order = await db.ironSprueOrder.findUnique({ where: { id: orderId }, include: { items: true } });
+  if (!order || order.storeCode !== IRON_SPRUE_STORE_CODE) throw new Error('Iron Sprue order was not found.');
+  if (order.paymentStatus !== 'SUCCEEDED' && order.paymentStatus !== 'REFUNDED') {
+    throw new Error('Only paid Iron Sprue orders can be refunded.');
+  }
+  const alreadyRefunded = order.refundedMinor ?? 0;
+  const refundableMinor = Math.max(order.totalMinor - alreadyRefunded, 0);
+  if (amountMinor > refundableMinor) throw new Error('Refund amount exceeds the remaining refundable total.');
+
+  const config = getStoreStripeConfig({
+    store: IRON_SPRUE_STORE_CODE,
+    ...(input.environment ? { environment: input.environment } : {}),
+  });
+  let refundablePaymentIntentId = order.paymentIntentId;
+  if (!refundablePaymentIntentId && order.stripeCheckoutSessionId) {
+    try {
+      const session = await retrieveIronSprueStripeCheckoutSession(config.secretKey, order.stripeCheckoutSessionId);
+      refundablePaymentIntentId = paymentIntentId(session.payment_intent);
+      if (refundablePaymentIntentId) {
+        await db.ironSprueOrder.update({
+          where: { id: order.id },
+          data: { paymentIntentId: refundablePaymentIntentId },
+        });
+      }
+    } catch (error) {
+      if (!isMissingStripePaymentResourceError(error)) throw error;
+    }
+  }
+  if (!refundablePaymentIntentId) throw new Error('No refundable Stripe payment was found for this order.');
+
+  const refundBody = new URLSearchParams();
+  refundBody.set('payment_intent', refundablePaymentIntentId);
+  refundBody.set('amount', String(amountMinor));
+  refundBody.set('reason', 'requested_by_customer');
+  refundBody.set('metadata[store]', IRON_SPRUE_STORE_CODE);
+  refundBody.set('metadata[orderId]', order.id);
+  refundBody.set('metadata[orderNumber]', order.orderNumber);
+  const trimmedReason = input.reason?.trim();
+  if (trimmedReason) refundBody.set('metadata[refundReason]', trimmedReason.slice(0, 450));
+
+  const refund = await stripeRequest<StripeRefundResponse>(config.secretKey, 'refunds', refundBody, {
+    idempotencyKey: input.idempotencyKey?.trim() || `iron-sprue-order-refund-${order.id}-${alreadyRefunded}-${amountMinor}`,
+  });
+
+  const nextRefundedMinor = alreadyRefunded + amountMinor;
+  const updated = await db.ironSprueOrder.update({
+    where: { id: order.id },
+    data: {
+      refundedMinor: nextRefundedMinor,
+      refundedAt: new Date(),
+      paymentStatus: nextRefundedMinor >= order.totalMinor ? 'REFUNDED' : order.paymentStatus,
+      status: nextRefundedMinor >= order.totalMinor ? 'REFUNDED' : order.status,
+    },
+    include: { items: true },
+  });
+
+  return { order: mapOrderRecord(updated), refund };
+}
+
 export async function reconcileIronSprueReservedStock(db: DatabaseClient = getIronSprueCommercePrisma(), now = new Date()) {
   const [reservedRows, activeOrders] = await Promise.all([
     db.ironSprueAdminInventory.findMany({
@@ -1022,6 +1186,30 @@ export async function finalizePaidIronSprueCheckoutOrder(input: { orderId: strin
     }
     if (current.userId) {
       await tx.ironSprueCartItem.deleteMany({ where: { cart: { userId: current.userId } } });
+    }
+    if (current.discountCode && current.discountMinor > 0) {
+      const discountCode = await tx.ironSprueDiscountCode.findUnique({
+        where: { storeCode_code: { storeCode: IRON_SPRUE_STORE_CODE, code: current.discountCode } },
+        select: { id: true },
+      });
+      if (discountCode) {
+        await tx.ironSprueDiscountRedemption.upsert({
+          where: { discountCodeId_orderId: { discountCodeId: discountCode.id, orderId: current.id } },
+          create: {
+            storeCode: IRON_SPRUE_STORE_CODE,
+            discountCodeId: discountCode.id,
+            orderId: current.id,
+            userId: current.userId,
+            email: current.shippingEmail.toLowerCase(),
+            amountMinor: current.discountMinor,
+          },
+          update: {
+            userId: current.userId,
+            email: current.shippingEmail.toLowerCase(),
+            amountMinor: current.discountMinor,
+          },
+        });
+      }
     }
     return tx.ironSprueOrder.update({
       where: { id: input.orderId },

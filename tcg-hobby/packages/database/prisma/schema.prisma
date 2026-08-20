@@ -192,6 +192,7 @@ model User {
   marketingSubscribers MarketingSubscriber[]
   marketingCampaigns MarketingCampaign[]
   securityTokens UserSecurityToken[]
+  ironSprueWishlistItems IronSprueWishlistItem[]
   roleChangesReceived AdminRoleChange[] @relation("RoleChangesForUser")
   roleChangesMade AdminRoleChange[] @relation("RoleChangesByUser")
 }
@@ -1403,6 +1404,8 @@ model IronSprueAdminProduct {
   auditLogs             IronSprueAdminAuditLog[]
   cartItems             IronSprueCartItem[]
   orderItems            IronSprueOrderItem[]
+  returnLines           IronSprueOrderReturnLine[]
+  wishlistItems         IronSprueWishlistItem[]
 
   @@unique([storeCode, sku])
   @@unique([storeCode, slug])
@@ -1414,6 +1417,20 @@ model IronSprueAdminProduct {
   @@index([storeCode, featured])
   @@index([storeCode, newArrival])
   @@index([storeCode, specialOffer])
+}
+
+model IronSprueWishlistItem {
+  id        String   @id @default(cuid())
+  storeCode String   @default("IRON_SPRUE")
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   IronSprueAdminProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([storeCode, userId, productId])
+  @@index([storeCode, userId, createdAt])
+  @@index([storeCode, productId])
 }
 
 model IronSprueCart {
@@ -1465,6 +1482,8 @@ model IronSprueOrder {
   shippingMethodCode      String
   shippingMethodName      String
   shippingMethodAmountMinor Int
+  discountCode            String?
+  discountMinor           Int      @default(0)
   shippingFullName        String
   shippingEmail           String
   shippingLine1           String
@@ -1481,14 +1500,95 @@ model IronSprueOrder {
   trackingNumber          String?
   trackingUrl             String?
   cancelledAt             DateTime?
+  refundedMinor           Int      @default(0)
+  refundedAt              DateTime?
+  internalNotes           String?
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   items                   IronSprueOrderItem[]
   webhookEvents           IronSprueStripeWebhookEvent[]
   transactionalEmailDeliveries IronSprueTransactionalEmailDelivery[]
+  returns                 IronSprueOrderReturn[]
+  discountRedemptions     IronSprueDiscountRedemption[]
 
   @@index([storeCode, paymentStatus, createdAt])
   @@index([storeCode, userId, createdAt])
+}
+
+model IronSprueDiscountCode {
+  id                  String   @id @default(cuid())
+  storeCode           String   @default("IRON_SPRUE")
+  code                String
+  enabled             Boolean  @default(true)
+  discountType        String
+  amount              Int
+  expiresAt           DateTime?
+  minimumSpendMinor   Int?
+  oneUsePerCustomer   Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  redemptions         IronSprueDiscountRedemption[]
+
+  @@unique([storeCode, code])
+  @@index([storeCode, enabled, expiresAt])
+}
+
+model IronSprueDiscountRedemption {
+  id              String   @id @default(cuid())
+  storeCode       String   @default("IRON_SPRUE")
+  discountCodeId  String
+  orderId         String
+  userId          String?
+  email           String?
+  amountMinor     Int
+  createdAt       DateTime @default(now())
+  discountCode    IronSprueDiscountCode @relation(fields: [discountCodeId], references: [id], onDelete: Restrict)
+  order           IronSprueOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([storeCode, userId, createdAt])
+  @@index([storeCode, email, createdAt])
+  @@index([discountCodeId, createdAt])
+  @@unique([discountCodeId, orderId])
+}
+
+model IronSprueOrderReturn {
+  id                String   @id @default(cuid())
+  storeCode         String   @default("IRON_SPRUE")
+  orderId           String
+  status            String   @default("REQUESTED")
+  reference         String?
+  notes             String?
+  condition         String?
+  restock           Boolean  @default(false)
+  refundAmountMinor Int      @default(0)
+  refundStatus      String   @default("NOT_REQUESTED")
+  stripeRefundId    String?
+  requestedAt       DateTime @default(now())
+  receivedAt        DateTime?
+  refundedAt        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  order             IronSprueOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  lines             IronSprueOrderReturnLine[]
+
+  @@index([storeCode, status, createdAt])
+  @@index([orderId, createdAt])
+}
+
+model IronSprueOrderReturnLine {
+  id              String   @id @default(cuid())
+  returnId        String
+  orderItemId     String
+  productId       String
+  quantity        Int
+  restock         Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  return          IronSprueOrderReturn @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  orderItem       IronSprueOrderItem @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  product         IronSprueAdminProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([returnId])
+  @@index([productId])
 }
 
 model IronSprueTransactionalEmailDelivery {
@@ -1524,6 +1624,7 @@ model IronSprueOrderItem {
   createdAt       DateTime              @default(now())
   order           IronSprueOrder        @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product         IronSprueAdminProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+  returnLines     IronSprueOrderReturnLine[]
 
   @@index([orderId])
   @@index([productId])

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { PublicOrderDetail } from '@tcg-hobby/types';
+import { trackIronSprueEcommerceEvent } from '../lib/analytics';
 import { clearIronSprueBasketAfterPaidCheckout } from './basket-client';
 
 function formatPrice(minor: number) {
@@ -17,6 +18,7 @@ export function CheckoutSuccessClient({
 }) {
   const [order, setOrder] = useState<PublicOrderDetail | null>(initialOrder);
   const [hasClearedBasket, setHasClearedBasket] = useState(false);
+  const [hasTrackedPurchase, setHasTrackedPurchase] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +54,25 @@ export function CheckoutSuccessClient({
     }
   }, [hasClearedBasket, order?.paymentStatus]);
 
+  useEffect(() => {
+    if (!order || order.paymentStatus !== 'SUCCEEDED' || hasTrackedPurchase) return;
+    trackIronSprueEcommerceEvent('purchase', {
+      transaction_id: order.orderNumber,
+      currency: order.currency,
+      value: order.totalMinor / 100,
+      tax: order.taxMinor / 100,
+      shipping: order.shippingMinor / 100,
+      coupon: order.discountCode ?? undefined,
+      items: order.items.map((item) => ({
+        item_id: item.productSku,
+        item_name: item.productName,
+        quantity: item.quantity,
+        price: item.unitPriceMinor / 100,
+      })),
+    });
+    setHasTrackedPurchase(true);
+  }, [hasTrackedPurchase, order]);
+
   return (
     <section className="section-block checkout-result-page">
       <p className="eyebrow">Iron Sprue checkout</p>
@@ -64,6 +85,7 @@ export function CheckoutSuccessClient({
             <div><dt>Fulfilment</dt><dd>{order.fulfilmentStatus}</dd></div>
             <div><dt>Subtotal</dt><dd>{formatPrice(order.subtotalMinor)}</dd></div>
             <div><dt>Shipping</dt><dd>{formatPrice(order.shippingMinor)}</dd></div>
+            {(order.discountMinor ?? 0) > 0 ? <div><dt>Discount{order.discountCode ? ` (${order.discountCode})` : ''}</dt><dd>-{formatPrice(order.discountMinor ?? 0)}</dd></div> : null}
             <div><dt>VAT estimate</dt><dd>{formatPrice(order.taxMinor)}</dd></div>
             <div><dt>Total</dt><dd>{formatPrice(order.totalMinor)}</dd></div>
             <div><dt>Delivery</dt><dd>{order.shippingMethodName}</dd></div>

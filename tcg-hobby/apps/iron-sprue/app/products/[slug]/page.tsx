@@ -4,6 +4,7 @@ import { AddToBasketButton } from '../../../components/basket-client';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
 import { type IronSprueProduct } from '../../../lib/catalogue';
 import { featuredProducts, formatPrice, productAvailability, productGalleryImages, productSellableQuantity } from '../../../lib/storefront';
+import { addIronSprueWishlistItemAction } from '../../../lib/wishlist-actions';
 
 const products = launchProducts as IronSprueProduct[];
 
@@ -86,6 +87,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 imageAlt: product.name,
               }}
             />
+            <form action={addIronSprueWishlistItemAction}>
+              <input type="hidden" name="sku" value={product.sku} />
+              <input type="hidden" name="slug" value={product.slug} />
+              <button type="submit" className="button secondary">Save to wishlist</button>
+            </form>
           </div>
           <div className="service-summary">
             <p><strong>Delivery</strong> UK delivery options shown before checkout.</p>

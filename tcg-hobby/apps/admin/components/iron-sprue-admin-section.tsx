@@ -3,6 +3,7 @@ import {
   getIronSprueAdminReferenceData,
   getIronSprueAdminStorefrontControls,
   getIronSprueAdminWorkspaceCards,
+  IRON_SPRUE_COURIERS,
   listIronSprueAdminContentReviews,
   listIronSprueAdminInventory,
   listIronSprueAdminMediaAssets,
@@ -13,7 +14,13 @@ import { Button, Card, CardContent, Container, PageHeader, Section, StatusBadge 
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import {
+  adjustIronSprueStockAction,
   cancelIronSprueOrderAction,
+  processIronSprueReturnAction,
+  receiveIronSprueStockAction,
+  resendIronSprueOrderEmailAction,
+  saveIronSprueOrderNotesAction,
+  saveIronSprueDiscountCodeAction,
   saveIronSprueHeroAction,
   saveIronSprueFeaturedProductPlacementAction,
   saveIronSprueHomepagePlacementAction,
@@ -386,9 +393,9 @@ async function InventorySection() {
   return (
     <Card>
       <CardContent className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-left text-sm">
+        <table className="w-full min-w-[1200px] text-left text-sm">
           <thead className="text-xs uppercase tracking-wide text-neutral-500">
-            <tr><th className="p-2">SKU</th><th className="p-2">Product</th><th className="p-2">Expected</th><th className="p-2">Received</th><th className="p-2">Damaged</th><th className="p-2">Missing</th><th className="p-2">On hand</th><th className="p-2">Reserved</th><th className="p-2">Available to sell</th><th className="p-2">Location</th></tr>
+            <tr><th className="p-2">SKU</th><th className="p-2">Product</th><th className="p-2">Expected</th><th className="p-2">Received</th><th className="p-2">Damaged</th><th className="p-2">Missing</th><th className="p-2">On hand</th><th className="p-2">Reserved</th><th className="p-2">Available to sell</th><th className="p-2">Location</th><th className="p-2">Operations</th></tr>
           </thead>
           <tbody>
             {rows.map((row) => (
@@ -403,6 +410,40 @@ async function InventorySection() {
                 <td className="p-2">{row.reservedStock}</td>
                 <td className="p-2 font-semibold">{Math.max(row.availableStock - row.reservedStock, 0)}</td>
                 <td className="p-2">{row.locationCode}</td>
+                <td className="min-w-[360px] p-2">
+                  <details className="rounded-md border border-surface-line bg-black/20 p-2">
+                    <summary className="cursor-pointer font-semibold text-accent">Stock controls</summary>
+                    <div className="mt-3 grid gap-3">
+                      <form action={receiveIronSprueStockAction} className="grid gap-2 rounded-md border border-surface-line p-2">
+                        <input type="hidden" name="productId" value={row.productId} />
+                        <p className="font-semibold text-neutral-200">Receive stock</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          <input name="receivedQuantity" type="number" min="0" className={fieldClass} placeholder="Received" />
+                          <input name="damagedQuantity" type="number" min="0" className={fieldClass} placeholder="Damaged" />
+                          <input name="missingQuantity" type="number" min="0" className={fieldClass} placeholder="Missing" />
+                        </div>
+                        <input name="batchReference" className={fieldClass} placeholder="Batch/reference" />
+                        <input name="reason" className={fieldClass} placeholder="Reason" defaultValue="Stock received" />
+                        <Button type="submit" size="sm" variant="outline">Save receipt</Button>
+                      </form>
+                      <form action={adjustIronSprueStockAction} className="grid gap-2 rounded-md border border-surface-line p-2">
+                        <input type="hidden" name="productId" value={row.productId} />
+                        <p className="font-semibold text-neutral-200">Manual adjustment</p>
+                        <div className="grid grid-cols-[1fr_1fr] gap-2">
+                          <input name="quantityDelta" type="number" className={fieldClass} placeholder="+/- quantity" />
+                          <select name="movementType" className={fieldClass} defaultValue="STOCK_CORRECTION">
+                            <option value="STOCK_CORRECTION">Correction</option>
+                            <option value="DAMAGE_WRITE_OFF">Damage/write-off</option>
+                            <option value="FOUND_STOCK">Found stock</option>
+                          </select>
+                        </div>
+                        <input name="reason" className={fieldClass} placeholder="Required adjustment reason" />
+                        <input name="batchReference" className={fieldClass} placeholder="Reference (optional)" />
+                        <Button type="submit" size="sm" variant="outline">Apply adjustment</Button>
+                      </form>
+                    </div>
+                  </details>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -992,8 +1033,34 @@ function SpecialOfferForm({
   );
 }
 
+function DiscountCodeForm({ record }: { record?: Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['discountCodes'][number] }) {
+  const fixed = record?.discountType === 'FIXED';
+  return (
+    <form action={saveIronSprueDiscountCodeAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-2">
+      <input type="hidden" name="id" value={record?.id ?? ''} />
+      <Field label="Code"><input name="code" defaultValue={record?.code ?? ''} required className={fieldClass} placeholder="WELCOME5" /></Field>
+      <Field label="Discount type">
+        <select name="discountType" defaultValue={record?.discountType ?? 'PERCENT'} className={fieldClass}>
+          <option value="PERCENT">Percentage</option>
+          <option value="FIXED">Fixed amount</option>
+        </select>
+      </Field>
+      <Field label={fixed ? 'Amount (£)' : 'Amount (%)'}>
+        <input name="amount" type="number" min="0" step={fixed ? '0.01' : '1'} defaultValue={record ? (fixed ? record.amount / 100 : record.amount) : ''} className={fieldClass} />
+      </Field>
+      <Field label="Minimum spend (£)">
+        <input name="minimumSpendMinor" type="number" min="0" step="0.01" defaultValue={record?.minimumSpendMinor != null ? record.minimumSpendMinor / 100 : ''} className={fieldClass} />
+      </Field>
+      <Field label="Expires"><input name="expiresAt" type="date" defaultValue={record?.expiresAt ? new Date(record.expiresAt).toISOString().slice(0, 10) : ''} className={fieldClass} /></Field>
+      <label className="flex items-center gap-2 text-sm"><input name="enabled" type="checkbox" defaultChecked={record?.enabled ?? true} /> Enabled</label>
+      <label className="flex items-center gap-2 text-sm"><input name="oneUsePerCustomer" type="checkbox" defaultChecked={record?.oneUsePerCustomer ?? false} /> One use per customer/email</label>
+      <Button type="submit">{record ? 'Save discount code' : 'Create discount code'}</Button>
+    </form>
+  );
+}
+
 async function StorefrontSection({ section }: { section: string }) {
-  const { homepagePlacements, heroes, specialOffers, auditLog } = await getIronSprueAdminStorefrontControls();
+  const { homepagePlacements, heroes, specialOffers, discountCodes, auditLog } = await getIronSprueAdminStorefrontControls();
   const { brands } = await getIronSprueAdminReferenceData();
   const productOptions = ['homepage', 'heroes', 'special-offers'].includes(section) ? (await listIronSprueAdminProducts({ pageSize: 100 })).products : [];
   const heroLibrary = section === 'heroes'
@@ -1048,6 +1115,16 @@ async function StorefrontSection({ section }: { section: string }) {
   if (section === 'special-offers') {
     return (
       <div className="space-y-4">
+        <Card>
+          <CardContent className="space-y-4">
+            <div>
+              <h2 className="font-bold">Discount codes</h2>
+              <p className="mt-1 text-sm text-neutral-400">Simple server-validated promotional codes for Iron Sprue launch offers.</p>
+            </div>
+            <DiscountCodeForm />
+            {discountCodes.map((record) => <DiscountCodeForm key={record.id} record={record} />)}
+          </CardContent>
+        </Card>
         <SpecialOfferForm products={productOptions} />
         {specialOffers.map((record) => <SpecialOfferForm key={record.id} record={record} products={productOptions} />)}
       </div>
@@ -1123,8 +1200,8 @@ function orderMatchesView(order: IronSprueAdminOrder, view: OrderView) {
   if (view === 'all') return true;
   if (view === 'action-required') return isPaidOrder(order) && ['PENDING', 'PICKING', 'PACKED'].includes(order.fulfilmentStatus);
   if (view === 'processing') return isPaidOrder(order) && ['PICKING', 'PACKED'].includes(order.fulfilmentStatus);
-  if (view === 'dispatched') return isPaidOrder(order) && order.fulfilmentStatus === 'SHIPPED';
-  if (view === 'completed') return isPaidOrder(order) && order.status === 'COMPLETED';
+  if (view === 'dispatched') return isPaidOrder(order) && ['SHIPPED', 'DELIVERED'].includes(order.fulfilmentStatus);
+  if (view === 'completed') return isPaidOrder(order) && (order.status === 'COMPLETED' || order.fulfilmentStatus === 'COMPLETED');
   if (view === 'unpaid') return ['REQUIRES_PAYMENT', 'PROCESSING'].includes(order.paymentStatus) && !order.cancelledAt;
   if (view === 'cancelled') return order.paymentStatus === 'CANCELED' || ['CANCELLED', 'CANCELED'].includes(order.status) || order.fulfilmentStatus === 'CANCELLED' || Boolean(order.cancelledAt);
   if (view === 'refunded') return order.paymentStatus === 'REFUNDED' || order.status === 'REFUNDED';
@@ -1155,12 +1232,21 @@ function cancellationActionLabel(order: IronSprueAdminOrder) {
 }
 
 async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) {
-  const orders = await listIronSprueAdminOrders();
+  const orderSearch = paramValue(searchParams?.orderSearch)?.trim() ?? '';
+  const orders = await listIronSprueAdminOrders({ search: orderSearch });
   if (!orders.length) {
-    return <EmptyNote>No Iron Sprue orders have been placed yet.</EmptyNote>;
+    return (
+      <div className="space-y-3">
+        <form className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-[1fr_auto]">
+          <input name="orderSearch" className={fieldClass} defaultValue={orderSearch} placeholder="Search order number, customer, email, SKU or product" />
+          <Button type="submit">Search</Button>
+        </form>
+        <EmptyNote>{orderSearch ? 'No Iron Sprue orders match this search.' : 'No Iron Sprue orders have been placed yet.'}</EmptyNote>
+      </div>
+    );
   }
 
-  const fulfilmentStates = ['PENDING', 'PICKING', 'PACKED', 'SHIPPED'];
+  const fulfilmentStates = ['PENDING', 'PICKING', 'PACKED', 'SHIPPED', 'DELIVERED', 'COMPLETED'];
   const selectedView = orderViews.some((view) => view.key === paramValue(searchParams?.orderView))
     ? paramValue(searchParams?.orderView) as OrderView
     : 'action-required';
@@ -1169,11 +1255,16 @@ async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) 
 
   return (
     <div className="space-y-4">
+      <form className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-[1fr_auto]">
+        <input type="hidden" name="orderView" value={selectedView} />
+        <input name="orderSearch" className={fieldClass} defaultValue={orderSearch} placeholder="Search order number, customer, email, SKU or product" />
+        <Button type="submit">Search orders</Button>
+      </form>
       <div className="flex flex-wrap gap-2">
         {orderViews.map((view) => (
           <a
             key={view.key}
-            href={`/iron-sprue-admin/orders?orderView=${view.key}`}
+            href={`/iron-sprue-admin/orders?orderView=${view.key}${orderSearch ? `&orderSearch=${encodeURIComponent(orderSearch)}` : ''}`}
             className={`rounded-md border px-3 py-2 text-sm font-bold ${selectedView === view.key ? 'border-accent bg-accent/20 text-accent' : 'border-surface-line text-neutral-300 hover:border-accent'}`}
           >
             {view.label} ({counts[view.key]})
@@ -1241,6 +1332,59 @@ async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) 
                   <p className="mt-2 text-neutral-400">{order.shippingMethodName}</p>
                 </div>
 
+                <form action={saveIronSprueOrderNotesAction} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-3 text-sm">
+                  <input type="hidden" name="orderId" value={order.id} />
+                  <h3 className="font-bold text-neutral-100">Internal notes</h3>
+                  <textarea name="internalNotes" className={fieldClass} rows={3} defaultValue={order.internalNotes ?? ''} placeholder="Operational notes visible to Admin only." />
+                  <Button type="submit" size="sm" variant="outline">Save notes</Button>
+                </form>
+
+                <div className="rounded-md border border-surface-line bg-black/30 p-3 text-sm">
+                  <h3 className="font-bold text-neutral-100">Transactional emails</h3>
+                  <p className="mt-1 text-neutral-400">Resend or verify customer transactional emails without using the email provider dashboard.</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <form action={resendIronSprueOrderEmailAction}>
+                      <input type="hidden" name="orderId" value={order.id} />
+                      <input type="hidden" name="purpose" value="confirmation" />
+                      <Button type="submit" size="sm" variant="outline">Confirmation email</Button>
+                    </form>
+                    <form action={resendIronSprueOrderEmailAction}>
+                      <input type="hidden" name="orderId" value={order.id} />
+                      <input type="hidden" name="purpose" value="dispatch" />
+                      <Button type="submit" size="sm" variant="outline">Dispatch email</Button>
+                    </form>
+                    <form action={resendIronSprueOrderEmailAction}>
+                      <input type="hidden" name="orderId" value={order.id} />
+                      <input type="hidden" name="purpose" value="cancellation" />
+                      <Button type="submit" size="sm" variant="outline">Cancellation/refund email</Button>
+                    </form>
+                  </div>
+                </div>
+
+                {order.returns.length ? (
+                  <div className="rounded-md border border-surface-line bg-black/30 p-3 text-sm">
+                    <h3 className="font-bold text-neutral-100">Return / refund history</h3>
+                    <div className="mt-2 space-y-2">
+                      {order.returns.map((returnRecord) => (
+                        <div key={returnRecord.id} className="rounded-md border border-surface-line p-2 text-neutral-400">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <StatePill>{returnRecord.status}</StatePill>
+                            <StatePill>{returnRecord.refundStatus}</StatePill>
+                            <span>{money(returnRecord.refundAmountMinor, order.currency)}</span>
+                          </div>
+                          <p className="mt-1">Reference: {returnRecord.reference ?? 'Not set'}</p>
+                          <p>Received: {date(returnRecord.receivedAt)}</p>
+                          <ul className="mt-1 list-disc pl-5">
+                            {returnRecord.lines.map((line) => (
+                              <li key={line.id}>{line.orderItem.productSku} x {line.quantity}{line.restock ? ' - restocked' : ' - not restocked'}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
                 {inactiveReason ? (
                   <div className="rounded-md border border-surface-line bg-black/30 p-3 text-sm text-neutral-400">
                     <h3 className="font-bold text-neutral-100">Fulfilment locked</h3>
@@ -1256,12 +1400,16 @@ async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) 
                     </Field>
                     <div className="grid gap-3 md:grid-cols-3">
                       <Field label="Courier">
-                        <input
+                        <select
                           name="trackingCarrier"
                           className={fieldClass}
                           defaultValue={order.trackingCarrier ?? ''}
-                          placeholder="Royal Mail, Evri..."
-                        />
+                        >
+                          <option value="">Select courier</option>
+                          {IRON_SPRUE_COURIERS.map((courier) => (
+                            <option key={courier.code} value={courier.code}>{courier.label}</option>
+                          ))}
+                        </select>
                       </Field>
                       <Field label="Tracking number">
                         <input
@@ -1280,7 +1428,7 @@ async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) 
                         />
                       </Field>
                     </div>
-                    <p className="text-xs text-neutral-500">Courier and tracking number are required when marking an order shipped.</p>
+                    <p className="text-xs text-neutral-500">Courier and tracking number are required when marking an order shipped. Royal Mail and Evri tracking links are generated automatically; custom courier can use an override URL.</p>
                     <Button type="submit" variant="outline">Save fulfilment</Button>
                   </form>
                 )}
@@ -1310,6 +1458,41 @@ async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) 
                       <span>I confirm this order should be cancelled.</span>
                     </label>
                     <Button type="submit" variant={order.paymentStatus === 'SUCCEEDED' ? 'primary' : 'outline'}>{cancellationActionLabel(order)}</Button>
+                  </form>
+                ) : null}
+
+                {(order.paymentStatus === 'SUCCEEDED' || order.paymentStatus === 'REFUNDED') && ['SHIPPED', 'COMPLETED'].includes(order.fulfilmentStatus) ? (
+                  <form action={processIronSprueReturnAction} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-3 text-sm">
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <h3 className="font-bold text-neutral-100">Return / refund</h3>
+                    <p className="text-neutral-400">Use after dispatch/delivery when items are returned. Restock only resellable units.</p>
+                    <Field label="Return reference">
+                      <input name="reference" className={fieldClass} placeholder="ReturnRev/manual reference" />
+                    </Field>
+                    <Field label="Condition / disposition">
+                      <input name="condition" className={fieldClass} placeholder="Resellable, damaged, opened..." />
+                    </Field>
+                    <div className="space-y-2">
+                      {order.items.map((item) => (
+                        <div key={item.id} className="grid gap-2 rounded-md border border-surface-line p-2">
+                          <p className="font-semibold">{item.productSku} - {item.productName}</p>
+                          <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+                            <input name={`returnQuantity:${item.id}`} type="number" min="0" max={item.quantity} className={fieldClass} placeholder={`Qty returned, max ${item.quantity}`} />
+                            <label className="flex items-center gap-2 text-neutral-300">
+                              <input type="checkbox" name={`returnRestock:${item.id}`} />
+                              Restock
+                            </label>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <Field label="Refund amount">
+                      <input name="refundAmount" type="number" min="0" step="0.01" className={fieldClass} placeholder="0.00" />
+                    </Field>
+                    <Field label="Notes">
+                      <textarea name="notes" className={fieldClass} rows={3} placeholder="Customer request, damage notes, restock decision..." />
+                    </Field>
+                    <Button type="submit" variant="primary">Process return/refund</Button>
                   </form>
                 ) : null}
               </div>

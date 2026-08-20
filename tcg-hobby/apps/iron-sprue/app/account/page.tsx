@@ -1,23 +1,29 @@
-export default function AccountPage() {
+import { redirect } from 'next/navigation';
+import { IronSprueLogoutForm, IronSprueProfileForm } from '../../components/account-forms';
+import { getCurrentIronSprueCustomerSession } from '../../lib/auth';
+import { getCurrentIronSprueOrders } from '../../lib/orders';
+
+export default async function AccountPage() {
+  const session = await getCurrentIronSprueCustomerSession();
+  if (!session) redirect('/login?next=/account');
+  const orders = await getCurrentIronSprueOrders();
   return (
     <section className="section-block auth-page">
       <div className="section-head">
         <p className="eyebrow">Account</p>
         <h1>Iron Sprue account</h1>
-        <p className="lead">Customer account actions will use the shared commerce API once transactional writes are connected.</p>
+        <p className="lead">Manage your profile, review orders and keep track of your workshop bench list.</p>
       </div>
-      <form className="auth-panel">
-        <label htmlFor="email">Email address</label>
-        <input id="email" type="email" placeholder="you@example.com" />
-        <label htmlFor="password">Password</label>
-        <input id="password" type="password" />
-        <button type="button" disabled>Login coming soon</button>
-        <a className="wishlist-icon-link" href="/wishlist" aria-label="View wishlist">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 20s-7-4.4-9.3-8.6C1 8.2 2.7 5 6.1 5c2 0 3.4 1.1 4.1 2.2C10.9 6.1 12.3 5 14.3 5c3.4 0 5.1 3.2 3.4 6.4C19 15.6 12 20 12 20Z" />
-          </svg>
-        </a>
-      </form>
+      <div className="account-grid">
+        <IronSprueProfileForm name={session.user.name} email={session.user.email} />
+        <div className="auth-panel">
+          <h2>Orders</h2>
+          <p>{orders.length ? `${orders.length} order${orders.length === 1 ? '' : 's'} linked to this account.` : 'No account orders yet.'}</p>
+          <a className="button" href="/account/orders">View order history</a>
+          <a className="button secondary" href="/wishlist">View wishlist</a>
+          <IronSprueLogoutForm />
+        </div>
+      </div>
     </section>
   );
 }

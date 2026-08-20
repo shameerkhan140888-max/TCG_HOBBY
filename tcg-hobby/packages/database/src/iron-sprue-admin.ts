@@ -1,6 +1,7 @@
 import type { IronSprueAdminProduct, Prisma, UserRole } from '@prisma/client';
 import { slugify } from '@tcg-hobby/utils';
 import { getIronSprueAdminPrisma } from './client';
+import { refundIronSprueOrderForMerchant } from './iron-sprue-commerce';
 
 export const IRON_SPRUE_STORE_CODE = 'IRON_SPRUE' as const;
 
@@ -81,6 +82,39 @@ export type IronSprueFulfilmentTrackingInput = {
   trackingNumber?: string | null;
   trackingUrl?: string | null;
 };
+
+export const IRON_SPRUE_COURIERS = [
+  {
+    code: 'ROYAL_MAIL',
+    label: 'Royal Mail',
+    trackingUrl: (trackingNumber: string) => `https://www.royalmail.com/track-your-item#/tracking-results/${encodeURIComponent(trackingNumber)}`,
+  },
+  {
+    code: 'EVRI',
+    label: 'Evri',
+    trackingUrl: (trackingNumber: string) => `https://www.evri.com/track/parcel/${encodeURIComponent(trackingNumber)}`,
+  },
+  {
+    code: 'CUSTOM',
+    label: 'Custom courier',
+    trackingUrl: (_trackingNumber: string) => null,
+  },
+] as const;
+
+export type IronSprueCourierCode = (typeof IRON_SPRUE_COURIERS)[number]['code'];
+
+export function getIronSprueCourier(code: string | null | undefined) {
+  return IRON_SPRUE_COURIERS.find((courier) => courier.code === code) ?? null;
+}
+
+export function buildIronSprueTrackingUrl(courierCode: string | null | undefined, trackingNumber: string | null | undefined, customUrl?: string | null) {
+  const tracking = cleanTrackingValue(trackingNumber);
+  if (!tracking) return null;
+  const custom = normalizeTrackingUrl(customUrl);
+  if (custom) return custom;
+  const courier = getIronSprueCourier(courierCode);
+  return courier?.trackingUrl(tracking) ?? null;
+}
 
 function isIronSprueAdminDbClient(value: unknown): value is IronSprueAdminDbClient {
   return Boolean(value && typeof value === 'object' && 'ironSprueOrder' in value);
@@ -641,6 +675,58 @@ export async function receiveIronSprueStock(
   });
 }
 
+export async function adjustIronSprueStock(
+  productId: string,
+  input: { quantityDelta: number; movementType?: string | null; reason?: string | null; batchReference?: string | null },
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const quantityDelta = Math.trunc(input.quantityDelta);
+  if (!quantityDelta) throw new Error('Stock adjustment quantity cannot be zero.');
+  const movementType = cleanNullable(input.movementType) ?? (quantityDelta > 0 ? 'STOCK_CORRECTION_IN' : 'STOCK_CORRECTION_OUT');
+  if (!cleanNullable(input.reason)) throw new Error('Stock adjustment reason is required.');
+  const inventory = await client.ironSprueAdminInventory.findFirst({
+    where: { productId, storeCode: IRON_SPRUE_STORE_CODE },
+  });
+  if (!inventory) throw new Error('Iron Sprue inventory record not found.');
+  const nextAvailable = inventory.availableStock + quantityDelta;
+  if (nextAvailable < 0) throw new Error('Stock adjustment cannot reduce available stock below zero.');
+
+  return client.$transaction(async (tx) => {
+    const updated = await tx.ironSprueAdminInventory.update({
+      where: { id: inventory.id },
+      data: { availableStock: nextAvailable },
+    });
+    await tx.ironSprueAdminStockMovement.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        productId,
+        movementType,
+        quantity: quantityDelta,
+        beforeQuantity: inventory.availableStock,
+        afterQuantity: nextAvailable,
+        reason: cleanNullable(input.reason)!,
+        batchReference: cleanNullable(input.batchReference),
+        actorId: actor.id,
+      },
+    });
+    await tx.ironSprueAdminAuditLog.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        actorId: actor.id,
+        action: 'inventory.stock_adjustment',
+        entityType: 'inventory',
+        entityId: inventory.id,
+        productId,
+        summary: `Adjusted Iron Sprue stock by ${quantityDelta}.`,
+        before: { availableStock: inventory.availableStock },
+        after: { availableStock: nextAvailable, movementType, reason: cleanNullable(input.reason) },
+      },
+    });
+    return updated;
+  });
+}
+
 export function assertIronSpruePrimaryMediaRole(role: string) {
   if (role !== 'catalogue-primary') {
     throw new Error('Only approved Image 2 catalogue-primary media can become the storefront primary image.');
@@ -755,16 +841,203 @@ export async function listIronSprueAdminInventory(client = getIronSprueAdminPris
   });
 }
 
-export async function listIronSprueAdminOrders(client = getIronSprueAdminPrisma()) {
+export async function listIronSprueAdminOrders(filters: { search?: string } = {}, client = getIronSprueAdminPrisma()) {
+  const search = cleanNullable(filters.search);
   return client.ironSprueOrder.findMany({
-    where: { storeCode: IRON_SPRUE_STORE_CODE },
+    where: {
+      storeCode: IRON_SPRUE_STORE_CODE,
+      ...(search
+        ? {
+          OR: [
+            { orderNumber: { contains: search, mode: 'insensitive' } },
+            { shippingEmail: { contains: search, mode: 'insensitive' } },
+            { shippingFullName: { contains: search, mode: 'insensitive' } },
+            { items: { some: { OR: [
+              { productSku: { contains: search, mode: 'insensitive' } },
+              { productName: { contains: search, mode: 'insensitive' } },
+            ] } } },
+          ],
+        }
+        : {}),
+    },
     orderBy: { createdAt: 'desc' },
     take: 100,
-    include: { items: { orderBy: { createdAt: 'asc' } } },
+    include: {
+      items: { orderBy: { createdAt: 'asc' } },
+      returns: {
+        orderBy: { createdAt: 'desc' },
+        include: { lines: { include: { orderItem: true } } },
+      },
+    },
   });
 }
 
-const ironSprueFulfilmentStates = ['PENDING', 'PICKING', 'PACKED', 'SHIPPED', 'CANCELLED'] as const;
+export async function updateIronSprueAdminOrderNotes(
+  orderId: string,
+  notes: string,
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const order = await client.ironSprueOrder.findFirst({ where: { id: orderId, storeCode: IRON_SPRUE_STORE_CODE } });
+  if (!order) throw new Error('Iron Sprue order not found.');
+  const nextNotes = cleanNullable(notes);
+  return client.$transaction(async (tx) => {
+    const updated = await tx.ironSprueOrder.update({ where: { id: order.id }, data: { internalNotes: nextNotes } });
+    await tx.ironSprueAdminAuditLog.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        actorId: actor.id,
+        action: 'order.internal_notes.update',
+        entityType: 'order',
+        entityId: order.id,
+        summary: `Updated internal notes for Iron Sprue order ${order.orderNumber}.`,
+        before: { internalNotes: order.internalNotes },
+        after: { internalNotes: nextNotes },
+      },
+    });
+    return updated;
+  });
+}
+
+export type IronSprueOrderReturnLineInput = {
+  orderItemId: string;
+  quantity: number;
+  restock?: boolean;
+};
+
+export async function processIronSprueOrderReturn(
+  input: {
+    orderId: string;
+    reference?: string | null;
+    notes?: string | null;
+    condition?: string | null;
+    refundAmountMinor?: number | null;
+    lines: IronSprueOrderReturnLineInput[];
+    environment?: 'test' | 'live';
+  },
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const order = await client.ironSprueOrder.findFirst({
+    where: { id: input.orderId, storeCode: IRON_SPRUE_STORE_CODE },
+    include: { items: true, returns: { include: { lines: true } } },
+  });
+  if (!order) throw new Error('Iron Sprue order not found.');
+  if (order.paymentStatus !== 'SUCCEEDED' && order.paymentStatus !== 'REFUNDED') {
+    throw new Error('Only paid Iron Sprue orders can be returned/refunded.');
+  }
+
+  const quantitiesByItem = new Map<string, { quantity: number; restock: boolean }>();
+  for (const line of input.lines) {
+    const quantity = Math.trunc(line.quantity);
+    if (quantity <= 0) continue;
+    const existing = quantitiesByItem.get(line.orderItemId);
+    quantitiesByItem.set(line.orderItemId, {
+      quantity: (existing?.quantity ?? 0) + quantity,
+      restock: Boolean(line.restock || existing?.restock),
+    });
+  }
+  if (!quantitiesByItem.size) throw new Error('Choose at least one returned item quantity.');
+
+  const previouslyReturnedByItem = new Map<string, number>();
+  for (const returnRecord of order.returns) {
+    for (const line of returnRecord.lines) {
+      previouslyReturnedByItem.set(line.orderItemId, (previouslyReturnedByItem.get(line.orderItemId) ?? 0) + line.quantity);
+    }
+  }
+
+  const selectedLines = [...quantitiesByItem.entries()].map(([orderItemId, line]) => {
+    const orderItem = order.items.find((item) => item.id === orderItemId);
+    if (!orderItem) throw new Error('Return line does not belong to this order.');
+    const remaining = orderItem.quantity - (previouslyReturnedByItem.get(orderItemId) ?? 0);
+    if (line.quantity > remaining) throw new Error(`Return quantity for ${orderItem.productSku} exceeds the remaining purchased quantity.`);
+    return { orderItem, quantity: line.quantity, restock: line.restock };
+  });
+
+  const refundAmountMinor = Math.max(0, Math.trunc(input.refundAmountMinor ?? 0));
+  if (refundAmountMinor <= 0) throw new Error('Refund amount is required for a return.');
+
+  const refundResult = await refundIronSprueOrderForMerchant({
+    orderId: order.id,
+    amountMinor: refundAmountMinor,
+    reason: input.notes ?? input.reference ?? 'Returned goods',
+    actorId: actor.email ?? actor.id,
+    idempotencyKey: `iron-sprue-return-${order.id}-${cleanNullable(input.reference) ?? selectedLines.map((line) => `${line.orderItem.id}:${line.quantity}:${line.restock ? 'r' : 'n'}`).join('|')}-${refundAmountMinor}`,
+    ...(input.environment ? { environment: input.environment } : {}),
+  });
+
+  return client.$transaction(async (tx) => {
+    const returnRecord = await tx.ironSprueOrderReturn.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        orderId: order.id,
+        status: 'RECEIVED',
+        reference: cleanNullable(input.reference),
+        notes: cleanNullable(input.notes),
+        condition: cleanNullable(input.condition),
+        restock: selectedLines.some((line) => line.restock),
+        refundAmountMinor,
+        refundStatus: 'REFUNDED',
+        stripeRefundId: refundResult.refund.id,
+        receivedAt: new Date(),
+        refundedAt: new Date(),
+        lines: {
+          create: selectedLines.map((line) => ({
+            orderItemId: line.orderItem.id,
+            productId: line.orderItem.productId,
+            quantity: line.quantity,
+            restock: line.restock,
+          })),
+        },
+      },
+      include: { lines: true },
+    });
+
+    for (const line of selectedLines.filter((item) => item.restock)) {
+      const inventory = await tx.ironSprueAdminInventory.findUnique({ where: { productId: line.orderItem.productId } });
+      if (!inventory) continue;
+      const afterQuantity = inventory.availableStock + line.quantity;
+      await tx.ironSprueAdminInventory.update({
+        where: { productId: line.orderItem.productId },
+        data: { availableStock: afterQuantity },
+      });
+      await tx.ironSprueAdminStockMovement.create({
+        data: {
+          storeCode: IRON_SPRUE_STORE_CODE,
+          productId: line.orderItem.productId,
+          movementType: 'RETURN_RESTOCK',
+          quantity: line.quantity,
+          beforeQuantity: inventory.availableStock,
+          afterQuantity,
+          reason: `Return restock for ${order.orderNumber}`,
+          batchReference: returnRecord.reference,
+          actorId: actor.id,
+        },
+      });
+    }
+
+    await tx.ironSprueAdminAuditLog.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        actorId: actor.id,
+        action: 'order.return.process',
+        entityType: 'order-return',
+        entityId: returnRecord.id,
+        summary: `Processed return for Iron Sprue order ${order.orderNumber}.`,
+        after: {
+          orderNumber: order.orderNumber,
+          refundAmountMinor,
+          lineCount: selectedLines.length,
+          restockedQuantity: selectedLines.filter((line) => line.restock).reduce((sum, line) => sum + line.quantity, 0),
+        },
+      },
+    });
+
+    return returnRecord;
+  });
+}
+
+const ironSprueFulfilmentStates = ['PENDING', 'PICKING', 'PACKED', 'SHIPPED', 'DELIVERED', 'COMPLETED', 'CANCELLED'] as const;
 
 export type IronSprueAdminFulfilmentState = (typeof ironSprueFulfilmentStates)[number];
 
@@ -796,7 +1069,7 @@ export async function updateIronSprueAdminOrderFulfilmentStatus(
 
   const trackingCarrier = cleanTrackingValue(trackingInput.trackingCarrier);
   const trackingNumber = cleanTrackingValue(trackingInput.trackingNumber);
-  const trackingUrl = normalizeTrackingUrl(trackingInput.trackingUrl);
+  const trackingUrl = buildIronSprueTrackingUrl(trackingCarrier, trackingNumber, trackingInput.trackingUrl);
   const resolvedTrackingCarrier = trackingCarrier ?? order.trackingCarrier;
   const resolvedTrackingNumber = trackingNumber ?? order.trackingNumber;
   const resolvedTrackingUrl = trackingUrl ?? order.trackingUrl;
@@ -805,13 +1078,14 @@ export async function updateIronSprueAdminOrderFulfilmentStatus(
     throw new Error('Courier and tracking number are required to mark an Iron Sprue order dispatched.');
   }
   const dispatchedAt = nextState === 'SHIPPED' ? (order.dispatchedAt ?? new Date()) : order.dispatchedAt;
-  const fulfilledAt = nextState === 'SHIPPED' ? (order.fulfilledAt ?? dispatchedAt ?? new Date()) : order.fulfilledAt;
+  const fulfilledAt = ['SHIPPED', 'DELIVERED', 'COMPLETED'].includes(nextState) ? (order.fulfilledAt ?? dispatchedAt ?? new Date()) : order.fulfilledAt;
 
   return client.$transaction(async (tx) => {
     const updated = await tx.ironSprueOrder.update({
       where: { id: order.id },
       data: {
         fulfilmentStatus: nextState,
+        status: nextState === 'COMPLETED' ? 'COMPLETED' : order.status,
         fulfilledAt,
         dispatchedAt,
         trackingCarrier: nextState === 'SHIPPED' ? resolvedTrackingCarrier : order.trackingCarrier,
@@ -1129,7 +1403,7 @@ export async function updateIronSprueAdminBrandControls(
 }
 
 export async function getIronSprueAdminStorefrontControls(client = getIronSprueAdminPrisma()) {
-  const [homepagePlacements, heroes, specialOffers, auditLog] = await Promise.all([
+  const [homepagePlacements, heroes, specialOffers, discountCodes, auditLog] = await Promise.all([
     client.ironSprueAdminHomepagePlacement.findMany({
       where: { storeCode: IRON_SPRUE_STORE_CODE },
       orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }],
@@ -1143,6 +1417,10 @@ export async function getIronSprueAdminStorefrontControls(client = getIronSprueA
       orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }],
       include: { product: { select: { sku: true, customerTitle: true } } },
     }),
+    client.ironSprueDiscountCode.findMany({
+      where: { storeCode: IRON_SPRUE_STORE_CODE },
+      orderBy: [{ enabled: 'desc' }, { code: 'asc' }],
+    }),
     client.ironSprueAdminAuditLog.findMany({
       where: { storeCode: IRON_SPRUE_STORE_CODE },
       orderBy: { createdAt: 'desc' },
@@ -1150,7 +1428,7 @@ export async function getIronSprueAdminStorefrontControls(client = getIronSprueA
     }),
   ]);
 
-  return { homepagePlacements, heroes, specialOffers, auditLog };
+  return { homepagePlacements, heroes, specialOffers, discountCodes, auditLog };
 }
 
 type StorefrontRecordInput = {
@@ -1288,6 +1566,64 @@ export async function upsertIronSprueAdminSpecialOffer(
       productId: record.productId,
       summary: `Saved Iron Sprue special offer ${record.title}.`,
       after: { title: record.title, active: record.active, sortOrder: record.sortOrder },
+    },
+  });
+
+  return record;
+}
+
+export type IronSprueDiscountCodeInput = {
+  id?: string | null | undefined;
+  code?: string | null | undefined;
+  enabled?: boolean | null | undefined;
+  discountType?: string | null | undefined;
+  amount?: number | null | undefined;
+  expiresAt?: Date | null | undefined;
+  minimumSpendMinor?: number | null | undefined;
+  oneUsePerCustomer?: boolean | null | undefined;
+};
+
+function normalizeDiscountCode(value: string | null | undefined) {
+  return (value ?? '').trim().toUpperCase().replace(/\s+/g, '');
+}
+
+export async function upsertIronSprueDiscountCode(input: IronSprueDiscountCodeInput, actor: IronSprueAdminUser, client = getIronSprueAdminPrisma()) {
+  const code = normalizeDiscountCode(input.code);
+  if (!code) throw new Error('Discount code is required.');
+  const discountType = cleanNullable(input.discountType) ?? 'PERCENT';
+  if (!['PERCENT', 'FIXED'].includes(discountType)) throw new Error('Discount type must be PERCENT or FIXED.');
+  const amount = Math.max(0, Math.trunc(input.amount ?? 0));
+  if (amount <= 0) throw new Error('Discount amount must be greater than zero.');
+  if (discountType === 'PERCENT' && amount > 100) throw new Error('Percentage discount cannot exceed 100.');
+
+  const data = {
+    storeCode: IRON_SPRUE_STORE_CODE,
+    code,
+    enabled: Boolean(input.enabled),
+    discountType,
+    amount,
+    expiresAt: input.expiresAt ?? null,
+    minimumSpendMinor: input.minimumSpendMinor ?? null,
+    oneUsePerCustomer: Boolean(input.oneUsePerCustomer),
+  };
+
+  const record = input.id
+    ? await client.ironSprueDiscountCode.update({ where: { id: input.id }, data })
+    : await client.ironSprueDiscountCode.upsert({
+      where: { storeCode_code: { storeCode: IRON_SPRUE_STORE_CODE, code } },
+      update: data,
+      create: data,
+    });
+
+  await client.ironSprueAdminAuditLog.create({
+    data: {
+      storeCode: IRON_SPRUE_STORE_CODE,
+      actorId: actor.id,
+      action: 'discount_code.upsert',
+      entityType: 'discount-code',
+      entityId: record.id,
+      summary: `Saved Iron Sprue discount code ${record.code}.`,
+      after: { code: record.code, enabled: record.enabled, discountType: record.discountType, amount: record.amount },
     },
   });
 

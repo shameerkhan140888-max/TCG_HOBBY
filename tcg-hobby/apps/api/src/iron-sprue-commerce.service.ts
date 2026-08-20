@@ -46,6 +46,11 @@ function isCustomerCheckoutError(message: string) {
     message === 'Product is not available.' ||
     message === 'Quantity must be at least 1.' ||
     /^Only \d+ in stock for this item\.$/.test(message)
+    || message === 'Discount code is not valid.'
+    || message === 'Discount code has expired.'
+    || message === 'Discount code has already been used.'
+    || message === 'Discount code does not apply to this basket.'
+    || /^Discount code requires a basket subtotal of at least £\d+\.\d{2}\.$/.test(message)
   );
 }
 
@@ -125,6 +130,7 @@ export class IronSprueCommerceService {
         cart,
         shippingAddress: requireAddress(input.shippingAddress),
         shippingMethodCode: input.shippingMethodCode,
+        ...(input.discountCode ? { discountCode: input.discountCode } : {}),
         ...(input.checkoutAttemptId ? { checkoutAttemptId: input.checkoutAttemptId } : {}),
       });
     } catch (error) {
@@ -151,6 +157,8 @@ export class IronSprueCommerceService {
       subtotalMinor: order.subtotalMinor,
       shippingMinor: order.shippingMinor,
       taxMinor: order.taxMinor,
+      discountMinor: order.discountMinor,
+      discountCode: order.discountCode,
       totalMinor: order.totalMinor,
       createdAt: order.createdAt.toISOString(),
       itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
@@ -163,6 +171,9 @@ export class IronSprueCommerceService {
       shippingRegion: order.shippingRegion,
       shippingPostalCode: order.shippingPostalCode,
       shippingCountry: order.shippingCountry,
+      trackingCarrier: order.trackingCarrier,
+      trackingNumber: order.trackingNumber,
+      trackingUrl: order.trackingUrl,
       items: order.items,
     };
   }
@@ -184,6 +195,8 @@ export class IronSprueCommerceService {
       subtotalMinor: order.subtotalMinor,
       shippingMinor: order.shippingMinor,
       taxMinor: order.taxMinor,
+      discountMinor: order.discountMinor,
+      discountCode: order.discountCode,
       totalMinor: order.totalMinor,
       createdAt: order.createdAt.toISOString(),
       itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
@@ -215,6 +228,9 @@ export class IronSprueCommerceService {
       shippingRegion: order.shippingRegion,
       shippingPostalCode: order.shippingPostalCode,
       shippingCountry: order.shippingCountry,
+      trackingCarrier: order.trackingCarrier,
+      trackingNumber: order.trackingNumber,
+      trackingUrl: order.trackingUrl,
       items: order.items,
     };
   }

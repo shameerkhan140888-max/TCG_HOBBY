@@ -247,6 +247,11 @@ export type PublicOrderDetail = PublicOrderSummary & {
   subtotalMinor: number;
   shippingMinor: number;
   taxMinor: number;
+  discountMinor?: number;
+  discountCode?: string | null;
+  trackingCarrier?: string | null;
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
   shippingMethodName: string;
   shippingFullName?: string;
   shippingEmail?: string;
@@ -264,6 +269,7 @@ export type PublicCheckoutRequest = {
   shippingAddress: CheckoutAddress;
   shippingMethodCode: ShippingMethodCode;
   checkoutAttemptId?: string;
+  discountCode?: string;
   returnUrl?: string;
 };
 

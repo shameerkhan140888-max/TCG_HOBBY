@@ -2,16 +2,22 @@
 
 import {
   cancelIronSprueOrderForMerchant,
+  adjustIronSprueStock,
   createIronSprueAdminMediaAsset,
+  processIronSprueOrderReturn,
+  receiveIronSprueStock,
   sendIronSprueCancellationEmail,
   sendIronSprueDispatchEmail,
+  sendIronSprueOrderConfirmationEmail,
   setIronSprueProductPublicationState,
   isIronSprueAdminFulfilmentState,
   updateIronSprueAdminBrandControls,
   updateIronSprueAdminContentReviewStatus,
   updateIronSprueAdminMediaApproval,
   updateIronSprueAdminOrderFulfilmentStatus,
+  updateIronSprueAdminOrderNotes,
   updateIronSprueAdminProductFlags,
+  upsertIronSprueDiscountCode,
   upsertIronSprueAdminHero,
   upsertIronSprueAdminHomepagePlacement,
   upsertIronSprueAdminSpecialOffer,
@@ -34,6 +40,18 @@ function optionalNumberFromForm(value: FormDataEntryValue | null) {
   if (!raw) return undefined;
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function optionalMoneyMinorFromForm(value: FormDataEntryValue | null) {
+  const parsed = optionalNumberFromForm(value);
+  return parsed == null ? undefined : Math.round(parsed * 100);
+}
+
+function optionalDateFromForm(value: FormDataEntryValue | null) {
+  const raw = stringFromForm(value).trim();
+  if (!raw) return undefined;
+  const parsed = new Date(`${raw}T23:59:59.999Z`);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }
 
 function fileFromForm(value: FormDataEntryValue | null) {
@@ -331,6 +349,32 @@ export async function saveIronSprueSpecialOfferAction(formData: FormData) {
   redirect(adminStatusPath('special-offers', 'saved', 'Special offer saved.'));
 }
 
+export async function saveIronSprueDiscountCodeAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const discountType = stringFromForm(formData.get('discountType')) || 'PERCENT';
+  try {
+    await upsertIronSprueDiscountCode(
+      {
+        id: stringFromForm(formData.get('id')),
+        code: stringFromForm(formData.get('code')),
+        enabled: boolFromForm(formData.get('enabled')),
+        discountType,
+        amount: discountType === 'FIXED' ? optionalMoneyMinorFromForm(formData.get('amount')) : optionalNumberFromForm(formData.get('amount')),
+        expiresAt: optionalDateFromForm(formData.get('expiresAt')),
+        minimumSpendMinor: optionalMoneyMinorFromForm(formData.get('minimumSpendMinor')),
+        oneUsePerCustomer: boolFromForm(formData.get('oneUsePerCustomer')),
+      },
+      actor,
+    );
+  } catch (error) {
+    redirect(adminStatusPath('special-offers', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/special-offers');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('special-offers', 'saved', 'Discount code saved.'));
+}
+
 export async function updateIronSprueOrderFulfilmentAction(formData: FormData) {
   const actor = await requireIronSprueActor();
   const orderId = stringFromForm(formData.get('orderId'));
@@ -383,4 +427,140 @@ export async function cancelIronSprueOrderAction(formData: FormData) {
   revalidatePath('/iron-sprue-admin/inventory');
   revalidateIronSprueStorefront();
   redirect(adminStatusPath('orders', 'saved', 'Order cancellation saved.'));
+}
+
+export async function saveIronSprueOrderNotesAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const orderId = stringFromForm(formData.get('orderId'));
+  const notes = stringFromForm(formData.get('internalNotes'));
+  try {
+    if (!orderId) throw new Error('orderId is required.');
+    await updateIronSprueAdminOrderNotes(orderId, notes, actor);
+  } catch (error) {
+    redirect(adminStatusPath('orders', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin/orders');
+  redirect(adminStatusPath('orders', 'saved', 'Order notes saved.'));
+}
+
+export async function processIronSprueReturnAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const orderId = stringFromForm(formData.get('orderId'));
+  const refundAmountMinor = optionalMoneyMinorFromForm(formData.get('refundAmount'));
+  try {
+    if (!orderId) throw new Error('orderId is required.');
+    const lines = [...formData.entries()]
+      .filter(([key]) => key.startsWith('returnQuantity:'))
+      .map(([key, value]) => {
+        const orderItemId = key.slice('returnQuantity:'.length);
+        return {
+          orderItemId,
+          quantity: Math.trunc(Number(stringFromForm(value)) || 0),
+          restock: boolFromForm(formData.get(`returnRestock:${orderItemId}`)),
+        };
+      })
+      .filter((line) => line.quantity > 0);
+    await processIronSprueOrderReturn(
+      {
+        orderId,
+        reference: stringFromForm(formData.get('reference')),
+        notes: stringFromForm(formData.get('notes')),
+        condition: stringFromForm(formData.get('condition')),
+        refundAmountMinor: refundAmountMinor ?? null,
+        lines,
+        environment: process.env.NODE_ENV === 'production' ? 'live' : 'test',
+      },
+      actor,
+    );
+    const emailResult = await sendIronSprueCancellationEmail(orderId);
+    if (emailResult.outcome === 'provider_unconfigured' || emailResult.outcome === 'failed') {
+      console.warn('iron_sprue_return_email_not_sent', { orderId, outcome: emailResult.outcome });
+    }
+  } catch (error) {
+    redirect(adminStatusPath('orders', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin/orders');
+  revalidatePath('/iron-sprue-admin/inventory');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('orders', 'saved', 'Return/refund processed.'));
+}
+
+export async function resendIronSprueOrderEmailAction(formData: FormData) {
+  await requireIronSprueActor();
+  const orderId = stringFromForm(formData.get('orderId'));
+  const purpose = stringFromForm(formData.get('purpose'));
+  try {
+    if (!orderId) throw new Error('orderId is required.');
+    let result;
+    if (purpose === 'confirmation') {
+      result = await sendIronSprueOrderConfirmationEmail(orderId);
+    } else if (purpose === 'dispatch') {
+      result = await sendIronSprueDispatchEmail(orderId);
+    } else if (purpose === 'cancellation') {
+      result = await sendIronSprueCancellationEmail(orderId);
+    } else {
+      throw new Error('Unsupported email type.');
+    }
+    if (result.outcome === 'provider_unconfigured') {
+      throw new Error('Iron Sprue email provider is not configured.');
+    }
+    if (result.outcome === 'failed') {
+      throw new Error('Email provider rejected the send request.');
+    }
+    if (result.outcome !== 'sent' && result.outcome !== 'in_progress') {
+      throw new Error(`Email cannot be sent for this order state (${result.outcome}).`);
+    }
+  } catch (error) {
+    redirect(adminStatusPath('orders', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin/orders');
+  redirect(adminStatusPath('orders', 'saved', 'Transactional email checked/sent.'));
+}
+
+export async function receiveIronSprueStockAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const productId = stringFromForm(formData.get('productId'));
+  try {
+    if (!productId) throw new Error('productId is required.');
+    await receiveIronSprueStock(
+      productId,
+      {
+        receivedQuantity: Math.max(0, Math.trunc(optionalNumberFromForm(formData.get('receivedQuantity')) ?? 0)),
+        damagedQuantity: Math.max(0, Math.trunc(optionalNumberFromForm(formData.get('damagedQuantity')) ?? 0)),
+        missingQuantity: Math.max(0, Math.trunc(optionalNumberFromForm(formData.get('missingQuantity')) ?? 0)),
+        batchReference: stringFromForm(formData.get('batchReference')),
+        reason: stringFromForm(formData.get('reason')),
+      },
+      actor,
+    );
+  } catch (error) {
+    redirect(adminStatusPath('inventory', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin/inventory');
+  revalidatePath('/iron-sprue-admin/goods-received');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('inventory', 'saved', 'Stock receipt saved.'));
+}
+
+export async function adjustIronSprueStockAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const productId = stringFromForm(formData.get('productId'));
+  try {
+    if (!productId) throw new Error('productId is required.');
+    await adjustIronSprueStock(
+      productId,
+      {
+        quantityDelta: Math.trunc(optionalNumberFromForm(formData.get('quantityDelta')) ?? 0),
+        movementType: stringFromForm(formData.get('movementType')),
+        reason: stringFromForm(formData.get('reason')),
+        batchReference: stringFromForm(formData.get('batchReference')),
+      },
+      actor,
+    );
+  } catch (error) {
+    redirect(adminStatusPath('inventory', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin/inventory');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('inventory', 'saved', 'Stock adjustment saved.'));
 }
