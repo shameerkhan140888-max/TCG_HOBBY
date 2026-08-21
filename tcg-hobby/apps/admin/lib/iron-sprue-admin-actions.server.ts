@@ -93,6 +93,21 @@ export async function updateIronSprueMediaApprovalAction(formData: FormData) {
   redirect(adminStatusPath('media', 'saved', 'Media approval saved.'));
 }
 
+export async function bulkApproveIronSprueMediaAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const mediaIds = formData.getAll('mediaId').map((value) => String(value)).filter(Boolean);
+  try {
+    if (!mediaIds.length) throw new Error('Select at least one media record to approve.');
+    await Promise.all(mediaIds.map((mediaId) => updateIronSprueAdminMediaApproval(mediaId, 'APPROVED', actor)));
+  } catch (error) {
+    redirect(adminStatusPath('media', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/media');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('media', 'saved', `${mediaIds.length} media approval${mediaIds.length === 1 ? '' : 's'} saved.`));
+}
+
 export async function updateIronSprueContentReviewAction(formData: FormData) {
   const actor = await requireIronSprueActor();
   const reviewId = String(formData.get('reviewId') ?? '');
@@ -108,6 +123,21 @@ export async function updateIronSprueContentReviewAction(formData: FormData) {
   revalidatePath('/iron-sprue-admin/content-review');
   revalidateIronSprueStorefront();
   redirect(adminStatusPath('content-review', 'saved', 'Content review saved.'));
+}
+
+export async function bulkApproveIronSprueContentReviewsAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const reviewIds = formData.getAll('reviewId').map((value) => String(value)).filter(Boolean);
+  try {
+    if (!reviewIds.length) throw new Error('Select at least one content review to approve.');
+    await Promise.all(reviewIds.map((reviewId) => updateIronSprueAdminContentReviewStatus(reviewId, 'APPROVED', actor)));
+  } catch (error) {
+    redirect(adminStatusPath('content-review', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/content-review');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('content-review', 'saved', `${reviewIds.length} content approval${reviewIds.length === 1 ? '' : 's'} saved.`));
 }
 
 export async function updateIronSprueProductFlagsAction(formData: FormData) {

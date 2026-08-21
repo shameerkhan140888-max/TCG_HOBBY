@@ -33,6 +33,8 @@ vi.mock('../lib/iron-sprue-media-storage.server', () => ({
 }));
 
 vi.mock('../lib/iron-sprue-admin-actions.server', () => ({
+  bulkApproveIronSprueContentReviewsAction: vi.fn(),
+  bulkApproveIronSprueMediaAction: vi.fn(),
   saveIronSprueFeaturedProductPlacementAction: vi.fn(),
   saveIronSprueHeroAction: vi.fn(),
   saveIronSprueHomepagePlacementAction: vi.fn(),
@@ -114,6 +116,9 @@ describe('IronSprueAdminSection operational controls', () => {
 
     expect(markup).toContain('Pagani Zonda F');
     expect(markup).toContain('products%2Fis-aos-05603%2Fimage-2%2Fmaster.webp');
+    expect(markup).toContain('Select all displayed');
+    expect(markup).toContain('Approve selected');
+    expect(markup).toContain('data-bulk-group="iron-sprue-media-bulk-approval"');
     expect(markup).not.toContain('No current');
     expect(markup).not.toContain('media record is available for this product.');
     expect(markup).toContain('Upload review candidate');
@@ -234,6 +239,8 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(pendingMarkup).toContain('Approved');
     expect(pendingMarkup).toContain('1');
     expect(pendingMarkup).toContain('Burj Khalifa');
+    expect(pendingMarkup).toContain('data-bulk-group="iron-sprue-content-bulk-approval"');
+    expect(pendingMarkup).toContain('Approve selected');
     expect(pendingMarkup).not.toContain('Toyota 2000GT Red');
 
     const approvedMarkup = await renderAsync(await IronSprueAdminSection({

@@ -971,10 +971,10 @@ p {
   display: grid;
   min-width: 0;
   overflow: hidden;
-  border: 1px solid rgba(17, 17, 15, 0.09);
+  border: 1px solid rgba(17, 17, 15, 0.12);
   border-radius: 8px;
   background: rgba(255, 250, 241, 0.9);
-  box-shadow: 0 16px 48px rgba(25, 20, 12, 0.07);
+  box-shadow: 0 16px 48px rgba(25, 20, 12, 0.08);
 }
 
 .product-image {
@@ -1015,9 +1015,58 @@ p {
 }
 
 .product-card-body {
+  position: relative;
   display: grid;
   gap: 8px;
-  padding: 17px;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 250, 241, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 250, 241, 0.1), transparent 34%, rgba(0, 0, 0, 0.36)),
+    linear-gradient(115deg, rgba(255, 250, 241, 0.08), transparent 36%, rgba(0, 0, 0, 0.26) 78%),
+    url("/assets/iron-board/iron-board-gunmetal-texture.png");
+  background-color: #1b1d1c;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: rgba(255, 250, 241, 0.82);
+  padding: 31px 34px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.42);
+}
+
+.product-card-body::before {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(255, 250, 241, 0.08), transparent 34%),
+    radial-gradient(ellipse at 82% 100%, rgba(0, 0, 0, 0.38), transparent 38%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.2));
+  content: "";
+  opacity: 1;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.product-card-body::after {
+  position: absolute;
+  inset: 0;
+  background:
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 5px top 5px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 5px top 5px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 5px bottom 5px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 5px bottom 5px / 22px 22px no-repeat,
+    linear-gradient(90deg, rgba(255, 250, 241, 0.055), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.34)),
+    linear-gradient(180deg, rgba(255, 250, 241, 0.08), transparent 22%, transparent 76%, rgba(0, 0, 0, 0.42));
+  content: "";
+  pointer-events: none;
+  z-index: 1;
+}
+
+.product-card-body > * {
+  position: relative;
+  z-index: 2;
 }
 
 .product-card h2,
@@ -1026,6 +1075,7 @@ p {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 17px;
   text-transform: none;
+  color: var(--paper-soft);
 }
 
 .product-card p {
@@ -1033,21 +1083,75 @@ p {
   font-size: 13px;
 }
 
+.product-card-body > p:not(.product-brand):not(.meta) {
+  color: rgba(255, 250, 241, 0.74);
+}
+
+.product-card .product-brand {
+  color: var(--brass);
+}
+
+.product-card .meta {
+  color: rgba(255, 250, 241, 0.76);
+  font-size: 11px;
+}
+
+.product-card strong {
+  color: var(--paper-soft);
+  font-size: 18px;
+}
+
 .stock-badge {
   justify-self: start;
-  border: 1px solid rgba(29, 106, 94, 0.32);
+  border: 1px solid rgba(92, 178, 124, 0.42);
   border-radius: 999px;
-  background: rgba(29, 106, 94, 0.08);
-  color: var(--sprue);
+  background: rgba(92, 178, 124, 0.12);
+  color: #1d6a45;
   padding: 5px 10px;
   font-size: 12px;
   font-weight: 900;
 }
 
+.stock-badge.in-stock {
+  border-color: rgba(92, 178, 124, 0.5);
+  background: rgba(92, 178, 124, 0.13);
+  color: #1d6a45;
+}
+
+.stock-badge.low-stock {
+  border-color: rgba(184, 125, 39, 0.48);
+  background: rgba(214, 159, 73, 0.15);
+  color: #85601a;
+}
+
 .stock-badge.out-of-stock {
-  border-color: rgba(116, 112, 103, 0.42);
-  background: rgba(116, 112, 103, 0.12);
-  color: #615c52;
+  border-color: rgba(164, 56, 45, 0.46);
+  background: rgba(199, 78, 62, 0.14);
+  color: #91382f;
+}
+
+.product-card .stock-badge {
+  border-color: rgba(247, 248, 246, 0.24);
+  background: rgba(247, 248, 246, 0.09);
+  color: rgba(255, 250, 241, 0.9);
+}
+
+.product-card .stock-badge.in-stock {
+  border-color: rgba(92, 178, 124, 0.56);
+  background: rgba(92, 178, 124, 0.14);
+  color: #a6e0b8;
+}
+
+.product-card .stock-badge.low-stock {
+  border-color: rgba(214, 159, 73, 0.6);
+  background: rgba(214, 159, 73, 0.16);
+  color: #f1c878;
+}
+
+.product-card .stock-badge.out-of-stock {
+  border-color: rgba(199, 78, 62, 0.58);
+  background: rgba(199, 78, 62, 0.16);
+  color: #f2a99c;
 }
 
 .product-card.is-out-of-stock {
@@ -1076,10 +1180,38 @@ p {
   margin-top: 8px;
 }
 
-.product-actions a {
-  color: var(--ink);
+.product-card .product-actions a {
+  display: grid;
+  min-height: 43px;
+  place-items: center;
+  border: 1px solid rgba(255, 250, 241, 0.16);
+  border-radius: 7px;
+  background: linear-gradient(180deg, rgba(255, 250, 241, 0.07), rgba(0, 0, 0, 0.18));
+  color: rgba(255, 250, 241, 0.9);
   font-size: 13px;
   font-weight: 900;
+  text-decoration: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.11),
+    0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.product-card .basket-action-stack button:not(:disabled) {
+  border-color: var(--brass);
+  background: var(--brass);
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 rgba(255, 250, 241, 0.32);
+}
+
+.product-card .form-status {
+  border-left: 3px solid rgba(196, 131, 60, 0.72);
+  color: rgba(255, 250, 241, 0.74);
+  padding-left: 8px;
+}
+
+.product-card .form-status.error {
+  border-left-color: rgba(174, 87, 64, 0.78);
+  color: #f0c7b8;
 }
 
 .basket-layout {
@@ -1375,6 +1507,14 @@ p {
   background: rgba(255, 250, 241, 0.86);
   padding: 18px;
   text-decoration: none;
+}
+
+.addon-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #fff;
 }
 
 .addon-card span,

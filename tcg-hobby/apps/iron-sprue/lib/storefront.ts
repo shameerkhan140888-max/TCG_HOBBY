@@ -153,12 +153,45 @@ export function productAvailability(product: IronSprueProduct) {
   return 'In stock';
 }
 
+export function productAvailabilityClass(product: IronSprueProduct) {
+  const availableQuantity = productSellableQuantity(product);
+  if (availableQuantity <= 0) return 'out-of-stock';
+  if (availableQuantity <= Math.max(1, product.reorderLevel ?? 1)) return 'low-stock';
+  return 'in-stock';
+}
+
 export function featuredProducts(products: IronSprueProduct[], count = 8, options: { includeUnpublishedPreview?: boolean } = {}) {
   const isVisible = (product: IronSprueProduct) =>
     product.storeCode === 'IRON_SPRUE' && (options.includeUnpublishedPreview || product.published !== false);
   const withImages = products.filter((product) => isVisible(product) && productImage(product));
   const rest = products.filter((product) => isVisible(product) && !productImage(product));
   return [...withImages, ...rest].slice(0, count);
+}
+
+const workshopAddonCategories = new Set([
+  'adhesives-finishing',
+  'epoxy-adhesives',
+  'knives-blades',
+  'magnification',
+  'masking-finishing',
+  'measuring-tools',
+  'pin-vices-drills',
+  'sanding-files',
+  'tool-sets',
+  'tweezers-pliers',
+]);
+
+export function isProductAddonCandidate(product: IronSprueProduct) {
+  return workshopAddonCategories.has(slugForCategory(product.category));
+}
+
+export function productDetailAddons(products: IronSprueProduct[], currentSku: string, count = 4) {
+  const candidates = products
+    .filter((product) => product.sku !== currentSku)
+    .filter((product) => productSellableQuantity(product) > 0)
+    .filter(isProductAddonCandidate);
+
+  return featuredProducts(candidates, count, { includeUnpublishedPreview: true });
 }
 
 export function categoryOptions(products: IronSprueProduct[]) {

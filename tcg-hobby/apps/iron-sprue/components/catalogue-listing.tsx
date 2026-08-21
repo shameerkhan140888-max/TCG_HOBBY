@@ -1,5 +1,5 @@
 import launchProducts from '../data/launch-products.json';
-import { filterIronSprueProducts, launchCatalogueStatus, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
+import { filterIronSprueProducts, isModelKitProduct, launchCatalogueStatus, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
 import { getIronSprueStorefrontProducts } from '../lib/admin-storefront-controls';
 import { AddToBasketButton } from './basket-client';
 import {
@@ -7,6 +7,7 @@ import {
   categoryOptions,
   formatPrice,
   productAvailability,
+  productAvailabilityClass,
   productImage,
   productSellableQuantity,
   slugForCategory,
@@ -23,6 +24,7 @@ function single(params: Params, key: string) {
 
 function categoryMatches(product: IronSprueProduct, category: string) {
   if (category === '3d-puzzles-and-builds') return product.brand === 'CubicFun' || product.brand === 'Pintoo';
+  if (category === 'model-kits') return isModelKitProduct(product);
   return slugForCategory(product.category) === category;
 }
 
@@ -151,6 +153,7 @@ export async function CatalogueListing({
                 const imageUrl = productImage(product);
                 const availableQuantity = productSellableQuantity(product);
                 const isOutOfStock = availableQuantity <= 0;
+                const availabilityClass = productAvailabilityClass(product);
                 return (
                   <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
                     <a className="product-image" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
@@ -161,7 +164,7 @@ export async function CatalogueListing({
                       <h2>{product.name}</h2>
                       <p>{product.category}</p>
                       <strong>{formatPrice(product)} inc VAT</strong>
-                      <span className={`stock-badge${isOutOfStock ? ' out-of-stock' : ''}`}>{productAvailability(product)}</span>
+                      <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
                       <p className="meta">Manufacturer Reference {product.manufacturerReference ?? product.supplierSku}</p>
                       <div className="product-actions">
                         <a href={`/products/${product.slug}`}>View details</a>

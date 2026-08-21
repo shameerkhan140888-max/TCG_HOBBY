@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import finalManifest from '../data/final-launch-catalogue-manifest.json';
 import launchProducts from '../data/launch-products.json';
-import { deriveBrandsWeStock, productPriceMinor, type IronSprueProduct } from './catalogue';
+import { deriveBrandsWeStock, filterIronSprueProducts, isModelKitProduct, productPriceMinor, type IronSprueProduct } from './catalogue';
+import { productDetailAddons, productSellableQuantity } from './storefront';
 
 const products = launchProducts as IronSprueProduct[];
 
@@ -20,6 +21,28 @@ describe('Iron Sprue PO-derived launch products', () => {
     expect(brands).toEqual(['Aoshima', 'CubicFun', 'Deluxe Materials', 'Expo Tools', 'OcCre Creations', 'Pintoo', 'Tasma']);
     expect(products.every((product) => product.sku.startsWith('IS-'))).toBe(true);
     expect(products.every((product) => product.category !== 'Trading Cards')).toBe(true);
+  });
+
+  it('treats model kits as a product type so Aoshima subject categories remain visible', () => {
+    const modelKits = filterIronSprueProducts(products, { category: 'model-kits' });
+    const aoshimaModelKits = filterIronSprueProducts(products, { brand: 'Aoshima', category: 'model-kits' });
+    const backToTheFuture = aoshimaModelKits.filter((product) => product.name.startsWith('Back to the Future'));
+
+    expect(modelKits.every(isModelKitProduct)).toBe(true);
+    expect(aoshimaModelKits.every((product) => product.brand === 'Aoshima')).toBe(true);
+    expect(backToTheFuture.map((product) => product.sku).sort()).toEqual(['IS-AOS-06437', 'IS-AOS-06438']);
+  });
+
+  it('returns sellable workshop-category add-ons for product detail recommendations', () => {
+    const product = products.find((item) => item.sku === 'IS-AOS-05628');
+    expect(product).toBeTruthy();
+
+    const addons = productDetailAddons(products, product!.sku, 4);
+
+    expect(addons.length).toBeGreaterThan(0);
+    expect(addons.every((item) => item.sku !== product!.sku)).toBe(true);
+    expect(addons.every((item) => productSellableQuantity(item) > 0)).toBe(true);
+    expect(addons.every((item) => ['Adhesives & Finishing', 'Epoxy Adhesives', 'Knives & Blades', 'Magnification', 'Masking & Finishing', 'Measuring Tools', 'Pin Vices & Drills', 'Sanding & Files', 'Tool Sets', 'Tweezers & Pliers'].includes(item.category))).toBe(true);
   });
 
   it('has VAT-inclusive launch prices for every product', () => {

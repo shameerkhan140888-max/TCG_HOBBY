@@ -192,6 +192,12 @@ export function vehicleManufacturerOptions(products: IronSprueProduct[]) {
   return Array.from(new Set(products.map(vehicleManufacturerForProduct).filter((value): value is VehicleManufacturer => Boolean(value)))).sort();
 }
 
+export function isModelKitProduct(product: IronSprueProduct) {
+  const category = product.category.toLowerCase();
+  const productType = product.productType.toLowerCase();
+  return productType.includes('model kit') || category === 'model kits';
+}
+
 export function filterIronSprueProducts(products: IronSprueProduct[], query: { brand?: string | undefined; category?: string | undefined; search?: string | undefined; vehicleManufacturer?: string | undefined }) {
   const brand = query.brand?.trim().toLowerCase();
   const category = query.category?.trim().toLowerCase();
@@ -200,7 +206,14 @@ export function filterIronSprueProducts(products: IronSprueProduct[], query: { b
 
   return products.filter((product) => {
     if (brand && product.brand.toLowerCase() !== brand) return false;
-    if (category && product.category.toLowerCase().replace(/[^a-z0-9]+/g, '-') !== category) return false;
+    if (category) {
+      const productCategory = product.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      if (category === 'model-kits') {
+        if (!isModelKitProduct(product)) return false;
+      } else if (productCategory !== category) {
+        return false;
+      }
+    }
     if (vehicleManufacturer && vehicleManufacturerForProduct(product)?.toLowerCase() !== vehicleManufacturer) return false;
     if (search) {
       const haystack = `${product.name} ${product.brand} ${product.category} ${product.productType}`.toLowerCase();

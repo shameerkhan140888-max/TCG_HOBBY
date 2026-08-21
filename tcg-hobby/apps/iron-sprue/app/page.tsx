@@ -9,7 +9,7 @@ import {
   productsFromFeaturedPlacements,
 } from '../lib/admin-storefront-controls';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
-import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
+import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { AddToBasketButton } from '../components/basket-client';
 
@@ -122,6 +122,7 @@ export default async function HomePage() {
             const imageUrl = productImage(product);
             const availableQuantity = productSellableQuantity(product);
             const isOutOfStock = availableQuantity <= 0;
+            const availabilityClass = productAvailabilityClass(product);
 
             return (
             <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
@@ -133,7 +134,7 @@ export default async function HomePage() {
                 <h3>{product.name}</h3>
                 <p>{product.category}</p>
                 <strong>{formatPrice(product)} inc VAT</strong>
-                <span className={`stock-badge${isOutOfStock ? ' out-of-stock' : ''}`}>{productAvailability(product)}</span>
+                <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
                 <div className="product-actions">
                   <a href={`/products/${product.slug}`}>Details</a>
                   <AddToBasketButton

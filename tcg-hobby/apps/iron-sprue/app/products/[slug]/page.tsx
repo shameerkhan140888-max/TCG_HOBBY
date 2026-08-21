@@ -1,9 +1,10 @@
 import launchProducts from '../../../data/launch-products.json';
+import React from 'react';
 import { ProductGallery } from '../../../components/product-gallery';
 import { AddToBasketButton } from '../../../components/basket-client';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
 import { type IronSprueProduct } from '../../../lib/catalogue';
-import { featuredProducts, formatPrice, productAvailability, productGalleryImages, productSellableQuantity } from '../../../lib/storefront';
+import { formatPrice, productAvailability, productAvailabilityClass, productDetailAddons, productGalleryImages, productImage, productSellableQuantity } from '../../../lib/storefront';
 import { addIronSprueWishlistItemAction } from '../../../lib/wishlist-actions';
 
 const products = launchProducts as IronSprueProduct[];
@@ -54,6 +55,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const galleryImages = productGalleryImages(product);
   const availableQuantity = productSellableQuantity(product);
   const isOutOfStock = availableQuantity <= 0;
+  const availabilityClass = productAvailabilityClass(product);
+  const addonProducts = productDetailAddons(storefrontProducts, product.sku, 4);
 
   return (
     <section className="section-block product-detail-page">
@@ -69,7 +72,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <strong>{formatPrice(product)}</strong>
             <span>inc VAT</span>
           </div>
-          <span className={`stock-badge${isOutOfStock ? ' out-of-stock' : ''}`}>{productAvailability(product)}</span>
+          <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
           <div className="quantity-row">
             <label htmlFor="quantity">Qty</label>
             <input id="quantity" type="number" min="1" max={Math.max(1, availableQuantity)} defaultValue="1" disabled={isOutOfStock} />
@@ -138,13 +141,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <a className="text-link" href="/shop?category=workshop-essentials">View add-ons</a>
         </div>
         <div className="addon-grid">
-          {featuredProducts(storefrontProducts.slice().reverse(), 4).map((item) => (
-            <a className="addon-card" href={`/products/${item.slug}`} key={item.sku}>
-              <span>{item.brand}</span>
-              <strong>{item.name}</strong>
-              <small>{formatPrice(item)} inc VAT</small>
-            </a>
-          ))}
+          {addonProducts.map((item) => {
+            const addonImage = productImage(item);
+            return (
+              <a className="addon-card" href={`/products/${item.slug}`} key={item.sku}>
+                {addonImage ? <img src={addonImage} alt={item.name} /> : null}
+                <span>{item.brand}</span>
+                <strong>{item.name}</strong>
+                <small>{formatPrice(item)} inc VAT</small>
+              </a>
+            );
+          })}
         </div>
       </section>
     </section>

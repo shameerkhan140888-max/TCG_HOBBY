@@ -32,8 +32,11 @@ import {
   updateIronSprueProductFlagsAction,
   updateIronSpruePublicationStateAction,
   uploadIronSprueProductMediaAction,
+  bulkApproveIronSprueContentReviewsAction,
+  bulkApproveIronSprueMediaAction,
 } from '../lib/iron-sprue-admin-actions.server';
 import { ironSprueAdminPreviewUrl, listIronSprueR2Objects } from '../lib/iron-sprue-media-storage.server';
+import { IronSprueBulkApprovalControls } from './iron-sprue-bulk-approval-controls';
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -530,10 +533,17 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
   const reviewableMedia = reviewableIronSprueMediaAssets(media, mode);
   const productGroups = groupMediaByProduct(reviewableMedia, media, mode);
   const hiddenCount = media.length - reviewableMedia.length;
+  const bulkApprovableMediaCount = reviewableMedia.filter((asset) => asset.approvalState !== 'APPROVED').length;
 
   return (
     <div className="space-y-4">
       <ReviewTabs baseHref="/iron-sprue-admin/media" mode={mode} pendingCount={pendingCount} approvedCount={approvedCount} rejectedCount={rejectedCount} allCount={media.length} />
+      <form id="iron-sprue-media-bulk-approval" action={bulkApproveIronSprueMediaAction} />
+      <IronSprueBulkApprovalControls
+        formId="iron-sprue-media-bulk-approval"
+        itemLabel="media records"
+        totalCount={bulkApprovableMediaCount}
+      />
       {!reviewableMedia.length ? (
         <EmptyNote>{mode === 'approved' ? 'No approved Iron Sprue media assets found.' : mode === 'rejected' ? 'No rejected Iron Sprue media assets found.' : mode === 'all' ? 'No Iron Sprue media assets found.' : 'No Iron Sprue media assets currently require approval.'}</EmptyNote>
       ) : null}
@@ -577,7 +587,22 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
                       )}
                     </div>
                     <div className="space-y-3">
-                      <div className="flex flex-wrap gap-2"><StatePill>{asset.approvalState}</StatePill><StatePill>{asset.role}</StatePill>{asset.isPrimary ? <StatePill>PRIMARY</StatePill> : null}</div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {asset.approvalState !== 'APPROVED' ? (
+                          <label className="flex items-center gap-2 rounded-md border border-surface-line bg-black/30 px-2 py-1 text-xs font-bold text-neutral-200">
+                            <input
+                              aria-label={`Select ${asset.product?.customerTitle ?? asset.role} ${asset.role} for bulk approval`}
+                              data-bulk-group="iron-sprue-media-bulk-approval"
+                              form="iron-sprue-media-bulk-approval"
+                              name="mediaId"
+                              type="checkbox"
+                              value={asset.id}
+                            />
+                            Select
+                          </label>
+                        ) : null}
+                        <StatePill>{asset.approvalState}</StatePill><StatePill>{asset.role}</StatePill>{asset.isPrimary ? <StatePill>PRIMARY</StatePill> : null}
+                      </div>
                       <p className="text-sm text-neutral-400">{asset.width ?? '?'}x{asset.height ?? '?'} - {asset.mimeType ?? 'unknown'}</p>
                       <p className="break-all text-xs text-neutral-500">{asset.storageKey ?? asset.url ?? 'No storage key'}</p>
                       <MediaActionForms mediaId={asset.id} />
@@ -607,17 +632,39 @@ async function ContentReviewSection({ searchParams }: { searchParams?: SearchPar
       : mode === 'all'
         ? allReviews
         : pendingReviews;
+  const bulkApprovableReviewCount = reviews.filter((review) => review.status !== 'APPROVED').length;
 
   return (
     <div className="space-y-3">
       <ReviewTabs baseHref="/iron-sprue-admin/content-review" mode={mode} pendingCount={pendingReviews.length} approvedCount={approvedReviews.length} rejectedCount={rejectedReviews.length} allCount={allReviews.length} />
+      <form id="iron-sprue-content-bulk-approval" action={bulkApproveIronSprueContentReviewsAction} />
+      <IronSprueBulkApprovalControls
+        formId="iron-sprue-content-bulk-approval"
+        itemLabel="content review records"
+        totalCount={bulkApprovableReviewCount}
+      />
       {!reviews.length ? <EmptyNote>{mode === 'approved' ? 'No approved Iron Sprue content reviews found.' : mode === 'rejected' ? 'No rejected Iron Sprue content reviews found.' : mode === 'all' ? 'No Iron Sprue content review records found.' : 'No Iron Sprue content reviews currently require approval.'}</EmptyNote> : null}
       {reviews.map((review) => (
         <Card key={review.id}>
           <CardContent className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div><h2 className="font-bold">{review.product.customerTitle}</h2><p className="text-sm text-neutral-400">{review.product.sku} - {review.fieldName}</p></div>
-              <StatePill>{review.status}</StatePill>
+              <div className="flex flex-wrap items-center gap-2">
+                {review.status !== 'APPROVED' ? (
+                  <label className="flex items-center gap-2 rounded-md border border-surface-line bg-black/30 px-2 py-1 text-xs font-bold text-neutral-200">
+                    <input
+                      aria-label={`Select ${review.product.customerTitle} ${review.fieldName} for bulk approval`}
+                      data-bulk-group="iron-sprue-content-bulk-approval"
+                      form="iron-sprue-content-bulk-approval"
+                      name="reviewId"
+                      type="checkbox"
+                      value={review.id}
+                    />
+                    Select
+                  </label>
+                ) : null}
+                <StatePill>{review.status}</StatePill>
+              </div>
             </div>
             <pre className="max-h-52 overflow-auto rounded-md border border-surface-line bg-surface-ink p-3 text-xs text-neutral-300">{JSON.stringify(review.proposedValue, null, 2)}</pre>
             {review.sourceReference ? <p className="text-sm text-neutral-400">Source: {review.sourceReference}</p> : null}
