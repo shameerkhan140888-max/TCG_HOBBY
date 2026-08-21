@@ -52,10 +52,15 @@ export default async function AccountOrderDetailPage({
           <h2>Items</h2>
           {order.items.map((item) => (
             <div className="account-line" key={item.id}>
-              <span>
-                <strong>{item.productName}</strong>
-                <small>{item.productSku} - Qty {item.quantity}</small>
-              </span>
+              <div className="account-order-item">
+                <span className="account-order-thumb">
+                  {item.imageUrl ? <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} width="72" height="72" /> : 'Iron Sprue'}
+                </span>
+                <span>
+                  <strong>{item.productName}</strong>
+                  <small>{item.productSku} - Qty {item.quantity}</small>
+                </span>
+              </div>
               <strong>{money(item.totalMinor, order.currency)}</strong>
             </div>
           ))}

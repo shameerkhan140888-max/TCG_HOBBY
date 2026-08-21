@@ -3,8 +3,10 @@ import { getIronSprueAdminPrisma } from './client';
 import { IRON_SPRUE_STORE_CODE } from './iron-sprue-commerce';
 import {
   buildIronSprueCancellationEmail,
+  buildIronSprueCustomerRequestEmail,
   buildIronSprueDispatchEmail,
   buildIronSprueOrderConfirmationEmail,
+  type CustomerRequestEmailOptions,
   type IronSprueEmailOrder,
   type IronSprueEmailTemplate,
   type IronSprueEmailTemplateConfig,
@@ -14,6 +16,7 @@ export const IRON_SPRUE_ORDER_CONFIRMATION_EMAIL_PURPOSE = 'ORDER_CONFIRMATION';
 export const IRON_SPRUE_ORDER_CANCELLATION_EMAIL_PURPOSE = 'ORDER_CANCELLATION';
 export const IRON_SPRUE_ORDER_REFUND_EMAIL_PURPOSE = 'ORDER_REFUND';
 export const IRON_SPRUE_DISPATCH_EMAIL_PURPOSE = 'DISPATCH_NOTIFICATION';
+export const IRON_SPRUE_CUSTOMER_REQUEST_EMAIL_PURPOSE_PREFIX = 'CUSTOMER_REQUEST';
 
 const STALE_DELIVERY_CLAIM_MS = 10 * 60 * 1000;
 
@@ -49,13 +52,14 @@ function siteUrl() {
 
 function emailConfig(): IronSprueEmailTemplateConfig & { apiKey: string | null; from: string | null; replyTo: string | null } {
   const supportEmail = clean(process.env.IRON_SPRUE_SUPPORT_EMAIL) ?? 'info@ironsprue.co.uk';
+  const resolvedSiteUrl = siteUrl().replace(/\/$/, '');
   return {
     apiKey: clean(process.env.IRON_SPRUE_RESEND_API_KEY),
     from: clean(process.env.IRON_SPRUE_EMAIL_FROM),
     replyTo: clean(process.env.IRON_SPRUE_EMAIL_REPLY_TO) ?? supportEmail,
-    siteUrl: siteUrl().replace(/\/$/, ''),
+    siteUrl: resolvedSiteUrl,
     supportEmail,
-    logoUrl: clean(process.env.IRON_SPRUE_EMAIL_LOGO_URL),
+    logoUrl: clean(process.env.IRON_SPRUE_EMAIL_LOGO_URL) ?? `${resolvedSiteUrl}/brand/iron-sprue-horizontal.svg`,
   };
 }
 
@@ -302,6 +306,21 @@ export async function sendIronSprueDispatchEmail(
     orderId,
     IRON_SPRUE_DISPATCH_EMAIL_PURPOSE,
     buildIronSprueDispatchEmail,
+    db,
+  );
+}
+
+export async function sendIronSprueCustomerRequestAcknowledgementEmail(
+  orderId: string,
+  requestId: string,
+  options: CustomerRequestEmailOptions,
+  db: IronSprueEmailDb = getIronSprueEmailPrisma(),
+): Promise<IronSprueTransactionalEmailOutcome> {
+  if (!requestId.trim()) return { outcome: 'not_found' };
+  return sendIronSprueEmail(
+    orderId,
+    `${IRON_SPRUE_CUSTOMER_REQUEST_EMAIL_PURPOSE_PREFIX}_${requestId}`,
+    (emailOrder, config) => buildIronSprueCustomerRequestEmail(emailOrder, config, options),
     db,
   );
 }

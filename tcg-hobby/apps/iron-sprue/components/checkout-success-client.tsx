@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import type { PublicOrderDetail } from '@tcg-hobby/types';
-import { trackIronSprueEcommerceEvent } from '../lib/analytics';
+import {
+  hasTrackedIronSpruePurchase,
+  markIronSpruePurchaseTracked,
+  trackIronSprueEcommerceEvent,
+} from '../lib/analytics';
 import { clearIronSprueBasketAfterPaidCheckout } from './basket-client';
 
 function formatPrice(minor: number) {
@@ -75,6 +79,10 @@ export function CheckoutSuccessClient({
 
   useEffect(() => {
     if (!order || order.paymentStatus !== 'SUCCEEDED' || hasTrackedPurchase) return;
+    if (hasTrackedIronSpruePurchase(order.orderNumber)) {
+      setHasTrackedPurchase(true);
+      return;
+    }
     trackIronSprueEcommerceEvent('purchase', {
       transaction_id: order.orderNumber,
       currency: order.currency,
@@ -89,6 +97,7 @@ export function CheckoutSuccessClient({
         price: item.unitPriceMinor / 100,
       })),
     });
+    markIronSpruePurchaseTracked(order.orderNumber);
     setHasTrackedPurchase(true);
   }, [hasTrackedPurchase, order]);
 

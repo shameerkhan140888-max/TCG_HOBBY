@@ -9,6 +9,7 @@ import {
   generateIronSprueOrderNumber,
   processIronSprueStripeWebhookEvent,
   reconcileIronSprueReservedStock,
+  refundIronSprueOrderForMerchant,
   releaseIronSprueCheckoutOrderReservation,
   resolveIronSprueGuestCart,
 } from './iron-sprue-commerce';
@@ -892,6 +893,56 @@ describe('Iron Sprue Stripe commerce', () => {
     await expect(cancelIronSprueOrderForMerchant({ orderId: 'order-1', environment: 'test' }, db)).rejects.toThrow('Refund failed.');
 
     expect(db.$transaction).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+  });
+
+  it('does not restock inventory for a standalone refund without an explicit return restock decision', async () => {
+    const paidOrder = {
+      id: 'order-1',
+      storeCode: 'IRON_SPRUE',
+      orderNumber: 'IS-20260812-ABC123',
+      status: 'PAID',
+      paymentStatus: 'SUCCEEDED',
+      fulfilmentStatus: 'SHIPPED',
+      paymentIntentId: 'pi_iron_1',
+      stripeCheckoutSessionId: null,
+      totalMinor: 2298,
+      refundedMinor: 0,
+      currency: 'GBP',
+      cancelledAt: null,
+      items: [{ productId: 'product-1', quantity: 1 }],
+    };
+    const db = {
+      ironSprueOrder: {
+        findUnique: vi.fn().mockResolvedValue(paidOrder),
+        update: vi.fn().mockResolvedValue({ ...paidOrder, refundedMinor: 500 }),
+      },
+      ironSprueAdminInventory: {
+        update: vi.fn(),
+      },
+      ironSprueAdminStockMovement: {
+        create: vi.fn(),
+      },
+    } as any;
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 're_partial_iron_1', object: 'refund', status: 'succeeded' }),
+    } as Response);
+
+    await expect(refundIronSprueOrderForMerchant({
+      orderId: 'order-1',
+      amountMinor: 500,
+      reason: 'Goodwill adjustment',
+      environment: 'test',
+    }, db)).resolves.toMatchObject({
+      refund: { id: 're_partial_iron_1' },
+    });
+
+    expect(db.ironSprueAdminInventory.update).not.toHaveBeenCalled();
+    expect(db.ironSprueAdminStockMovement.create).not.toHaveBeenCalled();
+    expect(db.ironSprueOrder.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ refundedMinor: 500 }),
+    }));
     fetchSpy.mockRestore();
   });
 });

@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildIronSprueCancellationEmail,
+  buildIronSprueCustomerRequestEmail,
   buildIronSprueDispatchEmail,
+  buildIronSprueOrderConfirmationEmail,
   type IronSprueEmailOrderItem,
   type IronSprueEmailOrder,
   type IronSprueEmailTemplateConfig,
@@ -11,6 +13,7 @@ import {
   markIronSprueTransactionalEmailFailed,
   markIronSprueTransactionalEmailSent,
   sendIronSprueCancellationEmail,
+  sendIronSprueCustomerRequestAcknowledgementEmail,
   sendIronSprueDispatchEmail,
   sendIronSprueOrderConfirmationEmail,
 } from './iron-sprue-transactional-email';
@@ -180,6 +183,7 @@ describe('Iron Sprue transactional email sending', () => {
     const body = lastEmailPayload();
     expect(body.from).toBe('Iron Sprue <orders@example.test>');
     expect(body.html).toContain('Iron Sprue');
+    expect(body.html).toContain('https://ironsprue.example.test/brand/iron-sprue-horizontal.svg');
     expect(body.html).not.toContain('TCG Hobby');
     expect(db.ironSprueTransactionalEmailDelivery.update).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: 'SENT' }),
@@ -240,7 +244,9 @@ describe('Iron Sprue transactional email sending', () => {
     body = lastEmailPayload();
     expect(body.subject).toContain('Order cancelled');
     expect(body.html).toContain('No payment was taken');
+    expect(body.html).toContain('https://ironsprue.example.test/brand/iron-sprue-horizontal.svg');
     expect(body.html).not.toContain('Refund amount');
+    expect(body.html).not.toContain('TCG Hobby');
   });
 
   it('sends dispatch email with carrier and tracking CTA', async () => {
@@ -258,6 +264,36 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.html).toContain('Royal Mail');
     expect(body.html).toContain('ISPREVIEW123GB');
     expect(body.html).toContain('Track your order');
+    expect(body.html).toContain('https://ironsprue.example.test/brand/iron-sprue-horizontal.svg');
+    expect(body.html).not.toContain('TCG Hobby');
+  });
+
+  it('sends customer return and cancellation request acknowledgements once per request', async () => {
+    const db = createDb();
+
+    await expect(sendIronSprueCustomerRequestAcknowledgementEmail('order-1', 'request-1', {
+      requestType: 'RETURN',
+      reason: 'Damaged in transit',
+    }, db as never)).resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
+
+    expect(fetch).toHaveBeenCalledWith('https://api.resend.com/emails', expect.objectContaining({
+      headers: expect.objectContaining({
+        'Idempotency-Key': 'iron-sprue-order:order-1:customer_request_request-1',
+      }),
+    }));
+    const body = lastEmailPayload();
+    expect(body.subject).toContain('Return request received');
+    expect(body.html).toContain('Damaged in transit');
+    expect(body.html).toContain('Please do not send any item back');
+    expect(body.html).not.toContain('TCG Hobby');
+
+    vi.clearAllMocks();
+    const sentDb = createDb(sampleOrder(), 'SENT');
+    await expect(sendIronSprueCustomerRequestAcknowledgementEmail('order-1', 'request-1', {
+      requestType: 'CANCELLATION',
+      reason: 'Changed my mind',
+    }, sentDb as never)).resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('records provider failures without throwing into commerce flows', async () => {
@@ -294,6 +330,17 @@ describe('Iron Sprue email templates', () => {
     expect(template.html).not.toContain('Track your order');
   });
 
+  it('resolves persisted relative product images against the Iron Sprue site URL', () => {
+    const item: TestOrder['items'][number] = {
+      ...sampleOrder().items[0]!,
+      imageUrl: '/media/iron-sprue/toyota-red.webp',
+    };
+    const template = buildIronSprueOrderConfirmationEmail(sampleOrder({
+      items: [item],
+    }), config);
+    expect(template.html).toContain('https://ironsprue.example.test/media/iron-sprue/toyota-red.webp');
+  });
+
   it('keeps cancellation language free of internal lifecycle terminology', () => {
     const template = buildIronSprueCancellationEmail(sampleOrder({
       status: 'CANCELLED',
@@ -303,5 +350,15 @@ describe('Iron Sprue email templates', () => {
     }), config, { refunded: false });
     expect(template.text).toContain('No payment was taken');
     expect(template.text).not.toMatch(/reservation|webhook|payment intent|database/i);
+  });
+
+  it('keeps customer request acknowledgement language retail-friendly', () => {
+    const template = buildIronSprueCustomerRequestEmail(sampleOrder(), config, {
+      requestType: 'RETURN',
+      reason: 'No longer needed',
+    });
+    expect(template.subject).toContain('Return request received');
+    expect(template.text).toContain('No longer needed');
+    expect(template.text).not.toMatch(/reservation|webhook|payment intent|database|stripe/i);
   });
 });

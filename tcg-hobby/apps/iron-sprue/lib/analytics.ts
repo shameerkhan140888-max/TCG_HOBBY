@@ -37,3 +37,21 @@ export function trackIronSprueEcommerceEvent(eventName: 'add_to_cart' | 'begin_c
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(IRON_SPRUE_ANALYTICS_ECOMMERCE_EVENT, { detail: { eventName, parameters } }));
 }
+
+export function hasTrackedIronSpruePurchase(orderNumber: string) {
+  if (!hasBrowserStorage()) return false;
+  try {
+    return window.localStorage.getItem(`iron_sprue_purchase_tracked:${orderNumber}`) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markIronSpruePurchaseTracked(orderNumber: string) {
+  if (!hasBrowserStorage()) return;
+  try {
+    window.localStorage.setItem(`iron_sprue_purchase_tracked:${orderNumber}`, '1');
+  } catch {
+    // Analytics bookkeeping must not affect checkout completion.
+  }
+}

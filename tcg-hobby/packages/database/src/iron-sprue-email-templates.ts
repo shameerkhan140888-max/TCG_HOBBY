@@ -51,6 +51,11 @@ type CancellationOptions = {
   refunded: boolean;
 };
 
+export type CustomerRequestEmailOptions = {
+  requestType: 'CANCELLATION' | 'RETURN';
+  reason?: string | null;
+};
+
 const brand = {
   name: 'Iron Sprue',
   accent: '#ff7a1a',
@@ -98,8 +103,11 @@ function productHref(item: IronSprueEmailOrderItem, config: IronSprueEmailTempla
   return `${normaliseSiteUrl(config.siteUrl)}/products/${encodeURIComponent(item.productSlug)}`;
 }
 
-function imageSrc(item: IronSprueEmailOrderItem) {
-  return item.imageUrl && /^https?:\/\//i.test(item.imageUrl) ? item.imageUrl : null;
+function imageSrc(item: IronSprueEmailOrderItem, config: IronSprueEmailTemplateConfig) {
+  if (!item.imageUrl) return null;
+  if (/^https?:\/\//i.test(item.imageUrl)) return item.imageUrl;
+  if (item.imageUrl.startsWith('/')) return `${normaliseSiteUrl(config.siteUrl)}${item.imageUrl}`;
+  return null;
 }
 
 function addressLines(order: IronSprueEmailOrder) {
@@ -195,7 +203,7 @@ function customerFulfilmentStatus(status: string) {
 
 function itemRows(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig) {
   return order.items.map((item) => {
-    const src = imageSrc(item);
+    const src = imageSrc(item, config);
     const image = src
       ? `<img class="thumb" src="${escapeHtml(src)}" alt="${escapeHtml(item.imageAlt ?? item.productName)}" />`
       : '<span class="thumbFallback">Iron Sprue</span>';
@@ -379,6 +387,47 @@ export function buildIronSprueDispatchEmail(
     trackingUrl ? `Track your order: ${trackingUrl}` : '',
     '',
     textOrderLines(order),
+  ].filter(Boolean).join('\n');
+  return { subject, html, text };
+}
+
+export function buildIronSprueCustomerRequestEmail(
+  order: IronSprueEmailOrder,
+  config: IronSprueEmailTemplateConfig,
+  options: CustomerRequestEmailOptions,
+): IronSprueEmailTemplate {
+  const isReturn = options.requestType === 'RETURN';
+  const label = isReturn ? 'return request' : 'cancellation request';
+  const heading = isReturn ? 'Return request received' : 'Cancellation request received';
+  const subject = `${heading} - ${order.orderNumber}`;
+  const intro = `We have received your ${label}. The Iron Sprue team will review it and contact you if we need anything else.`;
+  const reason = options.reason?.trim();
+  const html = wrap(`
+    ${header(config, heading, intro)}
+    <div class="body">
+      ${orderMeta(order)}
+      <div class="panel">
+        <p><span class="label">Request</span><span class="value">${escapeHtml(isReturn ? 'Return' : 'Cancellation')}</span></p>
+        ${reason ? `<p><span class="label">Reason</span><span class="value">${escapeHtml(reason)}</span></p>` : ''}
+      </div>
+      ${itemsTable(order, config)}
+      <h2>What happens next</h2>
+      <p>We will review your order and reply with the next steps. Please do not send any item back until we confirm the return instructions.</p>
+      <p><a class="button" href="${escapeHtml(orderHref(order, config))}">View order</a></p>
+    </div>
+    ${footer(config)}
+  `);
+  const text = [
+    `${heading} - ${order.orderNumber}`,
+    '',
+    intro,
+    reason ? `Reason: ${reason}` : '',
+    '',
+    textOrderLines(order),
+    '',
+    'We will review your order and reply with the next steps. Please do not send any item back until we confirm the return instructions.',
+    '',
+    `View order: ${orderHref(order, config)}`,
   ].filter(Boolean).join('\n');
   return { subject, html, text };
 }

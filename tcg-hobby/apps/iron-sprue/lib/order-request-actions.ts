@@ -1,6 +1,9 @@
 'use server';
 
-import { createIronSprueCustomerOrderRequest } from '@tcg-hobby/database';
+import {
+  createIronSprueCustomerOrderRequest,
+  sendIronSprueCustomerRequestAcknowledgementEmail,
+} from '@tcg-hobby/database';
 import { redirect } from 'next/navigation';
 import { requireIronSprueCustomerSession } from './auth';
 
@@ -16,13 +19,25 @@ export async function submitIronSprueOrderRequestAction(formData: FormData) {
   const session = await requireIronSprueCustomerSession(orderNumber ? `/account/orders/${encodeURIComponent(orderNumber)}` : '/account/orders');
   try {
     if (requestType !== 'CANCELLATION' && requestType !== 'RETURN') throw new Error('Unsupported request type.');
-    await createIronSprueCustomerOrderRequest({
+    const request = await createIronSprueCustomerOrderRequest({
       userId: session.user.id,
       orderNumber,
       requestType,
       reason,
       customerMessage,
     });
+    try {
+      await sendIronSprueCustomerRequestAcknowledgementEmail(request.orderId, request.id, {
+        requestType,
+        reason,
+      });
+    } catch (emailError) {
+      console.warn('iron_sprue_customer_request_email_not_sent', {
+        orderNumber,
+        requestId: request.id,
+        reason: emailError instanceof Error ? emailError.message : 'Unknown email error',
+      });
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Request could not be submitted.';
     redirect(`/account/orders/${encodeURIComponent(orderNumber)}?requestError=${encodeURIComponent(message)}`);

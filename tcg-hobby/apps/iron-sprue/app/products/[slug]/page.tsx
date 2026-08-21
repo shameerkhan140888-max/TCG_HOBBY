@@ -1,6 +1,8 @@
 import launchProducts from '../../../data/launch-products.json';
 import React from 'react';
+import type { Metadata } from 'next';
 import { ProductGallery } from '../../../components/product-gallery';
+import { ironSprueBrand } from '../../../lib/brand';
 import { AddToBasketButton } from '../../../components/basket-client';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
 import { type IronSprueProduct } from '../../../lib/catalogue';
@@ -36,6 +38,36 @@ function publicSpecifications(product: IronSprueProduct) {
 
 export function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const product = products.find((candidate) => candidate.slug === slug);
+  if (!product) return { title: 'Product unavailable' };
+  const image = productImage(product);
+  const title = product.seoTitle || `${product.name} by ${product.brand}`;
+  const description = product.metaDescription || product.shortDescription;
+  const url = `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/products/${product.slug}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      siteName: 'Iron Sprue',
+      title,
+      description,
+      url,
+      images: image ? [{ url: image, alt: product.name }] : undefined,
+    },
+    twitter: {
+      card: image ? 'summary_large_image' : 'summary',
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {

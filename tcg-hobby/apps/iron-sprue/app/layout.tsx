@@ -15,6 +15,29 @@ export const metadata: Metadata = {
   },
   description: 'A premium modelling workshop and curated model-building retailer from Capital Hobby Group Ltd.',
   metadataBase: new URL(ironSprueBrand.siteUrl),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'Iron Sprue',
+    title: 'Iron Sprue | Premium model kits and workshop essentials',
+    description: 'Premium model kits, display builds and workshop essentials curated by Capital Hobby Group Ltd.',
+    url: ironSprueBrand.siteUrl,
+    images: [{ url: '/brand/iron-sprue-horizontal.svg', alt: 'Iron Sprue' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Iron Sprue | Premium model kits and workshop essentials',
+    description: 'Premium model kits, display builds and workshop essentials curated by Capital Hobby Group Ltd.',
+    images: ['/brand/iron-sprue-horizontal.svg'],
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_IRON_SPRUE_SEARCH_CONSOLE_VERIFICATION || undefined,
+    other: process.env.NEXT_PUBLIC_IRON_SPRUE_META_DOMAIN_VERIFICATION
+      ? { 'facebook-domain-verification': process.env.NEXT_PUBLIC_IRON_SPRUE_META_DOMAIN_VERIFICATION }
+      : undefined,
+  },
   icons: {
     icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
     shortcut: '/icon.svg',
