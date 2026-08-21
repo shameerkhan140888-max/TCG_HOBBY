@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CheckoutAddress, PublicBasket, PublicBasketInputItem, ShippingMethodCode } from '@tcg-hobby/types';
 import { trackIronSprueEcommerceEvent } from '../lib/analytics';
+import { PaymentMethodStrip } from './payment-method-strip';
 
 export const IRON_SPRUE_BASKET_STORAGE_KEY = 'iron-sprue-basket-v1';
 export const IRON_SPRUE_LEGACY_BASKET_STORAGE_KEYS = [
@@ -174,7 +175,7 @@ export function addIronSprueBasketItem(item: StoredBasketItem) {
   if (requestedTotal > limit) {
     return { ok: true, message: `Only ${limit} available. Basket quantity has been capped.` };
   }
-  return { ok: true, message: 'Added to basket.' };
+  return { ok: true, message: 'Added to basket' };
 }
 
 async function resolveLiveBasketLine(item: StoredBasketItem) {
@@ -255,7 +256,12 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
       >
         {outOfStock ? 'Out of stock' : isAdding ? 'Checking stock...' : 'Add to basket'}
       </button>
-      {message ? <p className={`form-status ${messageOk ? 'notice' : 'error'}`}>{message}</p> : null}
+      {message ? (
+        <div className={`add-to-basket-feedback ${messageOk ? 'notice' : 'error'}`} role="status">
+          <span>{messageOk && message === 'Added to basket' ? 'Added to basket' : message}</span>
+          {messageOk ? <a href="/basket">View basket</a> : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -597,10 +603,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             ) : (
               <a className="button" href="/checkout">Proceed to checkout</a>
             )}
-            <div className="basket-payment-strip" aria-label="Supported payment method">
-              <span>Supported payment</span>
-              <strong>Card payments</strong>
-            </div>
+            <PaymentMethodStrip compact />
             <a className="text-link" href="/shop">Continue shopping</a>
           </aside>
         </div>
@@ -726,9 +729,10 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             <span>Total to pay</span><strong>{formatPrice(checkoutPaymentIntent.totalMinor)}</strong>
           </div>
           <div className="checkout-reassurance">
-            <p><strong>Secure payment</strong> Card details are handled by the embedded payment provider form.</p>
+            <p><strong>Secure payment</strong> Card details are handled by the embedded payment provider form. Digital wallets may appear where supported by your device and browser.</p>
             <p><strong>Order reference</strong> {checkoutPaymentIntent.orderNumber}</p>
           </div>
+          <PaymentMethodStrip compact />
           <StripePaymentElementForm paymentIntent={checkoutPaymentIntent} />
           <button type="button" className="button secondary" onClick={() => setCheckoutStep('review')}>Back to order review</button>
         </section>
@@ -781,9 +785,9 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
           </div>
         </fieldset>
         <div className="checkout-reassurance">
-          <p><strong>Delivery</strong> UK delivery options are confirmed before payment.</p>
-          <p><strong>Returns</strong> Unused items can be returned under the published returns policy.</p>
-          <p><strong>Payments</strong> Secure card payment is processed through the embedded payment form.</p>
+          <p><strong>Delivery</strong> UK delivery options and costs are confirmed before payment. Free UK delivery applies on eligible orders over £75.</p>
+          <p><strong>Returns</strong> Unused items can be returned in line with the published returns policy.</p>
+          <p><strong>Payments</strong> Secure card payments are handled by the embedded payment form. Digital wallets may appear where supported.</p>
         </div>
         <div className="checkout-totals">
           <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>

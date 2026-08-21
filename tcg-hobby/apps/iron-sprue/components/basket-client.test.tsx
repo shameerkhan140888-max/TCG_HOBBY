@@ -121,7 +121,7 @@ describe('Iron Sprue basket persistence', () => {
 
     const result = await addIronSprueBasketItemWithLiveStock({ ...toyota, productId: 'IS-AOS-05628', availableQuantity: 2 });
 
-    expect(result).toEqual({ ok: true, message: 'Added to basket.' });
+    expect(result).toEqual({ ok: true, message: 'Added to basket' });
     expect(JSON.parse(window.localStorage.getItem(IRON_SPRUE_BASKET_STORAGE_KEY) ?? '[]')).toEqual([{
       ...toyota,
       productId: 'IS-AOS-05628',

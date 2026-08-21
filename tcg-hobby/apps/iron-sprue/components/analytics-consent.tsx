@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
@@ -167,6 +168,8 @@ export function IronSprueAnalyticsProvider(props: { ga4Id: string | null; metaPi
 
 export function IronSprueCookieConsentBanner() {
   const [consent, setConsent] = useState<IronSprueAnalyticsConsent>('unknown');
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [marketingEnabled, setMarketingEnabled] = useState(false);
 
   useEffect(() => {
     setConsent(getIronSprueAnalyticsConsent());
@@ -184,9 +187,36 @@ export function IronSprueCookieConsentBanner() {
       <div>
         <h2>Cookie preferences</h2>
         <p>Essential storage keeps basket, account and checkout features working. With your permission, Iron Sprue also uses analytics and marketing tags to measure storefront performance.</p>
+        {showPreferences ? (
+          <div className="cookie-preference-panel" aria-label="Optional cookie preferences">
+            <p><strong>Essential cookies</strong> Always on for security, basket, account and checkout.</p>
+            <label>
+              <input
+                type="checkbox"
+                checked={marketingEnabled}
+                onChange={(event) => setMarketingEnabled(event.target.checked)}
+              />
+              Optional analytics and marketing
+            </label>
+          </div>
+        ) : null}
       </div>
       <div className="cookie-consent-actions">
         <button type="button" onClick={() => { setIronSprueAnalyticsConsent('necessary'); setConsent('necessary'); }}>Necessary only</button>
+        {showPreferences ? (
+          <button
+            type="button"
+            onClick={() => {
+              const nextConsent = marketingEnabled ? 'marketing' : 'necessary';
+              setIronSprueAnalyticsConsent(nextConsent);
+              setConsent(nextConsent);
+            }}
+          >
+            Save preferences
+          </button>
+        ) : (
+          <button type="button" onClick={() => setShowPreferences(true)}>Manage preferences</button>
+        )}
         <button type="button" className="button" onClick={() => { setIronSprueAnalyticsConsent('marketing'); setConsent('marketing'); }}>Accept analytics</button>
       </div>
     </section>

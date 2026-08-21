@@ -488,7 +488,7 @@ async function createIronSprueStripePaymentIntent(params: {
   body.set('amount', String(params.totalMinor));
   body.set('currency', CURRENCY.toLowerCase());
   body.set('description', `${params.businessName} order ${params.orderNumber}`);
-  body.set('automatic_payment_methods[enabled]', 'true');
+  body.set('payment_method_types[0]', 'card');
   body.set('receipt_email', params.shippingEmail);
   const metadata = buildIronSprueStripeMetadata(params);
   for (const [key, value] of Object.entries(metadata)) {

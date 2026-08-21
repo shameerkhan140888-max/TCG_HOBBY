@@ -465,7 +465,8 @@ describe('Iron Sprue Stripe commerce', () => {
     expect(body.get('metadata[commerceStore]')).toBe('IRON_SPRUE');
     expect(body.get('metadata[orderNumber]')).toBe(result.orderNumber);
     expect(body.get('metadata[checkoutAttemptId]')).toBe('attempt-integrated-1');
-    expect(body.get('automatic_payment_methods[enabled]')).toBe('true');
+    expect(body.get('payment_method_types[0]')).toBe('card');
+    expect(body.get('automatic_payment_methods[enabled]')).toBeNull();
     expect(db.ironSprueOrder.update).toHaveBeenCalledWith({
       where: { id: 'order-1' },
       data: {

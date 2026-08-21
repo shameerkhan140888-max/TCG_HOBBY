@@ -6,6 +6,7 @@ import { categoryNavigation } from '../lib/storefront';
 import { LaunchListForm } from '../components/launch-list-form';
 import { BasketLink } from '../components/basket-link';
 import { IronSprueAnalyticsProvider, IronSprueCookieConsentBanner, IronSprueCookiePreferenceLink } from '../components/analytics-consent';
+import { PaymentMethodStrip } from '../components/payment-method-strip';
 
 export const metadata: Metadata = {
   title: {
@@ -104,16 +105,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <li><strong>Modeller content</strong><span>Tips, guides and more</span></li>
             </ul>
           </section>
-          <section className="payment-trust-banner" aria-label="Accepted payments and trust">
+          <section className="payment-trust-banner" aria-label="Payment and trust">
             <strong>Safe. Secure. Trusted.</strong>
-            <ul aria-label="Accepted payment methods">
-              <li><img src="/payments/visa.svg" alt="Visa" width="70" height="24" /></li>
-              <li><img src="/payments/mastercard.svg" alt="Mastercard" width="54" height="34" /></li>
-              <li><span className="payment-wordmark paypal">PayPal</span></li>
-              <li><span className="payment-wordmark applepay">Apple Pay</span></li>
-              <li><span className="payment-wordmark googlepay">G Pay</span></li>
-              <li><span className="payment-wordmark klarna">Klarna.</span></li>
-            </ul>
+            <PaymentMethodStrip compact />
           </section>
         </aside>
         <footer className="site-footer">

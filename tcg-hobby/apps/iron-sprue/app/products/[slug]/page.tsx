@@ -97,9 +97,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </form>
           </div>
           <div className="service-summary">
-            <p><strong>Delivery</strong> UK delivery options shown before checkout.</p>
-            <p><strong>Returns</strong> Returns information available before purchase.</p>
-            <p><strong>Payments</strong> Visa, Mastercard, PayPal, Apple Pay and Google Pay planned.</p>
+            <p><strong>Delivery</strong> UK delivery options and costs are confirmed before payment. Free UK delivery applies on eligible orders over £75.</p>
+            <p><strong>Returns</strong> Unused items can be returned in line with the published returns policy.</p>
+            <p><strong>Payments</strong> Secure card payments are handled by the embedded payment form. Digital wallets may appear where supported.</p>
           </div>
         </article>
       </div>
