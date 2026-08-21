@@ -4,8 +4,10 @@ import {
   cancelIronSprueOrderForMerchant,
   adjustIronSprueStock,
   createIronSprueAdminMediaAsset,
+  createIronSprueManualOrder,
   processIronSprueOrderReturn,
   receiveIronSprueStock,
+  resolveIronSprueCustomerOrderRequest,
   sendIronSprueCancellationEmail,
   sendIronSprueDispatchEmail,
   sendIronSprueOrderConfirmationEmail,
@@ -471,6 +473,68 @@ export async function saveIronSprueOrderNotesAction(formData: FormData) {
   }
   revalidatePath('/iron-sprue-admin/orders');
   redirect(adminStatusPath('orders', 'saved', 'Order notes saved.'));
+}
+
+export async function createIronSprueManualOrderAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  try {
+    const lines = [0, 1, 2].map((index) => ({
+      productId: stringFromForm(formData.get(`productId:${index}`)),
+      quantity: Math.trunc(optionalNumberFromForm(formData.get(`quantity:${index}`)) ?? 0),
+      unitPriceMinor: optionalMoneyMinorFromForm(formData.get(`unitPrice:${index}`)) ?? null,
+    })).filter((line) => line.productId && line.quantity > 0);
+    const placedAtRaw = stringFromForm(formData.get('placedAt')).trim();
+    const placedAt = placedAtRaw ? new Date(placedAtRaw) : undefined;
+    await createIronSprueManualOrder(
+      {
+        userId: stringFromForm(formData.get('userId')),
+        sourceChannel: stringFromForm(formData.get('sourceChannel')),
+        paymentMethodLabel: stringFromForm(formData.get('paymentMethodLabel')),
+        externalReference: stringFromForm(formData.get('externalReference')),
+        ...(placedAt ? { placedAt } : {}),
+        shippingMinor: optionalMoneyMinorFromForm(formData.get('shippingMinor')) ?? 0,
+        shippingMethodName: stringFromForm(formData.get('shippingMethodName')),
+        shippingFullName: stringFromForm(formData.get('shippingFullName')),
+        shippingEmail: stringFromForm(formData.get('shippingEmail')),
+        shippingLine1: stringFromForm(formData.get('shippingLine1')),
+        shippingLine2: stringFromForm(formData.get('shippingLine2')),
+        shippingCity: stringFromForm(formData.get('shippingCity')),
+        shippingRegion: stringFromForm(formData.get('shippingRegion')),
+        shippingPostalCode: stringFromForm(formData.get('shippingPostalCode')),
+        shippingCountry: stringFromForm(formData.get('shippingCountry')),
+        lines,
+      },
+      actor,
+    );
+  } catch (error) {
+    redirect(adminStatusPath('orders', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin/orders');
+  revalidatePath('/iron-sprue-admin/inventory');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('orders', 'saved', 'Manual order created and stock allocated.'));
+}
+
+export async function resolveIronSprueCustomerRequestAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const requestId = stringFromForm(formData.get('requestId'));
+  const status = stringFromForm(formData.get('status')).toUpperCase();
+  try {
+    if (!requestId) throw new Error('requestId is required.');
+    if (!['RESOLVED', 'DECLINED'].includes(status)) throw new Error('Invalid request status.');
+    await resolveIronSprueCustomerOrderRequest(
+      {
+        requestId,
+        status: status as 'RESOLVED' | 'DECLINED',
+        adminNotes: stringFromForm(formData.get('adminNotes')),
+      },
+      actor,
+    );
+  } catch (error) {
+    redirect(adminStatusPath('orders', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin/orders');
+  redirect(adminStatusPath('orders', 'saved', 'Customer request updated.'));
 }
 
 export async function processIronSprueReturnAction(formData: FormData) {

@@ -193,6 +193,7 @@ model User {
   marketingCampaigns MarketingCampaign[]
   securityTokens UserSecurityToken[]
   ironSprueWishlistItems IronSprueWishlistItem[]
+  ironSprueOrderCustomerRequests IronSprueOrderCustomerRequest[]
   roleChangesReceived AdminRoleChange[] @relation("RoleChangesForUser")
   roleChangesMade AdminRoleChange[] @relation("RoleChangesByUser")
 }
@@ -1470,6 +1471,9 @@ model IronSprueOrder {
   paymentStatus           String   @default("REQUIRES_PAYMENT")
   fulfilmentStatus        String   @default("PENDING")
   paymentProvider         String?
+  sourceChannel           String   @default("ONLINE")
+  paymentMethodLabel      String?
+  externalReference       String?
   paymentIntentId         String?  @unique
   stripeCheckoutSessionId String?  @unique
   stripeCheckoutUrl       String?
@@ -1493,6 +1497,7 @@ model IronSprueOrder {
   shippingPostalCode      String
   shippingCountry         String
   reservationExpiresAt    DateTime?
+  placedAt                DateTime @default(now())
   paidAt                  DateTime?
   fulfilledAt             DateTime?
   dispatchedAt            DateTime?
@@ -1509,10 +1514,12 @@ model IronSprueOrder {
   webhookEvents           IronSprueStripeWebhookEvent[]
   transactionalEmailDeliveries IronSprueTransactionalEmailDelivery[]
   returns                 IronSprueOrderReturn[]
+  customerRequests        IronSprueOrderCustomerRequest[]
   discountRedemptions     IronSprueDiscountRedemption[]
 
   @@index([storeCode, paymentStatus, createdAt])
   @@index([storeCode, userId, createdAt])
+  @@index([storeCode, sourceChannel, placedAt])
 }
 
 model IronSprueDiscountCode {
@@ -1589,6 +1596,27 @@ model IronSprueOrderReturnLine {
 
   @@index([returnId])
   @@index([productId])
+}
+
+model IronSprueOrderCustomerRequest {
+  id              String   @id @default(cuid())
+  storeCode       String   @default("IRON_SPRUE")
+  orderId         String
+  userId          String?
+  requestType     String
+  status          String   @default("OPEN")
+  reason          String
+  customerMessage String?
+  adminNotes      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  resolvedAt      DateTime?
+  order           IronSprueOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user            User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([storeCode, status, createdAt])
+  @@index([orderId, createdAt])
+  @@index([userId, createdAt])
 }
 
 model IronSprueTransactionalEmailDelivery {

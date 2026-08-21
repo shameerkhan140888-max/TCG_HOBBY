@@ -4,13 +4,16 @@ import {
   assertIronSprueR2Bucket,
   assertNoClientStoreOverride,
   calculateIronSprueOnHandStock,
+  createIronSprueCustomerOrderRequest,
   createIronSprueAdminProduct,
+  createIronSprueManualOrder,
   evaluateIronSprueProductReadiness,
   getIronSprueAdminDashboard,
   getIronSprueAdminPermissionMatrix,
   listIronSprueAdminProducts,
   receiveIronSprueStock,
   reconcileIronSprueInventoryAvailableStock,
+  resolveIronSprueCustomerOrderRequest,
   resolveIronSprueAdminPermissions,
   setIronSprueProductPublicationState,
   updateIronSprueAdminOrderFulfilmentStatus,
@@ -366,5 +369,224 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     await expect(updateIronSprueAdminOrderFulfilmentStatus('order-1', 'SHIPPED', actor, client as never)).rejects.toThrow(/paid/);
     await expect(updateIronSprueAdminOrderFulfilmentStatus('order-2', 'SHIPPED', actor, client as never)).rejects.toThrow(/paid/);
     expect(client.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('creates manual orders by snapshotting products and decrementing sellable stock', async () => {
+    const product = {
+      id: 'product-1',
+      storeCode: 'IRON_SPRUE',
+      sku: 'IS-AOS-05629',
+      customerTitle: 'Toyota 2000GT Silver',
+      slug: 'toyota-2000gt-silver',
+      grossPriceMinor: 1999,
+      inventory: { id: 'inventory-1', storeCode: 'IRON_SPRUE', productId: 'product-1', availableStock: 2 },
+      mediaAssets: [
+        { approvalState: 'APPROVED', isPrimary: true, role: 'catalogue-primary', sortOrder: 0, url: '/media/car.webp', storageKey: null, altText: 'Toyota 2000GT Silver' },
+      ],
+    };
+    const createdOrder = {
+      id: 'order-1',
+      orderNumber: 'IS-20260821-ABC123',
+      items: [],
+    };
+    const tx = {
+      ironSprueAdminInventory: {
+        findUnique: vi.fn().mockResolvedValue(product.inventory),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      ironSprueAdminStockMovement: { create: vi.fn().mockResolvedValue({}) },
+      ironSprueOrder: { create: vi.fn().mockResolvedValue(createdOrder) },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+    const client = {
+      ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue([product]) },
+      $transaction: vi.fn((callback) => callback(tx)),
+    };
+
+    await createIronSprueManualOrder({
+      sourceChannel: 'phone',
+      paymentMethodLabel: 'Card machine',
+      externalReference: 'TILL-42',
+      shippingFullName: 'Iron Customer',
+      shippingEmail: 'customer@example.test',
+      shippingLine1: '1 Model Street',
+      shippingCity: 'Dewsbury',
+      shippingPostalCode: 'WF13 3EW',
+      lines: [{ productId: 'product-1', quantity: 1 }],
+    }, actor, client as never);
+
+    expect(tx.ironSprueAdminInventory.update).toHaveBeenCalledWith({
+      where: { productId: 'product-1' },
+      data: { availableStock: 1 },
+    });
+    expect(tx.ironSprueAdminStockMovement.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        storeCode: 'IRON_SPRUE',
+        movementType: 'MANUAL_ORDER_SALE',
+        quantity: -1,
+        beforeQuantity: 2,
+        afterQuantity: 1,
+      }),
+    }));
+    expect(tx.ironSprueOrder.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        storeCode: 'IRON_SPRUE',
+        paymentProvider: 'MANUAL',
+        sourceChannel: 'PHONE',
+        paymentMethodLabel: 'Card machine',
+        externalReference: 'TILL-42',
+        subtotalMinor: 1999,
+        totalMinor: 1999,
+        items: {
+          create: [expect.objectContaining({
+            productSku: 'IS-AOS-05629',
+            quantity: 1,
+            imageUrl: '/media/car.webp',
+          })],
+        },
+      }),
+      include: { items: true },
+    }));
+  });
+
+  it('rejects manual orders when sellable stock is insufficient', async () => {
+    const product = {
+      id: 'product-1',
+      storeCode: 'IRON_SPRUE',
+      sku: 'IS-AOS-05629',
+      customerTitle: 'Toyota 2000GT Silver',
+      slug: 'toyota-2000gt-silver',
+      grossPriceMinor: 1999,
+      inventory: { id: 'inventory-1', storeCode: 'IRON_SPRUE', productId: 'product-1', availableStock: 0 },
+      mediaAssets: [],
+    };
+    const tx = {
+      ironSprueAdminInventory: { findUnique: vi.fn().mockResolvedValue(product.inventory), update: vi.fn() },
+      ironSprueAdminStockMovement: { create: vi.fn() },
+      ironSprueOrder: { create: vi.fn() },
+      ironSprueAdminAuditLog: { create: vi.fn() },
+    };
+    const client = {
+      ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue([product]) },
+      $transaction: vi.fn((callback) => callback(tx)),
+    };
+
+    await expect(createIronSprueManualOrder({
+      shippingFullName: 'Iron Customer',
+      shippingEmail: 'customer@example.test',
+      shippingLine1: '1 Model Street',
+      shippingCity: 'Dewsbury',
+      shippingPostalCode: 'WF13 3EW',
+      lines: [{ productId: 'product-1', quantity: 1 }],
+    }, actor, client as never)).rejects.toThrow(/Insufficient sellable stock/);
+
+    expect(tx.ironSprueOrder.create).not.toHaveBeenCalled();
+  });
+
+  it('records customer cancellation and return requests without mutating commerce state', async () => {
+    const order = {
+      id: 'order-1',
+      storeCode: 'IRON_SPRUE',
+      orderNumber: 'IS-20260821-ABC123',
+      userId: 'user-1',
+      status: 'PAID',
+      paymentStatus: 'SUCCEEDED',
+      fulfilmentStatus: 'PENDING',
+      cancelledAt: null,
+    };
+    const request = { id: 'request-1', orderId: 'order-1', requestType: 'CANCELLATION', status: 'OPEN' };
+    const tx = {
+      ironSprueOrderCustomerRequest: { create: vi.fn().mockResolvedValue(request) },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+    const client = {
+      ironSprueOrder: { findFirst: vi.fn().mockResolvedValue(order) },
+      ironSprueOrderCustomerRequest: { findFirst: vi.fn().mockResolvedValue(null) },
+      $transaction: vi.fn((callback) => callback(tx)),
+    };
+
+    await createIronSprueCustomerOrderRequest({
+      userId: 'user-1',
+      orderNumber: order.orderNumber,
+      requestType: 'CANCELLATION',
+      reason: 'Please cancel before dispatch',
+    }, client as never);
+
+    expect(tx.ironSprueOrderCustomerRequest.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        storeCode: 'IRON_SPRUE',
+        orderId: 'order-1',
+        userId: 'user-1',
+        requestType: 'CANCELLATION',
+      }),
+    });
+    expect(tx.ironSprueAdminAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ action: 'order.customer_request.cancellation' }),
+    }));
+  });
+
+  it('blocks customer return requests before dispatch', async () => {
+    const client = {
+      ironSprueOrder: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: 'order-1',
+          orderNumber: 'IS-1',
+          userId: 'user-1',
+          status: 'PAID',
+          paymentStatus: 'SUCCEEDED',
+          fulfilmentStatus: 'PENDING',
+          cancelledAt: null,
+        }),
+      },
+    };
+
+    await expect(createIronSprueCustomerOrderRequest({
+      userId: 'user-1',
+      orderNumber: 'IS-1',
+      requestType: 'RETURN',
+      reason: 'Need to return',
+    }, client as never)).rejects.toThrow(/dispatched/);
+  });
+
+  it('resolves customer order requests with an audit trail', async () => {
+    const request = {
+      id: 'request-1',
+      storeCode: 'IRON_SPRUE',
+      orderId: 'order-1',
+      requestType: 'RETURN',
+      status: 'OPEN',
+      order: { orderNumber: 'IS-20260821-ABC123' },
+    };
+    const updated = { ...request, status: 'RESOLVED', adminNotes: 'Return handled in admin.' };
+    const tx = {
+      ironSprueOrderCustomerRequest: {
+        findFirst: vi.fn().mockResolvedValue(request),
+        update: vi.fn().mockResolvedValue(updated),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+    const client = { $transaction: vi.fn((callback) => callback(tx)) };
+
+    await resolveIronSprueCustomerOrderRequest({
+      requestId: 'request-1',
+      status: 'RESOLVED',
+      adminNotes: 'Return handled in admin.',
+    }, actor, client as never);
+
+    expect(tx.ironSprueOrderCustomerRequest.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'request-1' },
+      data: expect.objectContaining({
+        status: 'RESOLVED',
+        adminNotes: 'Return handled in admin.',
+        resolvedAt: expect.any(Date),
+      }),
+    }));
+    expect(tx.ironSprueAdminAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        action: 'order.customer_request.resolved',
+        entityType: 'order-request',
+        entityId: 'request-1',
+      }),
+    }));
   });
 });

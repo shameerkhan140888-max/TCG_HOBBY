@@ -44,7 +44,16 @@ type IronSprueOrderRecord = Prisma.IronSprueOrderGetPayload<{
   include: {
     items: true;
   };
-}>;
+}> & {
+  customerRequests?: Array<{
+    id: string;
+    requestType: string;
+    status: string;
+    reason: string;
+    customerMessage: string | null;
+    createdAt: Date;
+  }>;
+};
 
 type StripeCheckoutSession = {
   id: string;
@@ -80,6 +89,9 @@ export type IronSprueOrderWithItems = {
   paymentStatus: PaymentStatus;
   fulfilmentStatus: FulfilmentStatus;
   paymentProvider: string | null;
+  sourceChannel: string;
+  paymentMethodLabel: string | null;
+  externalReference: string | null;
   paymentIntentId: string | null;
   stripeCheckoutSessionId: string | null;
   stripeCheckoutUrl: string | null;
@@ -105,12 +117,21 @@ export type IronSprueOrderWithItems = {
   trackingNumber: string | null;
   trackingUrl: string | null;
   reservationExpiresAt: Date | null;
+  placedAt: Date;
   paidAt: Date | null;
   fulfilledAt: Date | null;
   cancelledAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   items: OrderLineItem[];
+  customerRequests: Array<{
+    id: string;
+    requestType: string;
+    status: string;
+    reason: string;
+    customerMessage: string | null;
+    createdAt: Date;
+  }>;
 };
 
 export type IronSprueCheckoutSessionResult = {
@@ -508,6 +529,9 @@ function mapOrderRecord(order: IronSprueOrderRecord): IronSprueOrderWithItems {
     paymentStatus: order.paymentStatus as PaymentStatus,
     fulfilmentStatus: order.fulfilmentStatus as FulfilmentStatus,
     paymentProvider: order.paymentProvider,
+    sourceChannel: order.sourceChannel,
+    paymentMethodLabel: order.paymentMethodLabel,
+    externalReference: order.externalReference,
     paymentIntentId: order.paymentIntentId,
     stripeCheckoutSessionId: order.stripeCheckoutSessionId,
     stripeCheckoutUrl: order.stripeCheckoutUrl,
@@ -533,11 +557,20 @@ function mapOrderRecord(order: IronSprueOrderRecord): IronSprueOrderWithItems {
     trackingNumber: order.trackingNumber,
     trackingUrl: order.trackingUrl,
     reservationExpiresAt: order.reservationExpiresAt,
+    placedAt: order.placedAt,
     paidAt: order.paidAt,
     fulfilledAt: order.fulfilledAt,
     cancelledAt: order.cancelledAt,
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
+    customerRequests: (order.customerRequests ?? []).map((request) => ({
+      id: request.id,
+      requestType: request.requestType,
+      status: request.status,
+      reason: request.reason,
+      customerMessage: request.customerMessage,
+      createdAt: request.createdAt,
+    })),
     items: order.items.map((item) => ({
       id: item.id,
       productId: item.productId,
@@ -1445,7 +1478,7 @@ export async function getIronSprueCustomerOrders(userId: string, db: DatabaseCli
 export async function getIronSprueCustomerOrderByNumber(userId: string, orderNumber: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const order = await db.ironSprueOrder.findFirst({
     where: { storeCode: IRON_SPRUE_STORE_CODE, userId, orderNumber },
-    include: { items: true },
+    include: { items: true, customerRequests: { orderBy: { createdAt: 'desc' } } },
   });
   return order ? mapOrderRecord(order) : null;
 }

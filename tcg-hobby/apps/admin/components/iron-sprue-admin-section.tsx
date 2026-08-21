@@ -18,6 +18,7 @@ import {
   cancelIronSprueOrderAction,
   processIronSprueReturnAction,
   receiveIronSprueStockAction,
+  resolveIronSprueCustomerRequestAction,
   resendIronSprueOrderEmailAction,
   saveIronSprueOrderNotesAction,
   saveIronSprueDiscountCodeAction,
@@ -34,6 +35,7 @@ import {
   uploadIronSprueProductMediaAction,
   bulkApproveIronSprueContentReviewsAction,
   bulkApproveIronSprueMediaAction,
+  createIronSprueManualOrderAction,
 } from '../lib/iron-sprue-admin-actions.server';
 import { ironSprueAdminPreviewUrl, listIronSprueR2Objects } from '../lib/iron-sprue-media-storage.server';
 import { IronSprueBulkApprovalControls } from './iron-sprue-bulk-approval-controls';
@@ -130,6 +132,7 @@ function Field({ children, label }: { children: ReactNode; label: string }) {
 }
 
 const fieldClass = 'rounded-md border border-surface-line bg-surface-ink px-3 py-2 text-sm text-neutral-100';
+const compactSecondaryButtonClass = 'rounded-md border border-surface-line bg-surface-ink px-3 py-2 text-sm font-bold text-neutral-100 transition hover:border-brand-gold';
 
 type FullReviewMode = 'pending' | 'approved' | 'rejected' | 'all';
 
@@ -1278,12 +1281,73 @@ function cancellationActionLabel(order: IronSprueAdminOrder) {
   return order.paymentStatus === 'SUCCEEDED' ? 'Refund and cancel order' : 'Cancel checkout attempt';
 }
 
+function ManualOrderForm({ products }: { products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'] }) {
+  return (
+    <AdminDisclosure summary="Create manual / offline order">
+      <form action={createIronSprueManualOrderAction} className="grid gap-4">
+        <div className="grid gap-3 md:grid-cols-4">
+          <Field label="Sales channel">
+            <select name="sourceChannel" className={fieldClass} defaultValue="MANUAL">
+              <option value="MANUAL">Manual Admin</option>
+              <option value="PHONE">Phone</option>
+              <option value="EVENT">Event / show</option>
+              <option value="EMAIL">Email</option>
+              <option value="OFFLINE">Offline</option>
+            </select>
+          </Field>
+          <Field label="Payment method label"><input name="paymentMethodLabel" className={fieldClass} defaultValue="Manual payment" /></Field>
+          <Field label="External reference"><input name="externalReference" className={fieldClass} placeholder="Till, invoice or note reference" /></Field>
+          <Field label="Placed at"><input name="placedAt" type="datetime-local" className={fieldClass} /></Field>
+        </div>
+
+        <div className="grid gap-3 rounded-md border border-surface-line bg-black/20 p-3">
+          <p className="text-sm font-semibold text-neutral-200">Line items</p>
+          {[0, 1, 2].map((index) => (
+            <div key={index} className="grid gap-2 md:grid-cols-[minmax(220px,1fr)_110px_140px]">
+              <select name={`productId:${index}`} className={fieldClass} defaultValue="">
+                <option value="">{index === 0 ? 'Select product' : 'Optional additional product'}</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.sku} - {product.customerTitle} ({Math.max((product.inventory?.availableStock ?? 0) - (product.inventory?.reservedStock ?? 0), 0)} sellable)
+                  </option>
+                ))}
+              </select>
+              <input name={`quantity:${index}`} type="number" min="0" className={fieldClass} placeholder="Qty" />
+              <input name={`unitPrice:${index}`} type="number" min="0" step="0.01" className={fieldClass} placeholder="Unit price £" />
+            </div>
+          ))}
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <Field label="Full name"><input name="shippingFullName" className={fieldClass} required /></Field>
+          <Field label="Email"><input name="shippingEmail" type="email" className={fieldClass} required /></Field>
+          <Field label="Address line 1"><input name="shippingLine1" className={fieldClass} required /></Field>
+          <Field label="Address line 2"><input name="shippingLine2" className={fieldClass} /></Field>
+          <Field label="Town / city"><input name="shippingCity" className={fieldClass} required /></Field>
+          <Field label="Region"><input name="shippingRegion" className={fieldClass} /></Field>
+          <Field label="Postcode"><input name="shippingPostalCode" className={fieldClass} required /></Field>
+          <Field label="Country"><input name="shippingCountry" className={fieldClass} defaultValue="GB" required /></Field>
+          <Field label="Delivery method"><input name="shippingMethodName" className={fieldClass} defaultValue="Manual delivery" /></Field>
+          <Field label="Delivery charge (£)"><input name="shippingMinor" type="number" min="0" step="0.01" className={fieldClass} defaultValue="0.00" /></Field>
+        </div>
+
+        <p className="text-xs text-neutral-500">Manual orders create a paid Iron Sprue order, snapshot product prices/images and allocate sellable stock immediately. Use only for genuinely captured offline payments.</p>
+        <Button type="submit">Create manual order</Button>
+      </form>
+    </AdminDisclosure>
+  );
+}
+
 async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) {
   const orderSearch = paramValue(searchParams?.orderSearch)?.trim() ?? '';
-  const orders = await listIronSprueAdminOrders({ search: orderSearch });
+  const [orders, productOptions] = await Promise.all([
+    listIronSprueAdminOrders({ search: orderSearch }),
+    listIronSprueAdminProducts({ pageSize: 100 }),
+  ]);
   if (!orders.length) {
     return (
       <div className="space-y-3">
+        <ManualOrderForm products={productOptions.products} />
         <form className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-[1fr_auto]">
           <input name="orderSearch" className={fieldClass} defaultValue={orderSearch} placeholder="Search order number, customer, email, SKU or product" />
           <Button type="submit">Search</Button>
@@ -1302,6 +1366,7 @@ async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) 
 
   return (
     <div className="space-y-4">
+      <ManualOrderForm products={productOptions.products} />
       <form className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-[1fr_auto]">
         <input type="hidden" name="orderView" value={selectedView} />
         <input name="orderSearch" className={fieldClass} defaultValue={orderSearch} placeholder="Search order number, customer, email, SKU or product" />
@@ -1334,6 +1399,9 @@ async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) 
                 <p className="mt-1 text-sm text-neutral-400">
                   Created {date(order.createdAt)}
                   {order.paidAt ? ` - Paid ${date(order.paidAt)}` : ''}
+                </p>
+                <p className="mt-1 text-xs uppercase tracking-wide text-neutral-500">
+                  {order.sourceChannel ?? 'ONLINE'}{order.paymentMethodLabel ? ` - ${order.paymentMethodLabel}` : ''}{order.externalReference ? ` - Ref ${order.externalReference}` : ''}
                 </p>
               </div>
               <div className="text-right text-sm text-neutral-300">
@@ -1426,6 +1494,40 @@ async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) 
                               <li key={line.id}>{line.orderItem.productSku} x {line.quantity}{line.restock ? ' - restocked' : ' - not restocked'}</li>
                             ))}
                           </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {order.customerRequests.length ? (
+                  <div className="rounded-md border border-surface-line bg-black/30 p-3 text-sm">
+                    <h3 className="font-bold text-neutral-100">Customer requests</h3>
+                    <div className="mt-2 space-y-2">
+                      {order.customerRequests.map((request) => (
+                        <div key={request.id} className="rounded-md border border-surface-line p-2 text-neutral-400">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <StatePill>{request.requestType}</StatePill>
+                            <StatePill>{request.status}</StatePill>
+                            <span>{date(request.createdAt)}</span>
+                          </div>
+                          <p className="mt-1 font-semibold text-neutral-200">{request.reason}</p>
+                          {request.customerMessage ? <p className="mt-1">{request.customerMessage}</p> : null}
+                          {request.adminNotes ? <p className="mt-1">Admin note: {request.adminNotes}</p> : null}
+                          {request.status === 'OPEN' ? (
+                            <form action={resolveIronSprueCustomerRequestAction} className="mt-3 grid gap-2 md:grid-cols-[1fr_auto_auto]">
+                              <input type="hidden" name="requestId" value={request.id} />
+                              <input
+                                name="adminNotes"
+                                className={fieldClass}
+                                placeholder="Resolution note"
+                              />
+                              <button name="status" value="RESOLVED" className={compactSecondaryButtonClass}>Mark resolved</button>
+                              <button name="status" value="DECLINED" className={compactSecondaryButtonClass}>Decline</button>
+                            </form>
+                          ) : request.resolvedAt ? (
+                            <p className="mt-1">Resolved: {date(request.resolvedAt)}</p>
+                          ) : null}
                         </div>
                       ))}
                     </div>

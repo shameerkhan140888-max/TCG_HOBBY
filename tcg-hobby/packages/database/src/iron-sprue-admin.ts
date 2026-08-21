@@ -1,7 +1,12 @@
+import { randomUUID } from 'node:crypto';
 import type { IronSprueAdminProduct, Prisma, UserRole } from '@prisma/client';
 import { slugify } from '@tcg-hobby/utils';
 import { getIronSprueAdminPrisma } from './client';
-import { refundIronSprueOrderForMerchant } from './iron-sprue-commerce';
+import {
+  generateIronSprueOrderNumber,
+  refundIronSprueOrderForMerchant,
+} from './iron-sprue-commerce';
+import { calculateVatEstimateMinor } from './commerce';
 
 export const IRON_SPRUE_STORE_CODE = 'IRON_SPRUE' as const;
 
@@ -868,6 +873,7 @@ export async function listIronSprueAdminOrders(filters: { search?: string } = {}
         orderBy: { createdAt: 'desc' },
         include: { lines: { include: { orderItem: true } } },
       },
+      customerRequests: { orderBy: { createdAt: 'desc' } },
     },
   });
 }
@@ -904,6 +910,315 @@ export type IronSprueOrderReturnLineInput = {
   quantity: number;
   restock?: boolean;
 };
+
+export type IronSprueManualOrderLineInput = {
+  productId: string;
+  quantity: number;
+  unitPriceMinor?: number | null;
+};
+
+export type IronSprueManualOrderInput = {
+  userId?: string | null;
+  sourceChannel?: string | null;
+  paymentMethodLabel?: string | null;
+  externalReference?: string | null;
+  placedAt?: Date | null;
+  shippingMinor?: number | null;
+  shippingMethodName?: string | null;
+  shippingFullName: string;
+  shippingEmail: string;
+  shippingLine1: string;
+  shippingLine2?: string | null;
+  shippingCity: string;
+  shippingRegion?: string | null;
+  shippingPostalCode: string;
+  shippingCountry?: string | null;
+  lines: IronSprueManualOrderLineInput[];
+};
+
+function sanitizeManualOrderText(value: string | null | undefined, fallback?: string) {
+  const cleaned = value?.trim();
+  if (cleaned) return cleaned;
+  if (fallback != null) return fallback;
+  throw new Error('Required manual order field is missing.');
+}
+
+function resolveIronSprueOrderImage(product: Prisma.IronSprueAdminProductGetPayload<{ include: { mediaAssets: true } }>) {
+  const image = [...product.mediaAssets]
+    .filter((asset) => asset.approvalState === 'APPROVED')
+    .sort((left, right) => {
+      if (left.isPrimary !== right.isPrimary) return left.isPrimary ? -1 : 1;
+      if (left.role === right.role) return left.sortOrder - right.sortOrder;
+      if (left.role === 'catalogue-primary') return -1;
+      if (right.role === 'catalogue-primary') return 1;
+      return left.role.localeCompare(right.role);
+    })[0];
+  if (!image) return { imageUrl: null, imageStorageKey: null, imageAlt: product.customerTitle };
+  return {
+    imageUrl: cleanNullable(image.url),
+    imageStorageKey: cleanNullable(image.storageKey),
+    imageAlt: cleanNullable(image.altText) ?? product.customerTitle,
+  };
+}
+
+export async function createIronSprueManualOrder(
+  input: IronSprueManualOrderInput,
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const sourceChannel = sanitizeManualOrderText(input.sourceChannel, 'MANUAL').toUpperCase().replace(/\s+/g, '_');
+  const paymentMethodLabel = sanitizeManualOrderText(input.paymentMethodLabel, 'Manual payment');
+  const shippingFullName = sanitizeManualOrderText(input.shippingFullName);
+  const shippingEmail = sanitizeManualOrderText(input.shippingEmail).toLowerCase();
+  const shippingLine1 = sanitizeManualOrderText(input.shippingLine1);
+  const shippingCity = sanitizeManualOrderText(input.shippingCity);
+  const shippingPostalCode = sanitizeManualOrderText(input.shippingPostalCode);
+  const shippingCountry = sanitizeManualOrderText(input.shippingCountry, 'GB').toUpperCase();
+  const placedAt = input.placedAt && !Number.isNaN(input.placedAt.getTime()) ? input.placedAt : new Date();
+  const shippingMinor = Math.max(0, Math.trunc(input.shippingMinor ?? 0));
+  const lines = input.lines
+    .map((line) => ({
+      productId: cleanNullable(line.productId),
+      quantity: Math.trunc(line.quantity),
+      unitPriceMinor: line.unitPriceMinor == null ? null : Math.max(0, Math.trunc(line.unitPriceMinor)),
+    }))
+    .filter((line): line is { productId: string; quantity: number; unitPriceMinor: number | null } => Boolean(line.productId) && line.quantity > 0);
+  if (!lines.length) throw new Error('Choose at least one manual order product.');
+
+  const productIds = [...new Set(lines.map((line) => line.productId))];
+  const products = await client.ironSprueAdminProduct.findMany({
+    where: { storeCode: IRON_SPRUE_STORE_CODE, id: { in: productIds } },
+    include: { inventory: true, mediaAssets: true },
+  });
+  const productById = new Map(products.map((product) => [product.id, product]));
+  if (products.length !== productIds.length) throw new Error('One or more manual order products could not be found.');
+
+  const normalizedLines = lines.map((line) => {
+    const product = productById.get(line.productId);
+    if (!product?.inventory) throw new Error('Manual order product has no inventory record.');
+    const unitPriceMinor = line.unitPriceMinor ?? product.grossPriceMinor ?? 0;
+    if (unitPriceMinor <= 0) throw new Error(`Manual order price is required for ${product.sku}.`);
+    return {
+      product,
+      quantity: line.quantity,
+      unitPriceMinor,
+      totalMinor: unitPriceMinor * line.quantity,
+      image: resolveIronSprueOrderImage(product),
+    };
+  });
+
+  const subtotalMinor = normalizedLines.reduce((sum, line) => sum + line.totalMinor, 0);
+  const taxMinor = calculateVatEstimateMinor(subtotalMinor);
+  const totalMinor = subtotalMinor + shippingMinor;
+  const orderNumber = generateIronSprueOrderNumber(placedAt);
+  const checkoutAttemptId = `manual-${randomUUID()}`;
+
+  return client.$transaction(async (tx) => {
+    for (const line of normalizedLines) {
+      const inventory = await tx.ironSprueAdminInventory.findUnique({ where: { productId: line.product.id } });
+      if (!inventory || inventory.storeCode !== IRON_SPRUE_STORE_CODE) throw new Error('Manual order inventory record is missing.');
+      if (inventory.availableStock < line.quantity) {
+        throw new Error(`Insufficient sellable stock for ${line.product.sku}.`);
+      }
+      const afterQuantity = inventory.availableStock - line.quantity;
+      await tx.ironSprueAdminInventory.update({
+        where: { productId: line.product.id },
+        data: { availableStock: afterQuantity },
+      });
+      await tx.ironSprueAdminStockMovement.create({
+        data: {
+          storeCode: IRON_SPRUE_STORE_CODE,
+          productId: line.product.id,
+          movementType: 'MANUAL_ORDER_SALE',
+          quantity: -line.quantity,
+          beforeQuantity: inventory.availableStock,
+          afterQuantity,
+          reason: `Manual order ${orderNumber}`,
+          batchReference: cleanNullable(input.externalReference),
+          actorId: actor.id,
+        },
+      });
+    }
+
+    const order = await tx.ironSprueOrder.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        orderNumber,
+        userId: cleanNullable(input.userId),
+        status: 'PAID',
+        paymentStatus: 'SUCCEEDED',
+        fulfilmentStatus: 'PENDING',
+        paymentProvider: 'MANUAL',
+        sourceChannel,
+        paymentMethodLabel,
+        externalReference: cleanNullable(input.externalReference),
+        checkoutAttemptId,
+        subtotalMinor,
+        shippingMinor,
+        taxMinor,
+        totalMinor,
+        currency: 'GBP',
+        shippingMethodCode: 'manual',
+        shippingMethodName: cleanNullable(input.shippingMethodName) ?? 'Manual delivery',
+        shippingMethodAmountMinor: shippingMinor,
+        shippingFullName,
+        shippingEmail,
+        shippingLine1,
+        shippingLine2: cleanNullable(input.shippingLine2),
+        shippingCity,
+        shippingRegion: cleanNullable(input.shippingRegion),
+        shippingPostalCode,
+        shippingCountry,
+        placedAt,
+        paidAt: placedAt,
+        createdAt: placedAt,
+        items: {
+          create: normalizedLines.map((line) => ({
+            productId: line.product.id,
+            productName: line.product.customerTitle,
+            productSlug: line.product.slug,
+            productSku: line.product.sku,
+            quantity: line.quantity,
+            unitPriceMinor: line.unitPriceMinor,
+            totalMinor: line.totalMinor,
+            imageUrl: line.image.imageUrl,
+            imageAlt: line.image.imageAlt,
+            imageStorageKey: line.image.imageStorageKey,
+          })),
+        },
+      },
+      include: { items: true },
+    });
+
+    await tx.ironSprueAdminAuditLog.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        actorId: actor.id,
+        action: 'order.manual.create',
+        entityType: 'order',
+        entityId: order.id,
+        summary: `Created manual Iron Sprue order ${order.orderNumber}.`,
+        after: { orderNumber, sourceChannel, paymentMethodLabel, totalMinor, lineCount: normalizedLines.length },
+      },
+    });
+
+    return order;
+  });
+}
+
+export async function createIronSprueCustomerOrderRequest(
+  input: {
+    userId: string;
+    orderNumber: string;
+    requestType: 'CANCELLATION' | 'RETURN';
+    reason: string;
+    customerMessage?: string | null;
+  },
+  client = getIronSprueAdminPrisma(),
+) {
+  const orderNumber = sanitizeManualOrderText(input.orderNumber);
+  const reason = sanitizeManualOrderText(input.reason);
+  const requestType = input.requestType;
+  const order = await client.ironSprueOrder.findFirst({
+    where: { storeCode: IRON_SPRUE_STORE_CODE, orderNumber, userId: input.userId },
+  });
+  if (!order) throw new Error('Iron Sprue order not found.');
+  if (order.cancelledAt || ['CANCELLED', 'CANCELED', 'REFUNDED'].includes(order.status) || ['CANCELED', 'REFUNDED'].includes(order.paymentStatus)) {
+    throw new Error('This order is already closed.');
+  }
+  if (requestType === 'CANCELLATION' && ['SHIPPED', 'DELIVERED', 'COMPLETED'].includes(order.fulfilmentStatus)) {
+    throw new Error('This order has already been dispatched. Use a return request instead.');
+  }
+  if (requestType === 'RETURN' && !['SHIPPED', 'DELIVERED', 'COMPLETED'].includes(order.fulfilmentStatus)) {
+    throw new Error('Returns can be requested once the order has been dispatched.');
+  }
+
+  const existingOpen = await client.ironSprueOrderCustomerRequest.findFirst({
+    where: {
+      storeCode: IRON_SPRUE_STORE_CODE,
+      orderId: order.id,
+      requestType,
+      status: 'OPEN',
+    },
+  });
+  if (existingOpen) return existingOpen;
+
+  return client.$transaction(async (tx) => {
+    const request = await tx.ironSprueOrderCustomerRequest.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        orderId: order.id,
+        userId: input.userId,
+        requestType,
+        reason,
+        customerMessage: cleanNullable(input.customerMessage),
+      },
+    });
+    await tx.ironSprueAdminAuditLog.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        actorId: input.userId,
+        action: `order.customer_request.${requestType.toLowerCase()}`,
+        entityType: 'order-request',
+        entityId: request.id,
+        summary: `Customer submitted ${requestType.toLowerCase()} request for Iron Sprue order ${order.orderNumber}.`,
+        after: { orderNumber: order.orderNumber, requestType, reason },
+      },
+    });
+    return request;
+  });
+}
+
+export async function resolveIronSprueCustomerOrderRequest(
+  input: {
+    requestId: string;
+    status: 'RESOLVED' | 'DECLINED';
+    adminNotes?: string | null;
+  },
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const requestId = sanitizeManualOrderText(input.requestId);
+  const status = input.status;
+  if (!requestId) throw new Error('requestId is required.');
+  if (!['RESOLVED', 'DECLINED'].includes(status)) throw new Error('Invalid request status.');
+
+  return client.$transaction(async (tx) => {
+    const request = await tx.ironSprueOrderCustomerRequest.findFirst({
+      where: { id: requestId, storeCode: IRON_SPRUE_STORE_CODE },
+      include: { order: true },
+    });
+    if (!request) throw new Error('Customer request not found.');
+    if (request.status !== 'OPEN') return request;
+
+    const updated = await tx.ironSprueOrderCustomerRequest.update({
+      where: { id: request.id },
+      data: {
+        status,
+        adminNotes: cleanNullable(input.adminNotes),
+        resolvedAt: new Date(),
+      },
+      include: { order: true },
+    });
+    await tx.ironSprueAdminAuditLog.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        actorId: actor.id,
+        action: `order.customer_request.${status.toLowerCase()}`,
+        entityType: 'order-request',
+        entityId: request.id,
+        summary: `Marked ${request.requestType.toLowerCase()} request for Iron Sprue order ${request.order.orderNumber} as ${status.toLowerCase()}.`,
+        after: {
+          orderNumber: request.order.orderNumber,
+          requestType: request.requestType,
+          status,
+          adminNotes: cleanNullable(input.adminNotes),
+        },
+      },
+    });
+    return updated;
+  });
+}
 
 export async function processIronSprueOrderReturn(
   input: {
