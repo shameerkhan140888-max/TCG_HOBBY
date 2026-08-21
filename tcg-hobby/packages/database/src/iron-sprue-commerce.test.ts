@@ -5,6 +5,7 @@ import {
   cancelIronSprueCheckoutSession,
   cancelIronSprueOrderForMerchant,
   createIronSprueHostedCheckoutSession,
+  createIronSpruePaymentIntentCheckout,
   generateIronSprueOrderNumber,
   processIronSprueStripeWebhookEvent,
   reconcileIronSprueReservedStock,
@@ -354,6 +355,210 @@ describe('Iron Sprue Stripe commerce', () => {
     })).rejects.toThrow('IRON_SPRUE_STRIPE_TEST_SECRET_KEY');
 
     expect(db.$transaction).not.toHaveBeenCalled();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+  });
+
+  it('creates a store-scoped PaymentIntent checkout for the integrated Iron Sprue payment form', async () => {
+    process.env.IRON_SPRUE_STRIPE_TEST_PUBLISHABLE_KEY = 'pk_test_iron';
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 'pi_iron_integrated_1',
+        client_secret: 'pi_iron_integrated_1_secret_test',
+        amount: 2298,
+        currency: 'gbp',
+        status: 'requires_payment_method',
+        metadata: { store: 'IRON_SPRUE', orderId: 'order-1' },
+      }),
+    } as Response);
+    const db = {
+      ironSprueOrder: {
+        findMany: vi.fn().mockResolvedValue([]),
+        findUnique: vi.fn(),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      ironSprueAdminInventory: {
+        findMany: vi.fn().mockResolvedValue([]),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      ironSprueAdminProduct: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'product-1',
+          sku: 'IS-AOS-05628',
+          storeCode: 'IRON_SPRUE',
+          inventory: { availableStock: 2, reservedStock: 0 },
+        }),
+      },
+      $transaction: vi.fn(async (callback) => callback({
+        ironSprueAdminProduct: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: 'product-1',
+            sku: 'IS-AOS-05628',
+            storeCode: 'IRON_SPRUE',
+            inventory: { availableStock: 2, reservedStock: 0 },
+          }),
+        },
+        ironSprueAdminInventory: {
+          update: vi.fn().mockResolvedValue({}),
+        },
+        ironSprueOrder: {
+          create: vi.fn().mockResolvedValue({
+            id: 'order-1',
+            orderNumber: 'IS-20260812-ABC123',
+            items: [],
+          }),
+        },
+      })),
+    } as any;
+
+    const result = await createIronSpruePaymentIntentCheckout({
+      userId: null,
+      cart: {
+        items: [{
+          id: 'line-1',
+          productId: 'product-1',
+          productName: 'Toyota 2000GT Red',
+          productSlug: 'aoshima-05628-toyota-2000gt-red',
+          quantity: 1,
+          unitPriceMinor: 1999,
+          totalMinor: 1999,
+          inStock: true,
+          imageUrl: null,
+          imageAlt: null,
+          imageStorageKey: null,
+        }],
+        subtotalMinor: 1999,
+        totalItems: 1,
+        currency: 'GBP',
+      },
+      shippingAddress: {
+        fullName: 'Test Customer',
+        email: 'test@example.com',
+        line1: '1 Test Street',
+        line2: null,
+        city: 'London',
+        region: null,
+        postalCode: 'E1 5NF',
+        country: 'GB',
+      },
+      shippingMethodCode: 'UK_STANDARD',
+      checkoutAttemptId: 'attempt-integrated-1',
+      db,
+    });
+
+    expect(result).toMatchObject({
+      paymentIntentId: 'pi_iron_integrated_1',
+      clientSecret: 'pi_iron_integrated_1_secret_test',
+      publishableKey: 'pk_test_iron',
+      totalMinor: 2298,
+      currency: 'GBP',
+    });
+    expect(result.orderNumber).toMatch(/^IS-\d{8}-[A-F0-9]{6}$/);
+    expect(fetchSpy).toHaveBeenCalledWith('https://api.stripe.com/v1/payment_intents', expect.objectContaining({
+      method: 'POST',
+      headers: expect.objectContaining({ Authorization: 'Bearer sk_test_iron' }),
+    }));
+    const body = fetchSpy.mock.calls[0]?.[1]?.body as URLSearchParams;
+    expect(body.get('amount')).toBe('2298');
+    expect(body.get('metadata[store]')).toBe('IRON_SPRUE');
+    expect(body.get('metadata[commerceStore]')).toBe('IRON_SPRUE');
+    expect(body.get('metadata[orderNumber]')).toBe(result.orderNumber);
+    expect(body.get('metadata[checkoutAttemptId]')).toBe('attempt-integrated-1');
+    expect(body.get('automatic_payment_methods[enabled]')).toBe('true');
+    expect(db.ironSprueOrder.update).toHaveBeenCalledWith({
+      where: { id: 'order-1' },
+      data: {
+        paymentProvider: 'STRIPE',
+        paymentIntentId: 'pi_iron_integrated_1',
+      },
+    });
+    fetchSpy.mockRestore();
+  });
+
+  it('fails closed for integrated checkout when the Iron Sprue publishable key is absent', async () => {
+    delete process.env.IRON_SPRUE_STRIPE_TEST_PUBLISHABLE_KEY;
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const db = {
+      ironSprueOrder: {
+        findMany: vi.fn().mockResolvedValue([]),
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'order-1',
+          paymentStatus: 'REQUIRES_PAYMENT',
+          cancelledAt: null,
+          items: [{ productId: 'product-1', quantity: 1 }],
+        }),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      ironSprueAdminInventory: {
+        findMany: vi.fn().mockResolvedValue([]),
+        update: vi.fn().mockResolvedValue({}),
+        findUnique: vi.fn().mockResolvedValue({ productId: 'product-1', reservedStock: 1 }),
+      },
+      $transaction: vi.fn(async (callback) => callback({
+        ironSprueAdminProduct: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: 'product-1',
+            sku: 'IS-AOS-05628',
+            storeCode: 'IRON_SPRUE',
+            inventory: { availableStock: 2, reservedStock: 0 },
+          }),
+        },
+        ironSprueAdminInventory: {
+          update: vi.fn().mockResolvedValue({}),
+          findUnique: vi.fn().mockResolvedValue({ productId: 'product-1', reservedStock: 1 }),
+        },
+        ironSprueOrder: {
+          create: vi.fn().mockResolvedValue({
+            id: 'order-1',
+            orderNumber: 'IS-20260812-ABC123',
+            items: [{ productId: 'product-1', quantity: 1 }],
+          }),
+          findUnique: vi.fn().mockResolvedValue({
+            id: 'order-1',
+            paymentStatus: 'REQUIRES_PAYMENT',
+            cancelledAt: null,
+            items: [{ productId: 'product-1', quantity: 1 }],
+          }),
+          update: vi.fn().mockResolvedValue({}),
+        },
+      })),
+    } as any;
+
+    await expect(createIronSpruePaymentIntentCheckout({
+      userId: null,
+      cart: {
+        items: [{
+          id: 'line-1',
+          productId: 'product-1',
+          productName: 'Toyota 2000GT Red',
+          productSlug: 'aoshima-05628-toyota-2000gt-red',
+          quantity: 1,
+          unitPriceMinor: 1999,
+          totalMinor: 1999,
+          inStock: true,
+          imageUrl: null,
+          imageAlt: null,
+          imageStorageKey: null,
+        }],
+        subtotalMinor: 1999,
+        totalItems: 1,
+        currency: 'GBP',
+      },
+      shippingAddress: {
+        fullName: 'Test Customer',
+        email: 'test@example.com',
+        line1: '1 Test Street',
+        line2: null,
+        city: 'London',
+        region: null,
+        postalCode: 'E1 5NF',
+        country: 'GB',
+      },
+      shippingMethodCode: 'UK_STANDARD',
+      db,
+    })).rejects.toThrow('IRON_SPRUE_STRIPE_PUBLISHABLE_KEY_REQUIRED');
+
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });

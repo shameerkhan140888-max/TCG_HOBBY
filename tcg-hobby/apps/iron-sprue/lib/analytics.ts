@@ -33,7 +33,7 @@ export function clearIronSprueAnalyticsConsent() {
   window.dispatchEvent(new CustomEvent(IRON_SPRUE_ANALYTICS_CONSENT_CHANGED_EVENT, { detail: 'unknown' }));
 }
 
-export function trackIronSprueEcommerceEvent(eventName: 'add_to_cart' | 'purchase', parameters: Record<string, unknown>) {
+export function trackIronSprueEcommerceEvent(eventName: 'add_to_cart' | 'begin_checkout' | 'purchase', parameters: Record<string, unknown>) {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(IRON_SPRUE_ANALYTICS_ECOMMERCE_EVENT, { detail: { eventName, parameters } }));
 }

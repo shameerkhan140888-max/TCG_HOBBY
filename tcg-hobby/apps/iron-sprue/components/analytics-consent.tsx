@@ -196,3 +196,7 @@ export function IronSprueCookieConsentBanner() {
 export function IronSprueCookiePreferenceLink() {
   return <button type="button" className="footer-link-button" onClick={() => clearIronSprueAnalyticsConsent()}>Cookie preferences</button>;
 }
+
+export function IronSprueCookiePreferenceButton() {
+  return <button type="button" className="button cookie-preferences-button" onClick={() => clearIronSprueAnalyticsConsent()}>Manage cookie preferences</button>;
+}

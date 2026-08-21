@@ -143,13 +143,27 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <div className="addon-grid">
           {addonProducts.map((item) => {
             const addonImage = productImage(item);
+            const addonAvailableQuantity = productSellableQuantity(item);
             return (
-              <a className="addon-card" href={`/products/${item.slug}`} key={item.sku}>
-                {addonImage ? <img src={addonImage} alt={item.name} /> : null}
-                <span>{item.brand}</span>
-                <strong>{item.name}</strong>
-                <small>{formatPrice(item)} inc VAT</small>
-              </a>
+              <article className="addon-card" key={item.sku}>
+                <a className="addon-card-link" href={`/products/${item.slug}`}>
+                  {addonImage ? <img src={addonImage} alt={item.name} /> : null}
+                  <span>{item.brand}</span>
+                  <strong>{item.name}</strong>
+                  <small>{formatPrice(item)} inc VAT</small>
+                </a>
+                <AddToBasketButton
+                  item={{
+                    productId: item.sku,
+                    productName: item.name,
+                    productSlug: item.slug,
+                    unitPriceMinor: item.priceMinor ?? item.retailPriceMinor ?? 0,
+                    availableQuantity: addonAvailableQuantity,
+                    imageUrl: addonImage ?? null,
+                    imageAlt: item.name,
+                  }}
+                />
+              </article>
             );
           })}
         </div>

@@ -132,6 +132,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
             <nav aria-label="Legal links">
               <h2>Legal</h2>
+              <a href="/about">About</a>
               <a href="/privacy">Privacy</a>
               <a href="/terms">Terms</a>
               <a href="/contact">Contact</a>

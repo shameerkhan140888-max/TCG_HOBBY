@@ -38,6 +38,21 @@ vi.mock('../../../components/basket-client', () => ({
 }));
 
 describe('Iron Sprue product detail page', () => {
+  it('renders core product detail data for a real Aoshima Back to the Future product', async () => {
+    const markup = renderToStaticMarkup(await ProductPage({
+      params: Promise.resolve({ slug: 'aoshima-06437-back-to-the-future-part-ii' }),
+    }));
+
+    expect(markup).toContain('Back to the Future');
+    expect(markup).toContain('Aoshima');
+    expect(markup).toContain('SKU IS-AOS-06437');
+    expect(markup).toContain('Manufacturer Reference 06437');
+    expect(markup).toContain('inc VAT');
+    expect(markup).toContain('Add to basket');
+    expect(markup).toContain('Save to wishlist');
+    expect(markup).toContain('Build information');
+  });
+
   it('renders configured add-ons with their resolved product images', async () => {
     const markup = renderToStaticMarkup(await ProductPage({
       params: Promise.resolve({ slug: 'aoshima-05628-toyota-2000gt-red' }),
@@ -47,5 +62,7 @@ describe('Iron Sprue product detail page', () => {
     expect(markup).toContain('Recommended add-ons');
     expect(markup).toContain('/media/iron-sprue/products/is-dlm-ac9/original.jpg');
     expect(markup).toContain('/media/iron-sprue/products/is-dlm-ac20/original.webp');
+    expect(markup).toContain('/products/deluxe-materials-ac9-micro-tips-tube');
+    expect(markup.match(/Add to basket/g)?.length).toBeGreaterThan(1);
   });
 });

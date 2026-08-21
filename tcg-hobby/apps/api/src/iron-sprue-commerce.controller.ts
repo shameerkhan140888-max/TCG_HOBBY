@@ -46,9 +46,19 @@ export class IronSprueCommerceController {
     return this.commerce.checkout(headers, authorization, body);
   }
 
+  @Post('checkout/payment-intent')
+  checkoutPaymentIntent(@Headers() headers: Record<string, string | string[] | undefined>, @Headers('authorization') authorization: string | undefined, @Body() body: PublicCheckoutRequest) {
+    return this.commerce.checkoutPaymentIntent(headers, authorization, body);
+  }
+
   @Get('checkout/status/:sessionId')
   checkoutStatus(@Headers() headers: Record<string, string | string[] | undefined>, @Param('sessionId') sessionId: string) {
     return this.commerce.checkoutStatus(headers, sessionId);
+  }
+
+  @Get('checkout/payment-status/:paymentIntentId')
+  checkoutPaymentStatus(@Headers() headers: Record<string, string | string[] | undefined>, @Param('paymentIntentId') paymentIntentId: string) {
+    return this.commerce.checkoutPaymentStatus(headers, paymentIntentId);
   }
 
   @Post('checkout/cancel')

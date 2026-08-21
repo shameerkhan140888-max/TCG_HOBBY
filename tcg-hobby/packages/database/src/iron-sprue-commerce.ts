@@ -69,6 +69,7 @@ type StripePaymentIntentSnapshot = {
   currency: string;
   status: string;
   metadata: Stripe.Metadata | null;
+  client_secret?: string | null;
 };
 
 export type IronSprueOrderWithItems = {
@@ -115,6 +116,15 @@ export type IronSprueOrderWithItems = {
 export type IronSprueCheckoutSessionResult = {
   orderNumber: string;
   checkoutUrl: string;
+};
+
+export type IronSpruePaymentIntentCheckoutResult = {
+  orderNumber: string;
+  paymentIntentId: string;
+  clientSecret: string;
+  publishableKey: string;
+  totalMinor: number;
+  currency: CurrencyCode;
 };
 
 export type IronSprueStripeWebhookProcessingResult = {
@@ -465,6 +475,30 @@ async function createIronSprueStripeCheckoutSession(params: {
   return stripeRequest<StripeCheckoutSession>(params.secretKey, 'checkout/sessions', body);
 }
 
+async function createIronSprueStripePaymentIntent(params: {
+  secretKey: string;
+  businessName: string;
+  orderId: string;
+  orderNumber: string;
+  checkoutAttemptId: string;
+  totalMinor: number;
+  shippingEmail: string;
+}) {
+  const body = new URLSearchParams();
+  body.set('amount', String(params.totalMinor));
+  body.set('currency', CURRENCY.toLowerCase());
+  body.set('description', `${params.businessName} order ${params.orderNumber}`);
+  body.set('automatic_payment_methods[enabled]', 'true');
+  body.set('receipt_email', params.shippingEmail);
+  const metadata = buildIronSprueStripeMetadata(params);
+  for (const [key, value] of Object.entries(metadata)) {
+    body.set(`metadata[${key}]`, value);
+  }
+  return stripeRequest<StripePaymentIntentSnapshot>(params.secretKey, 'payment_intents', body, {
+    idempotencyKey: `iron-sprue-payment-intent-${params.orderId}`,
+  });
+}
+
 function mapOrderRecord(order: IronSprueOrderRecord): IronSprueOrderWithItems {
   return {
     id: order.id,
@@ -564,16 +598,17 @@ async function resolveIronSprueDiscount(input: {
   return { id: record.id, code: record.code, discountMinor };
 }
 
-export async function createIronSprueHostedCheckoutSession(input: {
+type CreateIronSprueCheckoutOrderInput = {
   userId: string | null;
   cart: CartSummary & { cartId?: string | null };
   shippingAddress: CheckoutAddress;
   shippingMethodCode: ShippingMethodCode;
   discountCode?: string | null;
   checkoutAttemptId?: string | null;
-  environment?: CommerceEnvironment;
   db?: DatabaseClient;
-}): Promise<IronSprueCheckoutSessionResult> {
+};
+
+async function createIronSpruePendingCheckoutOrder(input: CreateIronSprueCheckoutOrderInput) {
   const db = input.db ?? getIronSprueCommercePrisma();
   await releaseExpiredIronSprueCheckoutOrderReservations(db);
   const shippingAddress = requireCheckoutAddress(input.shippingAddress);
@@ -593,10 +628,6 @@ export async function createIronSprueHostedCheckoutSession(input: {
   const totalMinor = subtotalMinor + shippingMinor - discountMinor;
   const checkoutAttemptId = input.checkoutAttemptId?.trim() || randomUUID();
   const orderNumber = generateIronSprueOrderNumber();
-  const config = getStoreStripeConfig({
-    store: IRON_SPRUE_STORE_CODE,
-    ...(input.environment ? { environment: input.environment } : {}),
-  });
   const skuByProductId = new Map<string, string>();
 
   const order = await db.$transaction(async (tx) => {
@@ -658,32 +689,96 @@ export async function createIronSprueHostedCheckoutSession(input: {
     });
   });
 
+  return {
+    db,
+    order,
+    orderNumber,
+    checkoutAttemptId,
+    shippingMethod,
+    shippingMinor,
+    discount,
+    totalMinor,
+    shippingAddress,
+  };
+}
+
+export async function createIronSprueHostedCheckoutSession(input: CreateIronSprueCheckoutOrderInput & {
+  environment?: CommerceEnvironment;
+}): Promise<IronSprueCheckoutSessionResult> {
+  const config = getStoreStripeConfig({
+    store: IRON_SPRUE_STORE_CODE,
+    ...(input.environment ? { environment: input.environment } : {}),
+  });
+  const pending = await createIronSpruePendingCheckoutOrder(input);
+
   try {
     const session = await createIronSprueStripeCheckoutSession({
       secretKey: config.secretKey,
       businessName: config.publicBusinessName,
-      orderId: order.id,
-      orderNumber,
-      checkoutAttemptId,
+      orderId: pending.order.id,
+      orderNumber: pending.orderNumber,
+      checkoutAttemptId: pending.checkoutAttemptId,
       successUrl: config.successUrl,
       cancelUrl: config.cancelUrl,
       items: input.cart.items,
-      shippingMethod,
-      shippingMinor,
-      discount,
+      shippingMethod: pending.shippingMethod,
+      shippingMinor: pending.shippingMinor,
+      discount: pending.discount,
     });
     if (!session.url) throw new Error('Stripe did not return a Checkout URL.');
-    await db.ironSprueOrder.update({
-      where: { id: order.id },
+    await pending.db.ironSprueOrder.update({
+      where: { id: pending.order.id },
       data: {
         paymentProvider: 'STRIPE',
         stripeCheckoutSessionId: session.id,
         stripeCheckoutUrl: session.url,
       },
     });
-    return { orderNumber, checkoutUrl: session.url };
+    return { orderNumber: pending.orderNumber, checkoutUrl: session.url };
   } catch (error) {
-    await releaseIronSprueCheckoutOrderReservation(order.id, db, 'FAILED');
+    await releaseIronSprueCheckoutOrderReservation(pending.order.id, pending.db, 'FAILED');
+    throw error;
+  }
+}
+
+export async function createIronSpruePaymentIntentCheckout(input: CreateIronSprueCheckoutOrderInput & {
+  environment?: CommerceEnvironment;
+}): Promise<IronSpruePaymentIntentCheckoutResult> {
+  const config = getStoreStripeConfig({
+    store: IRON_SPRUE_STORE_CODE,
+    ...(input.environment ? { environment: input.environment } : {}),
+  });
+  if (!config.publishableKey) throw new Error('IRON_SPRUE_STRIPE_PUBLISHABLE_KEY_REQUIRED');
+  const pending = await createIronSpruePendingCheckoutOrder(input);
+
+  try {
+    const intent = await createIronSprueStripePaymentIntent({
+      secretKey: config.secretKey,
+      businessName: config.publicBusinessName,
+      orderId: pending.order.id,
+      orderNumber: pending.orderNumber,
+      checkoutAttemptId: pending.checkoutAttemptId,
+      totalMinor: pending.totalMinor,
+      shippingEmail: pending.shippingAddress.email,
+    });
+    if (!intent.client_secret) throw new Error('Stripe did not return a PaymentIntent client secret.');
+    await pending.db.ironSprueOrder.update({
+      where: { id: pending.order.id },
+      data: {
+        paymentProvider: 'STRIPE',
+        paymentIntentId: intent.id,
+      },
+    });
+    return {
+      orderNumber: pending.orderNumber,
+      paymentIntentId: intent.id,
+      clientSecret: intent.client_secret,
+      publishableKey: config.publishableKey,
+      totalMinor: pending.totalMinor,
+      currency: CURRENCY,
+    };
+  } catch (error) {
+    await releaseIronSprueCheckoutOrderReservation(pending.order.id, pending.db, 'FAILED');
     throw error;
   }
 }
@@ -1330,6 +1425,11 @@ export async function processIronSprueStripeWebhookEvent(event: Stripe.Event, db
 
 export async function getIronSprueOrderByStripeCheckoutSessionId(sessionId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const order = await db.ironSprueOrder.findUnique({ where: { stripeCheckoutSessionId: sessionId }, include: { items: true } });
+  return order ? mapOrderRecord(order) : null;
+}
+
+export async function getIronSprueOrderByStripePaymentIntentId(paymentIntentId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
+  const order = await db.ironSprueOrder.findUnique({ where: { paymentIntentId }, include: { items: true } });
   return order ? mapOrderRecord(order) : null;
 }
 

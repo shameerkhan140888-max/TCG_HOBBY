@@ -6,7 +6,7 @@ export default function CheckoutPage() {
       <div className="section-head">
         <p className="eyebrow">Checkout</p>
         <h1>Delivery and secure payment</h1>
-        <p className="lead">Enter delivery details, confirm the total and continue to Stripe for secure payment.</p>
+        <p className="lead">Enter delivery details, review the order total and complete payment within the Iron Sprue checkout.</p>
       </div>
       <BasketClient mode="checkout" />
     </section>

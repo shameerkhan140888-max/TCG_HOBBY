@@ -225,6 +225,7 @@ export {
   cancelIronSprueCheckoutSession,
   clearIronSprueCart,
   createIronSprueHostedCheckoutSession,
+  createIronSpruePaymentIntentCheckout,
   finalizePaidIronSprueCheckoutOrder,
   generateIronSprueOrderNumber,
   getIronSprueAvailableShippingMethods,
@@ -232,6 +233,7 @@ export {
   getIronSprueCustomerOrderByNumber,
   getIronSprueCustomerOrders,
   getIronSprueOrderByStripeCheckoutSessionId,
+  getIronSprueOrderByStripePaymentIntentId,
   IRON_SPRUE_STORE_CODE,
   processIronSprueStripeWebhookEvent,
   releaseExpiredIronSprueCheckoutOrderReservations,
@@ -244,6 +246,7 @@ export {
 export type {
   IronSprueCheckoutSessionResult,
   IronSprueOrderWithItems,
+  IronSpruePaymentIntentCheckoutResult,
   IronSprueStripeWebhookProcessingResult,
 } from './iron-sprue-commerce';
 export type {

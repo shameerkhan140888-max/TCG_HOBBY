@@ -3,9 +3,11 @@ import {
   addIronSprueProductToCart,
   cancelIronSprueCheckoutSession,
   clearIronSprueCart,
+  createIronSpruePaymentIntentCheckout,
   createIronSprueHostedCheckoutSession,
   getIronSprueAvailableShippingMethods,
   getIronSprueCustomerCartDetails,
+  getIronSprueOrderByStripePaymentIntentId,
   getIronSprueOrderByStripeCheckoutSessionId,
   getIronSprueCustomerOrderByNumber,
   getIronSprueCustomerOrders,
@@ -145,9 +147,68 @@ export class IronSprueCommerceService {
     }
   }
 
+  async checkoutPaymentIntent(headers: Record<string, string | string[] | undefined>, authorization: string | undefined, input: PublicCheckoutRequest) {
+    requireIronSprueProxy(headers);
+    const user = await this.auth.getOptionalUser(authorization);
+    const cart = user ? await getIronSprueCustomerCartDetails(user.id) : await resolveIronSprueGuestCart(input.guestItems ?? []);
+    if (cart.items.length === 0) throw new BadRequestException('Your basket is empty.');
+    try {
+      return await createIronSpruePaymentIntentCheckout({
+        userId: user?.id ?? null,
+        cart,
+        shippingAddress: requireAddress(input.shippingAddress),
+        shippingMethodCode: input.shippingMethodCode,
+        ...(input.discountCode ? { discountCode: input.discountCode } : {}),
+        ...(input.checkoutAttemptId ? { checkoutAttemptId: input.checkoutAttemptId } : {}),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Secure payment is temporarily unavailable. Please try again later.';
+      if (isCustomerCheckoutError(message)) {
+        throw new BadRequestException(message);
+      }
+      console.error('iron_sprue_payment_intent_start_failed', {
+        reason: /required|configured|publishable/i.test(message) ? 'missing_or_invalid_stripe_config' : 'payment_intent_start_failed',
+      });
+      throw new ServiceUnavailableException('Secure payment is temporarily unavailable. Please try again later.');
+    }
+  }
+
   async checkoutStatus(headers: Record<string, string | string[] | undefined>, sessionId: string): Promise<PublicOrderDetail> {
     requireIronSprueProxy(headers);
     const order = await getIronSprueOrderByStripeCheckoutSessionId(sessionId);
+    if (!order) throw new NotFoundException('Order not found.');
+    return {
+      orderNumber: order.orderNumber,
+      paymentStatus: order.paymentStatus,
+      fulfilmentStatus: order.fulfilmentStatus,
+      currency: order.currency,
+      subtotalMinor: order.subtotalMinor,
+      shippingMinor: order.shippingMinor,
+      taxMinor: order.taxMinor,
+      discountMinor: order.discountMinor,
+      discountCode: order.discountCode,
+      totalMinor: order.totalMinor,
+      createdAt: order.createdAt.toISOString(),
+      itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
+      shippingMethodName: order.shippingMethodName,
+      shippingFullName: order.shippingFullName,
+      shippingEmail: order.shippingEmail,
+      shippingLine1: order.shippingLine1,
+      shippingLine2: order.shippingLine2,
+      shippingCity: order.shippingCity,
+      shippingRegion: order.shippingRegion,
+      shippingPostalCode: order.shippingPostalCode,
+      shippingCountry: order.shippingCountry,
+      trackingCarrier: order.trackingCarrier,
+      trackingNumber: order.trackingNumber,
+      trackingUrl: order.trackingUrl,
+      items: order.items,
+    };
+  }
+
+  async checkoutPaymentStatus(headers: Record<string, string | string[] | undefined>, paymentIntentId: string): Promise<PublicOrderDetail> {
+    requireIronSprueProxy(headers);
+    const order = await getIronSprueOrderByStripePaymentIntentId(paymentIntentId);
     if (!order) throw new NotFoundException('Order not found.');
     return {
       orderNumber: order.orderNumber,

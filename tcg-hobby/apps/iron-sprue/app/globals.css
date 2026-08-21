@@ -14,6 +14,13 @@
   --brass: #c79947;
   --rust: #b65c1d;
   --shadow: rgba(25, 20, 12, 0.16);
+  --iron-board-base: #111311;
+  --iron-board-surface:
+    linear-gradient(180deg, rgba(5, 6, 5, 0.5), rgba(5, 6, 5, 0.56)),
+    url("/assets/iron-board/iron-board-gunmetal-texture.png");
+  --iron-board-overlay:
+    radial-gradient(ellipse at 20% 0%, rgba(255, 250, 241, 0.035), transparent 34%),
+    radial-gradient(ellipse at 82% 100%, rgba(0, 0, 0, 0.36), transparent 38%);
 }
 
 * {
@@ -1020,11 +1027,8 @@ p {
   gap: 8px;
   overflow: hidden;
   border-top: 1px solid rgba(255, 250, 241, 0.18);
-  background:
-    linear-gradient(180deg, rgba(255, 250, 241, 0.1), transparent 34%, rgba(0, 0, 0, 0.36)),
-    linear-gradient(115deg, rgba(255, 250, 241, 0.08), transparent 36%, rgba(0, 0, 0, 0.26) 78%),
-    url("/assets/iron-board/iron-board-gunmetal-texture.png");
-  background-color: #1b1d1c;
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -1039,10 +1043,7 @@ p {
 .product-card-body::before {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse at 20% 0%, rgba(255, 250, 241, 0.08), transparent 34%),
-    radial-gradient(ellipse at 82% 100%, rgba(0, 0, 0, 0.38), transparent 38%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.2));
+  background: var(--iron-board-overlay);
   content: "";
   opacity: 1;
   pointer-events: none;
@@ -1056,9 +1057,7 @@ p {
     url("/assets/iron-board/iron-board-slotted-bolt.png") left 5px top 5px / 22px 22px no-repeat,
     url("/assets/iron-board/iron-board-slotted-bolt.png") right 5px top 5px / 22px 22px no-repeat,
     url("/assets/iron-board/iron-board-slotted-bolt.png") left 5px bottom 5px / 22px 22px no-repeat,
-    url("/assets/iron-board/iron-board-slotted-bolt.png") right 5px bottom 5px / 22px 22px no-repeat,
-    linear-gradient(90deg, rgba(255, 250, 241, 0.055), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.34)),
-    linear-gradient(180deg, rgba(255, 250, 241, 0.08), transparent 22%, transparent 76%, rgba(0, 0, 0, 0.42));
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 5px bottom 5px / 22px 22px no-repeat;
   content: "";
   pointer-events: none;
   z-index: 1;
@@ -1233,28 +1232,54 @@ p {
 }
 
 .basket-line {
+  position: relative;
+  overflow: hidden;
   display: grid;
-  grid-template-columns: 104px minmax(0, 1fr) 96px auto;
-  gap: 16px;
+  grid-template-columns: 124px minmax(0, 1fr) 96px auto;
+  gap: 14px;
   align-items: center;
-  border: 1px solid rgba(17, 17, 15, 0.09);
+  border: 1px solid rgba(255, 250, 241, 0.16);
   border-radius: 8px;
-  background: rgba(255, 250, 241, 0.92);
-  padding: 14px;
-  box-shadow: 0 12px 36px rgba(25, 20, 12, 0.06);
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
+  background-position: center;
+  background-size: cover;
+  padding: 32px 34px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+    0 12px 36px rgba(25, 20, 12, 0.12);
+}
+
+.basket-line::after {
+  position: absolute;
+  inset: 0;
+  background:
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px bottom 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px bottom 6px / 22px 22px no-repeat;
+  content: "";
+  pointer-events: none;
+  z-index: 1;
+}
+
+.basket-line > * {
+  position: relative;
+  z-index: 2;
 }
 
 .basket-line.unavailable {
   border-color: rgba(143, 47, 31, 0.32);
-  background: rgba(247, 241, 231, 0.78);
   opacity: 0.78;
 }
 
 .basket-line img,
 .basket-image-fallback {
-  width: 104px;
-  height: 104px;
-  border: 1px solid var(--line);
+  width: 124px;
+  height: 124px;
+  border: 1px solid rgba(255, 250, 241, 0.18);
   border-radius: 7px;
   background: #fff;
   object-fit: contain;
@@ -1270,8 +1295,21 @@ p {
   text-align: center;
 }
 
+.basket-line-details {
+  align-self: stretch;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 2px 0;
+  color: var(--paper-soft);
+}
+
+.basket-line-details .eyebrow {
+  color: var(--brass);
+}
+
 .basket-line a {
-  color: var(--ink);
+  color: var(--paper-soft);
   font-size: 17px;
   font-weight: 900;
   text-decoration-thickness: 2px;
@@ -1280,7 +1318,7 @@ p {
 
 .basket-line p {
   margin: 6px 0 0;
-  color: var(--muted);
+  color: rgba(255, 250, 241, 0.74);
   font-size: 13px;
   font-weight: 800;
 }
@@ -1292,24 +1330,92 @@ p {
 .basket-line label {
   display: grid;
   gap: 6px;
+  color: rgba(255, 250, 241, 0.82);
+  font-weight: 900;
 }
 
 .basket-line input {
   width: 76px;
 }
 
+.basket-line > .button.secondary {
+  border-color: rgba(255, 250, 241, 0.28);
+  color: var(--paper-soft);
+}
+
+.checkout-panel button:not(.secondary):not(.text-button):not(.quantity-stepper),
+.basket-review-panel > .button,
+.basket-action-stack button {
+  border-color: var(--brass);
+  background: var(--brass);
+  color: var(--ink);
+}
+
+.checkout-panel button:not(.secondary):not(.text-button):not(.quantity-stepper):disabled,
+.basket-review-panel > .button:disabled,
+.basket-action-stack button:disabled {
+  border-color: rgba(255, 250, 241, 0.2);
+  background: rgba(255, 250, 241, 0.16);
+  color: rgba(255, 250, 241, 0.74);
+}
+
 .checkout-panel {
+  position: relative;
+  overflow: hidden;
   display: grid;
   gap: 16px;
-  border: 1px solid rgba(17, 17, 15, 0.09);
+  border: 1px solid rgba(255, 250, 241, 0.16);
   border-radius: 8px;
-  background: rgba(255, 250, 241, 0.94);
-  padding: 20px;
-  box-shadow: 0 16px 48px rgba(25, 20, 12, 0.08);
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: rgba(255, 250, 241, 0.84);
+  padding: 34px 38px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+    0 18px 48px rgba(20, 20, 18, 0.16);
+}
+
+.checkout-panel::before {
+  position: absolute;
+  inset: 0;
+  background: var(--iron-board-overlay);
+  content: "";
+  pointer-events: none;
+  z-index: 0;
+}
+
+.checkout-panel::after {
+  position: absolute;
+  inset: 0;
+  background:
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px bottom 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px bottom 6px / 22px 22px no-repeat;
+  content: "";
+  pointer-events: none;
+  z-index: 1;
+}
+
+.checkout-panel > * {
+  position: relative;
+  z-index: 2;
 }
 
 .checkout-panel h2 {
+  color: var(--paper-soft);
   font-size: 24px;
+}
+
+.checkout-panel .eyebrow,
+.checkout-review-title span,
+.checkout-fieldset legend {
+  color: var(--brass);
 }
 
 .basket-review-panel {
@@ -1317,9 +1423,32 @@ p {
   top: 148px;
 }
 
+.checkout-page-stack {
+  display: grid;
+  gap: 20px;
+}
+
+.checkout-review-page,
+.checkout-payment-page {
+  width: 100%;
+}
+
+.checkout-step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.checkout-step-actions .button.secondary,
+.checkout-payment-page .button.secondary {
+  border-color: rgba(255, 250, 241, 0.28);
+  color: var(--paper-soft);
+}
+
 .basket-summary-copy {
   margin: -4px 0 0;
-  color: var(--muted);
+  color: rgba(255, 250, 241, 0.74);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -1331,12 +1460,12 @@ p {
   gap: 12px;
   border: 1px solid rgba(199, 150, 67, 0.42);
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.58);
+  background: rgba(255, 250, 241, 0.08);
   padding: 10px 12px;
 }
 
 .basket-payment-strip span {
-  color: var(--muted);
+  color: rgba(255, 250, 241, 0.6);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -1344,7 +1473,7 @@ p {
 }
 
 .basket-payment-strip strong {
-  color: var(--ink);
+  color: var(--paper-soft);
   font-size: 13px;
   font-weight: 900;
 }
@@ -1355,9 +1484,28 @@ p {
   gap: 12px;
 }
 
+.checkout-fieldset {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  border: 1px solid rgba(255, 250, 241, 0.14);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.checkout-fieldset legend {
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .checkout-grid label {
   display: grid;
   gap: 6px;
+  color: rgba(255, 250, 241, 0.86);
+  font-weight: 800;
 }
 
 .checkout-grid input,
@@ -1376,20 +1524,339 @@ p {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px 14px;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  border-top: 1px solid rgba(255, 250, 241, 0.16);
+  border-bottom: 1px solid rgba(255, 250, 241, 0.16);
   padding: 14px 0;
 }
 
 .checkout-totals span,
 .checkout-totals strong {
+  color: rgba(255, 250, 241, 0.82);
   font-size: 14px;
 }
 
 .checkout-totals span:last-of-type,
 .checkout-totals strong:last-of-type {
-  color: var(--ink);
+  color: var(--paper-soft);
   font-size: 18px;
+}
+
+.payment-element-shell {
+  display: grid;
+  gap: 14px;
+  border: 1px solid rgba(255, 250, 241, 0.16);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 16px;
+}
+
+.payment-element-head h3 {
+  margin: 0;
+  color: var(--paper-soft);
+}
+
+.payment-element-head p:last-child {
+  margin: 6px 0 0;
+  color: rgba(255, 250, 241, 0.72);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.payment-element-mount {
+  min-height: 96px;
+}
+
+.checkout-order-review {
+  display: grid;
+  gap: 14px;
+  border: 1px solid rgba(255, 250, 241, 0.16);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  padding: 16px;
+}
+
+.checkout-review-head h3 {
+  margin: 0;
+  color: var(--paper-soft);
+  font-size: 20px;
+}
+
+.checkout-review-lines {
+  display: grid;
+  gap: 8px;
+}
+
+.checkout-review-line {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid rgba(255, 250, 241, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 250, 241, 0.08);
+  padding: 8px;
+}
+
+.checkout-review-line img {
+  width: 64px;
+  height: 64px;
+  border-radius: 5px;
+  background: #fff;
+  object-fit: contain;
+  padding: 5px;
+}
+
+.checkout-review-line strong {
+  color: var(--paper-soft);
+}
+
+.checkout-review-line span,
+.checkout-review-grid p {
+  color: rgba(255, 250, 241, 0.72);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.review-quantity-control {
+  display: inline-grid;
+  grid-template-columns: 34px minmax(32px, auto) 34px;
+  align-items: center;
+  width: max-content;
+  overflow: hidden;
+  margin-top: 8px;
+  border: 1px solid rgba(255, 250, 241, 0.18);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.review-quantity-control span {
+  display: grid;
+  min-height: 34px;
+  place-items: center;
+  color: var(--paper-soft);
+  font-weight: 900;
+}
+
+.quantity-stepper {
+  display: grid;
+  min-width: 34px;
+  min-height: 34px;
+  place-items: center;
+  border: 0;
+  background: rgba(255, 250, 241, 0.09);
+  color: var(--paper-soft);
+  font-weight: 900;
+}
+
+.quantity-stepper:disabled {
+  color: rgba(255, 250, 241, 0.34);
+}
+
+.checkout-review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.checkout-review-grid section,
+.checkout-reassurance {
+  border: 1px solid rgba(255, 250, 241, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 250, 241, 0.07);
+  padding: 12px;
+}
+
+.checkout-review-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.text-button {
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  color: var(--brass);
+  padding: 0;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.checkout-reassurance {
+  display: grid;
+  gap: 8px;
+}
+
+.checkout-reassurance p {
+  margin: 0;
+  color: rgba(255, 250, 241, 0.72);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.checkout-reassurance strong {
+  color: var(--paper-soft);
+}
+
+.checkout-result-card,
+.checkout-processing-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 18px;
+  border: 1px solid rgba(255, 250, 241, 0.16);
+  border-radius: 8px;
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
+  background-position: center;
+  background-size: cover;
+  color: rgba(255, 250, 241, 0.84);
+  padding: 34px 38px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+    0 18px 48px rgba(20, 20, 18, 0.16);
+}
+
+.checkout-result-card::after,
+.checkout-processing-card::after {
+  position: absolute;
+  inset: 0;
+  background:
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px bottom 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px bottom 6px / 22px 22px no-repeat;
+  content: "";
+  pointer-events: none;
+  z-index: 1;
+}
+
+.checkout-result-card > *,
+.checkout-processing-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+.checkout-result-card h2,
+.checkout-processing-card h1 {
+  color: var(--brass);
+  font-size: 22px;
+}
+
+.checkout-result-card .lead,
+.checkout-result-card address,
+.checkout-result-card .spec-grid dd {
+  color: var(--paper-soft);
+}
+
+.receipt-summary {
+  display: grid;
+  gap: 7px;
+  border: 1px solid rgba(255, 250, 241, 0.14);
+  border-radius: 7px;
+  background: rgba(255, 250, 241, 0.08);
+  padding: 12px 14px;
+}
+
+.receipt-summary div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: baseline;
+}
+
+.receipt-summary dt {
+  color: rgba(255, 250, 241, 0.68);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.receipt-summary dd {
+  margin: 0;
+  color: var(--paper-soft);
+  font-weight: 900;
+}
+
+.receipt-summary .receipt-total {
+  margin-top: 5px;
+  border-top: 1px solid rgba(255, 250, 241, 0.16);
+  padding-top: 8px;
+}
+
+.receipt-summary .receipt-total dt,
+.receipt-summary .receipt-total dd {
+  color: var(--paper-soft);
+  font-size: 18px;
+}
+
+.payment-spinner {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 250, 241, 0.18);
+  border-top-color: var(--brass);
+  border-radius: 999px;
+  animation: ironSprueSpin 900ms linear infinite;
+}
+
+@keyframes ironSprueSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.order-address {
+  display: grid;
+  gap: 3px;
+  font-style: normal;
+}
+
+.order-lines {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-lines li {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid rgba(255, 250, 241, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 250, 241, 0.08);
+  padding: 8px;
+}
+
+.order-lines img {
+  width: 72px;
+  height: 72px;
+  border-radius: 5px;
+  background: #fff;
+  object-fit: contain;
+  padding: 5px;
+}
+
+.order-lines span {
+  display: grid;
+  gap: 3px;
+  color: var(--paper-soft);
+}
+
+.order-lines small {
+  color: rgba(255, 250, 241, 0.68);
+  font-size: 12px;
 }
 
 .basket-action-stack {
@@ -1402,16 +1869,54 @@ p {
 }
 
 .basket-upsell-section {
+  position: relative;
+  overflow: hidden;
   display: grid;
   gap: 16px;
-  border: 1px solid rgba(17, 17, 15, 0.09);
+  border: 1px solid rgba(255, 250, 241, 0.16);
   border-radius: 8px;
-  background: rgba(255, 250, 241, 0.92);
-  padding: 20px;
-  box-shadow: 0 12px 36px rgba(25, 20, 12, 0.06);
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
+  background-position: center;
+  background-size: cover;
+  color: rgba(255, 250, 241, 0.84);
+  padding: 34px 38px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+    0 18px 48px rgba(20, 20, 18, 0.16);
+}
+
+.basket-upsell-section::before {
+  position: absolute;
+  inset: 0;
+  background: var(--iron-board-overlay);
+  content: "";
+  pointer-events: none;
+  z-index: 0;
+}
+
+.basket-upsell-section::after {
+  position: absolute;
+  inset: 0;
+  background:
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px bottom 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px bottom 6px / 22px 22px no-repeat;
+  content: "";
+  pointer-events: none;
+  z-index: 1;
+}
+
+.basket-upsell-section > * {
+  position: relative;
+  z-index: 2;
 }
 
 .basket-upsell-section h2 {
+  color: var(--paper-soft);
   font-size: clamp(28px, 4vw, 46px);
 }
 
@@ -1422,13 +1927,41 @@ p {
 }
 
 .basket-upsell-card {
+  position: relative;
+  overflow: hidden;
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 12px;
-  border: 1px solid var(--line);
+  gap: 0;
+  border: 1px solid rgba(255, 250, 241, 0.16);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.78);
-  padding: 12px;
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
+  background-position: center;
+  background-size: cover;
+  padding: 31px 34px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+    0 12px 30px rgba(25, 20, 12, 0.14);
+}
+
+.basket-upsell-card::after {
+  position: absolute;
+  inset: 0;
+  background:
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 5px top 5px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 5px top 5px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 5px bottom 5px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 5px bottom 5px / 22px 22px no-repeat;
+  content: "";
+  pointer-events: none;
+  z-index: 1;
+}
+
+.basket-upsell-card > * {
+  position: relative;
+  z-index: 2;
 }
 
 .basket-upsell-card img,
@@ -1437,18 +1970,29 @@ p {
   aspect-ratio: 1 / 1;
   height: auto;
   object-fit: contain;
-  border-radius: 6px;
+  border-radius: 7px;
   background: #fff;
+  padding: 10px;
 }
 
 .basket-upsell-card a {
-  color: var(--ink);
+  color: var(--paper-soft);
   font-weight: 900;
+}
+
+.basket-upsell-info {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+}
+
+.basket-upsell-info .eyebrow {
+  color: var(--brass);
 }
 
 .basket-upsell-card p {
   margin: 6px 0 10px;
-  color: var(--muted);
+  color: rgba(255, 250, 241, 0.72);
   font-size: 13px;
   font-weight: 800;
 }
@@ -1509,7 +2053,60 @@ p {
   text-decoration: none;
 }
 
-.addon-card img {
+.addon-card-link {
+  display: grid;
+  gap: 5px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.product-detail-page .addon-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(255, 250, 241, 0.16);
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: rgba(255, 250, 241, 0.82);
+  padding: 31px 34px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+    0 16px 36px rgba(20, 20, 18, 0.12);
+}
+
+.product-detail-page .addon-card::before {
+  position: absolute;
+  inset: 0;
+  background: var(--iron-board-overlay);
+  content: "";
+  pointer-events: none;
+  z-index: 0;
+}
+
+.product-detail-page .addon-card::after {
+  position: absolute;
+  inset: 0;
+  background:
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 5px top 5px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 5px top 5px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 5px bottom 5px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 5px bottom 5px / 22px 22px no-repeat;
+  content: "";
+  pointer-events: none;
+  z-index: 1;
+}
+
+.product-detail-page .addon-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+.addon-card img,
+.addon-card-link img {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: contain;
@@ -1517,11 +2114,45 @@ p {
   background: #fff;
 }
 
+.product-detail-page .addon-card img {
+  border: 1px solid rgba(255, 250, 241, 0.18);
+}
+
 .addon-card span,
 .addon-card small,
+.addon-card-link span,
+.addon-card-link small,
 .brand-tile small {
   color: var(--muted);
   font-size: 12px;
+}
+
+.product-detail-page .addon-card span,
+.product-detail-page .addon-card-link span {
+  color: var(--brass);
+  font-weight: 900;
+}
+
+.product-detail-page .addon-card strong,
+.product-detail-page .addon-card-link strong {
+  color: var(--paper-soft);
+}
+
+.product-detail-page .addon-card small,
+.product-detail-page .addon-card-link small {
+  color: rgba(255, 250, 241, 0.76);
+}
+
+.product-detail-page .addon-card .basket-action-stack {
+  margin-top: 10px;
+}
+
+.product-detail-page .addon-card .basket-action-stack button:not(:disabled) {
+  width: 100%;
+  border-color: var(--brass);
+  background: var(--brass);
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 rgba(255, 250, 241, 0.32);
 }
 
 .brand-tile img {
@@ -1835,6 +2466,7 @@ p {
   position: fixed;
   inset: auto 18px 18px;
   z-index: 90;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1842,15 +2474,39 @@ p {
   max-width: 1100px;
   margin-inline: auto;
   padding: 18px;
-  border: 1px solid rgba(213, 163, 76, 0.35);
+  border: 1px solid rgba(255, 250, 241, 0.16);
   border-radius: 8px;
-  background: rgba(12, 13, 12, 0.96);
-  color: var(--paper);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: var(--paper-soft);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    0 24px 80px rgba(0, 0, 0, 0.4);
+}
+
+.cookie-consent::before {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 18% 0%, rgba(255, 250, 241, 0.08), transparent 34%),
+    radial-gradient(ellipse at 82% 100%, rgba(0, 0, 0, 0.38), transparent 38%);
+  content: "";
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cookie-consent > * {
+  position: relative;
+  z-index: 1;
 }
 
 .cookie-consent h2 {
   margin: 0 0 4px;
+  color: var(--brass);
   font-size: 15px;
 }
 
@@ -1905,6 +2561,25 @@ p {
 
 .form-status.error {
   color: #8f2f1f;
+}
+
+.checkout-panel .form-status,
+.basket-action-stack .form-status {
+  border-left: 3px solid rgba(199, 153, 71, 0.72);
+  border-radius: 5px;
+  background: rgba(255, 250, 241, 0.1);
+  color: rgba(255, 250, 241, 0.82);
+  padding: 8px 10px;
+}
+
+.checkout-panel .form-status.error,
+.basket-action-stack .form-status.error {
+  border-left-color: rgba(207, 63, 50, 0.82);
+  color: #f2c7bf;
+}
+
+.basket-action-stack .form-status.notice {
+  color: var(--paper-soft);
 }
 
 .newsletter-panel ul {
@@ -2130,12 +2805,105 @@ label {
 }
 
 .product-gallery,
-.product-buy-panel,
 .detail-panels article {
   border: 1px solid rgba(17, 17, 15, 0.09);
   border-radius: 8px;
   background: rgba(255, 250, 241, 0.9);
   padding: 18px;
+}
+
+.cookie-preferences-button {
+  margin-top: 12px;
+}
+
+.product-buy-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 250, 241, 0.18);
+  border-radius: 8px;
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: rgba(255, 250, 241, 0.84);
+  padding: 34px 38px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+    0 18px 48px rgba(20, 20, 18, 0.16);
+}
+
+.product-buy-panel::before {
+  position: absolute;
+  inset: 0;
+  background: var(--iron-board-overlay);
+  content: "";
+  pointer-events: none;
+  z-index: 0;
+}
+
+.product-buy-panel::after {
+  position: absolute;
+  inset: 0;
+  background:
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px bottom 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px bottom 6px / 22px 22px no-repeat;
+  content: "";
+  pointer-events: none;
+  z-index: 1;
+}
+
+.product-buy-panel > * {
+  position: relative;
+  z-index: 2;
+}
+
+.product-detail-page .product-gallery {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(255, 250, 241, 0.16);
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  padding: 34px 38px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+    0 18px 48px rgba(20, 20, 18, 0.12);
+}
+
+.product-detail-page .product-gallery::before {
+  position: absolute;
+  inset: 0;
+  background: var(--iron-board-overlay);
+  content: "";
+  pointer-events: none;
+  z-index: 0;
+}
+
+.product-detail-page .product-gallery::after {
+  position: absolute;
+  inset: 0;
+  background:
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px bottom 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px bottom 6px / 22px 22px no-repeat;
+  content: "";
+  pointer-events: none;
+  z-index: 1;
+}
+
+.product-detail-page .product-gallery > * {
+  position: relative;
+  z-index: 2;
 }
 
 .primary-product-image {
@@ -2263,12 +3031,25 @@ label {
 }
 
 .product-buy-panel h1 {
+  color: var(--paper-soft);
   font-size: clamp(34px, 4vw, 58px);
+}
+
+.product-buy-panel .eyebrow {
+  color: var(--brass);
+}
+
+.product-buy-panel .lead {
+  color: rgba(255, 250, 241, 0.78);
 }
 
 .sku-line {
   color: var(--muted);
   font-size: 13px;
+}
+
+.product-buy-panel .sku-line {
+  color: rgba(255, 250, 241, 0.72);
 }
 
 .price-row {
@@ -2280,6 +3061,14 @@ label {
 
 .price-row strong {
   font-size: 32px;
+}
+
+.product-buy-panel .price-row strong {
+  color: var(--paper-soft);
+}
+
+.product-buy-panel .price-row span {
+  color: rgba(255, 250, 241, 0.82);
 }
 
 .quantity-row {
@@ -2298,9 +3087,68 @@ label {
   padding-top: 16px;
 }
 
+.product-buy-panel .service-summary {
+  border-top-color: rgba(255, 250, 241, 0.16);
+}
+
 .service-summary p {
   margin: 0;
   font-size: 13px;
+}
+
+.product-buy-panel .service-summary p {
+  color: rgba(255, 250, 241, 0.74);
+}
+
+.product-buy-panel .service-summary strong {
+  color: var(--paper-soft);
+}
+
+.product-buy-panel .quantity-row label {
+  color: rgba(255, 250, 241, 0.86);
+}
+
+.product-buy-panel .quantity-row input {
+  border: 1px solid rgba(255, 250, 241, 0.2);
+  background: rgba(255, 250, 241, 0.95);
+  color: var(--ink);
+}
+
+.product-buy-panel .button.secondary {
+  border-color: rgba(255, 250, 241, 0.18);
+  background: linear-gradient(180deg, rgba(255, 250, 241, 0.07), rgba(0, 0, 0, 0.18));
+  color: rgba(255, 250, 241, 0.9);
+}
+
+.product-buy-panel .basket-action-stack button:not(:disabled) {
+  border-color: var(--brass);
+  background: var(--brass);
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 rgba(255, 250, 241, 0.32);
+}
+
+.product-buy-panel .stock-badge {
+  border-color: rgba(247, 248, 246, 0.24);
+  background: rgba(247, 248, 246, 0.09);
+  color: rgba(255, 250, 241, 0.9);
+}
+
+.product-buy-panel .stock-badge.in-stock {
+  border-color: rgba(92, 178, 124, 0.56);
+  background: rgba(92, 178, 124, 0.14);
+  color: #a6e0b8;
+}
+
+.product-buy-panel .stock-badge.low-stock {
+  border-color: rgba(214, 159, 73, 0.6);
+  background: rgba(214, 159, 73, 0.16);
+  color: #f1c878;
+}
+
+.product-buy-panel .stock-badge.out-of-stock {
+  border-color: rgba(199, 78, 62, 0.58);
+  background: rgba(199, 78, 62, 0.16);
+  color: #f2a99c;
 }
 
 .detail-panels {
@@ -2308,6 +3156,61 @@ label {
   grid-template-columns: 0.9fr 1.1fr;
   gap: 18px;
   margin-top: 22px;
+}
+
+.product-detail-page .detail-panels article {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(255, 250, 241, 0.16);
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: rgba(255, 250, 241, 0.78);
+  padding: 34px 38px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+    0 18px 48px rgba(20, 20, 18, 0.12);
+}
+
+.product-detail-page .detail-panels article::before {
+  position: absolute;
+  inset: 0;
+  background: var(--iron-board-overlay);
+  content: "";
+  pointer-events: none;
+  z-index: 0;
+}
+
+.product-detail-page .detail-panels article::after {
+  position: absolute;
+  inset: 0;
+  background:
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px top 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 6px bottom 6px / 22px 22px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 6px bottom 6px / 22px 22px no-repeat;
+  content: "";
+  pointer-events: none;
+  z-index: 1;
+}
+
+.product-detail-page .detail-panels article > * {
+  position: relative;
+  z-index: 2;
+}
+
+.product-detail-page .detail-panels h2,
+.product-detail-page .detail-panels h3 {
+  color: var(--brass);
+}
+
+.product-detail-page .detail-panels p,
+.product-detail-page .detail-panels li {
+  color: rgba(255, 250, 241, 0.78);
 }
 
 .spec-grid {
@@ -2323,6 +3226,12 @@ label {
   padding: 12px;
 }
 
+.product-detail-page .spec-grid div {
+  border-color: rgba(255, 250, 241, 0.16);
+  background: linear-gradient(180deg, rgba(255, 250, 241, 0.07), rgba(0, 0, 0, 0.18));
+  box-shadow: inset 0 1px 0 rgba(255, 250, 241, 0.08);
+}
+
 .spec-grid dt {
   color: var(--muted);
   font-size: 11px;
@@ -2333,6 +3242,107 @@ label {
 .spec-grid dd {
   margin: 5px 0 0;
   font-weight: 800;
+}
+
+.product-detail-page .spec-grid dt {
+  color: var(--brass);
+}
+
+.product-detail-page .spec-grid dd {
+  color: var(--paper-soft);
+}
+
+.info-page .section-head {
+  max-width: 900px;
+}
+
+.info-page .detail-panels {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.info-page .detail-panels article {
+  border-color: rgba(17, 17, 15, 0.12);
+  background: rgba(255, 250, 241, 0.94);
+  box-shadow: 0 12px 34px rgba(25, 20, 12, 0.06);
+}
+
+.info-page .detail-panels article.legal-board {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 250, 241, 0.18);
+  border-radius: 8px;
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: rgba(255, 250, 241, 0.82);
+  padding: clamp(40px, 5vw, 58px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+    0 18px 48px rgba(20, 20, 18, 0.18);
+}
+
+.info-page .detail-panels article.legal-board::before {
+  position: absolute;
+  inset: 0;
+  background: var(--iron-board-overlay);
+  content: "";
+  pointer-events: none;
+  z-index: 0;
+}
+
+.info-page .detail-panels article.legal-board::after {
+  position: absolute;
+  inset: 0;
+  background:
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 8px top 8px / 24px 24px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 8px top 8px / 24px 24px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") left 8px bottom 8px / 24px 24px no-repeat,
+    url("/assets/iron-board/iron-board-slotted-bolt.png") right 8px bottom 8px / 24px 24px no-repeat;
+  content: "";
+  pointer-events: none;
+  z-index: 1;
+}
+
+.info-page .detail-panels article.legal-board > * {
+  position: relative;
+  z-index: 2;
+}
+
+.info-page .detail-panels article.legal-board section {
+  border-top: 1px solid rgba(255, 250, 241, 0.12);
+  padding: 22px 0;
+}
+
+.info-page .detail-panels article.legal-board section:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.info-page .detail-panels article.legal-board section:last-child {
+  padding-bottom: 0;
+}
+
+.info-page .detail-panels article.legal-board h2 {
+  margin: 0 0 10px;
+  color: var(--paper-soft);
+}
+
+.info-page .detail-panels article.legal-board p,
+.info-page .detail-panels article.legal-board li {
+  color: rgba(255, 250, 241, 0.78);
+}
+
+.info-page .detail-panels article.legal-board ul {
+  margin: 10px 0 0;
+  padding-left: 22px;
+}
+
+.info-page .detail-panels article.legal-board a {
+  color: var(--brass);
 }
 
 .site-footer {
@@ -2598,6 +3608,7 @@ label {
 
   .basket-line {
     grid-template-columns: 88px minmax(0, 1fr);
+    padding: 30px 28px;
   }
 
   .basket-line img,
@@ -2606,8 +3617,22 @@ label {
     height: 88px;
   }
 
-  .checkout-grid {
+  .basket-line label,
+  .basket-line > .button.secondary {
+    grid-column: 1 / -1;
+  }
+
+  .checkout-grid,
+  .checkout-review-grid {
     grid-template-columns: 1fr;
+  }
+
+  .checkout-review-line {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .checkout-review-line > strong {
+    grid-column: 2;
   }
 
   .basket-layout,

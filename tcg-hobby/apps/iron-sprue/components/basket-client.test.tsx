@@ -6,6 +6,7 @@ import {
   addIronSprueBasketItemWithLiveStock,
   clearIronSprueBasketAfterPaidCheckout,
   readIronSprueBasketCount,
+  updateIronSprueBasketItemQuantity,
 } from './basket-client';
 
 function memoryStorage(): Storage {
@@ -154,5 +155,27 @@ describe('Iron Sprue basket persistence', () => {
     expect(secondAdd).toEqual({ ok: true, message: 'Only 1 available. Basket quantity has been capped.' });
     expect(readIronSprueBasketCount()).toBe(1);
     expect(JSON.parse(window.localStorage.getItem(IRON_SPRUE_BASKET_STORAGE_KEY) ?? '[]')).toEqual([{ ...limitedToyota, quantity: 1 }]);
+  });
+
+  it('persists an order-review quantity decrease back to the basket', () => {
+    addIronSprueBasketItem({ ...toyota, quantity: 2, availableQuantity: 3 });
+
+    const result = updateIronSprueBasketItemQuantity({ productId: toyota.productId, availableQuantity: 3 }, 1);
+
+    expect(result).toMatchObject({ quantity: 1, capped: false, limit: 3 });
+    expect(readIronSprueBasketCount()).toBe(1);
+    expect(JSON.parse(window.localStorage.getItem(IRON_SPRUE_BASKET_STORAGE_KEY) ?? '[]')).toEqual([{ ...toyota, quantity: 1, availableQuantity: 3 }]);
+  });
+
+  it('persists an order-review quantity increase and caps it at available stock', () => {
+    addIronSprueBasketItem({ ...toyota, quantity: 1, availableQuantity: 2 });
+
+    const increased = updateIronSprueBasketItemQuantity({ productId: toyota.productId, availableQuantity: 2 }, 2);
+    const capped = updateIronSprueBasketItemQuantity({ productId: toyota.productId, availableQuantity: 2 }, 3);
+
+    expect(increased).toMatchObject({ quantity: 2, capped: false, limit: 2 });
+    expect(capped).toMatchObject({ quantity: 2, capped: true, limit: 2 });
+    expect(readIronSprueBasketCount()).toBe(2);
+    expect(JSON.parse(window.localStorage.getItem(IRON_SPRUE_BASKET_STORAGE_KEY) ?? '[]')).toEqual([{ ...toyota, quantity: 2, availableQuantity: 2 }]);
   });
 });

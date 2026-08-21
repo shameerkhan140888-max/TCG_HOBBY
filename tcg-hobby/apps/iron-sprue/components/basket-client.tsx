@@ -27,6 +27,73 @@ export type StoredBasketItem = {
 
 export type BasketUpsellProduct = Omit<StoredBasketItem, 'quantity'>;
 
+type CheckoutPaymentIntent = {
+  orderNumber: string;
+  paymentIntentId: string;
+  clientSecret: string;
+  publishableKey: string;
+  totalMinor: number;
+  currency: string;
+};
+
+type CheckoutStep = 'details' | 'review' | 'payment';
+
+type StripePaymentElement = {
+  mount(selector: string): void;
+  unmount(): void;
+};
+
+type StripeElements = {
+  create(type: 'payment'): StripePaymentElement;
+};
+
+type StripeInstance = {
+  elements(options: { clientSecret: string; appearance?: Record<string, unknown> }): StripeElements;
+  confirmPayment(options: {
+    elements: StripeElements;
+    confirmParams: { return_url: string };
+  }): Promise<{ error?: { message?: string } }>;
+};
+
+declare global {
+  interface Window {
+    Stripe?: (publishableKey: string) => StripeInstance | null;
+  }
+}
+
+let stripeScriptPromise: Promise<void> | null = null;
+
+function loadStripeScript() {
+  if (typeof window === 'undefined') return Promise.reject(new Error('Payment form is not available yet.'));
+  if (window.Stripe) return Promise.resolve();
+  stripeScriptPromise = stripeScriptPromise ?? new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector('script[data-iron-sprue-stripe-js="true"]');
+    if (existing) {
+      if (window.Stripe) {
+        resolve();
+        return;
+      }
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener('error', () => reject(new Error('Secure payment form could not be loaded.')), { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://js.stripe.com/v3/';
+    script.async = true;
+    script.dataset.ironSprueStripeJs = 'true';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Secure payment form could not be loaded.'));
+    document.head.appendChild(script);
+  });
+  return stripeScriptPromise;
+}
+
+function focusCheckoutField(fieldId: string) {
+  const field = document.getElementById(fieldId);
+  field?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (field instanceof HTMLElement) field.focus();
+}
+
 function readBasket(): StoredBasketItem[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -44,6 +111,22 @@ export function readIronSprueBasketCount() {
 function writeBasket(items: StoredBasketItem[]) {
   window.localStorage.setItem(IRON_SPRUE_BASKET_STORAGE_KEY, JSON.stringify(items));
   window.dispatchEvent(new CustomEvent('iron-sprue-basket-updated'));
+}
+
+export function updateIronSprueBasketItemQuantity(item: Pick<StoredBasketItem, 'productId' | 'availableQuantity'>, requestedQuantity: number) {
+  const items = readBasket();
+  const limit = availabilityLimit(item);
+  const nextQuantity = Math.min(Math.max(Number(requestedQuantity) || 1, 1), Math.max(limit, 1), 99);
+  const next = items.map((candidate) => (
+    candidate.productId === item.productId ? { ...candidate, quantity: nextQuantity } : candidate
+  ));
+  writeBasket(next);
+  return {
+    items: next,
+    quantity: nextQuantity,
+    capped: nextQuantity !== requestedQuantity,
+    limit,
+  };
 }
 
 export function clearIronSprueBasket() {
@@ -192,6 +275,89 @@ function basketLineWarning(item: StoredBasketItem & { inStock?: boolean }) {
   return '';
 }
 
+function StripePaymentElementForm({ paymentIntent }: { paymentIntent: CheckoutPaymentIntent }) {
+  const [stripe, setStripe] = useState<StripeInstance | null>(null);
+  const [elements, setElements] = useState<StripeElements | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState('');
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+  const mountId = `iron-sprue-payment-element-${paymentIntent.paymentIntentId}`;
+
+  useEffect(() => {
+    let cancelled = false;
+    let mountedElement: StripePaymentElement | null = null;
+    setPaymentStatus('Loading secure payment form...');
+    setStripe(null);
+    setElements(null);
+
+    void loadStripeScript()
+      .then(() => {
+        if (cancelled) return;
+        const stripeInstance = window.Stripe?.(paymentIntent.publishableKey) ?? null;
+        if (!stripeInstance) throw new Error('Secure payment form could not be initialised.');
+        const nextElements = stripeInstance.elements({
+          clientSecret: paymentIntent.clientSecret,
+          appearance: {
+            theme: 'night',
+            variables: {
+              colorPrimary: '#c7923d',
+              colorBackground: '#111311',
+              colorText: '#f8f3e7',
+              colorDanger: '#cf3f32',
+              borderRadius: '6px',
+              fontFamily: 'Arial, sans-serif',
+            },
+          },
+        });
+        mountedElement = nextElements.create('payment');
+        mountedElement.mount(`#${mountId}`);
+        setStripe(stripeInstance);
+        setElements(nextElements);
+        setPaymentStatus('');
+      })
+      .catch((error) => {
+        if (!cancelled) setPaymentStatus(error instanceof Error ? error.message : 'Secure payment form could not be loaded. Check your connection and try again.');
+      });
+
+    return () => {
+      cancelled = true;
+      mountedElement?.unmount();
+    };
+  }, [mountId, paymentIntent.clientSecret, paymentIntent.publishableKey]);
+
+  return (
+    <section className="payment-element-shell" aria-label="Secure payment">
+      <div className="payment-element-head">
+        <p className="eyebrow">Secure payment</p>
+        <h3>Pay by card</h3>
+        <p>Card details are handled securely by the payment provider. Iron Sprue does not store card numbers.</p>
+      </div>
+      <div id={mountId} className="payment-element-mount" />
+      <button
+        type="button"
+        disabled={!stripe || !elements || isSubmittingPayment}
+        onClick={async () => {
+          if (!stripe || !elements) return;
+          setIsSubmittingPayment(true);
+          setPaymentStatus('Confirming payment...');
+          const result = await stripe.confirmPayment({
+            elements,
+            confirmParams: {
+              return_url: `${window.location.origin}/checkout/success?payment_intent=${encodeURIComponent(paymentIntent.paymentIntentId)}`,
+            },
+          });
+          if (result.error) {
+            setPaymentStatus(result.error.message ?? 'Payment could not be completed. Please check your details and try again.');
+            setIsSubmittingPayment(false);
+          }
+        }}
+      >
+        {isSubmittingPayment ? 'Processing payment...' : `Pay ${formatPrice(paymentIntent.totalMinor)}`}
+      </button>
+      {paymentStatus ? <p className={`form-status${paymentStatus.includes('could not') ? ' error' : ''}`}>{paymentStatus}</p> : null}
+    </section>
+  );
+}
+
 const defaultAddress: CheckoutAddress = {
   fullName: '',
   email: '',
@@ -212,6 +378,8 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   const [discountCode, setDiscountCode] = useState('');
   const [status, setStatus] = useState('');
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutPaymentIntent, setCheckoutPaymentIntent] = useState<CheckoutPaymentIntent | null>(null);
+  const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>('details');
 
   useEffect(() => {
     const refresh = () => setItems(readBasket());
@@ -280,6 +448,68 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     if (shippingMethodCode === 'UK_EXPRESS' && subtotalMinor >= 5000) return 299;
     return shippingMethodCode === 'UK_EXPRESS' ? 499 : 299;
   }, [shippingMethodCode, subtotalMinor]);
+  const totalMinor = checkoutPaymentIntent?.totalMinor ?? subtotalMinor + deliveryMinor;
+  const vatIncludedEstimateMinor = Math.round(totalMinor / 6);
+  const requiredDetailsComplete = Boolean(
+    address.fullName.trim()
+    && address.email.trim()
+    && address.line1.trim()
+    && address.city.trim()
+    && address.postalCode.trim()
+    && address.country.trim(),
+  );
+
+  useEffect(() => {
+    setCheckoutPaymentIntent(null);
+    if (mode === 'checkout') setCheckoutStep('details');
+  }, [address, discountCode, items, shippingMethodCode]);
+
+  useEffect(() => {
+    if (hasUnavailableItems) {
+      setCheckoutPaymentIntent(null);
+      setStatus('');
+      if (mode === 'checkout') setCheckoutStep('details');
+    }
+  }, [hasUnavailableItems, mode]);
+
+  async function prepareSecurePayment() {
+    setIsCheckingOut(true);
+    setStatus('Preparing secure payment...');
+    try {
+      const response = await fetch('/api/checkout/payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          guestItems: toInputItems(items),
+          shippingAddress: address,
+          shippingMethodCode,
+          discountCode: discountCode.trim() || undefined,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.clientSecret || !payload.publishableKey || !payload.paymentIntentId) {
+        throw new Error(payload.message ?? payload.error ?? 'Checkout could not be started.');
+      }
+      setCheckoutPaymentIntent(payload as CheckoutPaymentIntent);
+      setCheckoutStep('payment');
+      setStatus('Secure payment form is ready.');
+      trackIronSprueEcommerceEvent('begin_checkout', {
+        currency: 'GBP',
+        value: (payload.totalMinor ?? subtotalMinor + deliveryMinor) / 100,
+        coupon: discountCode.trim() || undefined,
+        items: basketLineItems.map((item) => ({
+          item_id: item.productId,
+          item_name: item.productName,
+          quantity: item.quantity,
+          price: item.unitPriceMinor / 100,
+        })),
+      });
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Checkout could not be started.');
+    } finally {
+      setIsCheckingOut(false);
+    }
+  }
 
   if (!mounted) {
     return (
@@ -308,7 +538,8 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
         return (
         <article className={`basket-line${warning ? ' unavailable' : ''}`} key={item.productId}>
           {item.imageUrl ? <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} width="120" height="120" /> : <span className="basket-image-fallback">Iron Sprue</span>}
-          <div>
+          <div className="basket-line-details">
+            <p className="eyebrow">Basket item</p>
             <a href={`/products/${item.productSlug}`}>{item.productName}</a>
             <p>{formatPrice(item.unitPriceMinor)} inc VAT</p>
             {warning ? <p className="basket-line-warning">{warning}</p> : null}
@@ -322,10 +553,8 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
               value={item.quantity}
               disabled={limit <= 0}
               onChange={(event) => {
-                const quantity = Math.min(Math.max(Number(event.target.value) || 1, 1), Math.max(limit, 1));
-                const next = items.map((candidate) => candidate.productId === item.productId ? { ...candidate, quantity } : candidate);
-                setItems(next);
-                writeBasket(next);
+                const result = updateIronSprueBasketItemQuantity(item, Number(event.target.value) || 1);
+                setItems(result.items);
               }}
             />
           </label>
@@ -384,10 +613,11 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             <div className="basket-upsell-grid">
               {visibleUpsells.map((product) => (
                 <article className="basket-upsell-card" key={product.productId}>
-                  <a href={`/products/${product.productSlug}`}>
+                  <a className="basket-upsell-image" href={`/products/${product.productSlug}`}>
                     {product.imageUrl ? <img src={product.imageUrl} alt={product.imageAlt ?? product.productName} /> : <span className="basket-image-fallback">Iron Sprue</span>}
                   </a>
-                  <div>
+                  <div className="basket-upsell-info">
+                    <p className="eyebrow">Add-on</p>
                     <a href={`/products/${product.productSlug}`}>{product.productName}</a>
                     <p>{formatPrice(product.unitPriceMinor)} inc VAT</p>
                     <AddToBasketButton item={product} />
@@ -401,63 +631,168 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     );
   }
 
+  if (checkoutStep === 'review') {
+    return (
+      <div className="checkout-page-stack">
+        <section className="checkout-panel checkout-review-page" aria-label="Order review">
+          <p className="eyebrow">Order review</p>
+          <h2>Check everything before secure payment.</h2>
+          <div className="checkout-review-lines receipt-lines">
+            {basketLineItems.map((item) => (
+              <article className="checkout-review-line" key={item.productId}>
+                {item.imageUrl ? <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} width="64" height="64" /> : <span className="basket-image-fallback">Iron Sprue</span>}
+                <div>
+                  <strong>{item.productName}</strong>
+                  <span>{formatPrice(item.unitPriceMinor)} each</span>
+                  <div className="review-quantity-control" aria-label={`Quantity for ${item.productName}`}>
+                    <button
+                      type="button"
+                      className="quantity-stepper"
+                      disabled={item.quantity <= 1}
+                      onClick={() => {
+                        const result = updateIronSprueBasketItemQuantity(item, item.quantity - 1);
+                        setItems(result.items);
+                        setStatus('');
+                      }}
+                    >
+                      -
+                    </button>
+                    <span>{item.quantity}</span>
+                    <button
+                      type="button"
+                      className="quantity-stepper"
+                      disabled={availabilityLimit(item) <= item.quantity}
+                      onClick={() => {
+                        const result = updateIronSprueBasketItemQuantity(item, item.quantity + 1);
+                        setItems(result.items);
+                        setStatus(result.capped ? `Only ${result.limit} available for ${item.productName}.` : '');
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <strong>{formatPrice(item.unitPriceMinor * item.quantity)}</strong>
+              </article>
+            ))}
+          </div>
+          <div className="checkout-review-grid">
+            <section>
+              <div className="checkout-review-title">
+                <span>Delivery address</span>
+                <button type="button" className="text-button" onClick={() => setCheckoutStep('details')}>Edit address</button>
+              </div>
+              <p>
+                {address.fullName}<br />
+                {address.line1}{address.line2 ? <><br />{address.line2}</> : null}<br />
+                {address.city}<br />
+                {address.postalCode}<br />
+                {address.country}
+              </p>
+            </section>
+            <section>
+              <div className="checkout-review-title">
+                <span>Contact and delivery</span>
+                <button type="button" className="text-button" onClick={() => setCheckoutStep('details')}>Edit contact</button>
+              </div>
+              <p>{address.email}</p>
+              <p>{shippingMethodCode === 'UK_EXPRESS' ? 'Express delivery' : 'Standard delivery'} - {formatPrice(deliveryMinor)}</p>
+            </section>
+          </div>
+          <div className="checkout-totals receipt-totals">
+            <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>
+            <span>Delivery</span><strong>{formatPrice(deliveryMinor)}</strong>
+            <span>VAT included estimate</span><strong>{formatPrice(vatIncludedEstimateMinor)}</strong>
+            <span>Total</span><strong>{formatPrice(totalMinor)}</strong>
+          </div>
+          {status ? <p className="form-status error">{status}</p> : null}
+          <div className="checkout-step-actions">
+            <button type="button" disabled={isCheckingOut || hasUnavailableItems} onClick={prepareSecurePayment}>
+              {isCheckingOut ? 'Preparing payment...' : 'Continue to secure payment'}
+            </button>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (checkoutStep === 'payment' && checkoutPaymentIntent && !hasUnavailableItems) {
+    return (
+      <div className="checkout-page-stack">
+        <section className="checkout-panel checkout-payment-page" aria-label="Secure payment">
+          <p className="eyebrow">Secure payment</p>
+          <h2>Complete payment.</h2>
+          <div className="checkout-totals receipt-totals">
+            <span>Total to pay</span><strong>{formatPrice(checkoutPaymentIntent.totalMinor)}</strong>
+          </div>
+          <div className="checkout-reassurance">
+            <p><strong>Secure payment</strong> Card details are handled by the embedded payment provider form.</p>
+            <p><strong>Order reference</strong> {checkoutPaymentIntent.orderNumber}</p>
+          </div>
+          <StripePaymentElementForm paymentIntent={checkoutPaymentIntent} />
+          <button type="button" className="button secondary" onClick={() => setCheckoutStep('review')}>Back to order review</button>
+        </section>
+      </div>
+    );
+  }
+
   return (
-    <div className="basket-layout">
+    <div className="basket-layout checkout-details-layout">
       {basketLines}
 
       <form
         className="checkout-panel"
-        onSubmit={async (event) => {
+        onSubmit={(event) => {
           event.preventDefault();
-          setIsCheckingOut(true);
-          setStatus('Starting secure checkout...');
-          try {
-            const response = await fetch('/api/checkout/session', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                guestItems: toInputItems(items),
-                shippingAddress: address,
-                shippingMethodCode,
-                discountCode: discountCode.trim() || undefined,
-              }),
-            });
-            const payload = await response.json();
-            if (!response.ok || !payload.checkoutUrl) throw new Error(payload.message ?? payload.error ?? 'Checkout could not be started.');
-            window.location.href = payload.checkoutUrl;
-          } catch (error) {
-            setStatus(error instanceof Error ? error.message : 'Checkout could not be started.');
-            setIsCheckingOut(false);
+          setStatus('');
+          if (hasUnavailableItems) {
+            setStatus('One or more basket items are no longer available. Return to basket and remove them before checkout.');
+            return;
           }
+          if (!requiredDetailsComplete) {
+            setStatus('Complete the required delivery and contact details before reviewing your order.');
+            return;
+          }
+          setCheckoutStep('review');
         }}
       >
-        <h2>Delivery and payment</h2>
+        <p className="eyebrow">Delivery details</p>
+        <h2>Where should we send it?</h2>
         {hasUnavailableItems ? (
-          <p className="form-status">One or more basket items are no longer available. Return to basket and remove them before checkout.</p>
+          <p className="form-status error">One or more basket items are no longer available. Return to basket and remove them before checkout.</p>
         ) : null}
-        <div className="checkout-grid">
-          <label>Full name<input required value={address.fullName} onChange={(event) => setAddress({ ...address, fullName: event.target.value })} /></label>
-          <label>Email<input required type="email" value={address.email} onChange={(event) => setAddress({ ...address, email: event.target.value })} /></label>
-          <label>Address line 1<input required value={address.line1} onChange={(event) => setAddress({ ...address, line1: event.target.value })} /></label>
-          <label>Address line 2<input value={address.line2 ?? ''} onChange={(event) => setAddress({ ...address, line2: event.target.value || null })} /></label>
-          <label>City<input required value={address.city} onChange={(event) => setAddress({ ...address, city: event.target.value })} /></label>
-          <label>Postcode<input required value={address.postalCode} onChange={(event) => setAddress({ ...address, postalCode: event.target.value })} /></label>
-          <label>Country<input required value={address.country} onChange={(event) => setAddress({ ...address, country: event.target.value.toUpperCase() })} /></label>
-          <label>Delivery
-            <select value={shippingMethodCode} onChange={(event) => setShippingMethodCode(event.target.value as ShippingMethodCode)}>
-              <option value="UK_STANDARD">Standard delivery</option>
-              <option value="UK_EXPRESS">Express delivery</option>
-            </select>
-          </label>
-          <label>Discount code<input value={discountCode} onChange={(event) => setDiscountCode(event.target.value.toUpperCase())} placeholder="WELCOME5" /></label>
+        <fieldset className="checkout-fieldset">
+          <legend>Contact and delivery</legend>
+          <div className="checkout-grid">
+            <label htmlFor="checkout-full-name">Full name<input id="checkout-full-name" required value={address.fullName} onChange={(event) => setAddress({ ...address, fullName: event.target.value })} /></label>
+            <label htmlFor="checkout-email">Email<input id="checkout-email" required type="email" value={address.email} onChange={(event) => setAddress({ ...address, email: event.target.value })} /></label>
+            <label htmlFor="checkout-line-1">Address line 1<input id="checkout-line-1" required value={address.line1} onChange={(event) => setAddress({ ...address, line1: event.target.value })} /></label>
+            <label htmlFor="checkout-line-2">Address line 2<input id="checkout-line-2" value={address.line2 ?? ''} onChange={(event) => setAddress({ ...address, line2: event.target.value || null })} /></label>
+            <label htmlFor="checkout-city">City<input id="checkout-city" required value={address.city} onChange={(event) => setAddress({ ...address, city: event.target.value })} /></label>
+            <label htmlFor="checkout-postcode">Postcode<input id="checkout-postcode" required value={address.postalCode} onChange={(event) => setAddress({ ...address, postalCode: event.target.value })} /></label>
+            <label htmlFor="checkout-country">Country<input id="checkout-country" required value={address.country} onChange={(event) => setAddress({ ...address, country: event.target.value.toUpperCase() })} /></label>
+            <label>Delivery
+              <select value={shippingMethodCode} onChange={(event) => setShippingMethodCode(event.target.value as ShippingMethodCode)}>
+                <option value="UK_STANDARD">Standard delivery</option>
+                <option value="UK_EXPRESS">Express delivery</option>
+              </select>
+            </label>
+            <label>Discount code<input value={discountCode} onChange={(event) => setDiscountCode(event.target.value.toUpperCase())} placeholder="WELCOME5" /></label>
+          </div>
+        </fieldset>
+        <div className="checkout-reassurance">
+          <p><strong>Delivery</strong> UK delivery options are confirmed before payment.</p>
+          <p><strong>Returns</strong> Unused items can be returned under the published returns policy.</p>
+          <p><strong>Payments</strong> Secure card payment is processed through the embedded payment form.</p>
         </div>
         <div className="checkout-totals">
           <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>
           <span>Delivery</span><strong>{formatPrice(deliveryMinor)}</strong>
-          <span>Total</span><strong>{formatPrice(subtotalMinor + deliveryMinor)}</strong>
+          <span>VAT included estimate</span><strong>{formatPrice(vatIncludedEstimateMinor)}</strong>
+          <span>Total</span><strong>{formatPrice(totalMinor)}</strong>
         </div>
-        <button type="submit" disabled={isCheckingOut || hasUnavailableItems}>{isCheckingOut ? 'Starting checkout...' : 'Pay securely with Stripe'}</button>
-        {status ? <p className="form-status">{status}</p> : null}
+        <button type="submit" disabled={hasUnavailableItems}>Continue to review order</button>
+        {status ? <p className="form-status error">{status}</p> : null}
       </form>
     </div>
   );
