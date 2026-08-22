@@ -6,9 +6,9 @@ export {
   requireCustomerAccount,
   SESSION_COOKIE_NAME,
   SESSION_DURATION_MS,
-} from './session';
-export type { CustomerSession, SessionRole, SessionUser } from './session';
-export { hashPassword, verifyPassword } from './password';
+} from './session.js';
+export type { CustomerSession, SessionRole, SessionUser } from './session.js';
+export { hashPassword, verifyPassword } from './password.js';
 export {
   normalizeEmail,
   validateEmail,
@@ -16,5 +16,5 @@ export {
   validatePassword,
   validateProfileInput,
   validateRegisterInput,
-} from './validation';
-export type { FieldErrors, LoginFormInput, ProfileFormInput, RegisterFormInput } from './validation';
+} from './validation.js';
+export type { FieldErrors, LoginFormInput, ProfileFormInput, RegisterFormInput } from './validation.js';
