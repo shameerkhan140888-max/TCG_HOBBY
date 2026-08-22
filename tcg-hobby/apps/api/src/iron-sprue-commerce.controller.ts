@@ -66,6 +66,11 @@ export class IronSprueCommerceController {
     return this.commerce.cancelCheckout(headers, typeof body.sessionId === 'string' ? body.sessionId : '');
   }
 
+  @Post('checkout/payment-intent/cancel')
+  checkoutPaymentIntentCancel(@Headers() headers: Record<string, string | string[] | undefined>, @Body() body: { paymentIntentId?: unknown }) {
+    return this.commerce.cancelCheckoutPaymentIntent(headers, typeof body.paymentIntentId === 'string' ? body.paymentIntentId : '');
+  }
+
   @Get('customer/orders')
   orders(@Headers() headers: Record<string, string | string[] | undefined>, @Headers('authorization') authorization?: string) {
     return this.commerce.orders(headers, authorization);

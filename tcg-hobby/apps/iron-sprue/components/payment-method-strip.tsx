@@ -12,10 +12,12 @@ export function PaymentMethodStrip({
 
   return (
     <div className={`payment-method-strip${compact ? ' compact' : ''}`} aria-label="Supported payment methods">
-      <div>
-        <span>Secure payment</span>
-        <strong>{compact ? 'Major cards' : ironSpruePaymentSummary()}</strong>
-      </div>
+      {!compact ? (
+        <div>
+          <span>Secure payment</span>
+          <strong>{ironSpruePaymentSummary()}</strong>
+        </div>
+      ) : null}
       <ul aria-label="Accepted card payments">
         {visibleMethods.map((method) => (
           <li key={method.id}>

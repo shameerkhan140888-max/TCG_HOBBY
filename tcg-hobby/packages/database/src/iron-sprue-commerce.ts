@@ -421,6 +421,10 @@ async function retrieveIronSprueStripeCheckoutSession(secretKey: string, session
   return stripeRequest<StripeCheckoutSession>(secretKey, `checkout/sessions/${encodeURIComponent(sessionId)}`);
 }
 
+async function retrieveIronSprueStripePaymentIntent(secretKey: string, paymentIntentId: string) {
+  return stripeRequest<StripePaymentIntentSnapshot>(secretKey, `payment_intents/${encodeURIComponent(paymentIntentId)}`);
+}
+
 async function createIronSprueStripeCoupon(secretKey: string, params: { code: string; discountMinor: number; orderNumber: string }) {
   const body = new URLSearchParams();
   body.set('duration', 'once');
@@ -962,6 +966,63 @@ export async function cancelIronSprueCheckoutSession(sessionId: string, db: Data
   });
   if (!order) return null;
   return releaseIronSprueCheckoutOrderReservation(order.id, db, 'CANCELED');
+}
+
+export async function cancelIronSpruePaymentIntentCheckout(paymentIntentId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
+  const normalizedPaymentIntentId = paymentIntentId.trim();
+  if (!normalizedPaymentIntentId) return null;
+  const order = await db.ironSprueOrder.findUnique({
+    where: { paymentIntentId: normalizedPaymentIntentId },
+    include: { items: true },
+  });
+  if (!order) return null;
+  if (order.paymentStatus === 'SUCCEEDED' || order.paymentStatus === 'REFUNDED') return mapOrderRecord(order);
+
+  await releaseIronSprueCheckoutOrderReservation(order.id, db, 'CANCELED');
+  const config = getStoreStripeConfig({ store: IRON_SPRUE_STORE_CODE });
+  try {
+    await stripeRequest<StripePaymentIntentSnapshot>(config.secretKey, `payment_intents/${encodeURIComponent(normalizedPaymentIntentId)}/cancel`, new URLSearchParams());
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '';
+    if (!/cannot be canceled|already succeeded|already canceled|already cancelled/i.test(message)) throw error;
+  }
+  return getIronSprueOrderByStripePaymentIntentId(normalizedPaymentIntentId, db);
+}
+
+export async function reconcileIronSpruePaymentIntentCheckout(paymentIntentId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
+  const normalizedPaymentIntentId = paymentIntentId.trim();
+  if (!normalizedPaymentIntentId) return null;
+  const order = await db.ironSprueOrder.findUnique({
+    where: { paymentIntentId: normalizedPaymentIntentId },
+    include: { items: true },
+  });
+  if (!order) return null;
+  if (order.paymentStatus === 'SUCCEEDED' || order.paymentStatus === 'REFUNDED') return mapOrderRecord(order);
+
+  const config = getStoreStripeConfig({ store: IRON_SPRUE_STORE_CODE });
+  const intent = await retrieveIronSprueStripePaymentIntent(config.secretKey, normalizedPaymentIntentId);
+  assertIronSprueStripeMetadata(intent.metadata);
+
+  if (intent.status === 'succeeded') {
+    const paidMinor = typeof intent.amount_received === 'number' && intent.amount_received > 0
+      ? intent.amount_received
+      : intent.amount;
+    if (paidMinor !== order.totalMinor || intent.currency?.toUpperCase() !== order.currency.toUpperCase()) {
+      throw new Error('STRIPE_TOTAL_MISMATCH');
+    }
+    return finalizePaidIronSprueCheckoutOrder({
+      orderId: order.id,
+      paymentIntentId: intent.id,
+      stripeCheckoutSessionId: order.stripeCheckoutSessionId,
+    }, db);
+  }
+
+  if (intent.status === 'canceled') {
+    await releaseIronSprueCheckoutOrderReservation(order.id, db, 'CANCELED');
+    return getIronSprueOrderByStripePaymentIntentId(normalizedPaymentIntentId, db);
+  }
+
+  return mapOrderRecord(order);
 }
 
 type StripeRefundResponse = {

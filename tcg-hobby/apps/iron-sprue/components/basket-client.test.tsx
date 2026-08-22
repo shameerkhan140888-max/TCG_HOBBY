@@ -2,10 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   IRON_SPRUE_BASKET_STORAGE_KEY,
   IRON_SPRUE_LEGACY_BASKET_STORAGE_KEYS,
+  IRON_SPRUE_PENDING_PAYMENT_BASKET_STORAGE_KEY,
   addIronSprueBasketItem,
   addIronSprueBasketItemWithLiveStock,
   clearIronSprueBasketAfterPaidCheckout,
+  holdIronSprueBasketForPendingPayment,
   readIronSprueBasketCount,
+  restoreIronSprueBasketAfterFailedPayment,
   updateIronSprueBasketItemQuantity,
 } from './basket-client';
 
@@ -82,6 +85,31 @@ describe('Iron Sprue basket persistence', () => {
 
     expect(readIronSprueBasketCount()).toBe(2);
     expect(JSON.parse(window.localStorage.getItem(IRON_SPRUE_BASKET_STORAGE_KEY) ?? '[]')).toHaveLength(2);
+  });
+
+  it('hides the visible basket during payment processing while keeping it recoverable', () => {
+    addIronSprueBasketItem(queenAnne);
+    addIronSprueBasketItem(toyota);
+
+    const held = holdIronSprueBasketForPendingPayment();
+
+    expect(held).toHaveLength(2);
+    expect(readIronSprueBasketCount()).toBe(0);
+    expect(JSON.parse(window.localStorage.getItem(IRON_SPRUE_BASKET_STORAGE_KEY) ?? '[]')).toEqual([]);
+    expect(JSON.parse(window.sessionStorage.getItem(IRON_SPRUE_PENDING_PAYMENT_BASKET_STORAGE_KEY) ?? '[]')).toHaveLength(2);
+  });
+
+  it('restores the exact basket after a failed embedded payment attempt', () => {
+    addIronSprueBasketItem(queenAnne);
+    addIronSprueBasketItem(toyota);
+    holdIronSprueBasketForPendingPayment();
+
+    const restored = restoreIronSprueBasketAfterFailedPayment();
+
+    expect(restored).toEqual([queenAnne, toyota]);
+    expect(readIronSprueBasketCount()).toBe(2);
+    expect(JSON.parse(window.localStorage.getItem(IRON_SPRUE_BASKET_STORAGE_KEY) ?? '[]')).toEqual([queenAnne, toyota]);
+    expect(window.sessionStorage.getItem(IRON_SPRUE_PENDING_PAYMENT_BASKET_STORAGE_KEY)).toBeNull();
   });
 
   it('rejects an already out-of-stock product before it enters the basket', () => {

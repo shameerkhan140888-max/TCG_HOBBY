@@ -39,6 +39,7 @@ export function CheckoutSuccessClient({
   const [order, setOrder] = useState<PublicOrderDetail | null>(initialOrder);
   const [hasClearedBasket, setHasClearedBasket] = useState(false);
   const [hasTrackedPurchase, setHasTrackedPurchase] = useState(false);
+  const resultState = ironSprueCheckoutResultState(order?.paymentStatus);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,6 +70,16 @@ export function CheckoutSuccessClient({
       if (timeout) clearTimeout(timeout);
     };
   }, [checkoutReference, order?.paymentStatus, referenceType]);
+
+  useEffect(() => {
+    if (resultState !== 'processing') return undefined;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    return () => window.removeEventListener('beforeunload', warnBeforeUnload);
+  }, [resultState]);
 
   useEffect(() => {
     if (order?.paymentStatus === 'SUCCEEDED' && !hasClearedBasket) {
@@ -109,6 +120,7 @@ export function CheckoutSuccessClient({
           <span className="payment-spinner" aria-hidden="true" />
           <h1>Processing your payment.</h1>
           <p className="lead">Please wait while we securely confirm your payment.</p>
+          <p className="form-status notice">Please do not refresh or close this page while payment is being confirmed.</p>
         </div>
       ) : ironSprueCheckoutResultState(order.paymentStatus) === 'failure' ? (
         <>
@@ -165,7 +177,7 @@ export function CheckoutSuccessClient({
       )}
       <div className="hero-actions">
         {order && isPaymentFailure(order.paymentStatus) ? <a className="button" href="/checkout">Retry payment</a> : null}
-        <a className="button" href="/shop">Continue shopping</a>
+        {resultState !== 'processing' ? <a className="button" href="/shop">Continue shopping</a> : null}
       </div>
     </section>
   );

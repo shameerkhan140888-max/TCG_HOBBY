@@ -38,4 +38,13 @@ describe('Iron Sprue payment method presentation', () => {
       status: 'eligible-through-stripe',
     });
   });
+
+  it('keeps compact checkout strips logo-only', () => {
+    const markup = renderToStaticMarkup(<PaymentMethodStrip compact />);
+
+    expect(markup).toContain('/payments/visa.svg');
+    expect(markup).not.toContain('Major cards');
+    expect(markup).not.toContain('Secure payment');
+    expect(markup).not.toContain('Secure payments');
+  });
 });

@@ -8,6 +8,7 @@ import {
   createIronSpruePaymentIntentCheckout,
   generateIronSprueOrderNumber,
   processIronSprueStripeWebhookEvent,
+  reconcileIronSpruePaymentIntentCheckout,
   reconcileIronSprueReservedStock,
   refundIronSprueOrderForMerchant,
   releaseIronSprueCheckoutOrderReservation,
@@ -256,6 +257,44 @@ describe('Iron Sprue Stripe commerce', () => {
       }),
       include: { items: true },
     });
+  });
+
+  it('reconciles a succeeded integrated PaymentIntent when the customer result page polls before the webhook lands', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 'pi_iron_integrated_1',
+        status: 'succeeded',
+        amount: 5298,
+        amount_received: 5298,
+        currency: 'gbp',
+        metadata: { commerceStore: 'IRON_SPRUE', orderId: 'order-1' },
+      }),
+    } as Response);
+    const db = databaseMock();
+    db.$transaction = vi.fn(async (callback) => callback(db));
+
+    const result = await reconcileIronSpruePaymentIntentCheckout('pi_iron_integrated_1', db);
+
+    expect(result).toMatchObject({
+      id: 'order-1',
+      paymentStatus: 'SUCCEEDED',
+    });
+    expect(fetchSpy).toHaveBeenCalledWith('https://api.stripe.com/v1/payment_intents/pi_iron_integrated_1', expect.objectContaining({
+      method: 'GET',
+      headers: expect.objectContaining({ Authorization: 'Bearer sk_test_iron' }),
+    }));
+    expect(db.ironSprueOrder.update).toHaveBeenCalledWith({
+      where: { id: 'order-1' },
+      data: expect.objectContaining({
+        paymentIntentId: 'pi_iron_integrated_1',
+        status: 'PAID',
+        paymentStatus: 'SUCCEEDED',
+        reservationExpiresAt: null,
+      }),
+      include: { items: true },
+    });
+    fetchSpy.mockRestore();
   });
 
   it('uses approved R2 catalogue-primary media for cart and checkout snapshots', async () => {

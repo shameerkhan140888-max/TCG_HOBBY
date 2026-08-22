@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CheckoutAddress, PublicBasket, PublicBasketInputItem, ShippingMethodCode } from '@tcg-hobby/types';
 import { trackIronSprueEcommerceEvent } from '../lib/analytics';
 import { PaymentMethodStrip } from './payment-method-strip';
 
 export const IRON_SPRUE_BASKET_STORAGE_KEY = 'iron-sprue-basket-v1';
+export const IRON_SPRUE_PENDING_PAYMENT_BASKET_STORAGE_KEY = 'iron-sprue-pending-payment-basket-v1';
 export const IRON_SPRUE_LEGACY_BASKET_STORAGE_KEYS = [
   'iron-sprue-basket',
   'iron-sprue-cart',
@@ -42,6 +43,7 @@ type CheckoutStep = 'details' | 'review' | 'payment';
 type StripePaymentElement = {
   mount(selector: string): void;
   unmount(): void;
+  on?(event: 'ready' | 'loaderror', handler: (event?: { error?: { message?: string } }) => void): void;
 };
 
 type StripeElements = {
@@ -114,6 +116,34 @@ function writeBasket(items: StoredBasketItem[]) {
   window.dispatchEvent(new CustomEvent('iron-sprue-basket-updated'));
 }
 
+function writePendingPaymentBasket(items: StoredBasketItem[]) {
+  if (typeof window === 'undefined') return;
+  window.sessionStorage.setItem(IRON_SPRUE_PENDING_PAYMENT_BASKET_STORAGE_KEY, JSON.stringify(items));
+}
+
+export function holdIronSprueBasketForPendingPayment() {
+  const items = readBasket();
+  if (!items.length) return items;
+  writePendingPaymentBasket(items);
+  window.localStorage.setItem(IRON_SPRUE_BASKET_STORAGE_KEY, '[]');
+  window.dispatchEvent(new CustomEvent('iron-sprue-basket-updated'));
+  return items;
+}
+
+export function restoreIronSprueBasketAfterFailedPayment() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const parsed = JSON.parse(window.sessionStorage.getItem(IRON_SPRUE_PENDING_PAYMENT_BASKET_STORAGE_KEY) ?? '[]');
+    const items = Array.isArray(parsed) ? parsed.filter((item) => item?.productId && Number.isInteger(item.quantity)) : [];
+    if (items.length) writeBasket(items);
+    return items;
+  } catch {
+    return [];
+  } finally {
+    window.sessionStorage.removeItem(IRON_SPRUE_PENDING_PAYMENT_BASKET_STORAGE_KEY);
+  }
+}
+
 export function updateIronSprueBasketItemQuantity(item: Pick<StoredBasketItem, 'productId' | 'availableQuantity'>, requestedQuantity: number) {
   const items = readBasket();
   const limit = availabilityLimit(item);
@@ -142,6 +172,7 @@ export function clearIronSprueBasket() {
 
 export async function clearIronSprueBasketAfterPaidCheckout() {
   clearIronSprueBasket();
+  if (typeof window !== 'undefined') window.sessionStorage.removeItem(IRON_SPRUE_PENDING_PAYMENT_BASKET_STORAGE_KEY);
   try {
     await fetch('/api/cart', { method: 'DELETE', cache: 'no-store' });
   } catch {
@@ -225,7 +256,20 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
   const [message, setMessage] = useState('');
   const [messageOk, setMessageOk] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const messageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const outOfStock = availabilityLimit(item) <= 0;
+
+  useEffect(() => () => {
+    if (messageTimer.current) clearTimeout(messageTimer.current);
+  }, []);
+
+  function showTemporaryMessage(nextMessage: string, ok: boolean) {
+    setMessage(nextMessage);
+    setMessageOk(ok);
+    if (messageTimer.current) clearTimeout(messageTimer.current);
+    messageTimer.current = setTimeout(() => setMessage(''), 3200);
+  }
+
   return (
     <div className="basket-action-stack">
       <button
@@ -237,8 +281,7 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
           setIsAdding(true);
           try {
             const result = await addIronSprueBasketItemWithLiveStock({ ...item, quantity });
-            setMessage(result.message);
-            setMessageOk(result.ok);
+            showTemporaryMessage(result.message, result.ok);
             if (result.ok) {
               trackIronSprueEcommerceEvent('add_to_cart', {
                 currency: 'GBP',
@@ -247,8 +290,7 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
               });
             }
           } catch {
-            setMessage('Stock could not be confirmed. Please try again.');
-            setMessageOk(false);
+            showTemporaryMessage('Stock could not be confirmed. Please try again.', false);
           } finally {
             setIsAdding(false);
           }
@@ -258,8 +300,7 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
       </button>
       {message ? (
         <div className={`add-to-basket-feedback ${messageOk ? 'notice' : 'error'}`} role="status">
-          <span>{messageOk && message === 'Added to basket' ? 'Added to basket' : message}</span>
-          {messageOk ? <a href="/basket">View basket</a> : null}
+          <span>{messageOk && message === 'Added to basket' ? '✓ Added to basket' : message}</span>
         </div>
       ) : null}
     </div>
@@ -281,7 +322,13 @@ function basketLineWarning(item: StoredBasketItem & { inStock?: boolean }) {
   return '';
 }
 
-function StripePaymentElementForm({ paymentIntent }: { paymentIntent: CheckoutPaymentIntent }) {
+function StripePaymentElementForm({
+  paymentIntent,
+  onUnavailable,
+}: {
+  paymentIntent: CheckoutPaymentIntent;
+  onUnavailable: (message?: string) => void;
+}) {
   const [stripe, setStripe] = useState<StripeInstance | null>(null);
   const [elements, setElements] = useState<StripeElements | null>(null);
   const [paymentStatus, setPaymentStatus] = useState('');
@@ -291,6 +338,15 @@ function StripePaymentElementForm({ paymentIntent }: { paymentIntent: CheckoutPa
   useEffect(() => {
     let cancelled = false;
     let mountedElement: StripePaymentElement | null = null;
+    let readyTimeout: ReturnType<typeof setTimeout> | null = null;
+    let reportedUnavailable = false;
+    const reportUnavailable = (message?: string) => {
+      if (cancelled || reportedUnavailable) return;
+      reportedUnavailable = true;
+      const nextMessage = message || 'Secure payment form could not be loaded. Please try again.';
+      setPaymentStatus(nextMessage);
+      onUnavailable(nextMessage);
+    };
     setPaymentStatus('Loading secure payment form...');
     setStripe(null);
     setElements(null);
@@ -315,20 +371,32 @@ function StripePaymentElementForm({ paymentIntent }: { paymentIntent: CheckoutPa
           },
         });
         mountedElement = nextElements.create('payment');
+        mountedElement.on?.('ready', () => {
+          if (cancelled || reportedUnavailable) return;
+          if (readyTimeout) clearTimeout(readyTimeout);
+          setStripe(stripeInstance);
+          setElements(nextElements);
+          setPaymentStatus('');
+        });
+        mountedElement.on?.('loaderror', (event) => {
+          if (readyTimeout) clearTimeout(readyTimeout);
+          reportUnavailable(event?.error?.message || 'Secure payment form could not be loaded. Please try again.');
+        });
         mountedElement.mount(`#${mountId}`);
-        setStripe(stripeInstance);
-        setElements(nextElements);
-        setPaymentStatus('');
+        readyTimeout = setTimeout(() => {
+          reportUnavailable('Secure payment form could not be loaded. Please try again.');
+        }, 12000);
       })
       .catch((error) => {
-        if (!cancelled) setPaymentStatus(error instanceof Error ? error.message : 'Secure payment form could not be loaded. Check your connection and try again.');
+        reportUnavailable(error instanceof Error ? error.message : 'Secure payment form could not be loaded. Please try again.');
       });
 
     return () => {
       cancelled = true;
+      if (readyTimeout) clearTimeout(readyTimeout);
       mountedElement?.unmount();
     };
-  }, [mountId, paymentIntent.clientSecret, paymentIntent.publishableKey]);
+  }, [mountId, onUnavailable, paymentIntent.clientSecret, paymentIntent.publishableKey]);
 
   return (
     <section className="payment-element-shell" aria-label="Secure payment">
@@ -345,6 +413,7 @@ function StripePaymentElementForm({ paymentIntent }: { paymentIntent: CheckoutPa
           if (!stripe || !elements) return;
           setIsSubmittingPayment(true);
           setPaymentStatus('Confirming payment...');
+          holdIronSprueBasketForPendingPayment();
           const result = await stripe.confirmPayment({
             elements,
             confirmParams: {
@@ -352,6 +421,7 @@ function StripePaymentElementForm({ paymentIntent }: { paymentIntent: CheckoutPa
             },
           });
           if (result.error) {
+            restoreIronSprueBasketAfterFailedPayment();
             setPaymentStatus(result.error.message ?? 'Payment could not be completed. Please check your details and try again.');
             setIsSubmittingPayment(false);
           }
@@ -419,6 +489,11 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     };
   }, [items, mounted]);
 
+  useEffect(() => {
+    if (mode !== 'checkout' || typeof window === 'undefined') return;
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [checkoutStep, mode]);
+
   const resolvedByIdentity = useMemo(() => {
     const entries: Array<[string, PublicBasket['items'][number]]> = [];
     for (const item of resolved?.items ?? []) {
@@ -429,14 +504,18 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   const basketLineItems = useMemo(() => {
     return items.map((item) => {
       const live = resolvedByIdentity.get(item.productId) ?? resolvedByIdentity.get(item.productSlug);
+      const availableQuantity = live?.availableQuantity ?? item.availableQuantity ?? null;
+      const quantity = typeof availableQuantity === 'number' && availableQuantity > 0
+        ? Math.min(item.quantity, availableQuantity)
+        : item.quantity;
       return {
         ...item,
-        quantity: live?.quantity ?? item.quantity,
+        quantity,
         unitPriceMinor: live?.unitPriceMinor ?? item.unitPriceMinor,
         imageUrl: live?.imageUrl ?? item.imageUrl ?? null,
         imageAlt: live?.imageAlt ?? item.imageAlt ?? null,
-        availableQuantity: live?.availableQuantity ?? item.availableQuantity ?? null,
-        inStock: live?.inStock ?? availabilityLimit(item) >= item.quantity,
+        availableQuantity,
+        inStock: live?.inStock ?? availabilityLimit({ ...item, availableQuantity }) >= quantity,
       };
     });
   }, [items, resolvedByIdentity]);
@@ -467,16 +546,42 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
 
   useEffect(() => {
     setCheckoutPaymentIntent(null);
-    if (mode === 'checkout') setCheckoutStep('details');
-  }, [address, discountCode, items, shippingMethodCode]);
+    if (mode === 'checkout') {
+      setCheckoutStep((current) => (current === 'payment' ? 'review' : current));
+    }
+  }, [address, discountCode, items, mode, shippingMethodCode]);
+
+  useEffect(() => {
+    let changed = false;
+    const nextItems = items.map((item) => {
+      const line = basketLineItems.find((candidate) => (
+        candidate.productId === item.productId || candidate.productSlug === item.productSlug
+      ));
+      if (!line || line.quantity === item.quantity) return item;
+      changed = true;
+      return {
+        ...item,
+        quantity: line.quantity,
+        availableQuantity: line.availableQuantity,
+        unitPriceMinor: line.unitPriceMinor,
+        imageUrl: line.imageUrl,
+        imageAlt: line.imageAlt,
+      };
+    });
+    if (!changed) return;
+    setItems(nextItems);
+    writeBasket(nextItems);
+    setCheckoutPaymentIntent(null);
+    setStatus('Basket quantity updated to match current stock.');
+  }, [basketLineItems, items]);
 
   useEffect(() => {
     if (hasUnavailableItems) {
       setCheckoutPaymentIntent(null);
       setStatus('');
-      if (mode === 'checkout') setCheckoutStep('details');
+      if (mode === 'checkout' && checkoutStep === 'payment') setCheckoutStep('review');
     }
-  }, [hasUnavailableItems, mode]);
+  }, [checkoutStep, hasUnavailableItems, mode]);
 
   async function prepareSecurePayment() {
     setIsCheckingOut(true);
@@ -498,7 +603,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
       }
       setCheckoutPaymentIntent(payload as CheckoutPaymentIntent);
       setCheckoutStep('payment');
-      setStatus('Secure payment form is ready.');
+      setStatus('');
       trackIronSprueEcommerceEvent('begin_checkout', {
         currency: 'GBP',
         value: (payload.totalMinor ?? subtotalMinor + deliveryMinor) / 100,
@@ -517,9 +622,26 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     }
   }
 
+  const handlePaymentElementUnavailable = useCallback(async (message?: string) => {
+    const intent = checkoutPaymentIntent;
+    if (!intent) return;
+    try {
+      await fetch('/api/checkout/payment-intent/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentIntentId: intent.paymentIntentId }),
+      });
+    } finally {
+      setCheckoutPaymentIntent(null);
+      setCheckoutStep('review');
+      setStatus(message || 'Secure payment form could not be loaded. Please try again.');
+      setItems((current) => [...current]);
+    }
+  }, [checkoutPaymentIntent]);
+
   if (!mounted) {
     return (
-      <div className="empty-state basket-loading" aria-live="polite">
+      <div className="checkout-panel basket-loading" aria-live="polite">
         <h2>Loading your basket.</h2>
         <p>Checking the items saved on this device.</p>
       </div>
@@ -590,6 +712,14 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             <p className="eyebrow">Order summary</p>
             <h2>Review your order</h2>
             <p className="basket-summary-copy">Review your order before proceeding to secure checkout.</p>
+            <div className="basket-summary-items" aria-label="Basket items summary">
+              {basketLineItems.map((item) => (
+                <div key={item.productId}>
+                  <span>{item.productName} x {item.quantity}</span>
+                  <strong>{formatPrice(item.unitPriceMinor * item.quantity)}</strong>
+                </div>
+              ))}
+            </div>
             <div className="checkout-totals">
               <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>
               <span>Estimated delivery</span><strong>{formatPrice(deliveryMinor)}</strong>
@@ -708,6 +838,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             <span>VAT included estimate</span><strong>{formatPrice(vatIncludedEstimateMinor)}</strong>
             <span>Total</span><strong>{formatPrice(totalMinor)}</strong>
           </div>
+          <PaymentMethodStrip compact />
           {status ? <p className="form-status error">{status}</p> : null}
           <div className="checkout-step-actions">
             <button type="button" disabled={isCheckingOut || hasUnavailableItems} onClick={prepareSecurePayment}>
@@ -728,12 +859,12 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
           <div className="checkout-totals receipt-totals">
             <span>Total to pay</span><strong>{formatPrice(checkoutPaymentIntent.totalMinor)}</strong>
           </div>
-          <div className="checkout-reassurance">
-            <p><strong>Secure payment</strong> Card details are handled by the embedded payment provider form. Digital wallets may appear where supported by your device and browser.</p>
+          <div className="checkout-reassurance checkout-reassurance-icons">
+            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h8a4 4 0 0 1 0 8h-4v2h5v2h-5v4H9v-4H6v-2h3v-2H6v-2h3V6H6V4zm4 2v4h4a2 2 0 0 0 0-4z" /></svg></span><span><strong>Secure payment</strong> Card details are handled by the embedded payment provider form. Digital wallets may appear where supported by your device and browser.</span></p>
             <p><strong>Order reference</strong> {checkoutPaymentIntent.orderNumber}</p>
           </div>
           <PaymentMethodStrip compact />
-          <StripePaymentElementForm paymentIntent={checkoutPaymentIntent} />
+          <StripePaymentElementForm paymentIntent={checkoutPaymentIntent} onUnavailable={handlePaymentElementUnavailable} />
           <button type="button" className="button secondary" onClick={() => setCheckoutStep('review')}>Back to order review</button>
         </section>
       </div>
@@ -781,13 +912,13 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
                 <option value="UK_EXPRESS">Express delivery</option>
               </select>
             </label>
-            <label>Discount code<input value={discountCode} onChange={(event) => setDiscountCode(event.target.value.toUpperCase())} placeholder="WELCOME5" /></label>
+            <label>Discount code<input value={discountCode} onChange={(event) => setDiscountCode(event.target.value.toUpperCase())} /></label>
           </div>
         </fieldset>
-        <div className="checkout-reassurance">
-          <p><strong>Delivery</strong> UK delivery options and costs are confirmed before payment. Free UK delivery applies on eligible orders over £75.</p>
-          <p><strong>Returns</strong> Unused items can be returned in line with the published returns policy.</p>
-          <p><strong>Payments</strong> Secure card payments are handled by the embedded payment form. Digital wallets may appear where supported.</p>
+        <div className="checkout-reassurance checkout-reassurance-icons">
+          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK delivery options and costs are confirmed before payment. Free UK delivery applies on eligible orders over £75.</span></p>
+          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Unused items can be returned in line with the published returns policy.</span></p>
+          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Payments</strong> Secure card payments are handled by the embedded payment form. Digital wallets may appear where supported.</span></p>
         </div>
         <div className="checkout-totals">
           <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>

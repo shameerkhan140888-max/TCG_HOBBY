@@ -168,19 +168,22 @@ export function IronSprueAnalyticsProvider(props: { ga4Id: string | null; metaPi
 
 export function IronSprueCookieConsentBanner() {
   const [consent, setConsent] = useState<IronSprueAnalyticsConsent>('unknown');
+  const [checkedStoredConsent, setCheckedStoredConsent] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [marketingEnabled, setMarketingEnabled] = useState(false);
 
   useEffect(() => {
     setConsent(getIronSprueAnalyticsConsent());
+    setCheckedStoredConsent(true);
     function handleConsentChange() {
       setConsent(getIronSprueAnalyticsConsent());
+      setCheckedStoredConsent(true);
     }
     window.addEventListener(IRON_SPRUE_ANALYTICS_CONSENT_CHANGED_EVENT, handleConsentChange);
     return () => window.removeEventListener(IRON_SPRUE_ANALYTICS_CONSENT_CHANGED_EVENT, handleConsentChange);
   }, []);
 
-  if (consent !== 'unknown') return null;
+  if (!checkedStoredConsent || consent !== 'unknown') return null;
 
   return (
     <section className="cookie-consent" aria-label="Cookie preferences">

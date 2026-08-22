@@ -2,6 +2,7 @@ import { BadRequestException, Inject, Injectable, NotFoundException, ServiceUnav
 import {
   addIronSprueProductToCart,
   cancelIronSprueCheckoutSession,
+  cancelIronSpruePaymentIntentCheckout,
   clearIronSprueCart,
   createIronSpruePaymentIntentCheckout,
   createIronSprueHostedCheckoutSession,
@@ -11,6 +12,7 @@ import {
   getIronSprueOrderByStripeCheckoutSessionId,
   getIronSprueCustomerOrderByNumber,
   getIronSprueCustomerOrders,
+  reconcileIronSpruePaymentIntentCheckout,
   removeIronSprueCartItem,
   resolveIronSprueGuestCart,
   updateIronSprueCartItemQuantity,
@@ -208,7 +210,8 @@ export class IronSprueCommerceService {
 
   async checkoutPaymentStatus(headers: Record<string, string | string[] | undefined>, paymentIntentId: string): Promise<PublicOrderDetail> {
     requireIronSprueProxy(headers);
-    const order = await getIronSprueOrderByStripePaymentIntentId(paymentIntentId);
+    const order = await reconcileIronSpruePaymentIntentCheckout(paymentIntentId)
+      ?? await getIronSprueOrderByStripePaymentIntentId(paymentIntentId);
     if (!order) throw new NotFoundException('Order not found.');
     return {
       orderNumber: order.orderNumber,
@@ -242,6 +245,12 @@ export class IronSprueCommerceService {
   async cancelCheckout(headers: Record<string, string | string[] | undefined>, sessionId: string) {
     requireIronSprueProxy(headers);
     await cancelIronSprueCheckoutSession(sessionId);
+    return { ok: true };
+  }
+
+  async cancelCheckoutPaymentIntent(headers: Record<string, string | string[] | undefined>, paymentIntentId: string) {
+    requireIronSprueProxy(headers);
+    await cancelIronSpruePaymentIntentCheckout(paymentIntentId);
     return { ok: true };
   }
 
