@@ -15,4 +15,4 @@ FROM deps AS build
 ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 
 RUN npm run db:generate
-RUN npx turbo run build --filter=@tcg-hobby/api... --concurrency=1
+RUN npm run build -w @tcg-hobby/api
