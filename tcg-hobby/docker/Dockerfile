@@ -5,6 +5,7 @@ FROM base AS deps
 COPY package.json package-lock.json* turbo.json ./
 COPY apps ./apps
 COPY packages ./packages
+COPY scripts ./scripts
 RUN npm install
 
 FROM deps AS verify
