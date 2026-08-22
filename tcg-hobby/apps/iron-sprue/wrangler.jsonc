@@ -1,0 +1,45 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "iron-sprue-storefront-staging",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-08-22",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "find_additional_modules": true,
+  "preserve_file_names": true,
+  "base_dir": ".open-next/.worker-files",
+  "rules": [
+    {
+      "type": "CompiledWasm",
+      "globs": [
+        "node_modules/.prisma/client/*.wasm"
+      ],
+      "fallthrough": true
+    }
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "iron-sprue-storefront-staging"
+    }
+  ],
+  "vars": {
+    "NEXTJS_ENV": "production",
+    "TCG_HOBBY_PRISMA_RUNTIME": "worker",
+    "TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES": "1",
+    "IRON_SPRUE_ENVIRONMENT": "staging",
+    "IRON_SPRUE_STORE_ID": "IRON_SPRUE",
+    "IRON_SPRUE_SITE_URL": "https://staging.ironsprue.co.uk",
+    "NEXT_PUBLIC_IRON_SPRUE_SITE_URL": "https://staging.ironsprue.co.uk",
+    "IRON_SPRUE_EMAIL_ASSET_BASE_URL": "https://staging.ironsprue.co.uk",
+    "IRON_SPRUE_EMAIL_LOGO_URL": "https://staging.ironsprue.co.uk/brand/iron-sprue-horizontal-email.png",
+    "IRON_SPRUE_CHECKOUT_SUCCESS_URL": "https://staging.ironsprue.co.uk/checkout/success?session_id={CHECKOUT_SESSION_ID}",
+    "IRON_SPRUE_CHECKOUT_CANCEL_URL": "https://staging.ironsprue.co.uk/checkout/cancel"
+  }
+}

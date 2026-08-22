@@ -5,6 +5,9 @@
   "scripts": {
     "build": "next build",
     "build:coming-soon": "node scripts/build-coming-soon.mjs",
+    "cloudflare:build": "node ./scripts/cloudflare-build.mjs build",
+    "cloudflare:preview": "node ./scripts/cloudflare-build.mjs preview",
+    "cloudflare:dry-run": "node ./scripts/cloudflare-build.mjs dry-run",
     "dev": "next dev",
     "import:launch-catalogue": "node scripts/import-launch-catalogue.mjs",
     "import:launch-catalogue:dry-run": "node scripts/import-launch-catalogue.mjs --dry-run",
@@ -44,10 +47,12 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.2",
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.118.0"
   }
 }
