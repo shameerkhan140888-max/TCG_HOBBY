@@ -5,6 +5,7 @@ import {
   getIronSprueHomepagePlacements,
   getIronSprueStorefrontProducts,
   placementByKey,
+  productSectionsFromPlacements,
   promoPanelsFromPlacements,
   productsFromFeaturedPlacements,
 } from '../lib/admin-storefront-controls';
@@ -22,6 +23,42 @@ function heroFitMode(slide: Awaited<ReturnType<typeof getIronSprueHeroSlides>>[n
   return identity.includes('aoshima') ? 'cover' : 'contain';
 }
 
+function ProductCard({ product }: { product: IronSprueProduct }) {
+  const imageUrl = productImage(product);
+  const availableQuantity = productSellableQuantity(product);
+  const isOutOfStock = availableQuantity <= 0;
+  const availabilityClass = productAvailabilityClass(product);
+
+  return (
+    <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
+      <a className="product-image" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
+        {imageUrl ? <img src={imageUrl} alt={product.name} width="1000" height="1000" /> : <span>{product.brand}</span>}
+      </a>
+      <div className="product-card-body">
+        <p className="product-brand">{product.brand}</p>
+        <h3>{product.name}</h3>
+        <p>{product.category}</p>
+        <strong>{formatPrice(product)} inc VAT</strong>
+        <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
+        <div className="product-actions">
+          <a href={`/products/${product.slug}`}>Details</a>
+          <AddToBasketButton
+            item={{
+              productId: product.sku,
+              productName: product.name,
+              productSlug: product.slug,
+              unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,
+              availableQuantity,
+              imageUrl,
+              imageAlt: product.name,
+            }}
+          />
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default async function HomePage() {
   const [activeHeroSlides, homepagePlacements, storefrontProducts] = await Promise.all([
     getIronSprueHeroSlides(),
@@ -32,6 +69,7 @@ export default async function HomePage() {
   const brandsWeStock = await getIronSprueBrandPresentation(previewProducts)
     .then((brands) => brands.length ? brands : withOfficialBrandLogos(deriveBrandsWeStock(previewProducts)));
   const newArrivals = productsFromFeaturedPlacements(storefrontProducts, homepagePlacements, 4);
+  const productSections = productSectionsFromPlacements(storefrontProducts, homepagePlacements);
   const homepagePromoPanels = promoPanelsFromPlacements(homepagePlacements, 3);
   const featuredPlacement = placementByKey(homepagePlacements, 'featured-products');
   const brandPlacement = placementByKey(homepagePlacements, 'brand-carousel');
@@ -118,43 +156,28 @@ export default async function HomePage() {
           </a>
         </div>
         <div className="product-grid">
-          {newArrivals.map((product) => {
-            const imageUrl = productImage(product);
-            const availableQuantity = productSellableQuantity(product);
-            const isOutOfStock = availableQuantity <= 0;
-            const availabilityClass = productAvailabilityClass(product);
-
-            return (
-            <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
-              <a className="product-image" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
-                {imageUrl ? <img src={imageUrl} alt={product.name} width="1000" height="1000" /> : <span>{product.brand}</span>}
-              </a>
-              <div className="product-card-body">
-                <p className="product-brand">{product.brand}</p>
-                <h3>{product.name}</h3>
-                <p>{product.category}</p>
-                <strong>{formatPrice(product)} inc VAT</strong>
-                <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
-                <div className="product-actions">
-                  <a href={`/products/${product.slug}`}>Details</a>
-                  <AddToBasketButton
-                    item={{
-                      productId: product.sku,
-                      productName: product.name,
-                      productSlug: product.slug,
-                      unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,
-                      availableQuantity,
-                      imageUrl,
-                      imageAlt: product.name,
-                    }}
-                  />
-                </div>
-              </div>
-            </article>
-            );
-          })}
+          {newArrivals.map((product) => <ProductCard product={product} key={product.sku} />)}
         </div>
       </section>
+
+      {productSections.map((section) => (
+        <section className="section-block" key={section.sectionKey}>
+          <div className="section-head split">
+            <div>
+              <p className="eyebrow">{section.eyebrow}</p>
+              <h2>{section.heading}</h2>
+            </div>
+            {section.ctaHref ? (
+              <a className="text-link" href={section.ctaHref}>
+                {section.ctaLabel || 'View section'}
+              </a>
+            ) : null}
+          </div>
+          <div className="product-grid">
+            {section.products.map((product) => <ProductCard product={product} key={product.sku} />)}
+          </div>
+        </section>
+      ))}
 
       <section className="brand-carousel" aria-label="Brands we stock">
         <h2>{brandPlacement?.title || 'Brands we stock'}</h2>

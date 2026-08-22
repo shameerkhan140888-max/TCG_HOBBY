@@ -16,8 +16,11 @@ import {
   resolveIronSprueCustomerOrderRequest,
   resolveIronSprueAdminPermissions,
   setIronSprueProductPublicationState,
+  updateIronSprueAdminCategoryControls,
   updateIronSprueAdminOrderFulfilmentStatus,
   updateIronSprueAdminMediaApproval,
+  upsertIronSprueAdminHero,
+  upsertIronSprueAdminTypographySettings,
 } from './iron-sprue-admin';
 
 const originalEnv = { ...process.env };
@@ -338,6 +341,153 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         approvalState: 'APPROVED',
         approvedById: actor.id,
         isPrimary: true,
+      }),
+    }));
+  });
+
+  it('updates category storefront visibility with an audit trail', async () => {
+    const category = {
+      id: 'category-1',
+      storeCode: 'IRON_SPRUE',
+      name: 'Model Kits',
+      active: false,
+      sortOrder: 20,
+    };
+    const updated = { ...category, active: true, sortOrder: 5 };
+    const client = {
+      ironSprueAdminCategory: {
+        findFirst: vi.fn().mockResolvedValue(category),
+        update: vi.fn().mockResolvedValue(updated),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+
+    await updateIronSprueAdminCategoryControls('category-1', { active: true, sortOrder: 5 }, actor, client as never);
+
+    expect(client.ironSprueAdminCategory.findFirst).toHaveBeenCalledWith({
+      where: { id: 'category-1', storeCode: 'IRON_SPRUE' },
+    });
+    expect(client.ironSprueAdminCategory.update).toHaveBeenCalledWith({
+      where: { id: 'category-1' },
+      data: { active: true, sortOrder: 5 },
+    });
+    expect(client.ironSprueAdminAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        storeCode: 'IRON_SPRUE',
+        action: 'category.controls.update',
+        entityType: 'category',
+        entityId: 'category-1',
+        before: { active: false, sortOrder: 20 },
+        after: { active: true, sortOrder: 5 },
+      }),
+    }));
+  });
+
+  it('persists constrained hero merchandising badges through the hero controls', async () => {
+    const hero = {
+      id: 'hero-1',
+      headline: 'New arrivals for the bench',
+      merchandisingBadge: 'NEW',
+      active: true,
+      sortOrder: 1,
+    };
+    const client = {
+      ironSprueAdminHero: {
+        create: vi.fn().mockResolvedValue(hero),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+
+    await upsertIronSprueAdminHero(
+      {
+        headline: 'New arrivals for the bench',
+        merchandisingBadge: 'new',
+        active: true,
+        sortOrder: 1,
+      },
+      actor,
+      client as never,
+    );
+
+    expect(client.ironSprueAdminHero.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        storeCode: 'IRON_SPRUE',
+        merchandisingBadge: 'NEW',
+      }),
+    });
+    expect(client.ironSprueAdminAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        action: 'hero.upsert',
+        after: expect.objectContaining({ merchandisingBadge: 'NEW' }),
+      }),
+    }));
+  });
+
+  it('rejects unsupported hero merchandising badge values before persistence', async () => {
+    const client = {
+      ironSprueAdminHero: {
+        create: vi.fn(),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn() },
+    };
+
+    await expect(upsertIronSprueAdminHero(
+      { headline: 'Unsafe badge', merchandisingBadge: 'javascript:alert(1)' },
+      actor,
+      client as never,
+    )).rejects.toThrow(/hero merchandising badge/i);
+
+    expect(client.ironSprueAdminHero.create).not.toHaveBeenCalled();
+  });
+
+  it('persists constrained storefront typography settings with an audit trail', async () => {
+    const record = {
+      id: 'typography-1',
+      storeCode: 'IRON_SPRUE',
+      headingFamily: 'SYSTEM_SANS',
+      bodyFamily: 'HUMANIST_SANS',
+      headingWeight: 'BOLD',
+      bodyWeight: 'MEDIUM',
+      headingScale: 'LARGE',
+      bodyScale: 'COMFORTABLE',
+    };
+    const client = {
+      ironSprueAdminTypographySetting: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        upsert: vi.fn().mockResolvedValue(record),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+
+    await upsertIronSprueAdminTypographySettings(
+      {
+        headingFamily: 'system sans',
+        bodyFamily: 'humanist-sans',
+        headingWeight: 'bold',
+        bodyWeight: 'medium',
+        headingScale: 'large',
+        bodyScale: 'comfortable',
+      },
+      actor,
+      client as never,
+    );
+
+    expect(client.ironSprueAdminTypographySetting.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      where: { storeCode: 'IRON_SPRUE' },
+      create: expect.objectContaining({
+        headingFamily: 'SYSTEM_SANS',
+        bodyFamily: 'HUMANIST_SANS',
+        headingWeight: 'BOLD',
+        bodyWeight: 'MEDIUM',
+        headingScale: 'LARGE',
+        bodyScale: 'COMFORTABLE',
+      }),
+    }));
+    expect(client.ironSprueAdminAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        action: 'typography.update',
+        entityType: 'typography-settings',
+        after: expect.objectContaining({ headingScale: 'LARGE', bodyScale: 'COMFORTABLE' }),
       }),
     }));
   });

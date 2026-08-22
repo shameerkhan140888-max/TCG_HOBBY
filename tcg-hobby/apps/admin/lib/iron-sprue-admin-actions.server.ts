@@ -14,6 +14,7 @@ import {
   setIronSprueProductPublicationState,
   isIronSprueAdminFulfilmentState,
   updateIronSprueAdminBrandControls,
+  updateIronSprueAdminCategoryControls,
   updateIronSprueAdminContentReviewStatus,
   updateIronSprueAdminMediaApproval,
   updateIronSprueAdminOrderFulfilmentStatus,
@@ -23,6 +24,7 @@ import {
   upsertIronSprueAdminHero,
   upsertIronSprueAdminHomepagePlacement,
   upsertIronSprueAdminSpecialOffer,
+  upsertIronSprueAdminTypographySettings,
 } from '@tcg-hobby/database';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -286,6 +288,43 @@ export async function saveIronSprueFeaturedProductPlacementAction(formData: Form
   redirect(adminStatusPath('homepage', 'saved', 'Featured product controls saved.'));
 }
 
+export async function saveIronSprueHomepageProductSectionAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const productSlugs = formData.getAll('productSlug')
+    .map((value) => stringFromForm(value).trim())
+    .filter(Boolean);
+  const sectionKey = stringFromForm(formData.get('sectionKey')).trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+  const sectionHeading = stringFromForm(formData.get('sectionHeading')).trim();
+  const existingId = stringFromForm(formData.get('id'));
+  const baseSortOrder = optionalNumberFromForm(formData.get('sortOrder')) ?? 0;
+  try {
+    if (!sectionKey) throw new Error('Enter a section key.');
+    if (!sectionHeading) throw new Error('Enter a section heading.');
+    if (!productSlugs.length) throw new Error('Select at least one product for this section.');
+    for (const [index, productSlug] of productSlugs.entries()) {
+      await upsertIronSprueAdminHomepagePlacement(
+        {
+          id: existingId && index === 0 ? existingId : '',
+          placementKey: `product-section:${sectionKey}:${productSlug}`,
+          title: sectionHeading,
+          ctaLabel: stringFromForm(formData.get('ctaLabel')),
+          ctaHref: stringFromForm(formData.get('ctaHref')),
+          imageUrl: index === 0 ? stringFromForm(formData.get('imageUrl')) : '',
+          active: boolFromForm(formData.get('active')),
+          sortOrder: baseSortOrder + index,
+        },
+        actor,
+      );
+    }
+  } catch (error) {
+    redirect(adminStatusPath('homepage', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/homepage');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('homepage', 'saved', 'Homepage product section saved.'));
+}
+
 export async function updateIronSprueBrandControlsAction(formData: FormData) {
   const actor = await requireIronSprueActor();
   const brandId = stringFromForm(formData.get('brandId'));
@@ -309,6 +348,29 @@ export async function updateIronSprueBrandControlsAction(formData: FormData) {
   revalidatePath('/iron-sprue-admin/homepage');
   revalidateIronSprueStorefront();
   redirect(adminStatusPath('homepage', 'saved', 'Brand carousel controls saved.'));
+}
+
+export async function updateIronSprueCategoryControlsAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const categoryId = stringFromForm(formData.get('categoryId'));
+  try {
+    if (!categoryId) throw new Error('categoryId is required.');
+    const sortOrder = optionalNumberFromForm(formData.get('sortOrder'));
+    await updateIronSprueAdminCategoryControls(
+      categoryId,
+      {
+        active: boolFromForm(formData.get('active')),
+        ...(sortOrder == null ? {} : { sortOrder }),
+      },
+      actor,
+    );
+  } catch (error) {
+    redirect(adminStatusPath('categories', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/categories');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('categories', 'saved', 'Category visibility saved.'));
 }
 
 export async function saveIronSprueHeroAction(formData: FormData) {
@@ -340,6 +402,7 @@ export async function saveIronSprueHeroAction(formData: FormData) {
         ctaLabel: stringFromForm(formData.get('ctaLabel')),
         ctaHref: productSlug ? `/products/${productSlug}` : ctaHref,
         imageUrl,
+        merchandisingBadge: stringFromForm(formData.get('merchandisingBadge')),
         active: boolFromForm(formData.get('active')),
         sortOrder: optionalNumberFromForm(formData.get('sortOrder')),
       },
@@ -352,6 +415,29 @@ export async function saveIronSprueHeroAction(formData: FormData) {
   revalidatePath('/iron-sprue-admin/heroes');
   revalidateIronSprueStorefront();
   redirect(adminStatusPath('heroes', 'saved', 'Hero controls saved.'));
+}
+
+export async function saveIronSprueTypographySettingsAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  try {
+    await upsertIronSprueAdminTypographySettings(
+      {
+        headingFamily: stringFromForm(formData.get('headingFamily')),
+        bodyFamily: stringFromForm(formData.get('bodyFamily')),
+        headingWeight: stringFromForm(formData.get('headingWeight')),
+        bodyWeight: stringFromForm(formData.get('bodyWeight')),
+        headingScale: stringFromForm(formData.get('headingScale')),
+        bodyScale: stringFromForm(formData.get('bodyScale')),
+      },
+      actor,
+    );
+  } catch (error) {
+    redirect(adminStatusPath('homepage', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/homepage');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('homepage', 'saved', 'Typography controls saved.'));
 }
 
 export async function saveIronSprueSpecialOfferAction(formData: FormData) {

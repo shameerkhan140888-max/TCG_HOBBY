@@ -3,6 +3,7 @@ import {
   buildIronSprueCancellationEmail,
   buildIronSprueDispatchEmail,
   buildIronSprueOrderConfirmationEmail,
+  defaultIronSprueEmailLogoUrl,
   type IronSprueEmailOrder,
   type IronSprueEmailTemplateConfig,
 } from '@tcg-hobby/database';
@@ -12,7 +13,8 @@ export const dynamic = 'force-dynamic';
 const config: IronSprueEmailTemplateConfig = {
   siteUrl: process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL ?? 'http://localhost:3004',
   supportEmail: process.env.IRON_SPRUE_SUPPORT_EMAIL ?? 'info@ironsprue.co.uk',
-  logoUrl: process.env.IRON_SPRUE_EMAIL_LOGO_URL ?? null,
+  assetBaseUrl: process.env.IRON_SPRUE_EMAIL_ASSET_BASE_URL ?? process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL ?? 'http://localhost:3004',
+  logoUrl: process.env.IRON_SPRUE_EMAIL_LOGO_URL ?? defaultIronSprueEmailLogoUrl(process.env.IRON_SPRUE_EMAIL_ASSET_BASE_URL ?? process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL ?? 'http://localhost:3004'),
 };
 
 const sampleOrder: IronSprueEmailOrder = {

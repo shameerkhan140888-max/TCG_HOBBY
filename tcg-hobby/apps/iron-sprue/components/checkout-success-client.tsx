@@ -134,7 +134,7 @@ export function CheckoutSuccessClient({
         <h1>Order confirmed.</h1>
         <div className="checkout-result-card">
           <p className="lead">Order {order.orderNumber}</p>
-          <p className="form-status notice">Payment received. Your Iron Sprue order is confirmed.</p>
+          <p className="checkout-confirmation-note">Payment received. Your Iron Sprue order is confirmed.</p>
           <h2>Items</h2>
           <ul className="order-lines">
             {order.items.map((item) => (

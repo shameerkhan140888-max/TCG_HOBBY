@@ -20,6 +20,15 @@ vi.mock('@tcg-hobby/database', () => ({
   getIronSprueAdminReferenceData: mocks.getIronSprueAdminReferenceData,
   getIronSprueAdminStorefrontControls: mocks.getIronSprueAdminStorefrontControls,
   getIronSprueAdminWorkspaceCards: mocks.getIronSprueAdminWorkspaceCards,
+  IRON_SPRUE_HERO_MERCHANDISING_BADGES: ['NONE', 'IN_STOCK', 'NEW', 'SALE', 'COMING_SOON', 'PRE_ORDER', 'FEATURED', 'EXCLUSIVE'],
+  IRON_SPRUE_TYPOGRAPHY_OPTIONS: {
+    headingFamily: ['IMPACT_CONDENSED', 'SYSTEM_SANS', 'SERIF_DISPLAY'],
+    bodyFamily: ['SYSTEM_SANS', 'HUMANIST_SANS', 'SERIF'],
+    headingWeight: ['BOLD', 'BLACK'],
+    bodyWeight: ['REGULAR', 'MEDIUM'],
+    headingScale: ['COMPACT', 'STANDARD', 'LARGE'],
+    bodyScale: ['COMPACT', 'STANDARD', 'COMFORTABLE'],
+  },
   listIronSprueAdminContentReviews: mocks.listIronSprueAdminContentReviews,
   listIronSprueAdminInventory: vi.fn(),
   listIronSprueAdminMediaAssets: mocks.listIronSprueAdminMediaAssets,
@@ -38,7 +47,9 @@ vi.mock('../lib/iron-sprue-admin-actions.server', () => ({
   saveIronSprueFeaturedProductPlacementAction: vi.fn(),
   saveIronSprueHeroAction: vi.fn(),
   saveIronSprueHomepagePlacementAction: vi.fn(),
+  saveIronSprueHomepageProductSectionAction: vi.fn(),
   saveIronSprueSpecialOfferAction: vi.fn(),
+  saveIronSprueTypographySettingsAction: vi.fn(),
   updateIronSprueBrandControlsAction: vi.fn(),
   updateIronSprueContentReviewAction: vi.fn(),
   updateIronSprueMediaApprovalAction: vi.fn(),
@@ -80,7 +91,25 @@ describe('IronSprueAdminSection operational controls', () => {
     vi.clearAllMocks();
     mocks.listIronSprueAdminProducts.mockResolvedValue({ products: [] });
     mocks.getIronSprueAdminReferenceData.mockResolvedValue({ brands: [], categories: [], suppliers: [] });
-    mocks.getIronSprueAdminStorefrontControls.mockResolvedValue({ homepagePlacements: [], heroes: [], specialOffers: [], auditLog: [] });
+    mocks.getIronSprueAdminStorefrontControls.mockResolvedValue({
+      homepagePlacements: [],
+      heroes: [],
+      specialOffers: [],
+      discountCodes: [],
+      typographySettings: {
+        id: null,
+        storeCode: 'IRON_SPRUE',
+        headingFamily: 'IMPACT_CONDENSED',
+        bodyFamily: 'SYSTEM_SANS',
+        headingWeight: 'BLACK',
+        bodyWeight: 'REGULAR',
+        headingScale: 'STANDARD',
+        bodyScale: 'STANDARD',
+        createdAt: null,
+        updatedAt: null,
+      },
+      auditLog: [],
+    });
     mocks.listIronSprueR2Objects.mockResolvedValue([]);
   });
 
@@ -137,12 +166,26 @@ describe('IronSprueAdminSection operational controls', () => {
         ctaHref: '/products/aoshima-06348-lamborghini-adventador-green',
         imageUrl: 'r2://marketing/heroes/aoshima-pagani.webp',
         active: true,
+        merchandisingBadge: 'NEW',
         sortOrder: 1,
         storeCode: 'IRON_SPRUE',
         createdAt: new Date('2026-08-11T00:00:00.000Z'),
         updatedAt: new Date('2026-08-11T00:00:00.000Z'),
       }],
       specialOffers: [],
+      discountCodes: [],
+      typographySettings: {
+        id: null,
+        storeCode: 'IRON_SPRUE',
+        headingFamily: 'IMPACT_CONDENSED',
+        bodyFamily: 'SYSTEM_SANS',
+        headingWeight: 'BLACK',
+        bodyWeight: 'REGULAR',
+        headingScale: 'STANDARD',
+        bodyScale: 'STANDARD',
+        createdAt: null,
+        updatedAt: null,
+      },
       auditLog: [],
     });
     mocks.listIronSprueR2Objects.mockResolvedValue([
@@ -239,6 +282,8 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(pendingMarkup).toContain('Approved');
     expect(pendingMarkup).toContain('1');
     expect(pendingMarkup).toContain('Burj Khalifa');
+    expect(pendingMarkup).toContain('Retail copy');
+    expect(pendingMarkup).not.toContain('&quot;text&quot;');
     expect(pendingMarkup).toContain('data-bulk-group="iron-sprue-content-bulk-approval"');
     expect(pendingMarkup).toContain('Approve selected');
     expect(pendingMarkup).not.toContain('Toyota 2000GT Red');
@@ -274,6 +319,19 @@ describe('IronSprueAdminSection operational controls', () => {
       }],
       heroes: [],
       specialOffers: [],
+      discountCodes: [],
+      typographySettings: {
+        id: null,
+        storeCode: 'IRON_SPRUE',
+        headingFamily: 'IMPACT_CONDENSED',
+        bodyFamily: 'SYSTEM_SANS',
+        headingWeight: 'BLACK',
+        bodyWeight: 'REGULAR',
+        headingScale: 'STANDARD',
+        bodyScale: 'STANDARD',
+        createdAt: null,
+        updatedAt: null,
+      },
       auditLog: [],
     });
     mocks.listIronSprueAdminProducts.mockResolvedValue({ products: [] });
@@ -285,6 +343,8 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Free UK delivery on orders over £75');
     expect(markup).toContain('promo-banner');
     expect(markup).toContain('Create promo/banner placement');
+    expect(markup).toContain('Storefront typography');
+    expect(markup).toContain('Save typography controls');
     expect(markup).toContain('Brands we stock carousel');
     expect(markup).toContain('Save brand controls');
     expect(markup).toContain('Aoshima');

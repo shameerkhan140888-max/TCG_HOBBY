@@ -1855,21 +1855,35 @@ model IronSprueAdminHomepagePlacement {
 }
 
 model IronSprueAdminHero {
-  id          String   @id @default(cuid())
-  storeCode   String   @default("IRON_SPRUE")
-  headline    String
-  strapline   String?
-  ctaLabel    String?
-  ctaHref     String?
-  imageUrl    String?
-  active      Boolean  @default(false)
-  startsAt    DateTime?
-  endsAt      DateTime?
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  storeCode           String   @default("IRON_SPRUE")
+  headline            String
+  strapline           String?
+  ctaLabel            String?
+  ctaHref             String?
+  imageUrl            String?
+  merchandisingBadge  String   @default("NONE")
+  active              Boolean  @default(false)
+  startsAt            DateTime?
+  endsAt              DateTime?
+  sortOrder           Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   @@index([storeCode, active, sortOrder])
+}
+
+model IronSprueAdminTypographySetting {
+  id            String   @id @default(cuid())
+  storeCode     String   @default("IRON_SPRUE") @unique
+  headingFamily String   @default("IMPACT_CONDENSED")
+  bodyFamily    String   @default("SYSTEM_SANS")
+  headingWeight String   @default("BLACK")
+  bodyWeight    String   @default("REGULAR")
+  headingScale  String   @default("STANDARD")
+  bodyScale     String   @default("STANDARD")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model IronSprueAdminSpecialOffer {

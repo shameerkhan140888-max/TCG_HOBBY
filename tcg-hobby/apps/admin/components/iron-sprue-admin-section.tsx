@@ -3,6 +3,8 @@ import {
   getIronSprueAdminReferenceData,
   getIronSprueAdminStorefrontControls,
   getIronSprueAdminWorkspaceCards,
+  IRON_SPRUE_HERO_MERCHANDISING_BADGES,
+  IRON_SPRUE_TYPOGRAPHY_OPTIONS,
   IRON_SPRUE_COURIERS,
   listIronSprueAdminContentReviews,
   listIronSprueAdminInventory,
@@ -20,12 +22,15 @@ import {
   receiveIronSprueStockAction,
   resolveIronSprueCustomerRequestAction,
   resendIronSprueOrderEmailAction,
+  saveIronSprueTypographySettingsAction,
   saveIronSprueOrderNotesAction,
   saveIronSprueDiscountCodeAction,
   saveIronSprueHeroAction,
   saveIronSprueFeaturedProductPlacementAction,
   saveIronSprueHomepagePlacementAction,
+  saveIronSprueHomepageProductSectionAction,
   saveIronSprueSpecialOfferAction,
+  updateIronSprueCategoryControlsAction,
   updateIronSprueBrandControlsAction,
   updateIronSprueContentReviewAction,
   updateIronSprueMediaApprovalAction,
@@ -481,6 +486,25 @@ async function ReferenceSection({ section }: { section: string }) {
             {'featured' in row ? <p className="text-sm text-neutral-400">Featured: {row.featured ? 'Yes' : 'No'}</p> : null}
             {'website' in row && row.website ? <a className="text-sm text-accent" href={row.website} target="_blank" rel="noreferrer">Website</a> : null}
             <p className="text-sm text-neutral-400">{row._count.products} products</p>
+            {section === 'categories' ? (() => {
+              const categoryRow = row as typeof categories[number];
+              return (
+              <form action={updateIronSprueCategoryControlsAction} className="mt-3 grid gap-2 rounded-md border border-surface-line bg-black/30 p-3">
+                <input type="hidden" name="categoryId" value={categoryRow.id} />
+                <Field label="Storefront order">
+                  <input name="sortOrder" type="number" defaultValue={categoryRow.sortOrder} className={fieldClass} />
+                </Field>
+                <label className="flex items-center gap-2 text-sm">
+                  <input name="active" type="checkbox" defaultChecked={categoryRow.active} />
+                  Visible on storefront
+                </label>
+                {categoryRow._count.products === 0 ? (
+                  <p className="text-xs text-amber-200">Categories with no active customer-visible products should stay hidden unless there is a deliberate launch reason.</p>
+                ) : null}
+                <Button type="submit" size="sm" variant="outline">Save category visibility</Button>
+              </form>
+              );
+            })() : null}
           </CardContent>
         </Card>
       );
@@ -499,6 +523,40 @@ function MediaActionForms({ mediaId }: { mediaId: string }) {
           <Button type="submit" size="sm" variant={state === 'APPROVED' ? 'primary' : 'outline'}>{state === 'APPROVED' ? 'Approve' : state === 'REJECTED' ? 'Reject' : 'Needs review'}</Button>
         </form>
       ))}
+    </div>
+  );
+}
+
+function customerFacingReviewText(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (!value || typeof value !== 'object') return '';
+
+  const record = value as Record<string, unknown>;
+  const preferred = ['text', 'copy', 'description', 'value', 'title', 'heading', 'summary', 'customerTitle', 'shortDescription', 'fullDescription'];
+  for (const key of preferred) {
+    const candidate = record[key];
+    if (typeof candidate === 'string' && candidate.trim()) return candidate;
+  }
+
+  const customerLines = Object.entries(record)
+    .filter(([key, candidate]) => (
+      !['id', 'sourceId', 'sourceReference', 'sourceUrl', 'internalNotes', 'metadata', 'raw', 'payload'].includes(key)
+      && (typeof candidate === 'string' || typeof candidate === 'number' || typeof candidate === 'boolean')
+    ))
+    .map(([key, candidate]) => `${key.replace(/([A-Z])/g, ' $1')}: ${String(candidate)}`);
+
+  return customerLines.join('\n');
+}
+
+function CustomerContentReviewPreview({ value }: { value: unknown }) {
+  const text = customerFacingReviewText(value);
+  if (!text.trim()) {
+    return <p className="rounded-md border border-surface-line bg-surface-ink p-3 text-sm text-neutral-400">No customer-facing copy is available in this review payload.</p>;
+  }
+  return (
+    <div className="rounded-md border border-surface-line bg-surface-ink p-3 text-sm leading-6 text-neutral-200">
+      {text.split(/\r?\n/).filter(Boolean).map((line) => <p key={line}>{line}</p>)}
     </div>
   );
 }
@@ -669,7 +727,7 @@ async function ContentReviewSection({ searchParams }: { searchParams?: SearchPar
                 <StatePill>{review.status}</StatePill>
               </div>
             </div>
-            <pre className="max-h-52 overflow-auto rounded-md border border-surface-line bg-surface-ink p-3 text-xs text-neutral-300">{JSON.stringify(review.proposedValue, null, 2)}</pre>
+            <CustomerContentReviewPreview value={review.proposedValue} />
             {review.sourceReference ? <p className="text-sm text-neutral-400">Source: {review.sourceReference}</p> : null}
             <div className="flex flex-wrap gap-2">
               {(['APPROVED', 'PENDING', 'CONFLICT', 'REJECTED'] as const).map((status) => (
@@ -722,6 +780,38 @@ function HomepagePlacementForm({
 type HeroLibraryItem = Awaited<ReturnType<typeof listIronSprueR2Objects>>[number];
 type HomepagePlacementRecord = Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['homepagePlacements'][number];
 type HeroRecord = Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['heroes'][number];
+type TypographySettingsRecord = Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['typographySettings'];
+
+const heroBadgeLabels: Record<typeof IRON_SPRUE_HERO_MERCHANDISING_BADGES[number], string> = {
+  NONE: 'No badge',
+  IN_STOCK: 'In stock',
+  NEW: 'New',
+  SALE: 'Sale',
+  COMING_SOON: 'Coming soon',
+  PRE_ORDER: 'Pre-order',
+  FEATURED: 'Featured',
+  EXCLUSIVE: 'Exclusive',
+};
+
+const typographyLabels: Record<string, string> = {
+  IMPACT_CONDENSED: 'Iron Sprue condensed display',
+  SYSTEM_SANS: 'System sans',
+  SERIF_DISPLAY: 'Classic serif display',
+  HUMANIST_SANS: 'Humanist sans',
+  SERIF: 'Serif',
+  BOLD: 'Bold',
+  BLACK: 'Black',
+  REGULAR: 'Regular',
+  MEDIUM: 'Medium',
+  COMPACT: 'Compact',
+  STANDARD: 'Standard',
+  LARGE: 'Large',
+  COMFORTABLE: 'Comfortable',
+};
+
+function optionLabel(value: string) {
+  return typographyLabels[value] ?? value.replaceAll('_', ' ').toLowerCase();
+}
 
 function RecordMeta({ active, sortOrder }: { active: boolean; sortOrder: number | null | undefined }) {
   return (
@@ -784,13 +874,13 @@ function HeroForm({
       <Field label="Upload hero artwork">
         <input name="image" type="file" accept="image/png,image/jpeg,image/webp" className={fieldClass} />
       </Field>
-      <Field label="Text style">
-        <select className={fieldClass} disabled defaultValue="">
-          <option value="">Uses Iron Sprue storefront default</option>
+      <Field label="Merchandising badge">
+        <select name="merchandisingBadge" defaultValue={record?.merchandisingBadge ?? 'NONE'} className={fieldClass}>
+          {IRON_SPRUE_HERO_MERCHANDISING_BADGES.map((badge) => (
+            <option key={badge} value={badge}>{heroBadgeLabels[badge]}</option>
+          ))}
         </select>
-        <span className="text-xs text-neutral-500">
-          Font style is not currently persisted in the hero schema. Add headline/strapline style fields before exposing this as an editable control.
-        </span>
+        <span className="text-xs text-neutral-500">Applies only to promotional hero merchandising labels, not product stock badges.</span>
       </Field>
       <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={record?.sortOrder ?? 0} className={fieldClass} /></Field>
       <label className="flex items-center gap-2 text-sm"><input name="active" type="checkbox" defaultChecked={record?.active ?? false} /> Active</label>
@@ -1059,6 +1149,91 @@ function FeaturedProductsManager({
   );
 }
 
+function HomepageProductSectionsManager({
+  placements,
+  products,
+}: {
+  placements: HomepagePlacementRecord[];
+  products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'];
+}) {
+  const productBySlug = new Map(products.map((product) => [product.slug, product]));
+  const sectionPlacements = placements
+    .map((placement) => {
+      const match = placement.placementKey.match(/^product-section:([^:]+):(.+)$/);
+      if (!match) return null;
+      return { placement, sectionKey: match[1]!, productSlug: match[2]! };
+    })
+    .filter((entry): entry is { placement: HomepagePlacementRecord; sectionKey: string; productSlug: string } => Boolean(entry))
+    .sort((left, right) => left.sectionKey.localeCompare(right.sectionKey) || (left.placement.sortOrder ?? 0) - (right.placement.sortOrder ?? 0));
+  const sectionKeys = [...new Set(sectionPlacements.map((entry) => entry.sectionKey))];
+
+  function renderSectionForm(record?: { placement: HomepagePlacementRecord; sectionKey: string; productSlug: string }) {
+    const product = record ? productBySlug.get(record.productSlug) : null;
+    const isNewRecord = !record;
+    const previewAsset = product?.mediaAssets.find((asset) => asset.approvalState === 'APPROVED' && asset.role === 'catalogue-primary') ?? product?.mediaAssets.find((asset) => asset.role === 'catalogue-primary');
+    const previewUrl = previewAsset ? ironSprueMediaPreviewUrl(previewAsset) : ironSprueAdminPreviewUrl(record?.placement.imageUrl);
+
+    return (
+      <form key={record?.placement.id ?? 'new-section-product'} action={saveIronSprueHomepageProductSectionAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-3 md:grid-cols-2">
+        <input type="hidden" name="id" value={record?.placement.id ?? ''} />
+        <div className="md:col-span-2">
+          <h3 className="font-bold">{record ? `Edit ${record.sectionKey}` : 'Add product to a homepage section'}</h3>
+          <p className="mt-1 text-xs text-neutral-500">Active products are rendered as normal Iron Sprue product cards and link to their product detail pages.</p>
+        </div>
+        {previewUrl ? <img src={previewUrl} alt={product?.customerTitle ?? record?.placement.title ?? 'Section product'} className="h-32 w-full rounded-md border border-surface-line bg-white object-contain p-2 md:col-span-2" /> : null}
+        <Field label="Section key"><input name="sectionKey" list="homepage-section-keys" defaultValue={record?.sectionKey ?? 'opening-bench-picks'} required className={fieldClass} /></Field>
+        <Field label="Section heading"><input name="sectionHeading" defaultValue={record?.placement.title ?? 'Opening bench picks.'} required className={fieldClass} /></Field>
+        <Field label={isNewRecord ? 'Products' : 'Product'}>
+          <select name="productSlug" defaultValue={record?.productSlug ?? (isNewRecord ? [] : '')} required className={fieldClass} multiple={isNewRecord} size={isNewRecord ? 8 : undefined}>
+            <option value="">Select a product</option>
+            {products.map((candidate) => <option key={candidate.id} value={candidate.slug}>{candidate.sku} - {candidate.customerTitle}</option>)}
+          </select>
+          {isNewRecord ? <p className="mt-1 text-xs text-neutral-500">Hold Ctrl/Cmd to select multiple products. They will be added to this section in order.</p> : null}
+        </Field>
+        <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={record?.placement.sortOrder ?? 0} className={fieldClass} /></Field>
+        <Field label="Section CTA label"><input name="ctaLabel" defaultValue={record?.placement.ctaLabel ?? ''} className={fieldClass} /></Field>
+        <Field label="Section CTA href"><input name="ctaHref" defaultValue={record?.placement.ctaHref ?? ''} className={fieldClass} /></Field>
+        <input type="hidden" name="imageUrl" value={record?.placement.imageUrl ?? ''} />
+        <label className="flex items-end gap-2 pb-2 text-sm"><input name="active" type="checkbox" defaultChecked={record?.placement.active ?? true} /> Active on homepage</label>
+        <Button type="submit" size="sm" variant={record ? 'outline' : 'primary'}>{record ? 'Save section product' : 'Add selected products'}</Button>
+      </form>
+    );
+  }
+  const sectionGroups = sectionKeys.map((sectionKey) => ({
+    sectionKey,
+    records: sectionPlacements.filter((record) => record.sectionKey === sectionKey),
+  }));
+
+  return (
+    <Card>
+      <CardContent className="space-y-4">
+        <div>
+          <h2 className="font-bold">Homepage product sections</h2>
+          <p className="mt-1 text-sm text-neutral-400">Create named product sections, choose the products shown in each section and control ordering without source-code edits.</p>
+        </div>
+        <datalist id="homepage-section-keys">
+          {sectionKeys.map((key) => <option key={key} value={key} />)}
+        </datalist>
+        {sectionGroups.length ? (
+          <div className="space-y-3">
+            {sectionGroups.map((group) => (
+              <details key={group.sectionKey} className="rounded-md border border-surface-line bg-surface-ink p-3" open>
+                <summary className="cursor-pointer text-sm font-bold uppercase tracking-[0.08em] text-accent">
+                  {group.sectionKey} ({group.records.length})
+                </summary>
+                <div className="mt-3 grid gap-3 lg:grid-cols-2">
+                  {group.records.map((record) => renderSectionForm(record))}
+                </div>
+              </details>
+            ))}
+          </div>
+        ) : <EmptyNote>No custom product sections exist yet. The homepage keeps the approved featured-products section until one is added.</EmptyNote>}
+        {renderSectionForm()}
+      </CardContent>
+    </Card>
+  );
+}
+
 function SpecialOfferForm({
   products,
   record,
@@ -1109,8 +1284,48 @@ function DiscountCodeForm({ record }: { record?: Awaited<ReturnType<typeof getIr
   );
 }
 
+function TypographySettingsForm({ settings }: { settings: TypographySettingsRecord }) {
+  const selectField = (
+    name: keyof typeof IRON_SPRUE_TYPOGRAPHY_OPTIONS,
+    label: string,
+    value: string | null | undefined,
+  ) => (
+    <Field label={label}>
+      <select name={name} defaultValue={value ?? ''} className={fieldClass}>
+        {IRON_SPRUE_TYPOGRAPHY_OPTIONS[name].map((option) => (
+          <option key={option} value={option}>{optionLabel(option)}</option>
+        ))}
+      </select>
+    </Field>
+  );
+
+  return (
+    <Card>
+      <CardContent className="space-y-4">
+        <div>
+          <h2 className="font-bold">Storefront typography</h2>
+          <p className="mt-1 text-sm text-neutral-400">
+            Persisted Iron Sprue design-system typography controls. Options are constrained so Admin changes cannot inject arbitrary CSS or external font URLs.
+          </p>
+        </div>
+        <form action={saveIronSprueTypographySettingsAction} className="grid gap-3 md:grid-cols-2">
+          {selectField('headingFamily', 'Heading typography', settings.headingFamily)}
+          {selectField('bodyFamily', 'Body typography', settings.bodyFamily)}
+          {selectField('headingWeight', 'Heading weight', settings.headingWeight)}
+          {selectField('bodyWeight', 'Body weight', settings.bodyWeight)}
+          {selectField('headingScale', 'Heading scale', settings.headingScale)}
+          {selectField('bodyScale', 'Body scale', settings.bodyScale)}
+          <div className="md:col-span-2">
+            <Button type="submit">Save typography controls</Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
 async function StorefrontSection({ section }: { section: string }) {
-  const { homepagePlacements, heroes, specialOffers, discountCodes, auditLog } = await getIronSprueAdminStorefrontControls();
+  const { homepagePlacements, heroes, specialOffers, discountCodes, typographySettings, auditLog } = await getIronSprueAdminStorefrontControls();
   const { brands } = await getIronSprueAdminReferenceData();
   const productOptions = ['homepage', 'heroes', 'special-offers'].includes(section) ? (await listIronSprueAdminProducts({ pageSize: 100 })).products : [];
   const heroLibrary = section === 'heroes'
@@ -1129,7 +1344,9 @@ async function StorefrontSection({ section }: { section: string }) {
         </Card>
         {homepagePlacements.map((record) => <HomepagePlacementForm key={record.id} record={record} />)}
         <HomepagePlacementForm defaultPlacementKey="promo-banner" submitLabel="Create promo/banner placement" />
+        <TypographySettingsForm settings={typographySettings} />
         <div id="featured-products"><FeaturedProductsManager placements={homepagePlacements} products={productOptions} /></div>
+        <div id="homepage-product-sections"><HomepageProductSectionsManager placements={homepagePlacements} products={productOptions} /></div>
         <div id="brand-presentation"><BrandCarouselManager brands={brands} /></div>
       </div>
     );

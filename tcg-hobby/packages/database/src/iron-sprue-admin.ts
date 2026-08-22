@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { IronSprueAdminProduct, Prisma, UserRole } from '@prisma/client';
+import { Prisma, type IronSprueAdminProduct, type UserRole } from '@prisma/client';
 import { slugify } from '@tcg-hobby/utils';
 import { getIronSprueAdminPrisma } from './client';
 import {
@@ -1717,8 +1717,169 @@ export async function updateIronSprueAdminBrandControls(
   return updated;
 }
 
+export async function updateIronSprueAdminCategoryControls(
+  categoryId: string,
+  input: { active?: boolean; sortOrder?: number },
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const category = await client.ironSprueAdminCategory.findFirst({
+    where: { id: categoryId, storeCode: IRON_SPRUE_STORE_CODE },
+  });
+  if (!category) throw new Error('Iron Sprue category not found.');
+
+  const updated = await client.ironSprueAdminCategory.update({
+    where: { id: category.id },
+    data: {
+      active: input.active ?? category.active,
+      sortOrder: input.sortOrder ?? category.sortOrder,
+    },
+  });
+
+  await client.ironSprueAdminAuditLog.create({
+    data: {
+      storeCode: IRON_SPRUE_STORE_CODE,
+      actorId: actor.id,
+      action: 'category.controls.update',
+      entityType: 'category',
+      entityId: category.id,
+      summary: `Updated Iron Sprue category controls for ${category.name}.`,
+      before: { active: category.active, sortOrder: category.sortOrder },
+      after: { active: updated.active, sortOrder: updated.sortOrder },
+    },
+  });
+
+  return updated;
+}
+
+export const IRON_SPRUE_HERO_MERCHANDISING_BADGES = [
+  'NONE',
+  'IN_STOCK',
+  'NEW',
+  'SALE',
+  'COMING_SOON',
+  'PRE_ORDER',
+  'FEATURED',
+  'EXCLUSIVE',
+] as const;
+
+export type IronSprueHeroMerchandisingBadge = typeof IRON_SPRUE_HERO_MERCHANDISING_BADGES[number];
+
+export const IRON_SPRUE_TYPOGRAPHY_OPTIONS = {
+  headingFamily: ['IMPACT_CONDENSED', 'SYSTEM_SANS', 'SERIF_DISPLAY'],
+  bodyFamily: ['SYSTEM_SANS', 'HUMANIST_SANS', 'SERIF'],
+  headingWeight: ['BOLD', 'BLACK'],
+  bodyWeight: ['REGULAR', 'MEDIUM'],
+  headingScale: ['COMPACT', 'STANDARD', 'LARGE'],
+  bodyScale: ['COMPACT', 'STANDARD', 'COMFORTABLE'],
+} as const;
+
+export const DEFAULT_IRON_SPRUE_TYPOGRAPHY_SETTINGS = {
+  headingFamily: 'IMPACT_CONDENSED',
+  bodyFamily: 'SYSTEM_SANS',
+  headingWeight: 'BLACK',
+  bodyWeight: 'REGULAR',
+  headingScale: 'STANDARD',
+  bodyScale: 'STANDARD',
+} as const;
+
+export type IronSprueTypographySettingInput = {
+  headingFamily?: typeof IRON_SPRUE_TYPOGRAPHY_OPTIONS.headingFamily[number] | string | null;
+  bodyFamily?: typeof IRON_SPRUE_TYPOGRAPHY_OPTIONS.bodyFamily[number] | string | null;
+  headingWeight?: typeof IRON_SPRUE_TYPOGRAPHY_OPTIONS.headingWeight[number] | string | null;
+  bodyWeight?: typeof IRON_SPRUE_TYPOGRAPHY_OPTIONS.bodyWeight[number] | string | null;
+  headingScale?: typeof IRON_SPRUE_TYPOGRAPHY_OPTIONS.headingScale[number] | string | null;
+  bodyScale?: typeof IRON_SPRUE_TYPOGRAPHY_OPTIONS.bodyScale[number] | string | null;
+};
+
+function assertOption<T extends readonly string[]>(value: string | null | undefined, allowed: T, fallback: T[number], label: string): T[number] {
+  const cleaned = value?.trim().toUpperCase().replace(/[\s-]+/g, '_') || fallback;
+  if (!allowed.includes(cleaned)) {
+    throw new Error(`Unsupported Iron Sprue ${label}.`);
+  }
+  return cleaned as T[number];
+}
+
+function cleanHeroBadge(value?: string | null): IronSprueHeroMerchandisingBadge {
+  return assertOption(value, IRON_SPRUE_HERO_MERCHANDISING_BADGES, 'NONE', 'hero merchandising badge');
+}
+
+function cleanTypographySettings(input: IronSprueTypographySettingInput) {
+  return {
+    headingFamily: assertOption(input.headingFamily, IRON_SPRUE_TYPOGRAPHY_OPTIONS.headingFamily, DEFAULT_IRON_SPRUE_TYPOGRAPHY_SETTINGS.headingFamily, 'heading typography'),
+    bodyFamily: assertOption(input.bodyFamily, IRON_SPRUE_TYPOGRAPHY_OPTIONS.bodyFamily, DEFAULT_IRON_SPRUE_TYPOGRAPHY_SETTINGS.bodyFamily, 'body typography'),
+    headingWeight: assertOption(input.headingWeight, IRON_SPRUE_TYPOGRAPHY_OPTIONS.headingWeight, DEFAULT_IRON_SPRUE_TYPOGRAPHY_SETTINGS.headingWeight, 'heading weight'),
+    bodyWeight: assertOption(input.bodyWeight, IRON_SPRUE_TYPOGRAPHY_OPTIONS.bodyWeight, DEFAULT_IRON_SPRUE_TYPOGRAPHY_SETTINGS.bodyWeight, 'body weight'),
+    headingScale: assertOption(input.headingScale, IRON_SPRUE_TYPOGRAPHY_OPTIONS.headingScale, DEFAULT_IRON_SPRUE_TYPOGRAPHY_SETTINGS.headingScale, 'heading scale'),
+    bodyScale: assertOption(input.bodyScale, IRON_SPRUE_TYPOGRAPHY_OPTIONS.bodyScale, DEFAULT_IRON_SPRUE_TYPOGRAPHY_SETTINGS.bodyScale, 'body scale'),
+  };
+}
+
+export async function getIronSprueAdminTypographySettings(client = getIronSprueAdminPrisma()) {
+  const record = await client.ironSprueAdminTypographySetting.findUnique({
+    where: { storeCode: IRON_SPRUE_STORE_CODE },
+  });
+
+  return record ?? {
+    id: null,
+    storeCode: IRON_SPRUE_STORE_CODE,
+    ...DEFAULT_IRON_SPRUE_TYPOGRAPHY_SETTINGS,
+    createdAt: null,
+    updatedAt: null,
+  };
+}
+
+export async function upsertIronSprueAdminTypographySettings(
+  input: IronSprueTypographySettingInput,
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const before = await client.ironSprueAdminTypographySetting.findUnique({
+    where: { storeCode: IRON_SPRUE_STORE_CODE },
+  });
+  const data = {
+    storeCode: IRON_SPRUE_STORE_CODE,
+    ...cleanTypographySettings(input),
+  };
+
+  const record = await client.ironSprueAdminTypographySetting.upsert({
+    where: { storeCode: IRON_SPRUE_STORE_CODE },
+    create: data,
+    update: data,
+  });
+
+  await client.ironSprueAdminAuditLog.create({
+    data: {
+      storeCode: IRON_SPRUE_STORE_CODE,
+      actorId: actor.id,
+      action: 'typography.update',
+      entityType: 'typography-settings',
+      entityId: record.id,
+      summary: 'Updated Iron Sprue storefront typography settings.',
+      before: before ? {
+        headingFamily: before.headingFamily,
+        bodyFamily: before.bodyFamily,
+        headingWeight: before.headingWeight,
+        bodyWeight: before.bodyWeight,
+        headingScale: before.headingScale,
+        bodyScale: before.bodyScale,
+      } : Prisma.JsonNull,
+      after: {
+        headingFamily: record.headingFamily,
+        bodyFamily: record.bodyFamily,
+        headingWeight: record.headingWeight,
+        bodyWeight: record.bodyWeight,
+        headingScale: record.headingScale,
+        bodyScale: record.bodyScale,
+      },
+    },
+  });
+
+  return record;
+}
+
 export async function getIronSprueAdminStorefrontControls(client = getIronSprueAdminPrisma()) {
-  const [homepagePlacements, heroes, specialOffers, discountCodes, auditLog] = await Promise.all([
+  const [homepagePlacements, heroes, specialOffers, discountCodes, typographySettings, auditLog] = await Promise.all([
     client.ironSprueAdminHomepagePlacement.findMany({
       where: { storeCode: IRON_SPRUE_STORE_CODE },
       orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }],
@@ -1736,6 +1897,7 @@ export async function getIronSprueAdminStorefrontControls(client = getIronSprueA
       where: { storeCode: IRON_SPRUE_STORE_CODE },
       orderBy: [{ enabled: 'desc' }, { code: 'asc' }],
     }),
+    getIronSprueAdminTypographySettings(client),
     client.ironSprueAdminAuditLog.findMany({
       where: { storeCode: IRON_SPRUE_STORE_CODE },
       orderBy: { createdAt: 'desc' },
@@ -1743,7 +1905,7 @@ export async function getIronSprueAdminStorefrontControls(client = getIronSprueA
     }),
   ]);
 
-  return { homepagePlacements, heroes, specialOffers, discountCodes, auditLog };
+  return { homepagePlacements, heroes, specialOffers, discountCodes, typographySettings, auditLog };
 }
 
 type StorefrontRecordInput = {
@@ -1755,6 +1917,7 @@ type StorefrontRecordInput = {
   ctaLabel?: string | null | undefined;
   ctaHref?: string | null | undefined;
   imageUrl?: string | null | undefined;
+  merchandisingBadge?: string | null | undefined;
   active?: boolean | undefined;
   sortOrder?: number | undefined;
 };
@@ -1814,6 +1977,7 @@ export async function upsertIronSprueAdminHero(input: StorefrontRecordInput, act
     ctaLabel: cleanNullable(input.ctaLabel),
     ctaHref: cleanNullable(input.ctaHref),
     imageUrl: cleanNullable(input.imageUrl),
+    merchandisingBadge: cleanHeroBadge(input.merchandisingBadge),
     active: Boolean(input.active),
     sortOrder: cleanSortOrder(input.sortOrder),
   };
@@ -1830,7 +1994,7 @@ export async function upsertIronSprueAdminHero(input: StorefrontRecordInput, act
       entityType: 'hero',
       entityId: record.id,
       summary: `Saved Iron Sprue hero ${record.headline}.`,
-      after: { headline: record.headline, active: record.active, sortOrder: record.sortOrder },
+      after: { headline: record.headline, merchandisingBadge: record.merchandisingBadge, active: record.active, sortOrder: record.sortOrder },
     },
   });
 

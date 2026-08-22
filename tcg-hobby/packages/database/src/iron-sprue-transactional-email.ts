@@ -6,6 +6,7 @@ import {
   buildIronSprueCustomerRequestEmail,
   buildIronSprueDispatchEmail,
   buildIronSprueOrderConfirmationEmail,
+  defaultIronSprueEmailLogoUrl,
   type CustomerRequestEmailOptions,
   type IronSprueEmailOrder,
   type IronSprueEmailTemplate,
@@ -53,13 +54,17 @@ function siteUrl() {
 function emailConfig(): IronSprueEmailTemplateConfig & { apiKey: string | null; from: string | null; replyTo: string | null } {
   const supportEmail = clean(process.env.IRON_SPRUE_SUPPORT_EMAIL) ?? 'info@ironsprue.co.uk';
   const resolvedSiteUrl = siteUrl().replace(/\/$/, '');
+  const explicitAssetBaseUrl = clean(process.env.IRON_SPRUE_EMAIL_ASSET_BASE_URL)?.replace(/\/$/, '');
+  const assetBaseUrl = explicitAssetBaseUrl
+    ?? (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(resolvedSiteUrl) ? 'https://www.ironsprue.co.uk' : resolvedSiteUrl);
   return {
     apiKey: clean(process.env.IRON_SPRUE_RESEND_API_KEY),
     from: clean(process.env.IRON_SPRUE_EMAIL_FROM),
     replyTo: clean(process.env.IRON_SPRUE_EMAIL_REPLY_TO) ?? supportEmail,
     siteUrl: resolvedSiteUrl,
+    assetBaseUrl,
     supportEmail,
-    logoUrl: clean(process.env.IRON_SPRUE_EMAIL_LOGO_URL) ?? `${resolvedSiteUrl}/brand/iron-sprue-horizontal.svg`,
+    logoUrl: clean(process.env.IRON_SPRUE_EMAIL_LOGO_URL) ?? defaultIronSprueEmailLogoUrl(assetBaseUrl),
   };
 }
 

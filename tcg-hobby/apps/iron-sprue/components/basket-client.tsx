@@ -310,7 +310,7 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
         {outOfStock ? 'Out of stock' : isAdding ? 'Checking stock...' : 'Add to basket'}
       </button>
       {message ? (
-        <div className={`add-to-basket-feedback ${messageOk ? 'notice' : 'error'}`} role="status">
+        <div className={`add-to-basket-feedback ${messageOk ? 'success' : 'error'}`} role="status">
           <span>{messageOk && message === 'Added to basket' ? '✓ Added to basket' : message}</span>
         </div>
       ) : null}
@@ -822,9 +822,9 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             {basketLineItems.map((item) => (
               <article className="checkout-review-line" key={item.productId}>
                 {item.imageUrl ? <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} width="64" height="64" /> : <span className="basket-image-fallback">Iron Sprue</span>}
-                <div>
+                <div className="checkout-review-item-copy">
                   <strong>{item.productName}</strong>
-                  <span>{formatPrice(item.unitPriceMinor)} each</span>
+                  <span className="checkout-review-unit">{formatPrice(item.unitPriceMinor)} each</span>
                   <div className="review-quantity-control" aria-label={`Quantity for ${item.productName}`}>
                     <button
                       type="button"
@@ -853,7 +853,10 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
                     </button>
                   </div>
                 </div>
-                <strong>{formatPrice(item.unitPriceMinor * item.quantity)}</strong>
+                <div className="checkout-review-line-total">
+                  <span>Line total</span>
+                  <strong>{formatPrice(item.unitPriceMinor * item.quantity)}</strong>
+                </div>
               </article>
             ))}
           </div>
@@ -921,7 +924,14 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
 
   return (
     <div className="basket-layout checkout-details-layout">
-      {basketLines}
+      <div className="checkout-details-main">
+        {basketLines}
+        <section className="checkout-panel checkout-reassurance checkout-reassurance-icons" aria-label="Delivery returns and payment information">
+          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK delivery options and costs are confirmed before payment. Free UK delivery applies on eligible orders over £75.</span></p>
+          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Unused items can be returned in line with the published returns policy.</span></p>
+          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Payments</strong> Secure card payments are handled by the embedded payment form. Digital wallets may appear where supported.</span></p>
+        </section>
+      </div>
 
       <form
         className="checkout-panel"
@@ -963,11 +973,6 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             <label>Discount code<input value={discountCode} onChange={(event) => setDiscountCode(event.target.value.toUpperCase())} /></label>
           </div>
         </fieldset>
-        <div className="checkout-reassurance checkout-reassurance-icons">
-          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK delivery options and costs are confirmed before payment. Free UK delivery applies on eligible orders over £75.</span></p>
-          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Unused items can be returned in line with the published returns policy.</span></p>
-          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Payments</strong> Secure card payments are handled by the embedded payment form. Digital wallets may appear where supported.</span></p>
-        </div>
         <div className="checkout-totals">
           <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>
           <span>Delivery</span><strong>{formatPrice(deliveryMinor)}</strong>

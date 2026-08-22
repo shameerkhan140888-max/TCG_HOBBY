@@ -5,7 +5,10 @@ import {
   applyInventoryToProducts,
   approvedMediaRowsToProductMedia,
   getIronSprueHeroSlides,
+  getIronSprueCategoryNavigation,
   getIronSpruePromoStripItems,
+  ironSprueTypographyCustomProperties,
+  productSectionsFromPlacements,
   promoPanelsFromPlacements,
   productsFromFeaturedPlacements,
   publicIronSprueMediaUrl,
@@ -48,6 +51,7 @@ describe('Iron Sprue Admin storefront controls', () => {
         ctaLabel: 'Shop Now',
         ctaHref: '/products/cubicfun-om3606-magic-box-london-at-night',
         imageUrl: 'r2://marketing/heroes/london-at-night.png',
+        merchandisingBadge: 'NONE',
         sortOrder: 0,
       },
     ]);
@@ -67,6 +71,7 @@ describe('Iron Sprue Admin storefront controls', () => {
         ctaLabel: 'View product',
         ctaHref: '/products/aoshima-05628-toyota-2000gt-red',
         imageUrl: '/assets/hero-campaigns/is-aos-05628-toyota-2000gt-red-hero.png',
+        merchandisingBadge: 'SALE',
         sortOrder: 0,
       },
     ]);
@@ -78,6 +83,7 @@ describe('Iron Sprue Admin storefront controls', () => {
       ctaHref: '/products/aoshima-05628-toyota-2000gt-red',
       ctaLabel: 'View product',
       image: '/assets/hero-campaigns/is-aos-05628-toyota-2000gt-red-hero.png',
+      availabilityLabel: 'Sale',
       sourceProductSlug: 'aoshima-05628-toyota-2000gt-red',
       brandName: 'Aoshima',
     });
@@ -92,6 +98,7 @@ describe('Iron Sprue Admin storefront controls', () => {
         ctaLabel: 'Shop now',
         ctaHref: '/shop',
         imageUrl: '/assets/hero-campaigns/custom-workshop.png',
+        merchandisingBadge: 'NONE',
         sortOrder: 0,
       },
     ]);
@@ -110,11 +117,30 @@ describe('Iron Sprue Admin storefront controls', () => {
         ctaLabel: 'Shop now',
         ctaHref: '/products/not-a-real-iron-sprue-product',
         imageUrl: '/assets/hero-campaigns/not-real.png',
+        merchandisingBadge: 'NEW',
         sortOrder: 0,
       },
     ]);
 
     expect(slides).toEqual([]);
+  });
+
+  it('maps persisted typography settings to constrained storefront CSS variables', () => {
+    expect(ironSprueTypographyCustomProperties({
+      headingFamily: 'IMPACT_CONDENSED',
+      bodyFamily: 'SYSTEM_SANS',
+      headingWeight: 'BLACK',
+      bodyWeight: 'REGULAR',
+      headingScale: 'STANDARD',
+      bodyScale: 'STANDARD',
+    })).toMatchObject({
+      '--iron-sprue-heading-font': expect.stringContaining('Impact'),
+      '--iron-sprue-body-font': 'Arial, Helvetica, sans-serif',
+      '--iron-sprue-heading-weight': '900',
+      '--iron-sprue-body-weight': '400',
+      '--iron-sprue-heading-scale-factor': '1',
+      '--iron-sprue-body-scale-factor': '1',
+    });
   });
 
   it('projects storefront availability from available stock minus reserved stock', () => {
@@ -341,6 +367,30 @@ describe('Iron Sprue Admin storefront controls', () => {
     expect(featured.map((product) => product.slug)).toEqual(['second-product', 'first-product']);
   });
 
+  it('groups active Admin product-section placements into editable homepage sections', () => {
+    const products = [
+      { slug: 'toyota-red', sku: 'RED', storeCode: 'IRON_SPRUE', published: true },
+      { slug: 'toyota-white', sku: 'WHITE', storeCode: 'IRON_SPRUE', published: true },
+      { slug: 'glue', sku: 'GLUE', storeCode: 'IRON_SPRUE', published: true },
+    ] as any[];
+
+    const sections = productSectionsFromPlacements(products, [
+      { id: 'second', placementKey: 'product-section:bench-picks:toyota-white', title: 'Bench picks', ctaLabel: 'See picks', ctaHref: '/shop?section=bench-picks', imageUrl: null, active: true, sortOrder: 2 },
+      { id: 'first', placementKey: 'product-section:bench-picks:toyota-red', title: 'Bench picks', ctaLabel: null, ctaHref: null, imageUrl: null, active: true, sortOrder: 1 },
+      { id: 'hidden', placementKey: 'product-section:bench-picks:glue', title: 'Bench picks', ctaLabel: null, ctaHref: null, imageUrl: null, active: false, sortOrder: 0 },
+      { id: 'promo', placementKey: 'promo-panel:tools', title: 'Promo', ctaLabel: null, ctaHref: null, imageUrl: null, active: true, sortOrder: 0 },
+    ]);
+
+    expect(sections).toHaveLength(1);
+    expect(sections[0]).toMatchObject({
+      sectionKey: 'bench-picks',
+      heading: 'Bench picks',
+      ctaLabel: 'See picks',
+      ctaHref: '/shop?section=bench-picks',
+    });
+    expect(sections[0]?.products.map((product) => product.slug)).toEqual(['toyota-red', 'toyota-white']);
+  });
+
   it('uses active Admin promo panel placements before static homepage cards', () => {
     const panels = promoPanelsFromPlacements([
       { id: 'inactive', placementKey: 'promo-panel:inactive', title: 'Hidden card', ctaLabel: 'Hidden', ctaHref: '/hidden', imageUrl: '/hidden.png', active: false, sortOrder: 0 },
@@ -367,6 +417,18 @@ describe('Iron Sprue Admin storefront controls', () => {
       'Fast dispatch on stocked lines',
       'Safe and secure checkout',
     ]);
+
+    vi.unstubAllEnvs();
+  });
+
+  it('falls back to approved static category navigation without retired categories', async () => {
+    vi.stubEnv('IRON_SPRUE_DATABASE_URL', '');
+    vi.stubEnv('IRON_SPRUE_WORKER_READ_DATABASE_URL', '');
+
+    const navigation = await getIronSprueCategoryNavigation();
+
+    expect(navigation.map((item) => item.label)).toContain('Model Kits');
+    expect(navigation.map((item) => item.label)).not.toContain('Display & Accessories');
 
     vi.unstubAllEnvs();
   });

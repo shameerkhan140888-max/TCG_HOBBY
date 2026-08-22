@@ -129,9 +129,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </form>
           </div>
           <div className="service-summary">
-            <p><strong>Delivery</strong> UK delivery options and costs are confirmed before payment. Free UK delivery applies on eligible orders over £75.</p>
-            <p><strong>Returns</strong> Unused items can be returned in line with the published returns policy.</p>
-            <p><strong>Payments</strong> Secure card payments are handled by the embedded payment form. Digital wallets may appear where supported.</p>
+            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK delivery options and costs are confirmed before payment. Free UK delivery applies on eligible orders over £75.</span></p>
+            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Unused items can be returned in line with the published returns policy.</span></p>
+            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Payments</strong> Secure card payments are handled by the embedded payment form. Digital wallets may appear where supported.</span></p>
           </div>
         </article>
       </div>

@@ -38,7 +38,9 @@ body {
     radial-gradient(circle at 18% 8%, rgba(255, 255, 255, 0.72), transparent 30%),
     linear-gradient(135deg, #f1f3f2 0%, #dce1e2 42%, #cbd1d3 100%);
   color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--iron-sprue-body-font, Arial, Helvetica, sans-serif);
+  font-size: calc(16px * var(--iron-sprue-body-scale-factor, 1));
+  font-weight: var(--iron-sprue-body-weight, 400);
 }
 
 body::before {
@@ -85,6 +87,23 @@ select:focus-visible {
   text-transform: uppercase;
   border-bottom: 1px solid rgba(8, 10, 8, 0.24);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.promo-strip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.promo-strip svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .site-header {
@@ -463,15 +482,16 @@ h2 {
 h1 {
   max-width: 620px;
   margin-bottom: 10px;
-  font-family: Impact, "Arial Narrow", "Franklin Gothic Condensed", Arial, sans-serif;
-  font-size: clamp(50px, 7.2vw, 92px);
-  font-weight: 900;
+  font-family: var(--iron-sprue-heading-font, Impact, "Arial Narrow", "Franklin Gothic Condensed", Arial, sans-serif);
+  font-size: calc(clamp(50px, 7.2vw, 92px) * var(--iron-sprue-heading-scale-factor, 1));
+  font-weight: var(--iron-sprue-heading-weight, 900);
   line-height: 0.94;
 }
 
 h2 {
-  font-family: Impact, "Arial Narrow", "Franklin Gothic Condensed", Arial, sans-serif;
-  font-size: clamp(30px, 3.7vw, 50px);
+  font-family: var(--iron-sprue-heading-font, Impact, "Arial Narrow", "Franklin Gothic Condensed", Arial, sans-serif);
+  font-size: calc(clamp(30px, 3.7vw, 50px) * var(--iron-sprue-heading-scale-factor, 1));
+  font-weight: var(--iron-sprue-heading-weight, 900);
   line-height: 1;
 }
 
@@ -1023,7 +1043,8 @@ p {
 
 .product-card-body {
   position: relative;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   overflow: hidden;
   border-top: 1px solid rgba(255, 250, 241, 0.18);
@@ -1175,8 +1196,9 @@ p {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
-  align-items: center;
-  margin-top: 8px;
+  align-items: start;
+  margin-top: auto;
+  padding-top: 10px;
 }
 
 .product-card .product-actions a {
@@ -1496,7 +1518,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 10px;
+  gap: 0;
   border: 0;
   background: transparent;
   padding: 0;
@@ -1534,7 +1556,7 @@ p {
   min-width: 0;
   flex-wrap: nowrap;
   justify-content: flex-start;
-  gap: 12px;
+  gap: 14px;
 }
 
 .payment-method-strip li {
@@ -1565,8 +1587,15 @@ p {
 }
 
 .payment-method-strip.compact img {
-  max-width: 48px;
-  max-height: 24px;
+  width: auto;
+  max-width: 62px;
+  max-height: 28px;
+}
+
+.payment-method-strip.compact img[src*="american-express"] {
+  width: 30px;
+  max-width: 30px;
+  max-height: 30px;
 }
 
 .checkout-grid {
@@ -1677,10 +1706,16 @@ p {
   gap: 8px;
 }
 
+.checkout-details-main {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
 .checkout-review-line {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) auto;
-  gap: 12px;
+  grid-template-columns: 64px minmax(0, 1fr) minmax(110px, auto);
+  gap: 16px;
   align-items: center;
   border: 1px solid rgba(255, 250, 241, 0.12);
   border-radius: 7px;
@@ -1706,6 +1741,31 @@ p {
   color: rgba(255, 250, 241, 0.72);
   font-size: 13px;
   line-height: 1.5;
+}
+
+.checkout-review-item-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.checkout-review-unit {
+  display: block;
+}
+
+.checkout-review-line-total {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  text-align: right;
+}
+
+.checkout-review-line-total span {
+  color: rgba(255, 250, 241, 0.58);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .review-quantity-control {
@@ -1785,10 +1845,26 @@ p {
   gap: 8px;
 }
 
+.checkout-panel.checkout-reassurance {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 250, 241, 0.16);
+  background: var(--iron-board-surface);
+  background-color: var(--iron-board-base);
+  background-position: center;
+  background-size: cover;
+  color: rgba(255, 250, 241, 0.84);
+  padding: 32px 42px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    0 18px 35px rgba(0, 0, 0, 0.22);
+}
+
 .checkout-reassurance-icons p {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
-  gap: 10px;
+  gap: 12px;
   align-items: flex-start;
 }
 
@@ -1982,6 +2058,8 @@ p {
 .basket-action-stack {
   display: grid;
   gap: 8px;
+  align-content: start;
+  min-height: 78px;
 }
 
 .basket-action-stack button {
@@ -2766,18 +2844,37 @@ p {
   padding: 8px 10px;
 }
 
+.basket-action-stack {
+  position: relative;
+}
+
 .add-to-basket-feedback {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 6px;
+  margin-top: 0;
+  min-height: 20px;
+  border: 0;
+  background: transparent;
+  padding: 0;
   color: #94d3a3;
   font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.01em;
 }
 
-.add-to-basket-feedback.notice span::before {
+.checkout-confirmation-note {
+  border-left: 4px solid var(--brass);
+  background: rgba(255, 250, 241, 0.08);
+  color: rgba(255, 250, 241, 0.88);
+  padding: 14px 16px;
+}
+
+.add-to-basket-feedback.success span::before {
   content: none;
 }
 
@@ -2854,6 +2951,12 @@ p {
 .payment-trust-banner .payment-method-strip {
   border-color: rgba(19, 21, 19, 0.12);
   background: rgba(19, 21, 19, 0.04);
+}
+
+.payment-trust-banner .payment-method-strip.compact {
+  border: 0;
+  background: transparent;
+  padding: 0;
 }
 
 .payment-trust-banner .payment-method-strip span,
@@ -2980,7 +3083,20 @@ label {
 }
 
 .cookie-preferences-button {
-  margin-top: 12px;
+  display: inline;
+  min-height: 0;
+  margin-top: 4px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: rgba(255, 250, 241, 0.72);
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: 0;
+  text-align: left;
+  text-decoration: underline;
+  text-transform: none;
+  text-underline-offset: 3px;
 }
 
 .product-buy-panel {
@@ -3259,6 +3375,10 @@ label {
 }
 
 .service-summary p {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
   margin: 0;
   font-size: 13px;
 }
@@ -3783,7 +3903,7 @@ label {
   }
 
   .payment-method-strip.compact ul {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
   .footer-company {
@@ -3816,8 +3936,10 @@ label {
     grid-template-columns: 56px minmax(0, 1fr);
   }
 
-  .checkout-review-line > strong {
+  .checkout-review-line-total {
     grid-column: 2;
+    justify-items: start;
+    text-align: left;
   }
 
   .basket-layout,

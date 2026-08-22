@@ -15,6 +15,7 @@ import {
   reconcileIronSpruePaymentIntentCheckout,
   removeIronSprueCartItem,
   resolveIronSprueGuestCart,
+  sendIronSprueOrderConfirmationEmail,
   updateIronSprueCartItemQuantity,
 } from '@tcg-hobby/database';
 import type {
@@ -213,6 +214,25 @@ export class IronSprueCommerceService {
     const order = await reconcileIronSpruePaymentIntentCheckout(paymentIntentId)
       ?? await getIronSprueOrderByStripePaymentIntentId(paymentIntentId);
     if (!order) throw new NotFoundException('Order not found.');
+    if (order.paymentStatus === 'SUCCEEDED') {
+      try {
+        const emailResult = await sendIronSprueOrderConfirmationEmail(order.id);
+        if (emailResult.outcome === 'provider_unconfigured' || emailResult.outcome === 'failed') {
+          console.warn('iron_sprue_order_confirmation_email_not_sent', {
+            orderId: order.id,
+            outcome: emailResult.outcome,
+            source: 'payment_status_reconciliation',
+          });
+        }
+      } catch (error) {
+        console.warn('iron_sprue_order_confirmation_email_not_sent', {
+          orderId: order.id,
+          outcome: 'failed',
+          source: 'payment_status_reconciliation',
+          reason: error instanceof Error ? error.message : 'Unknown email error',
+        });
+      }
+    }
     return {
       orderNumber: order.orderNumber,
       paymentStatus: order.paymentStatus,

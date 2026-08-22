@@ -1,8 +1,13 @@
+import type { CSSProperties, ReactNode } from 'react';
 import type { Metadata } from 'next';
 import './globals.css';
 import { ironSprueBrand } from '../lib/brand';
-import { getIronSpruePromoStripItems } from '../lib/admin-storefront-controls';
-import { categoryNavigation } from '../lib/storefront';
+import {
+  getIronSprueCategoryNavigation,
+  getIronSpruePromoStripItems,
+  getIronSprueTypographySettings,
+  ironSprueTypographyCustomProperties,
+} from '../lib/admin-storefront-controls';
 import { LaunchListForm } from '../components/launch-list-form';
 import { BasketLink } from '../components/basket-link';
 import { IronSprueAnalyticsProvider, IronSprueCookieConsentBanner, IronSprueCookiePreferenceLink } from '../components/analytics-consent';
@@ -46,13 +51,17 @@ export const metadata: Metadata = {
   robots: process.env.STOREFRONT_ACCESS_MODE === 'protected' ? { index: false, follow: false } : undefined,
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const promoStripItems = await getIronSpruePromoStripItems();
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const [promoStripItems, categoryNavigation, typographySettings] = await Promise.all([
+    getIronSpruePromoStripItems(),
+    getIronSprueCategoryNavigation(),
+    getIronSprueTypographySettings(),
+  ]);
   const ga4Id = process.env.NEXT_PUBLIC_IRON_SPRUE_GA4_MEASUREMENT_ID?.trim() || null;
   const metaPixelId = process.env.NEXT_PUBLIC_IRON_SPRUE_META_PIXEL_ID?.trim() || null;
 
   return (
-    <html lang="en-GB">
+    <html lang="en-GB" style={ironSprueTypographyCustomProperties(typographySettings) as CSSProperties}>
       <body>
         <IronSprueAnalyticsProvider ga4Id={ga4Id} metaPixelId={metaPixelId} />
         <header className="site-header">
@@ -111,7 +120,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           </div>
           <div className="promo-strip" role="status">
-            {promoStripItems.map((item) => <span key={item}>{item}</span>)}
+            {promoStripItems.map((item, index) => (
+              <span key={item}>
+                <PromoStripIcon label={item} index={index} />
+                {item}
+              </span>
+            ))}
           </div>
         </header>
         <main className="page-frame">{children}</main>
@@ -178,5 +192,31 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <IronSprueCookieConsentBanner />
       </body>
     </html>
+  );
+}
+
+function PromoStripIcon({ label, index }: { label: string; index: number }) {
+  const normalized = label.toLowerCase();
+  if (normalized.includes('delivery') || index === 0) {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" />
+        <circle cx="7" cy="18" r="2" />
+        <circle cx="18" cy="18" r="2" />
+      </svg>
+    );
+  }
+  if (normalized.includes('dispatch') || normalized.includes('stock') || index === 1) {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 3l7 3v5c0 4.5-2.8 8.5-7 10-4.2-1.5-7-5.5-7-10V6z" />
+      <path d="M8.5 12l2.2 2.2 4.8-5" />
+    </svg>
   );
 }
