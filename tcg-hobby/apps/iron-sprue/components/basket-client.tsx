@@ -55,7 +55,8 @@ type StripeInstance = {
   confirmPayment(options: {
     elements: StripeElements;
     confirmParams: { return_url: string };
-  }): Promise<{ error?: { message?: string } }>;
+    redirect?: 'always' | 'if_required';
+  }): Promise<{ error?: { message?: string }; paymentIntent?: { id: string; status: string } }>;
 };
 
 declare global {
@@ -128,6 +129,16 @@ export function holdIronSprueBasketForPendingPayment() {
   window.localStorage.setItem(IRON_SPRUE_BASKET_STORAGE_KEY, '[]');
   window.dispatchEvent(new CustomEvent('iron-sprue-basket-updated'));
   return items;
+}
+
+export function hasIronSpruePendingPaymentBasket() {
+  if (typeof window === 'undefined') return false;
+  try {
+    const parsed = JSON.parse(window.sessionStorage.getItem(IRON_SPRUE_PENDING_PAYMENT_BASKET_STORAGE_KEY) ?? '[]');
+    return Array.isArray(parsed) && parsed.some((item) => item?.productId && Number.isInteger(item.quantity));
+  } catch {
+    return false;
+  }
 }
 
 export function restoreIronSprueBasketAfterFailedPayment() {
@@ -322,6 +333,10 @@ function basketLineWarning(item: StoredBasketItem & { inStock?: boolean }) {
   return '';
 }
 
+function isPaymentElementUnavailableMessage(message: string) {
+  return /could not be loaded|could not retrieve data from the specified element|element.*mounted|ready event/i.test(message);
+}
+
 function StripePaymentElementForm({
   paymentIntent,
   onUnavailable,
@@ -413,23 +428,43 @@ function StripePaymentElementForm({
           if (!stripe || !elements) return;
           setIsSubmittingPayment(true);
           setPaymentStatus('Confirming payment...');
-          holdIronSprueBasketForPendingPayment();
-          const result = await stripe.confirmPayment({
-            elements,
-            confirmParams: {
-              return_url: `${window.location.origin}/checkout/success?payment_intent=${encodeURIComponent(paymentIntent.paymentIntentId)}`,
-            },
-          });
-          if (result.error) {
-            restoreIronSprueBasketAfterFailedPayment();
-            setPaymentStatus(result.error.message ?? 'Payment could not be completed. Please check your details and try again.');
+          let result: Awaited<ReturnType<StripeInstance['confirmPayment']>>;
+          let basketHeldForProcessing = false;
+          try {
+            result = await stripe.confirmPayment({
+              elements,
+              confirmParams: {
+                return_url: `${window.location.origin}/checkout/success?payment_intent=${encodeURIComponent(paymentIntent.paymentIntentId)}`,
+              },
+              redirect: 'if_required',
+            });
+          } catch (error) {
+            const message = error instanceof Error
+              ? error.message
+              : 'Payment could not be completed. Please review the payment details and try again.';
+            if (basketHeldForProcessing) restoreIronSprueBasketAfterFailedPayment();
+            setPaymentStatus(message);
             setIsSubmittingPayment(false);
+            if (isPaymentElementUnavailableMessage(message)) onUnavailable(message);
+            return;
           }
+          if (result.error) {
+            const message = result.error.message ?? 'Payment could not be completed. Please review the payment details and try again.';
+            if (basketHeldForProcessing) restoreIronSprueBasketAfterFailedPayment();
+            setPaymentStatus(message);
+            setIsSubmittingPayment(false);
+            if (isPaymentElementUnavailableMessage(message)) onUnavailable(message);
+            return;
+          }
+          const confirmedPaymentIntentId = result.paymentIntent?.id ?? paymentIntent.paymentIntentId;
+          holdIronSprueBasketForPendingPayment();
+          basketHeldForProcessing = true;
+          window.location.assign(`/checkout/success?payment_intent=${encodeURIComponent(confirmedPaymentIntentId)}`);
         }}
       >
         {isSubmittingPayment ? 'Processing payment...' : `Pay ${formatPrice(paymentIntent.totalMinor)}`}
       </button>
-      {paymentStatus ? <p className={`form-status${paymentStatus.includes('could not') ? ' error' : ''}`}>{paymentStatus}</p> : null}
+      {paymentStatus ? <p className={`form-status${/could not|not be completed/i.test(paymentStatus) ? ' error' : ''}`}>{paymentStatus}</p> : null}
     </section>
   );
 }
@@ -644,6 +679,19 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
       <div className="checkout-panel basket-loading" aria-live="polite">
         <h2>Loading your basket.</h2>
         <p>Checking the items saved on this device.</p>
+      </div>
+    );
+  }
+
+  if (mode === 'checkout' && !items.length && hasIronSpruePendingPaymentBasket()) {
+    return (
+      <div className="checkout-page-stack">
+        <section className="checkout-panel checkout-processing-card" role="status" aria-live="polite">
+          <span className="payment-spinner" aria-hidden="true" />
+          <h2>Processing your payment.</h2>
+          <p>Please wait while we securely confirm your payment.</p>
+          <p className="form-status notice">Please do not refresh or close this page while payment is being confirmed.</p>
+        </section>
       </div>
     );
   }

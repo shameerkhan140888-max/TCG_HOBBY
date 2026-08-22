@@ -6,6 +6,7 @@ import {
   addIronSprueBasketItem,
   addIronSprueBasketItemWithLiveStock,
   clearIronSprueBasketAfterPaidCheckout,
+  hasIronSpruePendingPaymentBasket,
   holdIronSprueBasketForPendingPayment,
   readIronSprueBasketCount,
   restoreIronSprueBasketAfterFailedPayment,
@@ -91,9 +92,12 @@ describe('Iron Sprue basket persistence', () => {
     addIronSprueBasketItem(queenAnne);
     addIronSprueBasketItem(toyota);
 
+    expect(hasIronSpruePendingPaymentBasket()).toBe(false);
+
     const held = holdIronSprueBasketForPendingPayment();
 
     expect(held).toHaveLength(2);
+    expect(hasIronSpruePendingPaymentBasket()).toBe(true);
     expect(readIronSprueBasketCount()).toBe(0);
     expect(JSON.parse(window.localStorage.getItem(IRON_SPRUE_BASKET_STORAGE_KEY) ?? '[]')).toEqual([]);
     expect(JSON.parse(window.sessionStorage.getItem(IRON_SPRUE_PENDING_PAYMENT_BASKET_STORAGE_KEY) ?? '[]')).toHaveLength(2);
@@ -107,6 +111,7 @@ describe('Iron Sprue basket persistence', () => {
     const restored = restoreIronSprueBasketAfterFailedPayment();
 
     expect(restored).toEqual([queenAnne, toyota]);
+    expect(hasIronSpruePendingPaymentBasket()).toBe(false);
     expect(readIronSprueBasketCount()).toBe(2);
     expect(JSON.parse(window.localStorage.getItem(IRON_SPRUE_BASKET_STORAGE_KEY) ?? '[]')).toEqual([queenAnne, toyota]);
     expect(window.sessionStorage.getItem(IRON_SPRUE_PENDING_PAYMENT_BASKET_STORAGE_KEY)).toBeNull();
