@@ -66,12 +66,13 @@ export const IRON_SPRUE_PUBLICATION_STATES = [
   'CONTENT_PENDING',
   'MEDIA_PENDING',
   'REVIEW_REQUIRED',
-  'READY',
+  'READY_TO_PUBLISH',
   'PUBLISHED',
   'ARCHIVED',
 ] as const;
 
 export type IronSpruePublicationState = (typeof IRON_SPRUE_PUBLICATION_STATES)[number];
+type IronSprueStoredPublicationState = IronSpruePublicationState | 'READY';
 
 export type IronSprueAdminUser = {
   id: string;
@@ -148,6 +149,30 @@ export type IronSprueReadinessCheck = {
   detail: string;
 };
 
+const IRON_SPRUE_STOREFRONT_CONTENT_REVIEW_FIELDS = [
+  'customerTitle',
+  'title',
+  'shortDescription',
+  'fullDescription',
+  'description',
+  'featureBullets',
+  'features',
+  'specifications',
+  'seoTitle',
+  'metaDescription',
+  'category',
+  'brand',
+  'buildType',
+  'productType',
+  'tags',
+  'searchKeywords',
+] as const;
+
+export function isIronSprueStorefrontContentReviewField(fieldName: string) {
+  const normalized = String(fieldName ?? '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+  return IRON_SPRUE_STOREFRONT_CONTENT_REVIEW_FIELDS.some((field) => normalized === field.toLowerCase());
+}
+
 export type IronSprueAdminCapabilityStatus = 'ready' | 'empty' | 'blocked' | 'deferred';
 
 export type IronSprueAdminWorkspaceCard = {
@@ -198,7 +223,25 @@ export type IronSprueAdminMediaReviewItem = Prisma.IronSprueAdminMediaAssetGetPa
   include: { product: { select: { id: true; sku: true; customerTitle: true; publicationState: true } } };
 }>;
 export type IronSprueAdminContentReviewItem = Prisma.IronSprueAdminContentReviewGetPayload<{
-  include: { product: { select: { id: true; sku: true; customerTitle: true; publicationState: true } } };
+  include: {
+    product: {
+      select: {
+        id: true;
+        sku: true;
+        customerTitle: true;
+        shortDescription: true;
+        fullDescription: true;
+        featureBullets: true;
+        specifications: true;
+        seoTitle: true;
+        metaDescription: true;
+        buildType: true;
+        publicationState: true;
+        brand: { select: { name: true } };
+        category: { select: { name: true } };
+      };
+    };
+  };
 }>;
 export type IronSprueAdminMediaAssetInput = {
   productId?: string | null;
@@ -236,8 +279,14 @@ function assertIronSprueStore(storeCode: string | undefined | null) {
 }
 
 function normalizePublicationState(value: string): IronSpruePublicationState {
+  if (value === 'READY') return 'READY_TO_PUBLISH';
   if (IRON_SPRUE_PUBLICATION_STATES.includes(value as IronSpruePublicationState)) return value as IronSpruePublicationState;
   throw new Error('Unsupported Iron Sprue publication state.');
+}
+
+function normalizeStoredPublicationState(value: string): IronSprueStoredPublicationState {
+  if (value === 'READY') return 'READY';
+  return normalizePublicationState(value);
 }
 
 function safeSlug(value: string) {
@@ -375,13 +424,14 @@ export function evaluateIronSprueProductReadiness(product: ProductWithReadiness)
   const cataloguePrimary = product.mediaAssets.find(
     (asset) => asset.role === 'catalogue-primary' && asset.approvalState === 'APPROVED' && asset.isPrimary,
   );
-  const unresolvedContent = product.contentReviews.some((review) => review.status === 'CONFLICT' || review.status === 'PENDING');
+  const unresolvedContent = product.contentReviews.some((review) => (
+    isIronSprueStorefrontContentReviewField(review.fieldName) && review.status !== 'APPROVED'
+  ));
 
   return [
     { key: 'identity', label: 'Confirmed identity', passed: Boolean(product.customerTitle && product.sku && product.slug), detail: 'Title, SKU and slug are required.' },
     { key: 'brand', label: 'Brand assigned', passed: Boolean(product.brandId), detail: 'A product cannot publish without a brand.' },
     { key: 'category', label: 'Category assigned', passed: Boolean(product.categoryId), detail: 'A product cannot publish without a category.' },
-    { key: 'price', label: 'VAT-inclusive price', passed: typeof product.grossPriceMinor === 'number' && product.grossPriceMinor > 0 && product.vatRate >= 0, detail: 'Gross selling price and VAT rate are required.' },
     { key: 'descriptions', label: 'Required descriptions', passed: Boolean(product.shortDescription && product.fullDescription), detail: 'Short and full descriptions are required.' },
     { key: 'specifications', label: 'Required specifications', passed: Boolean(product.specifications), detail: 'Structured specifications must be reviewed.' },
     { key: 'media', label: 'Image 2 primary media', passed: Boolean(cataloguePrimary), detail: 'An approved catalogue-primary Image 2 must be primary.' },
@@ -392,6 +442,95 @@ export function evaluateIronSprueProductReadiness(product: ProductWithReadiness)
 
 export function isIronSprueProductReady(product: ProductWithReadiness) {
   return evaluateIronSprueProductReadiness(product).every((check) => check.passed);
+}
+
+export function summarizeIronSprueProductReadinessBlockers(product: ProductWithReadiness) {
+  const checks = evaluateIronSprueProductReadiness(product);
+  const blockers: string[] = [];
+  const approvedPrimaryMedia = product.mediaAssets.filter(
+    (asset) => asset.role === 'catalogue-primary' && asset.approvalState === 'APPROVED' && asset.isPrimary,
+  ).length;
+  const pendingRequiredMedia = product.mediaAssets.filter(
+    (asset) => asset.role === 'catalogue-primary' && asset.approvalState !== 'APPROVED',
+  ).length;
+  const storefrontContentReviews = product.contentReviews.filter((review) => isIronSprueStorefrontContentReviewField(review.fieldName));
+  const pendingContent = storefrontContentReviews.filter((review) => review.status === 'PENDING').length;
+  const conflictedContent = storefrontContentReviews.filter((review) => review.status === 'CONFLICT').length;
+  const rejectedContent = storefrontContentReviews.filter((review) => review.status === 'REJECTED').length;
+
+  for (const check of checks.filter((item) => !item.passed)) {
+    if (check.key === 'media') {
+      blockers.push(
+        approvedPrimaryMedia
+          ? 'approved Image 2 must be marked as the primary catalogue image'
+          : `${Math.max(pendingRequiredMedia, 1)} required media asset${Math.max(pendingRequiredMedia, 1) === 1 ? '' : 's'} pending`,
+      );
+    } else if (check.key === 'content-conflicts') {
+      if (conflictedContent) blockers.push(`${conflictedContent} identity/content conflict${conflictedContent === 1 ? '' : 's'} unresolved`);
+      if (pendingContent) blockers.push(`${pendingContent} content approval${pendingContent === 1 ? '' : 's'} required`);
+      if (rejectedContent) blockers.push(`${rejectedContent} rejected content review${rejectedContent === 1 ? '' : 's'} unresolved`);
+    } else {
+      blockers.push(check.detail);
+    }
+  }
+
+  return [...new Set(blockers)];
+}
+
+export function deriveIronSprueProductReadinessState(product: ProductWithReadiness): IronSpruePublicationState {
+  const checks = evaluateIronSprueProductReadiness(product);
+  if (checks.every((check) => check.passed)) return 'READY_TO_PUBLISH';
+  if (!checks.find((check) => check.key === 'media')?.passed) return 'MEDIA_PENDING';
+  if (
+    !checks.find((check) => check.key === 'descriptions')?.passed ||
+    !checks.find((check) => check.key === 'specifications')?.passed ||
+    !checks.find((check) => check.key === 'seo')?.passed ||
+    product.contentReviews.some((review) => isIronSprueStorefrontContentReviewField(review.fieldName) && review.status === 'PENDING')
+  ) {
+    return 'CONTENT_PENDING';
+  }
+  return 'REVIEW_REQUIRED';
+}
+
+export async function synchronizeIronSprueProductPublicationReadiness(
+  productId: string,
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const product = await client.ironSprueAdminProduct.findFirst({
+    where: { id: productId, storeCode: IRON_SPRUE_STORE_CODE },
+    include: productReadinessInclude,
+  });
+  if (!product) throw new Error('Iron Sprue product not found.');
+  if (product.publicationState === 'ARCHIVED') return product;
+
+  const derivedState = deriveIronSprueProductReadinessState(product);
+  const nextState = product.publicationState === 'PUBLISHED' && derivedState === 'READY_TO_PUBLISH' ? 'PUBLISHED' : derivedState;
+  if (product.publicationState === nextState) return product;
+
+  const updated = await client.ironSprueAdminProduct.update({
+    where: { id: product.id },
+    data: {
+      publicationState: nextState,
+      readyApprovedAt: nextState === 'READY_TO_PUBLISH' ? new Date() : product.readyApprovedAt,
+      updatedById: actor.id,
+    },
+    include: productReadinessInclude,
+  });
+  await client.ironSprueAdminAuditLog.create({
+    data: {
+      storeCode: IRON_SPRUE_STORE_CODE,
+      actorId: actor.id,
+      action: 'product.publication_readiness.sync',
+      entityType: 'product',
+      entityId: product.id,
+      productId: product.id,
+      summary: `Synchronized Iron Sprue product ${product.sku} readiness to ${nextState}.`,
+      before: { publicationState: product.publicationState },
+      after: { publicationState: nextState, blockers: summarizeIronSprueProductReadinessBlockers(updated) },
+    },
+  });
+  return updated;
 }
 
 export async function getIronSprueAdminDashboard(client = getIronSprueAdminPrisma()): Promise<IronSprueAdminDashboard> {
@@ -418,7 +557,7 @@ export async function getIronSprueAdminDashboard(client = getIronSprueAdminPrism
     client.ironSprueAdminProduct.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, publicationState: 'CONTENT_PENDING' } }),
     client.ironSprueAdminProduct.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, publicationState: 'MEDIA_PENDING' } }),
     client.ironSprueAdminProduct.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, publicationState: 'REVIEW_REQUIRED' } }),
-    client.ironSprueAdminProduct.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, publicationState: 'READY' } }),
+    client.ironSprueAdminProduct.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, publicationState: { in: ['READY_TO_PUBLISH', 'READY'] } } }),
     client.ironSprueAdminProduct.count({ where: { storeCode: IRON_SPRUE_STORE_CODE, publicationState: 'PUBLISHED' } }),
     client.ironSprueAdminInventory.aggregate({
       where: { storeCode: IRON_SPRUE_STORE_CODE },
@@ -464,7 +603,7 @@ export async function getIronSprueAdminDashboard(client = getIronSprueAdminPrism
       { label: 'Content pending', value: contentPending, detail: 'Products waiting for content review.' },
       { label: 'Media pending', value: mediaPending, detail: 'Products waiting for Image 2 or gallery media.' },
       { label: 'Review required', value: reviewRequired, detail: 'Products with unresolved readiness checks.' },
-      { label: 'Ready', value: readyProducts, detail: 'Products eligible for explicit publication.' },
+      { label: 'Ready to publish', value: readyProducts, detail: 'Products eligible for explicit publication.' },
       { label: 'Published', value: publishedProducts, detail: 'Products visible after launch approval.' },
       { label: 'Content approvals required', value: contentApprovalRequired, detail: 'Pending or conflicted customer-facing copy/specification reviews.' },
       { label: 'Content approved', value: contentApproved, detail: 'Customer-facing copy/specification reviews already approved.' },
@@ -576,11 +715,12 @@ export async function createIronSprueAdminProduct(input: CreateIronSprueAdminPro
 
 export async function setIronSprueProductPublicationState(
   productId: string,
-  nextState: IronSpruePublicationState,
+  nextState: IronSpruePublicationState | 'READY',
   actor: IronSprueAdminUser,
   client = getIronSprueAdminPrisma(),
 ) {
   const state = normalizePublicationState(nextState);
+  const storedState = normalizeStoredPublicationState(state);
   const product = await client.ironSprueAdminProduct.findFirst({
     where: { id: productId, storeCode: IRON_SPRUE_STORE_CODE },
     include: productReadinessInclude,
@@ -588,7 +728,7 @@ export async function setIronSprueProductPublicationState(
   if (!product) throw new Error('Iron Sprue product not found.');
 
   const checks = evaluateIronSprueProductReadiness(product);
-  if ((state === 'READY' || state === 'PUBLISHED') && checks.some((check) => !check.passed)) {
+  if ((state === 'READY_TO_PUBLISH' || state === 'PUBLISHED') && checks.some((check) => !check.passed)) {
     throw new Error(`Iron Sprue product is not ${state.toLowerCase()}: ${checks.filter((check) => !check.passed).map((check) => check.key).join(', ')}`);
   }
 
@@ -596,8 +736,8 @@ export async function setIronSprueProductPublicationState(
     const updated = await tx.ironSprueAdminProduct.update({
       where: { id: product.id },
       data: {
-        publicationState: state,
-        readyApprovedAt: state === 'READY' ? new Date() : product.readyApprovedAt,
+        publicationState: storedState,
+        readyApprovedAt: state === 'READY_TO_PUBLISH' ? new Date() : product.readyApprovedAt,
         publishedAt: state === 'PUBLISHED' ? new Date() : product.publishedAt,
         archivedAt: state === 'ARCHIVED' ? new Date() : null,
         updatedById: actor.id,
@@ -613,9 +753,79 @@ export async function setIronSprueProductPublicationState(
         productId: product.id,
         summary: `Changed Iron Sprue product ${product.sku} to ${state}.`,
         before: { publicationState: product.publicationState },
-        after: { publicationState: state },
+        after: { publicationState: storedState },
       },
     });
+    return updated;
+  });
+}
+
+export async function publishIronSprueAdminProduct(
+  productId: string,
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  return setIronSprueProductPublicationState(productId, 'PUBLISHED', actor, client);
+}
+
+export async function publishIronSprueAdminProducts(
+  productIds: string[],
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const ids = [...new Set(productIds.filter(Boolean))];
+  if (!ids.length) throw new Error('Select at least one product to publish.');
+
+  const products = await client.ironSprueAdminProduct.findMany({
+    where: { id: { in: ids }, storeCode: IRON_SPRUE_STORE_CODE },
+    include: productReadinessInclude,
+  });
+  if (products.length !== ids.length) throw new Error('One or more Iron Sprue products could not be found.');
+
+  const blocked = products
+    .map((product) => ({
+      product,
+      blockers: product.publicationState === 'ARCHIVED'
+        ? ['archived products cannot be bulk-published']
+        : summarizeIronSprueProductReadinessBlockers(product),
+    }))
+    .filter((item) => item.blockers.length > 0);
+  if (blocked.length) {
+    throw new Error(
+      `Cannot publish selected products: ${blocked
+        .map((item) => `${item.product.sku}: ${item.blockers.join('; ')}`)
+        .join(' | ')}`,
+    );
+  }
+
+  return client.$transaction(async (tx) => {
+    const now = new Date();
+    const updated = [];
+    for (const product of products) {
+      updated.push(await tx.ironSprueAdminProduct.update({
+        where: { id: product.id },
+        data: {
+          publicationState: 'PUBLISHED',
+          readyApprovedAt: product.readyApprovedAt ?? now,
+          publishedAt: now,
+          archivedAt: null,
+          updatedById: actor.id,
+        },
+      }));
+      await tx.ironSprueAdminAuditLog.create({
+        data: {
+          storeCode: IRON_SPRUE_STORE_CODE,
+          actorId: actor.id,
+          action: 'product.bulk_publish',
+          entityType: 'product',
+          entityId: product.id,
+          productId: product.id,
+          summary: `Bulk-published Iron Sprue product ${product.sku}.`,
+          before: { publicationState: product.publicationState },
+          after: { publicationState: 'PUBLISHED' },
+        },
+      });
+    }
     return updated;
   });
 }
@@ -771,7 +981,11 @@ export async function listIronSprueAdminProducts(
     ...(filters.brandId ? { brandId: filters.brandId } : {}),
     ...(filters.categoryId ? { categoryId: filters.categoryId } : {}),
     ...(filters.supplierId ? { supplierId: filters.supplierId } : {}),
-    ...(filters.publicationState ? { publicationState: normalizePublicationState(filters.publicationState) } : {}),
+    ...(filters.publicationState
+      ? normalizePublicationState(filters.publicationState) === 'READY_TO_PUBLISH'
+        ? { publicationState: { in: ['READY_TO_PUBLISH', 'READY'] } }
+        : { publicationState: normalizePublicationState(filters.publicationState) }
+      : {}),
     ...(typeof filters.featured === 'boolean' ? { featured: filters.featured } : {}),
     ...(typeof filters.newArrival === 'boolean' ? { newArrival: filters.newArrival } : {}),
     ...(typeof filters.specialOffer === 'boolean' ? { specialOffer: filters.specialOffer } : {}),
@@ -800,7 +1014,11 @@ export async function listIronSprueAdminProducts(
   ]);
 
   return {
-    products,
+    products: products.map((product) => ({
+      ...product,
+      readinessState: deriveIronSprueProductReadinessState(product),
+      readinessBlockers: summarizeIronSprueProductReadinessBlockers(product),
+    })),
     pagination: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) },
   };
 }
@@ -1452,7 +1670,23 @@ export async function listIronSprueAdminMediaAssets(
     orderBy: [{ product: { sku: 'asc' } }, { role: 'asc' }, { approvalState: 'asc' }, { updatedAt: 'desc' }],
     take: pageSize,
     include: {
-      product: { select: { id: true, sku: true, customerTitle: true, publicationState: true } },
+      product: {
+        select: {
+          id: true,
+          sku: true,
+          customerTitle: true,
+          shortDescription: true,
+          fullDescription: true,
+          featureBullets: true,
+          specifications: true,
+          seoTitle: true,
+          metaDescription: true,
+          buildType: true,
+          publicationState: true,
+          brand: { select: { name: true } },
+          category: { select: { name: true } },
+        },
+      },
     },
   });
 }
@@ -1531,7 +1765,23 @@ export async function listIronSprueAdminContentReviews(
     orderBy: [{ status: 'asc' }, { updatedAt: 'desc' }],
     take: pageSize,
     include: {
-      product: { select: { id: true, sku: true, customerTitle: true, publicationState: true } },
+      product: {
+        select: {
+          id: true,
+          sku: true,
+          customerTitle: true,
+          shortDescription: true,
+          fullDescription: true,
+          featureBullets: true,
+          specifications: true,
+          seoTitle: true,
+          metaDescription: true,
+          buildType: true,
+          publicationState: true,
+          brand: { select: { name: true } },
+          category: { select: { name: true } },
+        },
+      },
     },
   });
 }
@@ -1585,6 +1835,10 @@ export async function updateIronSprueAdminMediaApproval(
     },
   });
 
+  if (media.productId) {
+    await synchronizeIronSprueProductPublicationReadiness(media.productId, actor, client);
+  }
+
   return updated;
 }
 
@@ -1599,7 +1853,7 @@ export async function updateIronSprueAdminContentReviewStatus(
   });
   if (!review) throw new Error('Iron Sprue content review not found.');
 
-  return client.$transaction(async (tx) => {
+  const updated = await client.$transaction(async (tx) => {
     const updated = await tx.ironSprueAdminContentReview.update({
       where: { id: review.id },
       data: {
@@ -1625,6 +1879,9 @@ export async function updateIronSprueAdminContentReviewStatus(
 
     return updated;
   });
+
+  await synchronizeIronSprueProductPublicationReadiness(review.productId, actor, client);
+  return updated;
 }
 
 export async function updateIronSprueAdminProductFlags(

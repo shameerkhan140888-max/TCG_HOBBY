@@ -11,6 +11,8 @@ import {
   sendIronSprueCancellationEmail,
   sendIronSprueDispatchEmail,
   sendIronSprueOrderConfirmationEmail,
+  publishIronSprueAdminProduct,
+  publishIronSprueAdminProducts,
   setIronSprueProductPublicationState,
   isIronSprueAdminFulfilmentState,
   updateIronSprueAdminBrandControls,
@@ -100,16 +102,22 @@ export async function updateIronSprueMediaApprovalAction(formData: FormData) {
 export async function bulkApproveIronSprueMediaAction(formData: FormData) {
   const actor = await requireIronSprueActor();
   const mediaIds = formData.getAll('mediaId').map((value) => String(value)).filter(Boolean);
+  const bulkAction = String(formData.get('bulkAction') ?? 'APPROVED');
   try {
-    if (!mediaIds.length) throw new Error('Select at least one media record to approve.');
-    await Promise.all(mediaIds.map((mediaId) => updateIronSprueAdminMediaApproval(mediaId, 'APPROVED', actor)));
+    if (!mediaIds.length) throw new Error('Select at least one media record.');
+    if (!['APPROVED', 'REVIEW_REQUIRED', 'REJECTED'].includes(bulkAction)) throw new Error('Invalid media bulk action.');
+    await Promise.all(mediaIds.map((mediaId) => updateIronSprueAdminMediaApproval(
+      mediaId,
+      bulkAction as 'APPROVED' | 'REVIEW_REQUIRED' | 'REJECTED',
+      actor,
+    )));
   } catch (error) {
     redirect(adminStatusPath('media', 'error', actionError(error)));
   }
   revalidatePath('/iron-sprue-admin');
   revalidatePath('/iron-sprue-admin/media');
   revalidateIronSprueStorefront();
-  redirect(adminStatusPath('media', 'saved', `${mediaIds.length} media approval${mediaIds.length === 1 ? '' : 's'} saved.`));
+  redirect(adminStatusPath('media', 'saved', `${mediaIds.length} media record${mediaIds.length === 1 ? '' : 's'} updated.`));
 }
 
 export async function updateIronSprueContentReviewAction(formData: FormData) {
@@ -132,16 +140,22 @@ export async function updateIronSprueContentReviewAction(formData: FormData) {
 export async function bulkApproveIronSprueContentReviewsAction(formData: FormData) {
   const actor = await requireIronSprueActor();
   const reviewIds = formData.getAll('reviewId').map((value) => String(value)).filter(Boolean);
+  const bulkAction = String(formData.get('bulkAction') ?? 'APPROVED');
   try {
-    if (!reviewIds.length) throw new Error('Select at least one content review to approve.');
-    await Promise.all(reviewIds.map((reviewId) => updateIronSprueAdminContentReviewStatus(reviewId, 'APPROVED', actor)));
+    if (!reviewIds.length) throw new Error('Select at least one content review.');
+    if (!['APPROVED', 'PENDING', 'CONFLICT', 'REJECTED'].includes(bulkAction)) throw new Error('Invalid content review bulk action.');
+    await Promise.all(reviewIds.map((reviewId) => updateIronSprueAdminContentReviewStatus(
+      reviewId,
+      bulkAction as 'APPROVED' | 'REJECTED' | 'CONFLICT' | 'PENDING',
+      actor,
+    )));
   } catch (error) {
     redirect(adminStatusPath('content-review', 'error', actionError(error)));
   }
   revalidatePath('/iron-sprue-admin');
   revalidatePath('/iron-sprue-admin/content-review');
   revalidateIronSprueStorefront();
-  redirect(adminStatusPath('content-review', 'saved', `${reviewIds.length} content approval${reviewIds.length === 1 ? '' : 's'} saved.`));
+  redirect(adminStatusPath('content-review', 'saved', `${reviewIds.length} content review${reviewIds.length === 1 ? '' : 's'} updated.`));
 }
 
 export async function updateIronSprueProductFlagsAction(formData: FormData) {
@@ -177,7 +191,7 @@ export async function updateIronSpruePublicationStateAction(formData: FormData) 
     if (!productId) throw new Error('productId is required.');
     await setIronSprueProductPublicationState(
       productId,
-      publicationState as 'DRAFT' | 'CONTENT_PENDING' | 'MEDIA_PENDING' | 'REVIEW_REQUIRED' | 'READY' | 'PUBLISHED' | 'ARCHIVED',
+      publicationState as 'DRAFT' | 'CONTENT_PENDING' | 'MEDIA_PENDING' | 'REVIEW_REQUIRED' | 'READY_TO_PUBLISH' | 'READY' | 'PUBLISHED' | 'ARCHIVED',
       actor,
     );
   } catch (error) {
@@ -187,6 +201,35 @@ export async function updateIronSpruePublicationStateAction(formData: FormData) 
   revalidatePath('/iron-sprue-admin/products');
   revalidateIronSprueStorefront();
   redirect(adminStatusPath('products', 'saved', 'Publication state saved.'));
+}
+
+export async function publishIronSprueProductAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const productId = String(formData.get('productId') ?? '');
+  try {
+    if (!productId) throw new Error('productId is required.');
+    await publishIronSprueAdminProduct(productId, actor);
+  } catch (error) {
+    redirect(adminStatusPath('products', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/products');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('products', 'saved', 'Product published.'));
+}
+
+export async function bulkPublishIronSprueProductsAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const productIds = formData.getAll('productId').map((value) => String(value)).filter(Boolean);
+  try {
+    await publishIronSprueAdminProducts(productIds, actor);
+  } catch (error) {
+    redirect(adminStatusPath('products', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/products');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('products', 'saved', `${productIds.length} product${productIds.length === 1 ? '' : 's'} published.`));
 }
 
 export async function uploadIronSprueProductMediaAction(formData: FormData) {

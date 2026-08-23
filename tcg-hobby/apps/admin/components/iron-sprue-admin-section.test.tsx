@@ -29,6 +29,19 @@ vi.mock('@tcg-hobby/database', () => ({
     headingScale: ['COMPACT', 'STANDARD', 'LARGE'],
     bodyScale: ['COMPACT', 'STANDARD', 'COMFORTABLE'],
   },
+  isIronSprueStorefrontContentReviewField: (fieldName: string) => [
+    'customerTitle',
+    'shortDescription',
+    'fullDescription',
+    'featureBullets',
+    'specifications',
+    'seoTitle',
+    'metaDescription',
+    'category',
+    'brand',
+    'buildType',
+    'productType',
+  ].includes(fieldName),
   listIronSprueAdminContentReviews: mocks.listIronSprueAdminContentReviews,
   listIronSprueAdminInventory: vi.fn(),
   listIronSprueAdminMediaAssets: mocks.listIronSprueAdminMediaAssets,
@@ -44,6 +57,8 @@ vi.mock('../lib/iron-sprue-media-storage.server', () => ({
 vi.mock('../lib/iron-sprue-admin-actions.server', () => ({
   bulkApproveIronSprueContentReviewsAction: vi.fn(),
   bulkApproveIronSprueMediaAction: vi.fn(),
+  bulkPublishIronSprueProductsAction: vi.fn(),
+  publishIronSprueProductAction: vi.fn(),
   saveIronSprueFeaturedProductPlacementAction: vi.fn(),
   saveIronSprueHeroAction: vi.fn(),
   saveIronSprueHomepagePlacementAction: vi.fn(),
@@ -147,6 +162,9 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('products%2Fis-aos-05603%2Fimage-2%2Fmaster.webp');
     expect(markup).toContain('Select all displayed');
     expect(markup).toContain('Approve selected');
+    expect(markup).toContain('Publish selected products');
+    expect(markup).toContain('Publish product');
+    expect(markup).toContain('data-bulk-group="iron-sprue-media-product-bulk-publish"');
     expect(markup).toContain('data-bulk-group="iron-sprue-media-bulk-approval"');
     expect(markup).not.toContain('No current');
     expect(markup).not.toContain('media record is available for this product.');
@@ -250,7 +268,21 @@ describe('IronSprueAdminSection operational controls', () => {
       {
         id: 'review-pending',
         productId: 'product-1',
-        product: { id: 'product-1', sku: 'IS-CUB-MC133H', customerTitle: 'Burj Khalifa', publicationState: 'MEDIA_PENDING' },
+        product: {
+          id: 'product-1',
+          sku: 'IS-CUB-MC133H',
+          customerTitle: 'Burj Khalifa',
+          shortDescription: 'PDP short copy',
+          fullDescription: 'PDP full descriptor copy',
+          featureBullets: ['Detailed landmark kit'],
+          specifications: { pieces: '136' },
+          seoTitle: 'Burj Khalifa model kit',
+          metaDescription: 'Build the Burj Khalifa.',
+          buildType: '3D puzzle',
+          publicationState: 'MEDIA_PENDING',
+          brand: { name: 'CubicFun' },
+          category: { name: 'Model Kits' },
+        },
         fieldName: 'fullDescription',
         proposedValue: { text: 'Retail copy' },
         sourceReference: null,
@@ -264,10 +296,52 @@ describe('IronSprueAdminSection operational controls', () => {
       {
         id: 'review-approved',
         productId: 'product-2',
-        product: { id: 'product-2', sku: 'IS-AOS-05628', customerTitle: 'Toyota 2000GT Red', publicationState: 'MEDIA_PENDING' },
+        product: {
+          id: 'product-2',
+          sku: 'IS-AOS-05628',
+          customerTitle: 'Toyota 2000GT Red',
+          shortDescription: 'Toyota PDP short copy',
+          fullDescription: 'Toyota PDP full descriptor copy',
+          featureBullets: ['1:24 scale model kit'],
+          specifications: { scale: '1:24' },
+          seoTitle: 'Toyota 2000GT Red model kit',
+          metaDescription: 'Aoshima Toyota 2000GT Red model kit.',
+          buildType: 'Model kit',
+          publicationState: 'MEDIA_PENDING',
+          brand: { name: 'Aoshima' },
+          category: { name: 'Model Kits' },
+        },
         fieldName: 'fullDescription',
         proposedValue: { text: 'Approved retail copy' },
         sourceReference: null,
+        status: 'APPROVED',
+        reviewedById: 'admin-1',
+        reviewedAt: new Date('2026-08-11T00:00:00.000Z'),
+        storeCode: 'IRON_SPRUE',
+        createdAt: new Date('2026-08-11T00:00:00.000Z'),
+        updatedAt: new Date('2026-08-11T00:00:00.000Z'),
+      },
+      {
+        id: 'review-media-metadata',
+        productId: 'product-2',
+        product: {
+          id: 'product-2',
+          sku: 'IS-AOS-05628',
+          customerTitle: 'Toyota 2000GT Red',
+          shortDescription: 'Toyota PDP short copy',
+          fullDescription: 'Toyota PDP full descriptor copy',
+          featureBullets: ['1:24 scale model kit'],
+          specifications: { scale: '1:24' },
+          seoTitle: 'Toyota 2000GT Red model kit',
+          metaDescription: 'Aoshima Toyota 2000GT Red model kit.',
+          buildType: 'Model kit',
+          publicationState: 'MEDIA_PENDING',
+          brand: { name: 'Aoshima' },
+          category: { name: 'Model Kits' },
+        },
+        fieldName: 'image-2-candidate',
+        proposedValue: { text: 'media generation metadata' },
+        sourceReference: 'codex-imagegen-edit',
         status: 'APPROVED',
         reviewedById: 'admin-1',
         reviewedAt: new Date('2026-08-11T00:00:00.000Z'),
@@ -282,10 +356,13 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(pendingMarkup).toContain('Approved');
     expect(pendingMarkup).toContain('1');
     expect(pendingMarkup).toContain('Burj Khalifa');
-    expect(pendingMarkup).toContain('Retail copy');
+    expect(pendingMarkup).toContain('PDP full descriptor copy');
+    expect(pendingMarkup).toContain('Feature bullets');
     expect(pendingMarkup).not.toContain('&quot;text&quot;');
     expect(pendingMarkup).toContain('data-bulk-group="iron-sprue-content-bulk-approval"');
     expect(pendingMarkup).toContain('Approve selected');
+    expect(pendingMarkup).toContain('Needs review');
+    expect(pendingMarkup).toContain('Reject selected');
     expect(pendingMarkup).not.toContain('Toyota 2000GT Red');
 
     const approvedMarkup = await renderAsync(await IronSprueAdminSection({
@@ -293,7 +370,57 @@ describe('IronSprueAdminSection operational controls', () => {
       searchParams: { status: 'approved' },
     }));
     expect(approvedMarkup).toContain('Toyota 2000GT Red');
+    expect(approvedMarkup).toContain('Toyota PDP full descriptor copy');
+    expect(approvedMarkup).toContain('Media / Commercial / Import Review');
+    expect(approvedMarkup).toContain('media generation metadata');
+    expect(approvedMarkup).toContain('Publish selected products');
+    expect(approvedMarkup).toContain('Publish product');
+    expect(approvedMarkup).toContain('data-bulk-group="iron-sprue-content-product-bulk-publish"');
     expect(approvedMarkup).not.toContain('Burj Khalifa');
+  });
+
+  it('shows product blockers, ready filter and publish controls', async () => {
+    mocks.getIronSprueAdminWorkspaceCards.mockReturnValue([
+      ...cards,
+      { key: 'products', label: 'Products', href: '/iron-sprue-admin/products', status: 'ready', requiredPermission: 'products:view', description: 'Product publishing.' },
+    ]);
+    mocks.getIronSprueAdminReferenceData.mockResolvedValue({ brands: [], categories: [], suppliers: [] });
+    mocks.listIronSprueAdminProducts.mockResolvedValue({
+      pagination: { total: 1, page: 1, pageSize: 81, totalPages: 1 },
+      products: [
+        {
+          id: 'product-ready',
+          sku: 'IS-AOS-05628',
+          slug: 'aoshima-05628-toyota-2000gt-red',
+          customerTitle: 'Toyota 2000GT Red',
+          sourceTitle: 'Toyota 2000GT Red',
+          shortDescription: 'Ready retail copy.',
+          publicationState: 'READY_TO_PUBLISH',
+          readinessBlockers: [],
+          brand: { name: 'Aoshima' },
+          category: { name: 'Model Kits' },
+          supplier: null,
+          grossPriceMinor: 1999,
+          currency: 'GBP',
+          inventory: { availableStock: 2 },
+          mediaAssets: [],
+          contentReviews: [],
+          featured: false,
+          newArrival: false,
+          comingSoon: false,
+          specialOffer: false,
+          hideWhenOutOfStock: false,
+        },
+      ],
+    });
+
+    const markup = await renderAsync(await IronSprueAdminSection({ section: 'products', searchParams: { state: 'READY_TO_PUBLISH' } }));
+
+    expect(markup).toContain('Ready to publish');
+    expect(markup).toContain('Publish product');
+    expect(markup).toContain('Publish selected');
+    expect(markup).toContain('data-bulk-group="iron-sprue-product-bulk-publish"');
+    expect(markup).toContain('READY_TO_PUBLISH');
   });
 
   it('renders storefront placement and brand carousel controls', async () => {

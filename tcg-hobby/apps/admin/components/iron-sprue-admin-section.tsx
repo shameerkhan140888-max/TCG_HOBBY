@@ -6,6 +6,7 @@ import {
   IRON_SPRUE_HERO_MERCHANDISING_BADGES,
   IRON_SPRUE_TYPOGRAPHY_OPTIONS,
   IRON_SPRUE_COURIERS,
+  isIronSprueStorefrontContentReviewField,
   listIronSprueAdminContentReviews,
   listIronSprueAdminInventory,
   listIronSprueAdminMediaAssets,
@@ -40,7 +41,9 @@ import {
   uploadIronSprueProductMediaAction,
   bulkApproveIronSprueContentReviewsAction,
   bulkApproveIronSprueMediaAction,
+  bulkPublishIronSprueProductsAction,
   createIronSprueManualOrderAction,
+  publishIronSprueProductAction,
 } from '../lib/iron-sprue-admin-actions.server';
 import { ironSprueAdminPreviewUrl, listIronSprueR2Objects } from '../lib/iron-sprue-media-storage.server';
 import { IronSprueBulkApprovalControls } from './iron-sprue-bulk-approval-controls';
@@ -63,7 +66,7 @@ function ironSprueMediaPreviewUrl(asset: { url: string | null; storageKey: strin
 
 function StatePill({ children }: { children: string }) {
   const value = children.toUpperCase();
-  const tone = value === 'APPROVED' || value === 'READY' || value === 'PUBLISHED' || value === 'ACTIVE' || value === 'PRIMARY'
+  const tone = value === 'APPROVED' || value === 'READY' || value === 'READY_TO_PUBLISH' || value === 'PUBLISHED' || value === 'ACTIVE' || value === 'PRIMARY'
     ? 'success'
     : value === 'FAILED' || value === 'REJECTED' || value === 'CONFLICT'
       ? 'warning'
@@ -268,6 +271,51 @@ function groupMediaByProduct(
   });
 }
 
+type ReviewProductSummary = {
+  id: string;
+  sku: string;
+  customerTitle: string;
+  publicationState: string;
+};
+
+function productCanAttemptPublish(product: ReviewProductSummary | null | undefined): product is ReviewProductSummary {
+  return Boolean(product && !['PUBLISHED', 'ARCHIVED'].includes(product.publicationState));
+}
+
+function ReviewProductPublishControls({
+  bulkFormId,
+  product,
+}: {
+  bulkFormId: string;
+  product: ReviewProductSummary | null | undefined;
+}) {
+  if (!product) return null;
+  const canAttemptPublish = productCanAttemptPublish(product);
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {canAttemptPublish ? (
+        <label className="flex items-center gap-2 rounded-md border border-surface-line bg-black/30 px-2 py-1 text-xs font-bold text-neutral-200">
+          <input
+            aria-label={`Select ${product.customerTitle} for bulk publishing`}
+            data-bulk-group={bulkFormId}
+            form={bulkFormId}
+            name="productId"
+            type="checkbox"
+            value={product.id}
+          />
+          Select product
+        </label>
+      ) : null}
+      <form action={publishIronSprueProductAction}>
+        <input type="hidden" name="productId" value={product.id} />
+        <Button type="submit" disabled={!canAttemptPublish} size="sm" variant={canAttemptPublish ? 'primary' : 'outline'}>Publish product</Button>
+      </form>
+      {canAttemptPublish ? <p className="text-xs text-neutral-500">Publishing will stop if media, content or conflict blockers remain.</p> : null}
+    </div>
+  );
+}
+
 function ProductFlagForm({ product }: { product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number] }) {
   const flags = [
     ['featured', 'Featured', product.featured],
@@ -292,11 +340,29 @@ function ProductFlagForm({ product }: { product: Awaited<ReturnType<typeof listI
 }
 
 function ProductAdminCard({ product }: { product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number] }) {
+  const blockers = 'readinessBlockers' in product && Array.isArray(product.readinessBlockers)
+    ? product.readinessBlockers as string[]
+    : [];
+  const canPublish = ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState) && blockers.length === 0;
+
   return (
     <details className="group rounded-md border border-surface-line bg-surface-ink">
       <summary className="grid cursor-pointer list-none gap-3 px-4 py-3 outline-none focus:ring-2 focus:ring-accent lg:grid-cols-[minmax(0,1fr)_auto]">
         <div>
           <div className="flex flex-wrap items-center gap-2">
+            {canPublish ? (
+              <label className="flex items-center gap-2 rounded-md border border-surface-line bg-black/30 px-2 py-1 text-xs font-bold text-neutral-200">
+                <input
+                  aria-label={`Select ${product.customerTitle} for bulk publishing`}
+                  data-bulk-group="iron-sprue-product-bulk-publish"
+                  form="iron-sprue-product-bulk-publish"
+                  name="productId"
+                  type="checkbox"
+                  value={product.id}
+                />
+                Select
+              </label>
+            ) : null}
             <h2 className="text-lg font-bold">{product.customerTitle}</h2>
             <StatePill>{product.publicationState}</StatePill>
           </div>
@@ -311,17 +377,34 @@ function ProductAdminCard({ product }: { product: Awaited<ReturnType<typeof list
       <div className="grid gap-4 border-t border-surface-line p-4 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div className="space-y-3">
           <p className="max-w-4xl text-sm leading-6 text-neutral-300">{product.shortDescription ?? 'No short description recorded.'}</p>
+          {blockers.length ? (
+            <div className="rounded-md border border-amber-500/40 bg-amber-950/20 p-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-200">Publication blockers</p>
+              <ul className="mt-2 grid gap-1 text-sm text-amber-100">
+                {blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}
+              </ul>
+            </div>
+          ) : (
+            <p className="rounded-md border border-emerald-500/40 bg-emerald-950/20 p-3 text-sm font-semibold text-emerald-100">Ready to publish.</p>
+          )}
           <ProductFlagForm product={product} />
         </div>
-        <form action={updateIronSpruePublicationStateAction} className="grid content-start gap-3">
-          <input type="hidden" name="productId" value={product.id} />
-          <Field label="Publication state">
-            <select name="publicationState" defaultValue={product.publicationState} className={fieldClass}>
-              {['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY', 'PUBLISHED', 'ARCHIVED'].map((state) => <option key={state} value={state}>{state}</option>)}
-            </select>
-          </Field>
-          <Button type="submit" variant="outline">Update state</Button>
-        </form>
+        <div className="grid content-start gap-3">
+          <form action={publishIronSprueProductAction} className="grid gap-2">
+            <input type="hidden" name="productId" value={product.id} />
+            <Button type="submit" disabled={!canPublish} variant={canPublish ? 'primary' : 'outline'}>Publish product</Button>
+            {!canPublish && product.publicationState !== 'PUBLISHED' ? <p className="text-xs text-neutral-500">Publishing unlocks when all mandatory review checks pass.</p> : null}
+          </form>
+          <form action={updateIronSpruePublicationStateAction} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-3">
+            <input type="hidden" name="productId" value={product.id} />
+            <Field label="Manual override">
+              <select name="publicationState" defaultValue={product.publicationState === 'READY' ? 'READY_TO_PUBLISH' : product.publicationState} className={fieldClass}>
+                {['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY_TO_PUBLISH', 'PUBLISHED', 'ARCHIVED'].map((state) => <option key={state} value={state}>{state}</option>)}
+              </select>
+            </Field>
+            <Button type="submit" variant="outline">Update state</Button>
+          </form>
+        </div>
       </div>
     </details>
   );
@@ -334,13 +417,14 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
   const categoryId = param(searchParams, 'categoryId');
   const supplierId = param(searchParams, 'supplierId');
   const publicationState = param(searchParams, 'state');
+  const normalizedPublicationState = publicationState === 'READY' ? 'READY_TO_PUBLISH' : publicationState;
   const result = await listIronSprueAdminProducts({
     ...(search ? { search } : {}),
     ...(brandId ? { brandId } : {}),
     ...(categoryId ? { categoryId } : {}),
     ...(supplierId ? { supplierId } : {}),
-    ...(publicationState && ['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY', 'PUBLISHED', 'ARCHIVED'].includes(publicationState)
-      ? { publicationState: publicationState as 'DRAFT' | 'CONTENT_PENDING' | 'MEDIA_PENDING' | 'REVIEW_REQUIRED' | 'READY' | 'PUBLISHED' | 'ARCHIVED' }
+    ...(normalizedPublicationState && ['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY_TO_PUBLISH', 'PUBLISHED', 'ARCHIVED'].includes(normalizedPublicationState)
+      ? { publicationState: normalizedPublicationState as 'DRAFT' | 'CONTENT_PENDING' | 'MEDIA_PENDING' | 'REVIEW_REQUIRED' | 'READY_TO_PUBLISH' | 'PUBLISHED' | 'ARCHIVED' }
       : {}),
     pageSize: 81,
   });
@@ -350,6 +434,24 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
     <div className="space-y-4">
       <Card>
         <CardContent>
+          <div className="mb-4 flex flex-wrap gap-2">
+            {[
+              ['READY_TO_PUBLISH', 'Ready to publish'],
+              ['MEDIA_PENDING', 'Media pending'],
+              ['CONTENT_PENDING', 'Content pending'],
+              ['REVIEW_REQUIRED', 'Review required'],
+              ['PUBLISHED', 'Published'],
+            ].map(([state, label]) => (
+              <a
+                aria-current={publicationState === state ? 'page' : undefined}
+                className={`rounded-md border px-3 py-2 text-sm font-semibold ${publicationState === state ? 'border-accent bg-accent/20 text-accent' : 'border-surface-line text-neutral-300'}`}
+                href={`/iron-sprue-admin/products?state=${state}`}
+                key={state}
+              >
+                {label}
+              </a>
+            ))}
+          </div>
           <form className="grid gap-3 lg:grid-cols-[minmax(220px,1.5fr)_repeat(4,minmax(150px,1fr))_auto]">
             <Field label="Search">
               <input name="q" defaultValue={param(searchParams, 'q') ?? ''} className={fieldClass} placeholder="SKU, title, barcode or MPN" />
@@ -357,7 +459,7 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
             <Field label="State">
               <select name="state" defaultValue={publicationState ?? ''} className={fieldClass}>
                 <option value="">All states</option>
-                {['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY', 'PUBLISHED', 'ARCHIVED'].map((state) => <option key={state} value={state}>{state}</option>)}
+                {['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY_TO_PUBLISH', 'PUBLISHED', 'ARCHIVED'].map((state) => <option key={state} value={state}>{state}</option>)}
               </select>
             </Field>
             <Field label="Brand">
@@ -392,6 +494,13 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
         }
       >
         <div className="space-y-3">
+          <form id="iron-sprue-product-bulk-publish" action={bulkPublishIronSprueProductsAction} />
+          <IronSprueBulkApprovalControls
+            actions={[{ label: 'Publish selected', value: 'PUBLISHED' }]}
+            formId="iron-sprue-product-bulk-publish"
+            itemLabel="eligible products"
+            totalCount={result.products.filter((product) => ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState)).length}
+          />
           {result.products.map((product) => <ProductAdminCard key={product.id} product={product} />)}
         </div>
       </AdminDisclosure>
@@ -561,6 +670,131 @@ function CustomerContentReviewPreview({ value }: { value: unknown }) {
   );
 }
 
+const commercialReviewFields = [
+  'supplier',
+  'supplierUnitCostMinor',
+  'landedCostMinor',
+  'grossPriceMinor',
+  'compareAtPriceMinor',
+  'retailPrice',
+  'margin',
+  'vatRate',
+  'inventory',
+  'expectedQuantity',
+  'sourceRow',
+  'sourceValidation',
+  'import',
+] as const;
+
+function isOperationalReviewField(fieldName: string) {
+  const normalized = fieldName.replace(/[^a-z0-9]/gi, '').toLowerCase();
+  return !isIronSprueStorefrontContentReviewField(fieldName)
+    || commercialReviewFields.some((field) => normalized.includes(field.toLowerCase()));
+}
+
+function ProductDescriptorContentPreview({
+  product,
+}: {
+  product: Awaited<ReturnType<typeof listIronSprueAdminContentReviews>>[number]['product'];
+}) {
+  const featureBullets = Array.isArray(product.featureBullets) ? product.featureBullets.filter(Boolean) : [];
+  const specifications = product.specifications && typeof product.specifications === 'object'
+    ? Object.entries(product.specifications as Record<string, unknown>).filter(([, value]) => value != null && String(value).trim())
+    : [];
+
+  return (
+    <div className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-3 text-sm text-neutral-200">
+      <p><span className="font-semibold text-neutral-100">PDP title:</span> {product.customerTitle}</p>
+      <p><span className="font-semibold text-neutral-100">Short description:</span> {product.shortDescription ?? 'Not populated'}</p>
+      <div>
+        <p className="font-semibold text-neutral-100">Full description</p>
+        <p className="mt-1 leading-6 text-neutral-300">{product.fullDescription ?? 'Not populated'}</p>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <div>
+          <p className="font-semibold text-neutral-100">Feature bullets</p>
+          {featureBullets.length ? (
+            <ul className="mt-1 list-disc space-y-1 pl-5 text-neutral-300">
+              {featureBullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
+            </ul>
+          ) : <p className="mt-1 text-neutral-500">Not populated</p>}
+        </div>
+        <div>
+          <p className="font-semibold text-neutral-100">Specifications</p>
+          {specifications.length ? (
+            <dl className="mt-1 grid gap-1 text-neutral-300">
+              {specifications.map(([key, value]) => (
+                <div key={key} className="grid grid-cols-[120px_1fr] gap-2">
+                  <dt className="text-neutral-500">{key}</dt>
+                  <dd>{String(value)}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : <p className="mt-1 text-neutral-500">Not populated</p>}
+        </div>
+      </div>
+      <div className="grid gap-2 rounded-md border border-surface-line bg-black/30 p-3 md:grid-cols-2">
+        <p><span className="font-semibold text-neutral-100">Brand:</span> {product.brand?.name ?? 'Not assigned'}</p>
+        <p><span className="font-semibold text-neutral-100">Category:</span> {product.category?.name ?? 'Not assigned'}</p>
+        <p><span className="font-semibold text-neutral-100">Product type:</span> {product.buildType ?? 'Not populated'}</p>
+        <p><span className="font-semibold text-neutral-100">State:</span> {product.publicationState}</p>
+        <p><span className="font-semibold text-neutral-100">SEO title:</span> {product.seoTitle ?? 'Not populated'}</p>
+        <p><span className="font-semibold text-neutral-100">Meta description:</span> {product.metaDescription ?? 'Not populated'}</p>
+      </div>
+    </div>
+  );
+}
+
+function ContentReviewCard({
+  bulkPublishFormId,
+  review,
+  variant = 'storefront',
+}: {
+  bulkPublishFormId: string;
+  review: Awaited<ReturnType<typeof listIronSprueAdminContentReviews>>[number];
+  variant?: 'storefront' | 'operational';
+}) {
+  return (
+    <Card key={review.id}>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div><h2 className="font-bold">{review.product.customerTitle}</h2><p className="text-sm text-neutral-400">{review.product.sku} - {review.fieldName}</p></div>
+          <div className="flex flex-wrap items-center gap-2">
+            {review.status !== 'APPROVED' ? (
+              <label className="flex items-center gap-2 rounded-md border border-surface-line bg-black/30 px-2 py-1 text-xs font-bold text-neutral-200">
+                <input
+                  aria-label={`Select ${review.product.customerTitle} ${review.fieldName} for bulk approval`}
+                  data-bulk-group="iron-sprue-content-bulk-approval"
+                  form="iron-sprue-content-bulk-approval"
+                  name="reviewId"
+                  type="checkbox"
+                  value={review.id}
+                />
+                Select
+              </label>
+            ) : null}
+            <StatePill>{review.status}</StatePill>
+          </div>
+        </div>
+        <ReviewProductPublishControls bulkFormId={bulkPublishFormId} product={review.product} />
+        {variant === 'storefront'
+          ? <ProductDescriptorContentPreview product={review.product} />
+          : <CustomerContentReviewPreview value={review.proposedValue} />}
+        {review.sourceReference ? <p className="text-sm text-neutral-400">Source: {review.sourceReference}</p> : null}
+        <div className="flex flex-wrap gap-2">
+          {(['APPROVED', 'PENDING', 'CONFLICT', 'REJECTED'] as const).map((status) => (
+            <form key={status} action={updateIronSprueContentReviewAction}>
+              <input type="hidden" name="reviewId" value={review.id} />
+              <input type="hidden" name="status" value={status} />
+              <Button type="submit" size="sm" variant={status === 'APPROVED' ? 'primary' : 'outline'}>{status}</Button>
+            </form>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function ProductMediaUploadForm({
   product,
   role,
@@ -595,15 +829,31 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
   const productGroups = groupMediaByProduct(reviewableMedia, media, mode);
   const hiddenCount = media.length - reviewableMedia.length;
   const bulkApprovableMediaCount = reviewableMedia.filter((asset) => asset.approvalState !== 'APPROVED').length;
+  const bulkPublishableProductCount = new Set(productGroups
+    .map((group) => group.product)
+    .filter(productCanAttemptPublish)
+    .map((product) => product?.id)).size;
 
   return (
     <div className="space-y-4">
       <ReviewTabs baseHref="/iron-sprue-admin/media" mode={mode} pendingCount={pendingCount} approvedCount={approvedCount} rejectedCount={rejectedCount} allCount={media.length} />
       <form id="iron-sprue-media-bulk-approval" action={bulkApproveIronSprueMediaAction} />
+      <form id="iron-sprue-media-product-bulk-publish" action={bulkPublishIronSprueProductsAction} />
       <IronSprueBulkApprovalControls
+        actions={[
+          { label: 'Approve selected', value: 'APPROVED' },
+          { label: 'Needs review', value: 'REVIEW_REQUIRED', tone: 'secondary' },
+          { label: 'Reject selected', value: 'REJECTED', tone: 'warning' },
+        ]}
         formId="iron-sprue-media-bulk-approval"
         itemLabel="media records"
         totalCount={bulkApprovableMediaCount}
+      />
+      <IronSprueBulkApprovalControls
+        actions={[{ label: 'Publish selected products', value: 'PUBLISHED' }]}
+        formId="iron-sprue-media-product-bulk-publish"
+        itemLabel="products"
+        totalCount={bulkPublishableProductCount}
       />
       {!reviewableMedia.length ? (
         <EmptyNote>{mode === 'approved' ? 'No approved Iron Sprue media assets found.' : mode === 'rejected' ? 'No rejected Iron Sprue media assets found.' : mode === 'all' ? 'No Iron Sprue media assets found.' : 'No Iron Sprue media assets currently require approval.'}</EmptyNote>
@@ -620,6 +870,7 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
               <h2 className="font-bold">{group.product?.customerTitle ?? 'Unassigned media'}</h2>
               <p className="text-sm text-neutral-400">{group.product?.sku ?? 'No SKU'} - {group.product?.publicationState ?? 'No product state'}</p>
             </div>
+            <ReviewProductPublishControls bulkFormId="iron-sprue-media-product-bulk-publish" product={group.product} />
             <div className="grid gap-4 xl:grid-cols-2">
               {(mode === 'all'
                 ? (['catalogue-primary', 'workshop-photography', 'manufacturer-original', 'completed-result'] as const)
@@ -686,61 +937,52 @@ async function ContentReviewSection({ searchParams }: { searchParams?: SearchPar
   const pendingReviews = allReviews.filter((review) => review.status === 'PENDING' || review.status === 'CONFLICT');
   const approvedReviews = allReviews.filter((review) => review.status === 'APPROVED');
   const rejectedReviews = allReviews.filter((review) => review.status === 'REJECTED');
-  const reviews = mode === 'approved'
+  const selectedReviews = mode === 'approved'
     ? approvedReviews
     : mode === 'rejected'
       ? rejectedReviews
       : mode === 'all'
         ? allReviews
         : pendingReviews;
+  const storefrontReviews = selectedReviews.filter((review) => !isOperationalReviewField(review.fieldName));
+  const operationalReviews = selectedReviews.filter((review) => isOperationalReviewField(review.fieldName));
+  const reviews = [...storefrontReviews, ...operationalReviews];
   const bulkApprovableReviewCount = reviews.filter((review) => review.status !== 'APPROVED').length;
+  const bulkPublishableProductCount = new Set(reviews
+    .map((review) => review.product)
+    .filter(productCanAttemptPublish)
+    .map((product) => product.id)).size;
 
   return (
     <div className="space-y-3">
       <ReviewTabs baseHref="/iron-sprue-admin/content-review" mode={mode} pendingCount={pendingReviews.length} approvedCount={approvedReviews.length} rejectedCount={rejectedReviews.length} allCount={allReviews.length} />
       <form id="iron-sprue-content-bulk-approval" action={bulkApproveIronSprueContentReviewsAction} />
+      <form id="iron-sprue-content-product-bulk-publish" action={bulkPublishIronSprueProductsAction} />
       <IronSprueBulkApprovalControls
+        actions={[
+          { label: 'Approve selected', value: 'APPROVED' },
+          { label: 'Needs review', value: 'PENDING', tone: 'secondary' },
+          { label: 'Reject selected', value: 'REJECTED', tone: 'warning' },
+        ]}
         formId="iron-sprue-content-bulk-approval"
         itemLabel="content review records"
         totalCount={bulkApprovableReviewCount}
       />
+      <IronSprueBulkApprovalControls
+        actions={[{ label: 'Publish selected products', value: 'PUBLISHED' }]}
+        formId="iron-sprue-content-product-bulk-publish"
+        itemLabel="products"
+        totalCount={bulkPublishableProductCount}
+      />
       {!reviews.length ? <EmptyNote>{mode === 'approved' ? 'No approved Iron Sprue content reviews found.' : mode === 'rejected' ? 'No rejected Iron Sprue content reviews found.' : mode === 'all' ? 'No Iron Sprue content review records found.' : 'No Iron Sprue content reviews currently require approval.'}</EmptyNote> : null}
-      {reviews.map((review) => (
-        <Card key={review.id}>
-          <CardContent className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div><h2 className="font-bold">{review.product.customerTitle}</h2><p className="text-sm text-neutral-400">{review.product.sku} - {review.fieldName}</p></div>
-              <div className="flex flex-wrap items-center gap-2">
-                {review.status !== 'APPROVED' ? (
-                  <label className="flex items-center gap-2 rounded-md border border-surface-line bg-black/30 px-2 py-1 text-xs font-bold text-neutral-200">
-                    <input
-                      aria-label={`Select ${review.product.customerTitle} ${review.fieldName} for bulk approval`}
-                      data-bulk-group="iron-sprue-content-bulk-approval"
-                      form="iron-sprue-content-bulk-approval"
-                      name="reviewId"
-                      type="checkbox"
-                      value={review.id}
-                    />
-                    Select
-                  </label>
-                ) : null}
-                <StatePill>{review.status}</StatePill>
-              </div>
-            </div>
-            <CustomerContentReviewPreview value={review.proposedValue} />
-            {review.sourceReference ? <p className="text-sm text-neutral-400">Source: {review.sourceReference}</p> : null}
-            <div className="flex flex-wrap gap-2">
-              {(['APPROVED', 'PENDING', 'CONFLICT', 'REJECTED'] as const).map((status) => (
-                <form key={status} action={updateIronSprueContentReviewAction}>
-                  <input type="hidden" name="reviewId" value={review.id} />
-                  <input type="hidden" name="status" value={status} />
-                  <Button type="submit" size="sm" variant={status === 'APPROVED' ? 'primary' : 'outline'}>{status}</Button>
-                </form>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+      {storefrontReviews.map((review) => <ContentReviewCard bulkPublishFormId="iron-sprue-content-product-bulk-publish" key={review.id} review={review} />)}
+      {operationalReviews.length ? (
+        <AdminDisclosure summary={<span>Media / Commercial / Import Review <span className="text-neutral-500">({operationalReviews.length})</span></span>}>
+          <div className="space-y-3">
+            {operationalReviews.map((review) => <ContentReviewCard bulkPublishFormId="iron-sprue-content-product-bulk-publish" key={review.id} review={review} variant="operational" />)}
+          </div>
+        </AdminDisclosure>
+      ) : null}
     </div>
   );
 }

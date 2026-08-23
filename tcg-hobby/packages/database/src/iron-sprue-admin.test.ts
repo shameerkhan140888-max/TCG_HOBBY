@@ -7,6 +7,7 @@ import {
   createIronSprueCustomerOrderRequest,
   createIronSprueAdminProduct,
   createIronSprueManualOrder,
+  deriveIronSprueProductReadinessState,
   evaluateIronSprueProductReadiness,
   getIronSprueAdminDashboard,
   getIronSprueAdminPermissionMatrix,
@@ -15,7 +16,10 @@ import {
   reconcileIronSprueInventoryAvailableStock,
   resolveIronSprueCustomerOrderRequest,
   resolveIronSprueAdminPermissions,
+  publishIronSprueAdminProduct,
+  publishIronSprueAdminProducts,
   setIronSprueProductPublicationState,
+  summarizeIronSprueProductReadinessBlockers,
   updateIronSprueAdminCategoryControls,
   updateIronSprueAdminOrderFulfilmentStatus,
   updateIronSprueAdminMediaApproval,
@@ -54,7 +58,7 @@ function readyProduct(overrides: Record<string, unknown> = {}) {
     ],
     contentReviews: [],
     ...overrides,
-  } as never;
+  } as any;
 }
 
 describe('Iron Sprue dedicated Admin foundation', () => {
@@ -84,7 +88,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
   it('requires Image 2, content, SEO and review completion before publication readiness', () => {
     const checks = evaluateIronSprueProductReadiness(readyProduct({
       mediaAssets: [],
-      contentReviews: [{ status: 'PENDING' }],
+      contentReviews: [{ fieldName: 'fullDescription', status: 'PENDING' }],
       metaDescription: null,
     }));
 
@@ -94,16 +98,81 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     expect(evaluateIronSprueProductReadiness(readyProduct()).every((check) => check.passed)).toBe(true);
   });
 
-  it('blocks READY or PUBLISHED when readiness checks fail', async () => {
+  it('derives publication states and blockers from media and content readiness', () => {
+    expect(deriveIronSprueProductReadinessState(readyProduct())).toBe('READY_TO_PUBLISH');
+    expect(deriveIronSprueProductReadinessState(readyProduct({ mediaAssets: [] }))).toBe('MEDIA_PENDING');
+    expect(deriveIronSprueProductReadinessState(readyProduct({ fullDescription: null }))).toBe('CONTENT_PENDING');
+    expect(deriveIronSprueProductReadinessState(readyProduct({ contentReviews: [{ fieldName: 'fullDescription', status: 'CONFLICT' }] }))).toBe('REVIEW_REQUIRED');
+    expect(deriveIronSprueProductReadinessState(readyProduct({ contentReviews: [{ fieldName: 'image-2-candidate', status: 'CONFLICT' }] }))).toBe('READY_TO_PUBLISH');
+    expect(summarizeIronSprueProductReadinessBlockers(readyProduct({
+      mediaAssets: [],
+      contentReviews: [{ fieldName: 'fullDescription', status: 'CONFLICT' }, { fieldName: 'shortDescription', status: 'PENDING' }, { fieldName: 'image-2-candidate', status: 'CONFLICT' }],
+    }))).toEqual(expect.arrayContaining([
+      '1 required media asset pending',
+      '1 identity/content conflict unresolved',
+      '1 content approval required',
+    ]));
+  });
+
+  it('blocks READY_TO_PUBLISH or PUBLISHED when readiness checks fail', async () => {
     const client = {
       ironSprueAdminProduct: {
         findFirst: vi.fn().mockResolvedValue(readyProduct({ mediaAssets: [] })),
       },
     };
 
-    await expect(setIronSprueProductPublicationState('product-1', 'READY', actor, client as never)).rejects.toThrow(/media/);
+    await expect(setIronSprueProductPublicationState('product-1', 'READY_TO_PUBLISH', actor, client as never)).rejects.toThrow(/media/);
     expect(client.ironSprueAdminProduct.findFirst).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: 'product-1', storeCode: 'IRON_SPRUE' },
+    }));
+  });
+
+  it('publishes a ready product through the canonical product publication state', async () => {
+    const product = readyProduct({ publicationState: 'READY_TO_PUBLISH', readyApprovedAt: new Date('2026-08-20T00:00:00.000Z') });
+    const tx = {
+      ironSprueAdminProduct: { update: vi.fn().mockResolvedValue({ ...product, publicationState: 'PUBLISHED' }) },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+    const client = {
+      ironSprueAdminProduct: { findFirst: vi.fn().mockResolvedValue(product) },
+      $transaction: vi.fn((callback) => callback(tx)),
+    };
+
+    await publishIronSprueAdminProduct('product-1', actor, client as never);
+
+    expect(tx.ironSprueAdminProduct.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'product-1' },
+      data: expect.objectContaining({ publicationState: 'PUBLISHED', publishedAt: expect.any(Date) }),
+    }));
+  });
+
+  it('bulk-publishes only products without unresolved review blockers', async () => {
+    const ready = readyProduct({ id: 'ready-1', sku: 'IS-READY', publicationState: 'READY_TO_PUBLISH' });
+    const blocked = readyProduct({ id: 'blocked-1', sku: 'IS-BLOCKED', contentReviews: [{ fieldName: 'fullDescription', status: 'CONFLICT' }] });
+    const client = {
+      ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue([ready, blocked]) },
+      $transaction: vi.fn(),
+    };
+
+    await expect(publishIronSprueAdminProducts(['ready-1', 'blocked-1'], actor, client as never)).rejects.toThrow(/identity\/content conflict/);
+    expect(client.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('bulk-publishes eligible selected products', async () => {
+    const ready = readyProduct({ id: 'ready-1', sku: 'IS-READY', publicationState: 'READY_TO_PUBLISH' });
+    const tx = {
+      ironSprueAdminProduct: { update: vi.fn().mockResolvedValue({ ...ready, publicationState: 'PUBLISHED' }) },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+    const client = {
+      ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue([ready]) },
+      $transaction: vi.fn((callback) => callback(tx)),
+    };
+
+    await publishIronSprueAdminProducts(['ready-1'], actor, client as never);
+
+    expect(tx.ironSprueAdminProduct.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ publicationState: 'PUBLISHED' }),
     }));
   });
 
@@ -282,6 +351,12 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         updateMany: vi.fn().mockResolvedValue({ count: 0 }),
         update: vi.fn().mockResolvedValue({ ...media, approvalState: 'REJECTED', isPrimary: false }),
       },
+      ironSprueAdminProduct: {
+        findFirst: vi.fn().mockResolvedValue(readyProduct({
+          publicationState: 'MEDIA_PENDING',
+          mediaAssets: [{ role: 'catalogue-primary', approvalState: 'REJECTED', isPrimary: false }],
+        })),
+      },
       ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
     };
 
@@ -321,6 +396,10 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         findFirst: vi.fn().mockResolvedValue(media),
         updateMany: vi.fn().mockResolvedValue({ count: 1 }),
         update: vi.fn().mockResolvedValue({ ...media, approvalState: 'APPROVED', isPrimary: true }),
+      },
+      ironSprueAdminProduct: {
+        findFirst: vi.fn().mockResolvedValue(readyProduct()),
+        update: vi.fn().mockResolvedValue(readyProduct({ publicationState: 'READY_TO_PUBLISH' })),
       },
       ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
     };
