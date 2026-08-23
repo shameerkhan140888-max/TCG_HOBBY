@@ -22,22 +22,15 @@ if (!Object.hasOwn(commands, mode)) {
 process.env.TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES = '1';
 process.env.NEXTJS_ENV ??= 'production';
 
+runWorkspaceCommand('npm', ['run', 'build', '-w', '@tcg-hobby/database'], workspaceRoot);
+
 if (mode !== 'build') {
   process.env.TCG_HOBBY_PRISMA_RUNTIME = 'worker';
   ensurePrismaWasmModuleDirectory();
 }
 
 const [command, args] = commands[mode];
-const result = spawnSync(command, args, {
-  cwd: storefrontRootUrl,
-  env: process.env,
-  shell: true,
-  stdio: 'inherit',
-});
-
-if (result.status !== 0) {
-  process.exit(result.status ?? 1);
-}
+runWorkspaceCommand(command, args, storefrontRoot);
 
 if (mode === 'build') {
   copyPrismaWasmAssets();
@@ -79,4 +72,17 @@ function findPrismaWasmDirectory() {
   ];
 
   return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0];
+}
+
+function runWorkspaceCommand(command, args, cwd) {
+  const result = spawnSync(command, args, {
+    cwd,
+    env: process.env,
+    shell: true,
+    stdio: 'inherit',
+  });
+
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
 }
