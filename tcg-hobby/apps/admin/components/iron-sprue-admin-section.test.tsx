@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.stubGlobal('React', React);
 
 const mocks = vi.hoisted(() => ({
+  getIronSprueAdminDashboard: vi.fn(),
   getIronSprueAdminReferenceData: vi.fn(),
   getIronSprueAdminStorefrontControls: vi.fn(),
   getIronSprueAdminWorkspaceCards: vi.fn(),
@@ -16,7 +17,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@tcg-hobby/database', () => ({
-  getIronSprueAdminDashboard: vi.fn(),
+  getIronSprueAdminDashboard: mocks.getIronSprueAdminDashboard,
   getIronSprueAdminReferenceData: mocks.getIronSprueAdminReferenceData,
   getIronSprueAdminStorefrontControls: mocks.getIronSprueAdminStorefrontControls,
   getIronSprueAdminWorkspaceCards: mocks.getIronSprueAdminWorkspaceCards,
@@ -99,12 +100,30 @@ const cards = [
   { key: 'media', label: 'Media', href: '/iron-sprue-admin/media', status: 'empty', requiredPermission: 'media:approve', description: 'Image 2, original, workshop and hero media review.' },
   { key: 'homepage', label: 'Storefront', href: '/iron-sprue-admin/homepage', status: 'empty', requiredPermission: 'homepage:manage', description: 'Homepage placements, category order and brand carousel controls.' },
   { key: 'heroes', label: 'Heroes', href: '/iron-sprue-admin/heroes', status: 'empty', requiredPermission: 'heroes:manage', description: 'Hero carousel artwork, CTA route and display ordering.' },
+  { key: 'settings', label: 'Settings', href: '/iron-sprue-admin/settings', status: 'ready', requiredPermission: 'roles:manage', description: 'Environment and operational readiness.' },
 ] as const;
 
 describe('IronSprueAdminSection operational controls', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getIronSprueAdminWorkspaceCards.mockReturnValue(cards);
     mocks.listIronSprueAdminProducts.mockResolvedValue({ products: [] });
+    mocks.getIronSprueAdminDashboard.mockResolvedValue({
+      storeCode: 'IRON_SPRUE',
+      environment: 'railway-production',
+      databaseTarget: {
+        label: 'RAILWAY PRODUCTION',
+        source: 'IRON_SPRUE_ADMIN_DATABASE_URL',
+        host: 'railway.internal',
+        database: 'railway',
+      },
+      databaseStatus: 'connected',
+      r2Status: 'configured',
+      workerReadStatus: 'configured',
+      warnings: [],
+      metrics: [],
+      workspace: cards,
+    });
     mocks.getIronSprueAdminReferenceData.mockResolvedValue({ brands: [], categories: [], suppliers: [] });
     mocks.getIronSprueAdminStorefrontControls.mockResolvedValue({
       homepagePlacements: [],
@@ -126,6 +145,16 @@ describe('IronSprueAdminSection operational controls', () => {
       auditLog: [],
     });
     mocks.listIronSprueR2Objects.mockResolvedValue([]);
+  });
+
+  it('shows the explicit Iron Sprue admin database target in settings', async () => {
+    const markup = await renderAsync(await IronSprueAdminSection({ section: 'settings' }));
+
+    expect(markup).toContain('Admin database target');
+    expect(markup).toContain('RAILWAY PRODUCTION');
+    expect(markup).toContain('IRON_SPRUE_ADMIN_DATABASE_URL');
+    expect(markup).toContain('railway.internal');
+    expect(markup).toContain('railway');
   });
 
   it('shows only approval-required media in the pending queue with upload controls', async () => {
@@ -349,6 +378,34 @@ describe('IronSprueAdminSection operational controls', () => {
         createdAt: new Date('2026-08-11T00:00:00.000Z'),
         updatedAt: new Date('2026-08-11T00:00:00.000Z'),
       },
+      {
+        id: 'review-commercial-import',
+        productId: 'product-3',
+        product: {
+          id: 'product-3',
+          sku: 'IS-CUB-MC093H',
+          customerTitle: "St Basil's Cathedral",
+          shortDescription: 'Landmark puzzle descriptor copy',
+          fullDescription: 'Build a colourful architectural display model inspired by St Basil cathedral.',
+          featureBullets: ['Detailed architectural puzzle', 'Display-ready model'],
+          specifications: { pieces: '214', buildTime: '4-6 hours', material: 'printed foam board' },
+          seoTitle: "St Basil's Cathedral 3D puzzle",
+          metaDescription: "Build St Basil's Cathedral as a display puzzle.",
+          buildType: '3D puzzle',
+          publicationState: 'REVIEW_REQUIRED',
+          brand: { name: 'CubicFun' },
+          category: { name: 'Landmark Models' },
+        },
+        fieldName: 'launch-import',
+        proposedValue: { sourceRow: 73, retailPriceMinor: 1849, supplierUnitCostMinor: 594 },
+        sourceReference: 'Iron_Sprue_Updated_Sales_Prices_and_Margins.xlsx#Sales Prices:row-73',
+        status: 'CONFLICT',
+        reviewedById: null,
+        reviewedAt: null,
+        storeCode: 'IRON_SPRUE',
+        createdAt: new Date('2026-08-11T00:00:00.000Z'),
+        updatedAt: new Date('2026-08-11T00:00:00.000Z'),
+      },
     ]);
 
     const pendingMarkup = await renderAsync(await IronSprueAdminSection({ section: 'content-review' }));
@@ -364,6 +421,9 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(pendingMarkup).toContain('Needs review');
     expect(pendingMarkup).toContain('Reject selected');
     expect(pendingMarkup).not.toContain('Toyota 2000GT Red');
+    expect(pendingMarkup).not.toContain("St Basil's Cathedral");
+    expect(pendingMarkup).not.toContain('retailPriceMinor');
+    expect(pendingMarkup).not.toContain('supplierUnitCostMinor');
 
     const approvedMarkup = await renderAsync(await IronSprueAdminSection({
       section: 'content-review',
@@ -371,8 +431,10 @@ describe('IronSprueAdminSection operational controls', () => {
     }));
     expect(approvedMarkup).toContain('Toyota 2000GT Red');
     expect(approvedMarkup).toContain('Toyota PDP full descriptor copy');
-    expect(approvedMarkup).toContain('Media / Commercial / Import Review');
-    expect(approvedMarkup).toContain('media generation metadata');
+    expect(approvedMarkup).not.toContain('Media / Commercial / Import Review');
+    expect(approvedMarkup).not.toContain('media generation metadata');
+    expect(approvedMarkup).not.toContain('retailPriceMinor');
+    expect(approvedMarkup).not.toContain('supplierUnitCostMinor');
     expect(approvedMarkup).toContain('Publish selected products');
     expect(approvedMarkup).toContain('Publish product');
     expect(approvedMarkup).toContain('data-bulk-group="iron-sprue-content-product-bulk-publish"');
@@ -443,6 +505,42 @@ describe('IronSprueAdminSection operational controls', () => {
         storeCode: 'IRON_SPRUE',
         createdAt: new Date('2026-08-11T00:00:00.000Z'),
         updatedAt: new Date('2026-08-11T00:00:00.000Z'),
+      }, {
+        id: 'placement-2',
+        placementKey: 'featured-products',
+        title: 'Opening bench picks.',
+        ctaLabel: 'See new arrivals',
+        ctaHref: '/shop?sort=new',
+        imageUrl: null,
+        active: true,
+        sortOrder: 0,
+        storeCode: 'IRON_SPRUE',
+        createdAt: new Date('2026-08-11T00:00:00.000Z'),
+        updatedAt: new Date('2026-08-11T00:00:00.000Z'),
+      }, {
+        id: 'placement-3',
+        placementKey: 'featured-product:lamborghini-aventador-blue',
+        title: 'Lamborghini Aventador Blue',
+        ctaLabel: 'Shop now',
+        ctaHref: '/products/lamborghini-aventador-blue',
+        imageUrl: null,
+        active: true,
+        sortOrder: 0,
+        storeCode: 'IRON_SPRUE',
+        createdAt: new Date('2026-08-11T00:00:00.000Z'),
+        updatedAt: new Date('2026-08-11T00:00:00.000Z'),
+      }, {
+        id: 'placement-4',
+        placementKey: 'product-section:our-aoshima-picks:lamborghini-aventador-blue',
+        title: 'Our favourite Aoshima kits',
+        ctaLabel: '',
+        ctaHref: '/products/lamborghini-aventador-blue',
+        imageUrl: null,
+        active: true,
+        sortOrder: 0,
+        storeCode: 'IRON_SPRUE',
+        createdAt: new Date('2026-08-11T00:00:00.000Z'),
+        updatedAt: new Date('2026-08-11T00:00:00.000Z'),
       }],
       heroes: [],
       specialOffers: [],
@@ -461,21 +559,42 @@ describe('IronSprueAdminSection operational controls', () => {
       },
       auditLog: [],
     });
-    mocks.listIronSprueAdminProducts.mockResolvedValue({ products: [] });
+    mocks.listIronSprueAdminProducts.mockResolvedValue({
+      products: [{
+        id: 'product-lambo',
+        sku: 'IS-AOS-06349',
+        slug: 'lamborghini-aventador-blue',
+        customerTitle: 'Lamborghini Aventador Blue',
+        mediaAssets: [{
+          approvalState: 'APPROVED',
+          role: 'catalogue-primary',
+          url: null,
+          storageKey: 'products/lambo.png',
+        }],
+      }],
+    });
 
     const markup = await renderAsync(await IronSprueAdminSection({ section: 'homepage' }));
 
-    expect(markup).toContain('Promo banner and storefront placements');
+    expect(markup).toContain('Promo strips and banners');
     expect(markup).toContain('Current promo banner state');
     expect(markup).toContain('Free UK delivery on orders over £75');
     expect(markup).toContain('promo-banner');
-    expect(markup).toContain('Create promo/banner placement');
-    expect(markup).toContain('Storefront typography');
-    expect(markup).toContain('Save typography controls');
+    expect(markup).toContain('Create promo banner');
+    expect(markup).toContain('Opening bench picks row');
+    expect(markup).toContain('Current products in this row');
+    expect(markup).toContain('Lamborghini Aventador Blue');
+    expect(markup).toContain('Additional homepage product rows');
+    expect(markup).toContain('Our favourite Aoshima kits');
+    expect(markup).toContain('Row key:');
+    expect(markup).toContain('our-aoshima-picks');
+    expect(markup).toContain('Add product to opening row');
+    expect(markup).not.toContain('Featured products');
+    expect(markup).not.toContain('Edit product-section:our-aoshima-picks');
     expect(markup).toContain('Brands we stock carousel');
     expect(markup).toContain('Save brand controls');
     expect(markup).toContain('Aoshima');
-    expect(markup).toContain('Featured products');
-    expect(markup).toContain('Add featured product');
+    expect(markup).toContain('Storefront typography');
+    expect(markup).toContain('Save typography controls');
   });
 });

@@ -26,6 +26,7 @@ import {
   upsertIronSprueAdminHero,
   upsertIronSprueAdminTypographySettings,
 } from './iron-sprue-admin.js';
+import { getIronSprueAdminDatabaseTargetInfo } from './client.js';
 
 const originalEnv = { ...process.env };
 
@@ -127,6 +128,22 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     }));
   });
 
+  it('uses the explicit Railway-production admin database target when configured', () => {
+    process.env.DATABASE_URL = 'postgresql://root@local.example/tcg_hobby';
+    process.env.IRON_SPRUE_DATABASE_URL = 'postgresql://iron@neon.example/neondb';
+    process.env.IRON_SPRUE_ADMIN_DATABASE_URL = 'postgresql://railway@railway.internal/railway';
+    process.env.IRON_SPRUE_ADMIN_ENVIRONMENT = 'railway-production';
+
+    const target = getIronSprueAdminDatabaseTargetInfo();
+
+    expect(target).toMatchObject({
+      source: 'IRON_SPRUE_ADMIN_DATABASE_URL',
+      label: 'RAILWAY PRODUCTION',
+      host: 'railway.internal',
+      database: 'railway',
+    });
+  });
+
   it('publishes a ready product through the canonical product publication state', async () => {
     const product = readyProduct({ publicationState: 'READY_TO_PUBLISH', readyApprovedAt: new Date('2026-08-20T00:00:00.000Z') });
     const tx = {
@@ -144,6 +161,42 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       where: { id: 'product-1' },
       data: expect.objectContaining({ publicationState: 'PUBLISHED', publishedAt: expect.any(Date) }),
     }));
+  });
+
+  it('makes an admin-published product visible to the canonical catalogue source', async () => {
+    const product = readyProduct({ publicationState: 'READY_TO_PUBLISH', readyApprovedAt: new Date('2026-08-20T00:00:00.000Z') });
+    let canonicalProduct = product;
+    const tx = {
+      ironSprueAdminProduct: {
+        update: vi.fn().mockImplementation(({ data }) => {
+          canonicalProduct = { ...canonicalProduct, ...data };
+          return Promise.resolve(canonicalProduct);
+        }),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+    const client = {
+      ironSprueAdminProduct: {
+        findFirst: vi.fn().mockResolvedValue(product),
+        findMany: vi.fn().mockImplementation(({ where }) => Promise.resolve(
+          where.publicationState === 'PUBLISHED' && canonicalProduct.publicationState === 'PUBLISHED'
+            ? [{ ...canonicalProduct, brand: null, category: null, supplier: null, inventory: { availableStock: 1, reservedStock: 0 } }]
+            : [],
+        )),
+      },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+      $transaction: vi.fn((callback) => callback(tx)),
+    };
+    const { getIronSprueCatalogueProducts } = await import('./iron-sprue-catalogue.js');
+
+    await publishIronSprueAdminProduct('product-1', actor, client as never);
+    const catalogue = await getIronSprueCatalogueProducts({ search: '', category: '', sort: 'featured', page: 1, pageSize: 20 }, client as never);
+
+    expect(canonicalProduct.publicationState).toBe('PUBLISHED');
+    expect(client.ironSprueAdminProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ publicationState: 'PUBLISHED' }),
+    }));
+    expect(catalogue.products).toHaveLength(1);
   });
 
   it('bulk-publishes only products without unresolved review blockers', async () => {
@@ -289,6 +342,8 @@ describe('Iron Sprue dedicated Admin foundation', () => {
   });
 
   it('counts dashboard data only through Iron Sprue scoped tables', async () => {
+    process.env.DATABASE_URL = 'postgresql://root@local.example/tcg_hobby';
+    process.env.IRON_SPRUE_ENVIRONMENT = 'development';
     process.env.IRON_SPRUE_WORKER_READ_DATABASE_URL = 'postgresql://redacted.example/iron';
     process.env.IRON_SPRUE_R2_BUCKET_NAME = 'iron-sprue-product-media';
     process.env.IRON_SPRUE_R2_ACCESS_KEY_ID = 'test-access';

@@ -42,7 +42,11 @@ export {
   ProductRecommendationType,
 } from '@prisma/client';
 export type { Prisma } from '@prisma/client';
-export { prisma } from './client.js';
+export {
+  getIronSprueAdminDatabaseTargetInfo,
+  prisma,
+} from './client.js';
+export type { IronSprueAdminDatabaseTargetInfo } from './client.js';
 export {
   calculateCollectionStats,
   getCollectionImportSuggestions,

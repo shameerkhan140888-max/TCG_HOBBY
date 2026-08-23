@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Prisma, type IronSprueAdminProduct, type UserRole } from '@prisma/client';
 import { slugify } from '@tcg-hobby/utils';
-import { getIronSprueAdminPrisma } from './client.js';
+import { getIronSprueAdminDatabaseTargetInfo, getIronSprueAdminPrisma } from './client.js';
 import {
   generateIronSprueOrderNumber,
   refundIronSprueOrderForMerchant,
@@ -187,6 +187,12 @@ export type IronSprueAdminWorkspaceCard = {
 export type IronSprueAdminDashboard = {
   storeCode: typeof IRON_SPRUE_STORE_CODE;
   environment: string;
+  databaseTarget: {
+    label: 'LOCAL' | 'STAGING' | 'RAILWAY PRODUCTION' | 'PRODUCTION' | 'UNKNOWN';
+    source: string;
+    host: string;
+    database: string;
+  };
   databaseStatus: 'connected' | 'blocked';
   r2Status: 'configured' | 'blocked';
   workerReadStatus: 'configured' | 'blocked';
@@ -534,6 +540,7 @@ export async function synchronizeIronSprueProductPublicationReadiness(
 }
 
 export async function getIronSprueAdminDashboard(client = getIronSprueAdminPrisma()): Promise<IronSprueAdminDashboard> {
+  const databaseTarget = getIronSprueAdminDatabaseTargetInfo();
   const [
     totalProducts,
     draftProducts,
@@ -589,13 +596,25 @@ export async function getIronSprueAdminDashboard(client = getIronSprueAdminPrism
 
   return {
     storeCode: IRON_SPRUE_STORE_CODE,
-    environment: process.env.IRON_SPRUE_ENVIRONMENT?.trim() || process.env.NODE_ENV || 'development',
+    environment: databaseTarget.environment,
+    databaseTarget: {
+      label: databaseTarget.label,
+      source: databaseTarget.source,
+      host: databaseTarget.host,
+      database: databaseTarget.database,
+    },
     databaseStatus: 'connected',
     r2Status: r2Configured ? 'configured' : 'blocked',
     workerReadStatus: workerReadConfigured ? 'configured' : 'blocked',
     warnings: [
       ...(workerReadConfigured ? [] : ['IRON_SPRUE_WORKER_READ_DATABASE_URL is not configured locally.']),
       ...(r2Configured ? [] : ['Iron Sprue R2 write configuration is incomplete.']),
+      ...(databaseTarget.label === 'RAILWAY PRODUCTION' && databaseTarget.source !== 'IRON_SPRUE_ADMIN_DATABASE_URL'
+        ? ['Railway production admin should use explicit IRON_SPRUE_ADMIN_DATABASE_URL.']
+        : []),
+      ...(databaseTarget.label !== 'RAILWAY PRODUCTION'
+        ? [`Admin is targeting ${databaseTarget.label} via ${databaseTarget.source} (${databaseTarget.host}/${databaseTarget.database}), not Railway production.`]
+        : []),
     ],
     metrics: [
       { label: 'Total products', value: totalProducts, detail: 'Iron Sprue-scoped Admin products.' },

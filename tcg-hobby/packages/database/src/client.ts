@@ -104,12 +104,62 @@ function normalizeCloudflareWorkerConnectionString(connectionString: string) {
   return url.toString();
 }
 
-function getIronSprueDatabaseUrl() {
-  const connectionString = process.env.IRON_SPRUE_DATABASE_URL?.trim() || process.env.DATABASE_URL?.trim();
-  if (!connectionString) {
-    throw new Error('IRON_SPRUE_DATABASE_URL or DATABASE_URL is required for Iron Sprue database access.');
+export type IronSprueAdminDatabaseTargetInfo = {
+  connectionString: string;
+  source: 'IRON_SPRUE_ADMIN_DATABASE_URL' | 'IRON_SPRUE_DATABASE_URL' | 'DATABASE_URL';
+  environment: string;
+  label: 'LOCAL' | 'STAGING' | 'RAILWAY PRODUCTION' | 'PRODUCTION' | 'UNKNOWN';
+  host: string;
+  database: string;
+};
+
+function parseDatabaseTarget(connectionString: string) {
+  try {
+    const url = new URL(connectionString);
+    return {
+      host: url.hostname || 'unknown',
+      database: url.pathname.replace(/^\/+/, '') || 'unknown',
+    };
+  } catch {
+    return { host: 'invalid', database: 'invalid' };
   }
-  return connectionString;
+}
+
+function classifyIronSprueAdminEnvironment(raw: string | undefined) {
+  const normalized = raw?.trim().toLowerCase();
+  if (!normalized) return 'UNKNOWN' as const;
+  if (normalized.includes('railway') && normalized.includes('prod')) return 'RAILWAY PRODUCTION' as const;
+  if (normalized === 'production' || normalized === 'prod' || normalized === 'live') return 'PRODUCTION' as const;
+  if (normalized.includes('stage') || normalized.includes('staging')) return 'STAGING' as const;
+  if (normalized.includes('local') || normalized.includes('dev')) return 'LOCAL' as const;
+  return 'UNKNOWN' as const;
+}
+
+export function getIronSprueAdminDatabaseTargetInfo(): IronSprueAdminDatabaseTargetInfo {
+  const explicitAdminUrl = process.env.IRON_SPRUE_ADMIN_DATABASE_URL?.trim();
+  const dedicatedIronSprueUrl = process.env.IRON_SPRUE_DATABASE_URL?.trim();
+  const rootUrl = process.env.DATABASE_URL?.trim();
+  const source = explicitAdminUrl
+    ? 'IRON_SPRUE_ADMIN_DATABASE_URL'
+    : dedicatedIronSprueUrl
+      ? 'IRON_SPRUE_DATABASE_URL'
+      : 'DATABASE_URL';
+  const connectionString = explicitAdminUrl || dedicatedIronSprueUrl || rootUrl;
+  if (!connectionString) {
+    throw new Error('IRON_SPRUE_ADMIN_DATABASE_URL, IRON_SPRUE_DATABASE_URL or DATABASE_URL is required for Iron Sprue database access.');
+  }
+  const environment = process.env.IRON_SPRUE_ADMIN_ENVIRONMENT?.trim()
+    || process.env.RAILWAY_ENVIRONMENT_NAME?.trim()
+    || process.env.IRON_SPRUE_ENVIRONMENT?.trim()
+    || process.env.NODE_ENV
+    || 'unknown';
+  return {
+    connectionString,
+    source,
+    environment,
+    label: classifyIronSprueAdminEnvironment(environment),
+    ...parseDatabaseTarget(connectionString),
+  };
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
@@ -119,7 +169,7 @@ if (!globalForPrisma.prisma) {
 }
 
 export function getIronSprueAdminPrisma() {
-  const connectionString = getIronSprueDatabaseUrl();
+  const { connectionString } = getIronSprueAdminDatabaseTargetInfo();
   if (!globalForPrisma.ironSprueAdminPrisma || globalForPrisma.ironSprueAdminPrismaUrl !== connectionString) {
     globalForPrisma.ironSprueAdminPrisma = createPrismaClient(connectionString);
     globalForPrisma.ironSprueAdminPrismaUrl = connectionString;

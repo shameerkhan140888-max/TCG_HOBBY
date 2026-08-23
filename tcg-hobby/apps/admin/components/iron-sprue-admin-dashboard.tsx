@@ -52,7 +52,8 @@ export async function IronSprueAdminDashboard({ session }: { session: AdminSessi
               </div>
               <div className="rounded-md border border-surface-line bg-surface-ink p-3">
                 <dt className="text-neutral-500">Environment</dt>
-                <dd className="mt-1 font-semibold">{dashboard.environment}</dd>
+                <dd className="mt-1 font-semibold">{dashboard.databaseTarget.label}</dd>
+                <dd className="mt-1 text-xs text-neutral-500">{dashboard.environment}</dd>
               </div>
               <div className="rounded-md border border-surface-line bg-surface-ink p-3">
                 <dt className="text-neutral-500">Signed in</dt>
@@ -65,6 +66,9 @@ export async function IronSprueAdminDashboard({ session }: { session: AdminSessi
               <div className="rounded-md border border-surface-line bg-surface-ink p-3">
                 <dt className="text-neutral-500">Database</dt>
                 <dd className="mt-1"><StatusPill status={dashboard.databaseStatus} /></dd>
+                <dd className="mt-2 break-all text-xs text-neutral-500">
+                  {dashboard.databaseTarget.source}: {dashboard.databaseTarget.host}/{dashboard.databaseTarget.database}
+                </dd>
               </div>
               <div className="rounded-md border border-surface-line bg-surface-ink p-3">
                 <dt className="text-neutral-500">Worker read</dt>

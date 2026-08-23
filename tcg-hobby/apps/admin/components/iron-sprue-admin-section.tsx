@@ -636,62 +636,6 @@ function MediaActionForms({ mediaId }: { mediaId: string }) {
   );
 }
 
-function customerFacingReviewText(value: unknown): string {
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-  if (!value || typeof value !== 'object') return '';
-
-  const record = value as Record<string, unknown>;
-  const preferred = ['text', 'copy', 'description', 'value', 'title', 'heading', 'summary', 'customerTitle', 'shortDescription', 'fullDescription'];
-  for (const key of preferred) {
-    const candidate = record[key];
-    if (typeof candidate === 'string' && candidate.trim()) return candidate;
-  }
-
-  const customerLines = Object.entries(record)
-    .filter(([key, candidate]) => (
-      !['id', 'sourceId', 'sourceReference', 'sourceUrl', 'internalNotes', 'metadata', 'raw', 'payload'].includes(key)
-      && (typeof candidate === 'string' || typeof candidate === 'number' || typeof candidate === 'boolean')
-    ))
-    .map(([key, candidate]) => `${key.replace(/([A-Z])/g, ' $1')}: ${String(candidate)}`);
-
-  return customerLines.join('\n');
-}
-
-function CustomerContentReviewPreview({ value }: { value: unknown }) {
-  const text = customerFacingReviewText(value);
-  if (!text.trim()) {
-    return <p className="rounded-md border border-surface-line bg-surface-ink p-3 text-sm text-neutral-400">No customer-facing copy is available in this review payload.</p>;
-  }
-  return (
-    <div className="rounded-md border border-surface-line bg-surface-ink p-3 text-sm leading-6 text-neutral-200">
-      {text.split(/\r?\n/).filter(Boolean).map((line) => <p key={line}>{line}</p>)}
-    </div>
-  );
-}
-
-const commercialReviewFields = [
-  'supplier',
-  'supplierUnitCostMinor',
-  'landedCostMinor',
-  'grossPriceMinor',
-  'compareAtPriceMinor',
-  'retailPrice',
-  'margin',
-  'vatRate',
-  'inventory',
-  'expectedQuantity',
-  'sourceRow',
-  'sourceValidation',
-  'import',
-] as const;
-
-function isOperationalReviewField(fieldName: string) {
-  const normalized = fieldName.replace(/[^a-z0-9]/gi, '').toLowerCase();
-  return !isIronSprueStorefrontContentReviewField(fieldName)
-    || commercialReviewFields.some((field) => normalized.includes(field.toLowerCase()));
-}
-
 function ProductDescriptorContentPreview({
   product,
 }: {
@@ -748,11 +692,9 @@ function ProductDescriptorContentPreview({
 function ContentReviewCard({
   bulkPublishFormId,
   review,
-  variant = 'storefront',
 }: {
   bulkPublishFormId: string;
   review: Awaited<ReturnType<typeof listIronSprueAdminContentReviews>>[number];
-  variant?: 'storefront' | 'operational';
 }) {
   return (
     <Card key={review.id}>
@@ -777,9 +719,7 @@ function ContentReviewCard({
           </div>
         </div>
         <ReviewProductPublishControls bulkFormId={bulkPublishFormId} product={review.product} />
-        {variant === 'storefront'
-          ? <ProductDescriptorContentPreview product={review.product} />
-          : <CustomerContentReviewPreview value={review.proposedValue} />}
+        <ProductDescriptorContentPreview product={review.product} />
         {review.sourceReference ? <p className="text-sm text-neutral-400">Source: {review.sourceReference}</p> : null}
         <div className="flex flex-wrap gap-2">
           {(['APPROVED', 'PENDING', 'CONFLICT', 'REJECTED'] as const).map((status) => (
@@ -934,19 +874,18 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
 async function ContentReviewSection({ searchParams }: { searchParams?: SearchParams }) {
   const mode = fullReviewModeFromSearch(searchParams);
   const allReviews = await listIronSprueAdminContentReviews({ pageSize: 100 });
-  const pendingReviews = allReviews.filter((review) => review.status === 'PENDING' || review.status === 'CONFLICT');
-  const approvedReviews = allReviews.filter((review) => review.status === 'APPROVED');
-  const rejectedReviews = allReviews.filter((review) => review.status === 'REJECTED');
+  const storefrontAllReviews = allReviews.filter((review) => isIronSprueStorefrontContentReviewField(review.fieldName));
+  const pendingReviews = storefrontAllReviews.filter((review) => review.status === 'PENDING' || review.status === 'CONFLICT');
+  const approvedReviews = storefrontAllReviews.filter((review) => review.status === 'APPROVED');
+  const rejectedReviews = storefrontAllReviews.filter((review) => review.status === 'REJECTED');
   const selectedReviews = mode === 'approved'
     ? approvedReviews
     : mode === 'rejected'
       ? rejectedReviews
       : mode === 'all'
-        ? allReviews
+        ? storefrontAllReviews
         : pendingReviews;
-  const storefrontReviews = selectedReviews.filter((review) => !isOperationalReviewField(review.fieldName));
-  const operationalReviews = selectedReviews.filter((review) => isOperationalReviewField(review.fieldName));
-  const reviews = [...storefrontReviews, ...operationalReviews];
+  const reviews = selectedReviews;
   const bulkApprovableReviewCount = reviews.filter((review) => review.status !== 'APPROVED').length;
   const bulkPublishableProductCount = new Set(reviews
     .map((review) => review.product)
@@ -955,7 +894,7 @@ async function ContentReviewSection({ searchParams }: { searchParams?: SearchPar
 
   return (
     <div className="space-y-3">
-      <ReviewTabs baseHref="/iron-sprue-admin/content-review" mode={mode} pendingCount={pendingReviews.length} approvedCount={approvedReviews.length} rejectedCount={rejectedReviews.length} allCount={allReviews.length} />
+      <ReviewTabs baseHref="/iron-sprue-admin/content-review" mode={mode} pendingCount={pendingReviews.length} approvedCount={approvedReviews.length} rejectedCount={rejectedReviews.length} allCount={storefrontAllReviews.length} />
       <form id="iron-sprue-content-bulk-approval" action={bulkApproveIronSprueContentReviewsAction} />
       <form id="iron-sprue-content-product-bulk-publish" action={bulkPublishIronSprueProductsAction} />
       <IronSprueBulkApprovalControls
@@ -975,14 +914,7 @@ async function ContentReviewSection({ searchParams }: { searchParams?: SearchPar
         totalCount={bulkPublishableProductCount}
       />
       {!reviews.length ? <EmptyNote>{mode === 'approved' ? 'No approved Iron Sprue content reviews found.' : mode === 'rejected' ? 'No rejected Iron Sprue content reviews found.' : mode === 'all' ? 'No Iron Sprue content review records found.' : 'No Iron Sprue content reviews currently require approval.'}</EmptyNote> : null}
-      {storefrontReviews.map((review) => <ContentReviewCard bulkPublishFormId="iron-sprue-content-product-bulk-publish" key={review.id} review={review} />)}
-      {operationalReviews.length ? (
-        <AdminDisclosure summary={<span>Media / Commercial / Import Review <span className="text-neutral-500">({operationalReviews.length})</span></span>}>
-          <div className="space-y-3">
-            {operationalReviews.map((review) => <ContentReviewCard bulkPublishFormId="iron-sprue-content-product-bulk-publish" key={review.id} review={review} variant="operational" />)}
-          </div>
-        </AdminDisclosure>
-      ) : null}
+      {reviews.map((review) => <ContentReviewCard bulkPublishFormId="iron-sprue-content-product-bulk-publish" key={review.id} review={review} />)}
     </div>
   );
 }
@@ -997,17 +929,18 @@ function HomepagePlacementForm({
   submitLabel?: string;
 }) {
   const previewUrl = ironSprueAdminPreviewUrl(record?.imageUrl ?? null);
+  const label = homepagePlacementLabel(record?.placementKey ?? defaultPlacementKey);
   return (
     <form action={saveIronSprueHomepagePlacementAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-2">
       <input type="hidden" name="id" value={record?.id ?? ''} />
       <div className="md:col-span-2">
-        <h3 className="font-bold">{record ? `Edit placement: ${record.placementKey}` : 'Create a new storefront placement'}</h3>
+        <h3 className="font-bold">{record ? `Edit ${label}` : `Create ${label.toLowerCase()}`}</h3>
         <p className="mt-1 text-sm text-neutral-500">
-          {record ? 'Changes update this existing Iron Sprue storefront record.' : 'Use this only when a new promo strip, newsletter, brand carousel or homepage module is needed.'}
+          {record ? 'Updates this saved homepage control.' : 'Add a homepage strip or banner that the storefront can render.'}
         </p>
       </div>
       {previewUrl ? <img src={previewUrl} alt={record?.title ?? 'Homepage placement'} className="h-40 w-full rounded-md border border-surface-line object-cover md:col-span-2" /> : null}
-      <Field label="Placement key"><input name="placementKey" defaultValue={record?.placementKey ?? defaultPlacementKey} className={fieldClass} /></Field>
+      <Field label="Internal placement key"><input name="placementKey" defaultValue={record?.placementKey ?? defaultPlacementKey} className={fieldClass} /></Field>
       <Field label="Title"><input name="title" defaultValue={record?.title ?? ''} required className={fieldClass} /></Field>
       <Field label="CTA label"><input name="ctaLabel" defaultValue={record?.ctaLabel ?? ''} className={fieldClass} /></Field>
       <Field label="CTA href"><input name="ctaHref" defaultValue={record?.ctaHref ?? ''} className={fieldClass} /></Field>
@@ -1062,6 +995,40 @@ function RecordMeta({ active, sortOrder }: { active: boolean; sortOrder: number 
       <StatusBadge tone="neutral">ORDER {sortOrder ?? 0}</StatusBadge>
     </div>
   );
+}
+
+function homepagePlacementLabel(placementKey: string) {
+  const labels: Record<string, string> = {
+    'featured-products': 'Opening bench picks heading',
+    'promo-banner': 'Promo banner',
+    'promo-strip-delivery': 'Delivery promo strip',
+    'brand-carousel': 'Brand carousel heading',
+    'newsletter-banner': 'Newsletter banner',
+  };
+  return labels[placementKey] ?? placementKey
+    .replace(/^product-section:/, '')
+    .replace(/^featured-product:/, '')
+    .replaceAll(':', ' / ')
+    .replaceAll('-', ' ');
+}
+
+function isFeaturedProductPlacement(placement: HomepagePlacementRecord) {
+  return placement.placementKey.startsWith('featured-product:');
+}
+
+function isProductSectionPlacement(placement: HomepagePlacementRecord) {
+  return placement.placementKey.startsWith('product-section:');
+}
+
+function isPromoOrBannerPlacement(placement: HomepagePlacementRecord) {
+  return placement.placementKey !== 'featured-products'
+    && placement.placementKey !== 'brand-carousel'
+    && !isFeaturedProductPlacement(placement)
+    && !isProductSectionPlacement(placement);
+}
+
+function productSlugFromPlacement(placement: HomepagePlacementRecord, prefix: string) {
+  return placement.ctaHref?.replace('/products/', '').split(/[?#]/)[0] ?? placement.placementKey.replace(prefix, '');
 }
 
 function isR2Reference(value: string | null | undefined) {
@@ -1321,27 +1288,55 @@ function FeaturedProductsManager({
   products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'];
 }) {
   const productBySlug = new Map(products.map((product) => [product.slug, product]));
+  const sectionHeading = placements.find((placement) => placement.placementKey === 'featured-products');
   const featuredPlacements = placements
-    .filter((placement) => placement.placementKey.startsWith('featured-product:'))
+    .filter(isFeaturedProductPlacement)
     .sort((left, right) => Number(right.active) - Number(left.active) || (left.sortOrder ?? 0) - (right.sortOrder ?? 0));
+  const activeFeaturedPlacements = featuredPlacements.filter((placement) => placement.active);
 
   return (
     <Card>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="font-bold">Featured products</h2>
-          <p className="text-sm text-neutral-400">These records control the product cards shown in the public homepage featured section. Active rows are shown in sort order and the public storefront consumes the same saved records.</p>
+            <h2 className="font-bold">Opening bench picks row</h2>
+            <p className="text-sm text-neutral-400">Controls the first product row after the promo cards on the public homepage.</p>
           </div>
-          <StatusBadge tone={featuredPlacements.some((placement) => placement.active) ? 'success' : 'warning'}>
-            {featuredPlacements.filter((placement) => placement.active).length} ACTIVE
+          <StatusBadge tone={activeFeaturedPlacements.length ? 'success' : 'warning'}>
+            {activeFeaturedPlacements.length} ACTIVE
           </StatusBadge>
         </div>
+
+        {sectionHeading ? (
+          <HomepagePlacementForm
+            defaultPlacementKey="featured-products"
+            record={sectionHeading}
+            submitLabel="Save opening row heading"
+          />
+        ) : (
+          <HomepagePlacementForm
+            defaultPlacementKey="featured-products"
+            submitLabel="Create opening row heading"
+          />
+        )}
+
+        {activeFeaturedPlacements.length ? (
+          <div className="rounded-md border border-surface-line bg-black/30 p-3">
+            <h3 className="text-sm font-bold">Current products in this row</h3>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {activeFeaturedPlacements.map((placement) => {
+                const slug = productSlugFromPlacement(placement, 'featured-product:');
+                const product = productBySlug.get(slug);
+                return <StatusBadge key={placement.id} tone="neutral">{product?.customerTitle ?? slug}</StatusBadge>;
+              })}
+            </div>
+          </div>
+        ) : null}
 
         {featuredPlacements.length ? (
           <div className="grid gap-3 lg:grid-cols-2">
             {featuredPlacements.map((placement) => {
-              const slug = placement.ctaHref?.replace('/products/', '').split(/[?#]/)[0] ?? placement.placementKey.replace('featured-product:', '');
+              const slug = productSlugFromPlacement(placement, 'featured-product:');
               const product = productBySlug.get(slug);
               const image = product?.mediaAssets.find((asset) => asset.approvalState === 'APPROVED' && asset.role === 'catalogue-primary') ?? product?.mediaAssets.find((asset) => asset.role === 'catalogue-primary');
               const previewUrl = image ? ironSprueMediaPreviewUrl(image) : ironSprueAdminPreviewUrl(placement.imageUrl);
@@ -1365,13 +1360,13 @@ function FeaturedProductsManager({
                     <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={placement.sortOrder ?? 0} className={fieldClass} /></Field>
                     <label className="flex items-end gap-2 pb-2 text-sm"><input name="active" type="checkbox" defaultChecked={placement.active} /> Active on homepage</label>
                   </div>
-                  <Button type="submit" size="sm" variant="outline">Save featured product</Button>
+                  <Button type="submit" size="sm" variant="outline">Save row product</Button>
                 </form>
               );
             })}
           </div>
         ) : (
-          <EmptyNote>No Admin-backed featured products currently exist. The public storefront will use the safe catalogue fallback until rows are added below.</EmptyNote>
+          <EmptyNote>No opening bench products are saved yet. The public homepage will use the catalogue fallback until products are added below.</EmptyNote>
         )}
 
         <form action={saveIronSprueFeaturedProductPlacementAction} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-3 md:grid-cols-[minmax(220px,1fr)_120px_140px]">
@@ -1384,7 +1379,7 @@ function FeaturedProductsManager({
           <input type="hidden" name="productTitle" value="" />
           <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={featuredPlacements.length} className={fieldClass} /></Field>
           <label className="flex items-end gap-2 pb-2 text-sm"><input name="active" type="checkbox" defaultChecked /> Active</label>
-          <Button type="submit" className="md:col-span-3">Add featured product</Button>
+          <Button type="submit" className="md:col-span-3">Add product to opening row</Button>
         </form>
       </CardContent>
     </Card>
@@ -1409,6 +1404,10 @@ function HomepageProductSectionsManager({
     .sort((left, right) => left.sectionKey.localeCompare(right.sectionKey) || (left.placement.sortOrder ?? 0) - (right.placement.sortOrder ?? 0));
   const sectionKeys = [...new Set(sectionPlacements.map((entry) => entry.sectionKey))];
 
+  function sectionHeading(records: Array<{ placement: HomepagePlacementRecord }>) {
+    return records.find((record) => record.placement.title?.trim())?.placement.title?.trim() ?? 'Untitled product row';
+  }
+
   function renderSectionForm(record?: { placement: HomepagePlacementRecord; sectionKey: string; productSlug: string }) {
     const product = record ? productBySlug.get(record.productSlug) : null;
     const isNewRecord = !record;
@@ -1419,12 +1418,12 @@ function HomepageProductSectionsManager({
       <form key={record?.placement.id ?? 'new-section-product'} action={saveIronSprueHomepageProductSectionAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-3 md:grid-cols-2">
         <input type="hidden" name="id" value={record?.placement.id ?? ''} />
         <div className="md:col-span-2">
-          <h3 className="font-bold">{record ? `Edit ${record.sectionKey}` : 'Add product to a homepage section'}</h3>
-          <p className="mt-1 text-xs text-neutral-500">Active products are rendered as normal Iron Sprue product cards and link to their product detail pages.</p>
+          <h3 className="font-bold">{record ? `Edit product in ${record.placement.title || record.sectionKey}` : 'Add products to a homepage row'}</h3>
+          <p className="mt-1 text-xs text-neutral-500">These rows appear after the opening bench picks row.</p>
         </div>
         {previewUrl ? <img src={previewUrl} alt={product?.customerTitle ?? record?.placement.title ?? 'Section product'} className="h-32 w-full rounded-md border border-surface-line bg-white object-contain p-2 md:col-span-2" /> : null}
-        <Field label="Section key"><input name="sectionKey" list="homepage-section-keys" defaultValue={record?.sectionKey ?? 'opening-bench-picks'} required className={fieldClass} /></Field>
-        <Field label="Section heading"><input name="sectionHeading" defaultValue={record?.placement.title ?? 'Opening bench picks.'} required className={fieldClass} /></Field>
+        <Field label="Row key"><input name="sectionKey" list="homepage-section-keys" defaultValue={record?.sectionKey ?? ''} placeholder="our-aoshima-picks" required className={fieldClass} /></Field>
+        <Field label="Homepage heading"><input name="sectionHeading" defaultValue={record?.placement.title ?? ''} placeholder="Our favourite Aoshima kits" required className={fieldClass} /></Field>
         <Field label={isNewRecord ? 'Products' : 'Product'}>
           <select name="productSlug" defaultValue={record?.productSlug ?? (isNewRecord ? [] : '')} required className={fieldClass} multiple={isNewRecord} size={isNewRecord ? 8 : undefined}>
             <option value="">Select a product</option>
@@ -1450,8 +1449,8 @@ function HomepageProductSectionsManager({
     <Card>
       <CardContent className="space-y-4">
         <div>
-          <h2 className="font-bold">Homepage product sections</h2>
-          <p className="mt-1 text-sm text-neutral-400">Create named product sections, choose the products shown in each section and control ordering without source-code edits.</p>
+          <h2 className="font-bold">Additional homepage product rows</h2>
+          <p className="mt-1 text-sm text-neutral-400">Controls extra product rows that appear below the opening bench picks on the public homepage.</p>
         </div>
         <datalist id="homepage-section-keys">
           {sectionKeys.map((key) => <option key={key} value={key} />)}
@@ -1460,16 +1459,29 @@ function HomepageProductSectionsManager({
           <div className="space-y-3">
             {sectionGroups.map((group) => (
               <details key={group.sectionKey} className="rounded-md border border-surface-line bg-surface-ink p-3" open>
-                <summary className="cursor-pointer text-sm font-bold uppercase tracking-[0.08em] text-accent">
-                  {group.sectionKey} ({group.records.length})
+                <summary className="cursor-pointer text-sm font-bold text-accent">
+                  {sectionHeading(group.records)} <span className="text-neutral-500">({group.records.length})</span>
                 </summary>
+                <div className="mt-3 rounded-md border border-surface-line bg-black/30 p-3">
+                  <p className="text-xs uppercase tracking-wide text-neutral-500">Current products</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {group.records.some((record) => record.placement.active)
+                      ? group.records.filter((record) => record.placement.active).map((record) => (
+                        <StatusBadge key={record.placement.id} tone="neutral">
+                          {productBySlug.get(record.productSlug)?.customerTitle ?? record.productSlug}
+                        </StatusBadge>
+                      ))
+                      : <span className="text-sm text-neutral-500">No active products in this row.</span>}
+                  </div>
+                  <p className="mt-2 text-xs text-neutral-500">Row key: {group.sectionKey}</p>
+                </div>
                 <div className="mt-3 grid gap-3 lg:grid-cols-2">
                   {group.records.map((record) => renderSectionForm(record))}
                 </div>
               </details>
             ))}
           </div>
-        ) : <EmptyNote>No custom product sections exist yet. The homepage keeps the approved featured-products section until one is added.</EmptyNote>}
+        ) : <EmptyNote>No additional product rows exist yet. Use the form below when the homepage needs a second curated row.</EmptyNote>}
         {renderSectionForm()}
       </CardContent>
     </Card>
@@ -1575,21 +1587,23 @@ async function StorefrontSection({ section }: { section: string }) {
     : [];
 
   if (section === 'homepage') {
+    const promoPlacements = homepagePlacements.filter(isPromoOrBannerPlacement);
+
     return (
       <div className="space-y-4">
         <div id="promotions"><CurrentPromoBannerOverview placements={homepagePlacements} /></div>
         <Card>
           <CardContent>
-            <h2 className="font-bold">Promo banner and storefront placements</h2>
-            <p className="mt-1 text-sm text-neutral-400">Create or edit the Iron Sprue promo strip, homepage modules, newsletter banner and brand carousel controls. Saved changes are persisted as Iron Sprue-scoped storefront records.</p>
+            <h2 className="font-bold">Promo strips and banners</h2>
+            <p className="mt-1 text-sm text-neutral-400">Controls the short promotional strips and image panels near the top of the public homepage.</p>
           </CardContent>
         </Card>
-        {homepagePlacements.map((record) => <HomepagePlacementForm key={record.id} record={record} />)}
-        <HomepagePlacementForm defaultPlacementKey="promo-banner" submitLabel="Create promo/banner placement" />
-        <TypographySettingsForm settings={typographySettings} />
+        {promoPlacements.map((record) => <HomepagePlacementForm key={record.id} record={record} />)}
+        <HomepagePlacementForm defaultPlacementKey="promo-banner" submitLabel="Create promo banner" />
         <div id="featured-products"><FeaturedProductsManager placements={homepagePlacements} products={productOptions} /></div>
         <div id="homepage-product-sections"><HomepageProductSectionsManager placements={homepagePlacements} products={productOptions} /></div>
         <div id="brand-presentation"><BrandCarouselManager brands={brands} /></div>
+        <TypographySettingsForm settings={typographySettings} />
       </div>
     );
   }
@@ -1675,7 +1689,13 @@ async function SettingsSection() {
   const dashboard = await getIronSprueAdminDashboard();
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <Card><CardContent><h2 className="font-bold">Database</h2><p className="mt-2"><StatePill>{dashboard.databaseStatus}</StatePill></p></CardContent></Card>
+      <Card>
+        <CardContent>
+          <h2 className="font-bold">Admin database target</h2>
+          <p className="mt-2"><StatePill>{dashboard.databaseTarget.label}</StatePill></p>
+          <p className="mt-3 break-all text-sm text-neutral-400">{dashboard.databaseTarget.source}: {dashboard.databaseTarget.host}/{dashboard.databaseTarget.database}</p>
+        </CardContent>
+      </Card>
       <Card><CardContent><h2 className="font-bold">Worker read</h2><p className="mt-2"><StatePill>{dashboard.workerReadStatus}</StatePill></p></CardContent></Card>
       <Card><CardContent><h2 className="font-bold">R2</h2><p className="mt-2"><StatePill>{dashboard.r2Status}</StatePill></p></CardContent></Card>
       <Card><CardContent><h2 className="font-bold">Warnings</h2>{dashboard.warnings.length ? <ul className="mt-2 list-disc pl-5 text-sm text-amber-200">{dashboard.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul> : <p className="mt-2 text-sm text-neutral-400">No warnings.</p>}</CardContent></Card>
