@@ -10,6 +10,7 @@ import {
   productsFromFeaturedPlacements,
 } from '../lib/admin-storefront-controls';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
+import { getIronSprueProductionApiHomeProducts, shouldUseIronSprueProductionApi } from '../lib/production-api';
 import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { AddToBasketButton } from '../components/basket-client';
@@ -63,7 +64,7 @@ export default async function HomePage() {
   const [activeHeroSlides, homepagePlacements, storefrontProducts] = await Promise.all([
     getIronSprueHeroSlides(),
     getIronSprueHomepagePlacements(),
-    getIronSprueStorefrontProducts(products),
+    shouldUseIronSprueProductionApi() ? getIronSprueProductionApiHomeProducts() : getIronSprueStorefrontProducts(products),
   ]);
   const previewProducts = storefrontProducts.map((product) => ({ ...product, published: true }));
   const brandsWeStock = await getIronSprueBrandPresentation(previewProducts)

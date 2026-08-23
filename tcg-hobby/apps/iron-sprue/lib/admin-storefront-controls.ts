@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import launchProducts from '../data/launch-products.json';
 import { brandSlug, deriveBrandsWeStock, type IronSprueBrandRecord, type IronSprueProduct } from './catalogue';
+import { getIronSprueProductionApiCatalogueProducts, shouldUseIronSprueProductionApi } from './production-api';
 import { brandLogoRegistry, categoryNavigation, featuredProducts, heroSlides, promoPanels } from './storefront';
 
 const STORE_CODE = 'IRON_SPRUE';
@@ -277,6 +278,7 @@ function ironSprueEnv(name: string) {
 }
 
 function storefrontConnectionString() {
+  if (shouldUseIronSprueProductionApi()) return '';
   return (
     ironSprueEnv('IRON_SPRUE_WORKER_READ_DATABASE_URL')
     || ironSprueEnv('IRON_SPRUE_DATABASE_URL')
@@ -542,6 +544,10 @@ export function applyInventoryToProducts(products: IronSprueProduct[], inventory
 }
 
 export async function getIronSprueStorefrontProducts(products: IronSprueProduct[]) {
+  if (shouldUseIronSprueProductionApi()) {
+    return getIronSprueProductionApiCatalogueProducts(new URLSearchParams({ pageSize: '50' }));
+  }
+
   const [approvedMediaBySku, inventoryBySku] = await Promise.all([
     getApprovedIronSprueMediaBySku(),
     getIronSprueInventoryBySku(),

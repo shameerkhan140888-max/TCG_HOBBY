@@ -1,5 +1,16 @@
-import { describe, expect, it } from 'vitest';
-import { canonicalizeInternalRequest, copyProxyRequestHeaders, isAllowedProxyRoute, signInternalRequest } from './node-proxy';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { canonicalizeInternalRequest, copyProxyRequestHeaders, getNodeApiOrigin, isAllowedProxyRoute, signInternalRequest } from './node-proxy';
+
+const originalProductionApiBaseUrl = process.env.IRON_SPRUE_PRODUCTION_API_BASE_URL;
+const originalNodeApiOrigin = process.env.IRON_SPRUE_NODE_API_ORIGIN;
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  if (originalProductionApiBaseUrl === undefined) delete process.env.IRON_SPRUE_PRODUCTION_API_BASE_URL;
+  else process.env.IRON_SPRUE_PRODUCTION_API_BASE_URL = originalProductionApiBaseUrl;
+  if (originalNodeApiOrigin === undefined) delete process.env.IRON_SPRUE_NODE_API_ORIGIN;
+  else process.env.IRON_SPRUE_NODE_API_ORIGIN = originalNodeApiOrigin;
+});
 
 describe('Iron Sprue Node proxy contract', () => {
   it('allows only explicit customer commerce routes', () => {
@@ -79,5 +90,21 @@ describe('Iron Sprue Node proxy contract', () => {
     });
     expect(signature).toHaveLength(64);
     expect(changed).not.toBe(signature);
+  });
+
+  it('uses the explicit production API base URL for production mutation proxying', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('IRON_SPRUE_PRODUCTION_API_BASE_URL', 'https://considerate-unity-production-b734.up.railway.app/');
+    vi.stubEnv('IRON_SPRUE_NODE_API_ORIGIN', 'https://local-node-api.example');
+
+    expect(getNodeApiOrigin()).toBe('https://considerate-unity-production-b734.up.railway.app');
+  });
+
+  it('preserves the local node API origin outside production', () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('IRON_SPRUE_PRODUCTION_API_BASE_URL', 'https://considerate-unity-production-b734.up.railway.app');
+    vi.stubEnv('IRON_SPRUE_NODE_API_ORIGIN', 'http://localhost:3001');
+
+    expect(getNodeApiOrigin()).toBe('http://localhost:3001');
   });
 });

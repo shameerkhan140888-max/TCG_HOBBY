@@ -1,6 +1,7 @@
 const encoder = new TextEncoder();
 const INTERNAL_HEADER_PREFIX = 'x-iron-sprue-internal-';
 const LOCAL_PROXY_ENV_KEYS = new Set([
+  'IRON_SPRUE_PRODUCTION_API_BASE_URL',
   'IRON_SPRUE_NODE_API_ORIGIN',
   'IRON_SPRUE_INTERNAL_API_KEY_ID',
   'IRON_SPRUE_INTERNAL_API_SECRET',
@@ -157,11 +158,13 @@ export function requireInternalSigningConfig() {
 
 export function getNodeApiOrigin() {
   loadLocalProxyEnvFallback();
-  const origin = process.env.IRON_SPRUE_NODE_API_ORIGIN;
-  if (!origin) throw new Error('IRON_SPRUE_NODE_API_ORIGIN is required for mutation proxying.');
+  const origin = process.env.NODE_ENV === 'production'
+    ? process.env.IRON_SPRUE_PRODUCTION_API_BASE_URL || process.env.IRON_SPRUE_NODE_API_ORIGIN
+    : process.env.IRON_SPRUE_NODE_API_ORIGIN || process.env.IRON_SPRUE_PRODUCTION_API_BASE_URL;
+  if (!origin) throw new Error('IRON_SPRUE_PRODUCTION_API_BASE_URL or IRON_SPRUE_NODE_API_ORIGIN is required for mutation proxying.');
   const url = new URL(origin);
   if (url.protocol !== 'https:' && process.env.NODE_ENV === 'production') {
-    throw new Error('IRON_SPRUE_NODE_API_ORIGIN must use HTTPS in production.');
+    throw new Error('Iron Sprue production API origin must use HTTPS in production.');
   }
   return url.origin;
 }

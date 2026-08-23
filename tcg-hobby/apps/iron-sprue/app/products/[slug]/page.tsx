@@ -6,6 +6,7 @@ import { ironSprueBrand } from '../../../lib/brand';
 import { AddToBasketButton } from '../../../components/basket-client';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
 import { type IronSprueProduct } from '../../../lib/catalogue';
+import { getIronSprueProductionApiProduct, shouldUseIronSprueProductionApi } from '../../../lib/production-api';
 import { formatPrice, productAvailability, productAvailabilityClass, productDetailAddons, productGalleryImages, productImage, productSellableQuantity } from '../../../lib/storefront';
 import { addIronSprueWishlistItemAction } from '../../../lib/wishlist-actions';
 
@@ -37,12 +38,15 @@ function publicSpecifications(product: IronSprueProduct) {
 }
 
 export function generateStaticParams() {
+  if (shouldUseIronSprueProductionApi()) return [];
   return products.map((product) => ({ slug: product.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const product = products.find((candidate) => candidate.slug === slug);
+  const product = shouldUseIronSprueProductionApi()
+    ? await getIronSprueProductionApiProduct(slug)
+    : products.find((candidate) => candidate.slug === slug);
   if (!product) return { title: 'Product unavailable' };
   const image = productImage(product);
   const title = product.seoTitle || `${product.name} by ${product.brand}`;
@@ -72,8 +76,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const storefrontProducts = await getIronSprueStorefrontProducts(products);
-  const product = storefrontProducts.find((candidate) => candidate.slug === slug);
+  const [storefrontProducts, apiProduct] = await Promise.all([
+    getIronSprueStorefrontProducts(products),
+    shouldUseIronSprueProductionApi() ? getIronSprueProductionApiProduct(slug) : Promise.resolve(null),
+  ]);
+  const product = apiProduct ?? storefrontProducts.find((candidate) => candidate.slug === slug);
 
   if (!product) {
     return (
