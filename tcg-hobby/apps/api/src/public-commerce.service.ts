@@ -12,6 +12,20 @@ import {
   getCustomerCartDetails,
   getCustomerOrderByNumber,
   getCustomerOrders,
+  getIronSprueCatalogueFilterOptions,
+  getIronSprueCatalogueHomeData,
+  getIronSprueCatalogueProductBySlug,
+  getIronSprueCatalogueProducts,
+  addIronSprueProductToCart,
+  clearIronSprueCart,
+  createIronSprueHostedCheckoutSession,
+  getIronSprueAvailableShippingMethods,
+  getIronSprueCustomerCartDetails,
+  getIronSprueCustomerOrderByNumber,
+  getIronSprueCustomerOrders,
+  removeIronSprueCartItem,
+  resolveIronSprueGuestCart,
+  updateIronSprueCartItemQuantity,
   isStripeCheckoutConfigured,
   removeCartItem,
   resolveGuestCart,
@@ -129,11 +143,34 @@ function requireAddress(input: CheckoutAddress): CheckoutAddress {
   return { ...input, country: input.country.trim().toUpperCase() };
 }
 
+export function isIronSpruePublicApiEnabled() {
+  const explicitStore = process.env.PUBLIC_COMMERCE_STORE_CODE?.trim().toUpperCase();
+  if (explicitStore) return explicitStore === 'IRON_SPRUE';
+  return Boolean(
+    process.env.IRON_SPRUE_INTERNAL_API_KEY_ID?.trim()
+      || process.env.IRON_SPRUE_STRIPE_ACCOUNT_ID?.trim()
+      || process.env.IRON_SPRUE_SITE_URL?.trim(),
+  );
+}
+
 @Injectable()
 export class PublicCommerceService {
   constructor(@Inject(AuthService) private readonly auth: AuthService) {}
 
   async home(): Promise<PublicHomeResponse> {
+    if (isIronSpruePublicApiEnabled()) {
+      const [home, latest] = await Promise.all([
+        getIronSprueCatalogueHomeData(),
+        getIronSprueCatalogueProducts({ search: '', category: '', sort: 'newest', page: 1, pageSize: 8 }),
+      ]);
+      const featuredIds = new Set(home.featuredProducts.map((product) => product.id));
+      return {
+        featuredProducts: home.featuredProducts.map(toPublicProductSummary),
+        latestProducts: latest.products.filter((product) => !featuredIds.has(product.id)).slice(0, 4).map(toPublicProductSummary),
+        categories: home.categories.map((category) => ({ id: category.id, name: category.name, value: category.slug, gameId: null })),
+      };
+    }
+
     const [home, latest] = await Promise.all([
       getCatalogueHomeData(),
       getCatalogueProducts({ search: '', category: '', sort: 'newest', page: 1, pageSize: 8 }),
@@ -159,11 +196,31 @@ export class PublicCommerceService {
       page: Math.max(Number(query.page) || 1, 1),
       pageSize: Math.min(Math.max(Number(query.pageSize) || 20, 1), 50),
     };
+    if (isIronSpruePublicApiEnabled()) {
+      const result = await getIronSprueCatalogueProducts({
+        ...filters,
+        brand: query.brand?.trim() ?? '',
+      });
+      return { products: result.products.map(toPublicProductSummary), pagination: result.pagination, filters: result.filters };
+    }
+
     const result = await getCatalogueProducts(filters);
     return { products: result.products.map(toPublicProductSummary), pagination: result.pagination, filters: result.filters };
   }
 
   async filters(): Promise<PublicCatalogueFilterOptions> {
+    if (isIronSpruePublicApiEnabled()) {
+      const values = await getIronSprueCatalogueFilterOptions();
+      return {
+        games: values.brands,
+        productTypes: [],
+        sets: [],
+        languages: [],
+        categories: values.categories,
+        sorts: SORTS,
+      };
+    }
+
     if (process.env.TCG_HOBBY_CATALOGUE_DATA_SOURCE === 'seed') {
       const catalogue = await getCatalogueProducts({ search: '', category: '', sort: 'featured', page: 1, pageSize: 500 });
       const unique = (values: Array<{ name: string; value: string }>): PublicCatalogueOption[] => Array.from(new Map(values.filter((value) => value.name).map((value) => [value.value, value])).values()).map((value) => ({ id: value.value, name: value.name, value: value.value, gameId: null }));
@@ -188,19 +245,29 @@ export class PublicCommerceService {
   }
 
   async product(slug: string): Promise<PublicProductDetail> {
-    const product = await getCatalogueProductBySlug(slug);
+    const product = isIronSpruePublicApiEnabled()
+      ? await getIronSprueCatalogueProductBySlug(slug)
+      : await getCatalogueProductBySlug(slug);
     if (!product) throw new NotFoundException('Product not found.');
     return toPublicProductDetail(product);
   }
 
   async basket(authorization: string | undefined, guestItems: PublicBasketInputItem[] = []): Promise<PublicBasket> {
     const user = await this.auth.getOptionalUser(authorization);
+    if (isIronSpruePublicApiEnabled()) {
+      const cart = user ? await getIronSprueCustomerCartDetails(user.id) : await resolveIronSprueGuestCart(guestItems);
+      return this.toPublicBasket(cart, true);
+    }
     const cart = user ? await getCustomerCartDetails(user.id) : await resolveGuestCart(guestItems);
-    return this.toPublicBasket(cart);
+    return this.toPublicBasket(cart, false);
   }
 
   async addBasketItem(authorization: string | undefined, body: { productId?: unknown; quantity?: unknown }): Promise<PublicBasket> {
     const user = await this.auth.requireUser(authorization);
+    if (isIronSpruePublicApiEnabled()) {
+      await addIronSprueProductToCart(user.id, String(body.productId ?? ''), Number(body.quantity) || 1);
+      return this.basket(authorization);
+    }
     await addProductToCart(user.id, String(body.productId ?? ''), Number(body.quantity) || 1);
     return this.basket(authorization);
   }
@@ -209,32 +276,58 @@ export class PublicCommerceService {
     const user = await this.auth.requireUser(authorization);
     const quantity = Number(body.quantity);
     if (!Number.isInteger(quantity) || quantity < 1) throw new BadRequestException('Enter a valid quantity.');
+    if (isIronSpruePublicApiEnabled()) {
+      await updateIronSprueCartItemQuantity(user.id, productId, quantity);
+      return this.basket(authorization);
+    }
     await updateCartItemQuantity(user.id, productId, quantity);
     return this.basket(authorization);
   }
 
   async removeBasketItem(authorization: string | undefined, productId: string): Promise<PublicBasket> {
     const user = await this.auth.requireUser(authorization);
+    if (isIronSpruePublicApiEnabled()) {
+      await removeIronSprueCartItem(user.id, productId);
+      return this.basket(authorization);
+    }
     await removeCartItem(user.id, productId);
     return this.basket(authorization);
   }
 
   async clearBasket(authorization: string | undefined): Promise<PublicBasket> {
     const user = await this.auth.requireUser(authorization);
+    if (isIronSpruePublicApiEnabled()) {
+      await clearIronSprueCart(user.id);
+      return this.basket(authorization);
+    }
     await clearCart(user.id);
     return this.basket(authorization);
   }
 
   async shipping(country: string, subtotalMinor = 0): Promise<ShippingMethod[]> {
+    if (isIronSpruePublicApiEnabled()) {
+      return getIronSprueAvailableShippingMethods(country.trim().toUpperCase() || 'GB', Math.max(Math.trunc(subtotalMinor), 0));
+    }
     return getAvailableShippingMethods(country.trim().toUpperCase() || 'GB', Math.max(Math.trunc(subtotalMinor), 0));
   }
 
   async checkout(authorization: string | undefined, input: PublicCheckoutRequest): Promise<PublicCheckoutResponse> {
     const user = await this.auth.getOptionalUser(authorization);
-    const cart = user ? await getCustomerCartDetails(user.id) : await resolveGuestCart(input.guestItems ?? []);
+    const cart = isIronSpruePublicApiEnabled()
+      ? user ? await getIronSprueCustomerCartDetails(user.id) : await resolveIronSprueGuestCart(input.guestItems ?? [])
+      : user ? await getCustomerCartDetails(user.id) : await resolveGuestCart(input.guestItems ?? []);
     if (cart.items.length === 0) throw new BadRequestException('Your basket is empty.');
     const base = process.env.PUBLIC_STOREFRONT_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tcg-hobby.co.uk';
     try {
+      if (isIronSpruePublicApiEnabled()) {
+        return await createIronSprueHostedCheckoutSession({
+          userId: user?.id ?? null,
+          cart,
+          shippingAddress: requireAddress(input.shippingAddress),
+          shippingMethodCode: input.shippingMethodCode,
+          ...(input.checkoutAttemptId ? { checkoutAttemptId: input.checkoutAttemptId } : {}),
+        });
+      }
       return await createHostedCheckoutSession({
         userId: user?.id ?? null,
         cart,
@@ -255,20 +348,25 @@ export class PublicCommerceService {
 
   async orders(authorization?: string): Promise<PublicOrderSummary[]> {
     const user = await this.auth.requireUser(authorization);
-    return (await getCustomerOrders(user.id)).map((order) => ({
+    const orders = isIronSpruePublicApiEnabled()
+      ? await getIronSprueCustomerOrders(user.id)
+      : await getCustomerOrders(user.id);
+    return orders.map((order) => ({
       orderNumber: order.orderNumber,
       paymentStatus: order.paymentStatus,
       fulfilmentStatus: order.fulfilmentStatus,
       currency: order.currency,
       totalMinor: order.totalMinor,
-      itemCount: order.itemCount,
+      itemCount: 'itemCount' in order ? order.itemCount : order.items.reduce((total, item) => total + item.quantity, 0),
       createdAt: order.createdAt.toISOString(),
     }));
   }
 
   async order(authorization: string | undefined, orderNumber: string): Promise<PublicOrderDetail> {
     const user = await this.auth.requireUser(authorization);
-    const order = await getCustomerOrderByNumber(user.id, orderNumber);
+    const order = isIronSpruePublicApiEnabled()
+      ? await getIronSprueCustomerOrderByNumber(user.id, orderNumber)
+      : await getCustomerOrderByNumber(user.id, orderNumber);
     if (!order) throw new NotFoundException('Order not found.');
     return {
       orderNumber: order.orderNumber,
@@ -286,8 +384,8 @@ export class PublicCommerceService {
     };
   }
 
-  private async toPublicBasket(cart: CartSummary): Promise<PublicBasket> {
-    const availability = await getAvailableStockByProductIds(cart.items.map((item) => item.productId));
+  private async toPublicBasket(cart: CartSummary, useCartAvailability: boolean): Promise<PublicBasket> {
+    const availability = useCartAvailability ? new Map<string, number>() : await getAvailableStockByProductIds(cart.items.map((item) => item.productId));
     return {
       items: cart.items.map((item) => ({
         ...item,
@@ -300,7 +398,7 @@ export class PublicCommerceService {
               isPrimary: true,
             }
           : null,
-        stockState: publicStockState(availability.get(item.productId) ?? 0),
+        stockState: publicStockState(useCartAvailability ? item.availableQuantity ?? 0 : availability.get(item.productId) ?? 0),
       })),
       subtotalMinor: cart.subtotalMinor,
       currency: cart.currency,

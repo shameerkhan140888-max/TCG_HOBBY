@@ -105,9 +105,9 @@ function normalizeCloudflareWorkerConnectionString(connectionString: string) {
 }
 
 function getIronSprueDatabaseUrl() {
-  const connectionString = process.env.IRON_SPRUE_DATABASE_URL?.trim();
+  const connectionString = process.env.IRON_SPRUE_DATABASE_URL?.trim() || process.env.DATABASE_URL?.trim();
   if (!connectionString) {
-    throw new Error('IRON_SPRUE_DATABASE_URL is required for Iron Sprue database access.');
+    throw new Error('IRON_SPRUE_DATABASE_URL or DATABASE_URL is required for Iron Sprue database access.');
   }
   return connectionString;
 }

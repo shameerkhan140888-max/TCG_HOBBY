@@ -276,6 +276,18 @@ export {
   getHomepageHeroProducts,
 } from './catalogue.js';
 export {
+  getIronSprueCatalogueCategories,
+  getIronSprueCatalogueFilterOptions,
+  getIronSprueCatalogueHomeData,
+  getIronSprueCatalogueProductBySlug,
+  getIronSprueCatalogueProducts,
+} from './iron-sprue-catalogue.js';
+export type {
+  IronSprueCatalogueFilters,
+  IronSprueCatalogueHomeData,
+  IronSprueCatalogueProductsResult,
+} from './iron-sprue-catalogue.js';
+export {
   AccessoryStrategy,
   FeaturedStrategy,
   LatestProductStrategy,
