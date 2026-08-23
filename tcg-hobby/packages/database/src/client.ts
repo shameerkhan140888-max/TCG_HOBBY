@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaClient as WorkerPrismaClient } from '@prisma/client/wasm.js';
 import { PrismaNeon, PrismaNeonHTTP } from '@prisma/adapter-neon';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 type PrismaGlobal = typeof globalThis & {
   prisma?: PrismaClient;
@@ -75,9 +76,8 @@ function createPrismaClient(connectionString = process.env.DATABASE_URL?.trim())
     // Transaction-dependent commerce writes stay on the Node/Nest runtime.
     const adapter = isWorkerRuntime
       ? new PrismaNeonHTTP(normalizedConnectionString, {})
-      : new PrismaNeon({
+      : new PrismaPg({
           connectionString: normalizedConnectionString,
-          allowExitOnIdle: true,
           connectionTimeoutMillis: 10_000,
           idleTimeoutMillis: 5_000,
           max: 5,
