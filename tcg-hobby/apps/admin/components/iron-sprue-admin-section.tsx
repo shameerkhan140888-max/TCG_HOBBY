@@ -639,7 +639,19 @@ function MediaActionForms({ mediaId }: { mediaId: string }) {
 function ProductDescriptorContentPreview({
   product,
 }: {
-  product: Awaited<ReturnType<typeof listIronSprueAdminContentReviews>>[number]['product'];
+  product: {
+    customerTitle: string;
+    shortDescription: string | null;
+    fullDescription: string | null;
+    featureBullets: unknown;
+    specifications: unknown;
+    seoTitle: string | null;
+    metaDescription: string | null;
+    buildType: string | null;
+    publicationState: string;
+    brand: { name: string } | null;
+    category: { name: string } | null;
+  };
 }) {
   const featureBullets = Array.isArray(product.featureBullets) ? product.featureBullets.filter(Boolean) : [];
   const specifications = product.specifications && typeof product.specifications === 'object'
@@ -728,6 +740,87 @@ function ContentReviewCard({
               <input type="hidden" name="status" value={status} />
               <Button type="submit" size="sm" variant={status === 'APPROVED' ? 'primary' : 'outline'}>{status}</Button>
             </form>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function descriptorMissingFields(product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number]) {
+  const fields: string[] = [];
+  const hasText = (value: string | null | undefined) => Boolean(value?.trim());
+  const featureBullets = Array.isArray(product.featureBullets) ? product.featureBullets.filter(Boolean) : [];
+  const specifications = product.specifications && typeof product.specifications === 'object'
+    ? Object.entries(product.specifications as Record<string, unknown>).filter(([, value]) => value != null && String(value).trim())
+    : [];
+
+  if (!hasText(product.customerTitle)) fields.push('PDP title');
+  if (!hasText(product.shortDescription)) fields.push('short description');
+  if (!hasText(product.fullDescription)) fields.push('full description');
+  if (!featureBullets.length) fields.push('feature bullets');
+  if (!specifications.length) fields.push('specifications');
+  if (!hasText(product.seoTitle)) fields.push('SEO title');
+  if (!hasText(product.metaDescription)) fields.push('meta description');
+  if (!product.brand?.name) fields.push('brand');
+  if (!product.category?.name) fields.push('category');
+  if (!hasText(product.buildType)) fields.push('product type');
+
+  return fields;
+}
+
+function ProductDescriptorCoverage({
+  bulkPublishFormId,
+  products,
+}: {
+  bulkPublishFormId: string;
+  products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'];
+}) {
+  const rows = products
+    .map((product) => ({ product, missingFields: descriptorMissingFields(product) }))
+    .filter(({ product, missingFields }) => product.publicationState === 'CONTENT_PENDING' || product.publicationState === 'REVIEW_REQUIRED' || missingFields.length)
+    .slice(0, 24);
+
+  if (!rows.length) {
+    return (
+      <Card>
+        <CardContent>
+          <h2 className="font-bold">PDP descriptor coverage</h2>
+          <EmptyNote>All loaded products have the core PDP descriptor fields populated. No customer-facing descriptor gaps were found in the current page of products.</EmptyNote>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent className="space-y-4">
+        <div>
+          <h2 className="font-bold">PDP descriptor coverage</h2>
+          <p className="text-sm text-neutral-400">Product-level view of the customer-facing title, descriptions, bullets, specifications, SEO, brand, category and type that populate PDPs.</p>
+        </div>
+        <div className="grid gap-3">
+          {rows.map(({ product, missingFields }) => (
+            <div key={product.id} className="rounded-md border border-surface-line bg-black/30 p-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-bold">{product.customerTitle}</h3>
+                  <p className="text-sm text-neutral-400">{product.sku} - {product.publicationState}</p>
+                </div>
+                <StatusBadge tone={missingFields.length ? 'warning' : 'success'}>
+                  {missingFields.length ? `${missingFields.length} DESCRIPTOR GAPS` : 'DESCRIPTORS POPULATED'}
+                </StatusBadge>
+              </div>
+              {missingFields.length ? (
+                <p className="mt-2 text-sm text-amber-100">Missing: {missingFields.join(', ')}</p>
+              ) : null}
+              <div className="mt-3">
+                <ReviewProductPublishControls bulkFormId={bulkPublishFormId} product={product} />
+              </div>
+              <div className="mt-3">
+                <ProductDescriptorContentPreview product={product} />
+              </div>
+            </div>
           ))}
         </div>
       </CardContent>
@@ -873,7 +966,10 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
 
 async function ContentReviewSection({ searchParams }: { searchParams?: SearchParams }) {
   const mode = fullReviewModeFromSearch(searchParams);
-  const allReviews = await listIronSprueAdminContentReviews({ pageSize: 100 });
+  const [allReviews, productPage] = await Promise.all([
+    listIronSprueAdminContentReviews({ pageSize: 100 }),
+    listIronSprueAdminProducts({ pageSize: 100 }),
+  ]);
   const storefrontAllReviews = allReviews.filter((review) => isIronSprueStorefrontContentReviewField(review.fieldName));
   const pendingReviews = storefrontAllReviews.filter((review) => review.status === 'PENDING' || review.status === 'CONFLICT');
   const approvedReviews = storefrontAllReviews.filter((review) => review.status === 'APPROVED');
@@ -914,6 +1010,7 @@ async function ContentReviewSection({ searchParams }: { searchParams?: SearchPar
         totalCount={bulkPublishableProductCount}
       />
       {!reviews.length ? <EmptyNote>{mode === 'approved' ? 'No approved Iron Sprue content reviews found.' : mode === 'rejected' ? 'No rejected Iron Sprue content reviews found.' : mode === 'all' ? 'No Iron Sprue content review records found.' : 'No Iron Sprue content reviews currently require approval.'}</EmptyNote> : null}
+      <ProductDescriptorCoverage bulkPublishFormId="iron-sprue-content-product-bulk-publish" products={productPage.products} />
       {reviews.map((review) => <ContentReviewCard bulkPublishFormId="iron-sprue-content-product-bulk-publish" key={review.id} review={review} />)}
     </div>
   );
@@ -929,7 +1026,9 @@ function HomepagePlacementForm({
   submitLabel?: string;
 }) {
   const previewUrl = ironSprueAdminPreviewUrl(record?.imageUrl ?? null);
-  const label = homepagePlacementLabel(record?.placementKey ?? defaultPlacementKey);
+  const placementKey = record?.placementKey ?? defaultPlacementKey;
+  const label = homepagePlacementLabel(placementKey);
+  const isStripPlacement = isPromoStripPlacementKey(placementKey);
   return (
     <form action={saveIronSprueHomepagePlacementAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-2">
       <input type="hidden" name="id" value={record?.id ?? ''} />
@@ -942,7 +1041,15 @@ function HomepagePlacementForm({
       {previewUrl ? <img src={previewUrl} alt={record?.title ?? 'Homepage placement'} className="h-40 w-full rounded-md border border-surface-line object-cover md:col-span-2" /> : null}
       <Field label="Internal placement key"><input name="placementKey" defaultValue={record?.placementKey ?? defaultPlacementKey} className={fieldClass} /></Field>
       <Field label="Title"><input name="title" defaultValue={record?.title ?? ''} required className={fieldClass} /></Field>
-      <Field label="CTA label"><input name="ctaLabel" defaultValue={record?.ctaLabel ?? ''} className={fieldClass} /></Field>
+      {isStripPlacement ? (
+        <Field label="Strip icon">
+          <select name="ctaLabel" defaultValue={record?.ctaLabel ?? 'DELIVERY'} className={fieldClass}>
+            {promoStripIconOptions.map((icon) => <option key={icon} value={icon}>{icon.toLowerCase().replaceAll('_', ' ')}</option>)}
+          </select>
+        </Field>
+      ) : (
+        <Field label="CTA label"><input name="ctaLabel" defaultValue={record?.ctaLabel ?? ''} className={fieldClass} /></Field>
+      )}
       <Field label="CTA href"><input name="ctaHref" defaultValue={record?.ctaHref ?? ''} className={fieldClass} /></Field>
       <Field label="Image URL"><input name="imageUrl" defaultValue={record?.imageUrl ?? ''} className={fieldClass} /></Field>
       <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={record?.sortOrder ?? 0} className={fieldClass} /></Field>
@@ -956,6 +1063,7 @@ type HeroLibraryItem = Awaited<ReturnType<typeof listIronSprueR2Objects>>[number
 type HomepagePlacementRecord = Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['homepagePlacements'][number];
 type HeroRecord = Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['heroes'][number];
 type TypographySettingsRecord = Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['typographySettings'];
+const promoStripIconOptions = ['DELIVERY', 'PARCEL', 'ANNOUNCEMENT', 'OFFER', 'INFORMATION', 'SECURITY'] as const;
 
 const heroBadgeLabels: Record<typeof IRON_SPRUE_HERO_MERCHANDISING_BADGES[number], string> = {
   NONE: 'No badge',
@@ -1027,8 +1135,24 @@ function isPromoOrBannerPlacement(placement: HomepagePlacementRecord) {
     && !isProductSectionPlacement(placement);
 }
 
+function isPromoStripPlacementKey(placementKey: string) {
+  return /^promo-banner$|promo-strip|strip/i.test(placementKey);
+}
+
 function productSlugFromPlacement(placement: HomepagePlacementRecord, prefix: string) {
   return placement.ctaHref?.replace('/products/', '').split(/[?#]/)[0] ?? placement.placementKey.replace(prefix, '');
+}
+
+function productPrimaryPreview(product: { mediaAssets?: Array<{ approvalState: string; role: string; url: string | null; storageKey: string | null }> }) {
+  return product.mediaAssets?.find((asset) => asset.approvalState === 'APPROVED' && asset.role === 'catalogue-primary')
+    ?? product.mediaAssets?.find((asset) => asset.role === 'catalogue-primary')
+    ?? null;
+}
+
+function openingBenchFallbackProducts(products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products']) {
+  const withImages = products.filter((product) => productPrimaryPreview(product));
+  const withoutImages = products.filter((product) => !productPrimaryPreview(product));
+  return [...withImages, ...withoutImages].slice(0, 4);
 }
 
 function isR2Reference(value: string | null | undefined) {
@@ -1293,6 +1417,9 @@ function FeaturedProductsManager({
     .filter(isFeaturedProductPlacement)
     .sort((left, right) => Number(right.active) - Number(left.active) || (left.sortOrder ?? 0) - (right.sortOrder ?? 0));
   const activeFeaturedPlacements = featuredPlacements.filter((placement) => placement.active);
+  const fallbackProducts = openingBenchFallbackProducts(products);
+  const effectiveProductCount = activeFeaturedPlacements.length || fallbackProducts.length;
+  const usingFallbackProducts = activeFeaturedPlacements.length === 0 && fallbackProducts.length > 0;
 
   return (
     <Card>
@@ -1302,8 +1429,8 @@ function FeaturedProductsManager({
             <h2 className="font-bold">Opening bench picks row</h2>
             <p className="text-sm text-neutral-400">Controls the first product row after the promo cards on the public homepage.</p>
           </div>
-          <StatusBadge tone={activeFeaturedPlacements.length ? 'success' : 'warning'}>
-            {activeFeaturedPlacements.length} ACTIVE
+          <StatusBadge tone={activeFeaturedPlacements.length ? 'success' : usingFallbackProducts ? 'warning' : 'neutral'}>
+            {activeFeaturedPlacements.length ? `${activeFeaturedPlacements.length} ADMIN ACTIVE` : `${effectiveProductCount} FALLBACK EFFECTIVE`}
           </StatusBadge>
         </div>
 
@@ -1331,6 +1458,26 @@ function FeaturedProductsManager({
               })}
             </div>
           </div>
+        ) : usingFallbackProducts ? (
+          <div className="rounded-md border border-amber-500/30 bg-amber-950/15 p-3">
+            <h3 className="text-sm font-bold text-amber-100">Current products in this row are storefront fallback</h3>
+            <p className="mt-1 text-sm text-amber-100/80">Add saved products below to replace this fallback row.</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {fallbackProducts.map((product) => {
+                const image = productPrimaryPreview(product);
+                const previewUrl = image ? ironSprueMediaPreviewUrl(image) : null;
+                return (
+                  <div key={product.id} className="rounded-md border border-surface-line bg-surface-ink p-3">
+                    <div className="rounded-md border border-surface-line bg-white p-2">
+                      {previewUrl ? <img src={previewUrl} alt={product.customerTitle} className="h-24 w-full object-contain" /> : <div className="grid h-24 place-items-center text-xs text-neutral-500">No preview</div>}
+                    </div>
+                    <p className="mt-2 text-sm font-bold">{product.customerTitle}</p>
+                    <p className="mt-1 text-xs text-neutral-500">{product.sku}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         ) : null}
 
         {featuredPlacements.length ? (
@@ -1338,7 +1485,7 @@ function FeaturedProductsManager({
             {featuredPlacements.map((placement) => {
               const slug = productSlugFromPlacement(placement, 'featured-product:');
               const product = productBySlug.get(slug);
-              const image = product?.mediaAssets.find((asset) => asset.approvalState === 'APPROVED' && asset.role === 'catalogue-primary') ?? product?.mediaAssets.find((asset) => asset.role === 'catalogue-primary');
+              const image = product ? productPrimaryPreview(product) : null;
               const previewUrl = image ? ironSprueMediaPreviewUrl(image) : ironSprueAdminPreviewUrl(placement.imageUrl);
 
               return (
@@ -1424,19 +1571,18 @@ function HomepageProductSectionsManager({
         {previewUrl ? <img src={previewUrl} alt={product?.customerTitle ?? record?.placement.title ?? 'Section product'} className="h-32 w-full rounded-md border border-surface-line bg-white object-contain p-2 md:col-span-2" /> : null}
         <Field label="Row key"><input name="sectionKey" list="homepage-section-keys" defaultValue={record?.sectionKey ?? ''} placeholder="our-aoshima-picks" required className={fieldClass} /></Field>
         <Field label="Homepage heading"><input name="sectionHeading" defaultValue={record?.placement.title ?? ''} placeholder="Our favourite Aoshima kits" required className={fieldClass} /></Field>
-        <Field label={isNewRecord ? 'Products' : 'Product'}>
-          <select name="productSlug" defaultValue={record?.productSlug ?? (isNewRecord ? [] : '')} required className={fieldClass} multiple={isNewRecord} size={isNewRecord ? 8 : undefined}>
+        <Field label="Product">
+          <select name="productSlug" defaultValue={record?.productSlug ?? ''} required className={fieldClass}>
             <option value="">Select a product</option>
             {products.map((candidate) => <option key={candidate.id} value={candidate.slug}>{candidate.sku} - {candidate.customerTitle}</option>)}
           </select>
-          {isNewRecord ? <p className="mt-1 text-xs text-neutral-500">Hold Ctrl/Cmd to select multiple products. They will be added to this section in order.</p> : null}
         </Field>
         <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={record?.placement.sortOrder ?? 0} className={fieldClass} /></Field>
         <Field label="Section CTA label"><input name="ctaLabel" defaultValue={record?.placement.ctaLabel ?? ''} className={fieldClass} /></Field>
         <Field label="Section CTA href"><input name="ctaHref" defaultValue={record?.placement.ctaHref ?? ''} className={fieldClass} /></Field>
         <input type="hidden" name="imageUrl" value={record?.placement.imageUrl ?? ''} />
         <label className="flex items-end gap-2 pb-2 text-sm"><input name="active" type="checkbox" defaultChecked={record?.placement.active ?? true} /> Active on homepage</label>
-        <Button type="submit" size="sm" variant={record ? 'outline' : 'primary'}>{record ? 'Save section product' : 'Add selected products'}</Button>
+        <Button type="submit" size="sm" variant={record ? 'outline' : 'primary'}>{record ? 'Save section product' : 'Add product to row'}</Button>
       </form>
     );
   }

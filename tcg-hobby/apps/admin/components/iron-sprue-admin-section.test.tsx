@@ -407,6 +407,28 @@ describe('IronSprueAdminSection operational controls', () => {
         updatedAt: new Date('2026-08-11T00:00:00.000Z'),
       },
     ]);
+    mocks.listIronSprueAdminProducts.mockResolvedValue({
+      products: [
+        {
+          id: 'product-3',
+          sku: 'IS-CUB-MC093H',
+          slug: 'cubicfun-mc093h-st-basils-cathedral',
+          customerTitle: "St Basil's Cathedral",
+          shortDescription: 'Landmark puzzle descriptor copy',
+          fullDescription: 'Build a colourful architectural display model inspired by St Basil cathedral.',
+          featureBullets: ['Detailed architectural puzzle', 'Display-ready model'],
+          specifications: { pieces: '214', buildTime: '4-6 hours', material: 'printed foam board' },
+          seoTitle: "St Basil's Cathedral 3D puzzle",
+          metaDescription: "Build St Basil's Cathedral as a display puzzle.",
+          buildType: '3D puzzle',
+          publicationState: 'REVIEW_REQUIRED',
+          brand: { name: 'CubicFun' },
+          category: { name: 'Landmark Models' },
+          mediaAssets: [],
+          contentReviews: [],
+        },
+      ],
+    });
 
     const pendingMarkup = await renderAsync(await IronSprueAdminSection({ section: 'content-review' }));
     expect(pendingMarkup).toContain('Approval Required');
@@ -421,7 +443,9 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(pendingMarkup).toContain('Needs review');
     expect(pendingMarkup).toContain('Reject selected');
     expect(pendingMarkup).not.toContain('Toyota 2000GT Red');
-    expect(pendingMarkup).not.toContain("St Basil's Cathedral");
+    expect(pendingMarkup).toContain('PDP descriptor coverage');
+    expect(pendingMarkup).toContain('St Basil&#x27;s Cathedral');
+    expect(pendingMarkup).toContain('Build a colourful architectural display model inspired by St Basil cathedral.');
     expect(pendingMarkup).not.toContain('retailPriceMinor');
     expect(pendingMarkup).not.toContain('supplierUnitCostMinor');
 
@@ -577,6 +601,7 @@ describe('IronSprueAdminSection operational controls', () => {
     const markup = await renderAsync(await IronSprueAdminSection({ section: 'homepage' }));
 
     expect(markup).toContain('Promo strips and banners');
+    expect(markup).toContain('Strip icon');
     expect(markup).toContain('Current promo banner state');
     expect(markup).toContain('Free UK delivery on orders over £75');
     expect(markup).toContain('promo-banner');
@@ -596,5 +621,55 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Aoshima');
     expect(markup).toContain('Storefront typography');
     expect(markup).toContain('Save typography controls');
+  });
+
+  it('shows opening bench fallback products when no saved homepage row products exist', async () => {
+    mocks.getIronSprueAdminWorkspaceCards.mockReturnValue(cards);
+    mocks.getIronSprueAdminReferenceData.mockResolvedValue({ categories: [], suppliers: [], brands: [] });
+    mocks.getIronSprueAdminStorefrontControls.mockResolvedValue({
+      homepagePlacements: [],
+      heroes: [],
+      specialOffers: [],
+      discountCodes: [],
+      typographySettings: {
+        id: null,
+        storeCode: 'IRON_SPRUE',
+        headingFamily: 'IMPACT_CONDENSED',
+        bodyFamily: 'SYSTEM_SANS',
+        headingWeight: 'BLACK',
+        bodyWeight: 'REGULAR',
+        headingScale: 'STANDARD',
+        bodyScale: 'STANDARD',
+        createdAt: null,
+        updatedAt: null,
+      },
+      auditLog: [],
+    });
+    mocks.listIronSprueAdminProducts.mockResolvedValue({
+      products: [
+        {
+          id: 'product-white',
+          sku: 'IS-AOS-05627',
+          slug: 'aoshima-05627-toyota-2000gt-white',
+          customerTitle: 'Toyota 2000GT White',
+          mediaAssets: [{ approvalState: 'APPROVED', role: 'catalogue-primary', url: null, storageKey: 'products/white.png' }],
+        },
+        {
+          id: 'product-red',
+          sku: 'IS-AOS-05628',
+          slug: 'aoshima-05628-toyota-2000gt-red',
+          customerTitle: 'Toyota 2000GT Red',
+          mediaAssets: [],
+        },
+      ],
+    });
+
+    const markup = await renderAsync(await IronSprueAdminSection({ section: 'homepage' }));
+
+    expect(markup).toContain('2 FALLBACK EFFECTIVE');
+    expect(markup).toContain('Current products in this row are storefront fallback');
+    expect(markup).toContain('Toyota 2000GT White');
+    expect(markup).toContain('Toyota 2000GT Red');
+    expect(markup).toContain('Add product to row');
   });
 });

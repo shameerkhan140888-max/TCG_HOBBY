@@ -121,9 +121,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           </div>
           <div className="promo-strip" role="status">
             {promoStripItems.map((item, index) => (
-              <span key={item}>
-                <PromoStripIcon label={item} index={index} />
-                {item}
+              <span key={item.label}>
+                <PromoStripIcon icon={item.icon} label={item.label} index={index} />
+                {item.label}
               </span>
             ))}
           </div>
@@ -195,9 +195,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   );
 }
 
-function PromoStripIcon({ label, index }: { label: string; index: number }) {
+function PromoStripIcon({ icon, label, index }: { icon?: string; label: string; index: number }) {
   const normalized = label.toLowerCase();
-  if (normalized.includes('delivery') || index === 0) {
+  if (icon === 'DELIVERY' || (!icon && (normalized.includes('delivery') || index === 0))) {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" />
@@ -206,10 +206,26 @@ function PromoStripIcon({ label, index }: { label: string; index: number }) {
       </svg>
     );
   }
-  if (normalized.includes('dispatch') || normalized.includes('stock') || index === 1) {
+  if (icon === 'PARCEL' || (!icon && (normalized.includes('dispatch') || normalized.includes('stock') || index === 1))) {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" />
+      </svg>
+    );
+  }
+  if (icon === 'ANNOUNCEMENT') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 14h3l9 4V6l-9 4H4z" />
+        <path d="M7 14l1 5h3" />
+      </svg>
+    );
+  }
+  if (icon === 'OFFER') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 12V5h7l9 9-7 7z" />
+        <circle cx="8" cy="9" r="1.4" />
       </svg>
     );
   }

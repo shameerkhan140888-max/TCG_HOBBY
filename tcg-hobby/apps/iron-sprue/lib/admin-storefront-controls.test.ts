@@ -413,9 +413,9 @@ describe('Iron Sprue Admin storefront controls', () => {
     const items = await getIronSpruePromoStripItems();
 
     expect(items).toEqual([
-      'Free UK delivery on orders over £75',
-      'Fast dispatch on stocked lines',
-      'Safe and secure checkout',
+      { label: 'Free UK delivery on orders over £75', icon: 'DELIVERY' },
+      { label: 'Fast dispatch on stocked lines', icon: 'PARCEL' },
+      { label: 'Safe and secure checkout', icon: 'SECURITY' },
     ]);
 
     vi.unstubAllEnvs();

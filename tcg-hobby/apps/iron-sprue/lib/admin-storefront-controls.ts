@@ -10,6 +10,14 @@ const fallbackPromoStripItems = ['Free UK delivery on orders over \u00a375', 'Fa
 const launchCatalogue = launchProducts as IronSprueProduct[];
 let localIronSprueEnv: Record<string, string> | null = null;
 
+export const ironSpruePromoStripIconKeys = ['DELIVERY', 'PARCEL', 'ANNOUNCEMENT', 'OFFER', 'INFORMATION', 'SECURITY'] as const;
+export type IronSpruePromoStripIconKey = (typeof ironSpruePromoStripIconKeys)[number];
+
+export type IronSpruePromoStripItem = {
+  label: string;
+  icon: IronSpruePromoStripIconKey;
+};
+
 export type AdminHeroRow = {
   id: string;
   headline: string;
@@ -135,6 +143,23 @@ export type IronSprueTypographySettings = {
   headingScale: 'COMPACT' | 'STANDARD' | 'LARGE';
   bodyScale: 'COMPACT' | 'STANDARD' | 'COMFORTABLE';
 };
+
+function promoStripIconForLabel(label: string, index = 0): IronSpruePromoStripIconKey {
+  const normalized = label.toLowerCase();
+  if (normalized.includes('delivery')) return 'DELIVERY';
+  if (normalized.includes('dispatch') || normalized.includes('stock') || normalized.includes('parcel')) return 'PARCEL';
+  if (normalized.includes('offer') || normalized.includes('save') || normalized.includes('deal')) return 'OFFER';
+  if (normalized.includes('safe') || normalized.includes('secure') || normalized.includes('checkout')) return 'SECURITY';
+  return index === 0 ? 'DELIVERY' : index === 1 ? 'PARCEL' : 'INFORMATION';
+}
+
+function normalizePromoStripIcon(value: string | null | undefined, label: string, index: number): IronSpruePromoStripIconKey {
+  const normalized = value?.trim().toUpperCase().replaceAll('-', '_').replaceAll(' ', '_');
+  if (normalized && ironSpruePromoStripIconKeys.includes(normalized as IronSpruePromoStripIconKey)) {
+    return normalized as IronSpruePromoStripIconKey;
+  }
+  return promoStripIconForLabel(label, index);
+}
 
 const defaultTypographySettings: IronSprueTypographySettings = {
   headingFamily: 'IMPACT_CONDENSED',
@@ -673,10 +698,15 @@ export async function getIronSpruePromoStripItems() {
   const placements = await getIronSprueHomepagePlacements();
   const promoItems = placements
     .filter((placement) => placement.active && /promo|banner|strip/i.test(placement.placementKey))
-    .map((placement) => placement.title.trim())
-    .filter(Boolean);
+    .map((placement, index) => {
+      const label = placement.title.trim();
+      return label ? { label, icon: normalizePromoStripIcon(placement.ctaLabel, label, index) } : null;
+    })
+    .filter((item): item is IronSpruePromoStripItem => Boolean(item));
 
-  return promoItems.length ? promoItems.slice(0, 3) : fallbackPromoStripItems;
+  return promoItems.length
+    ? promoItems.slice(0, 3)
+    : fallbackPromoStripItems.map((label, index) => ({ label, icon: promoStripIconForLabel(label, index) }));
 }
 
 function categoryHref(slug: string) {
