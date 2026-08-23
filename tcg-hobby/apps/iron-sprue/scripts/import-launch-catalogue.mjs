@@ -4,6 +4,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PrismaClient } from '@prisma/client';
 import { PrismaNeon } from '@prisma/adapter-neon';
+import { PrismaPg } from '@prisma/adapter-pg';
+import {
+  isDryRun,
+  parseImportTarget,
+  redactDatabaseUrl,
+  resolveIronSprueImportTarget,
+} from '../lib/launch-catalogue-target.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
@@ -29,38 +36,37 @@ function parseEnvFile(text) {
   return values;
 }
 
-async function loadIronSprueDatabaseUrl() {
-  const envText = await readFile(envPath, 'utf8');
-  const env = parseEnvFile(envText);
-  const url = process.env.IRON_SPRUE_DATABASE_URL?.trim() || env.IRON_SPRUE_DATABASE_URL?.trim();
-  if (!url) throw new Error('IRON_SPRUE_DATABASE_URL is required for the launch catalogue import.');
-  return url;
+async function loadFileEnv() {
+  try {
+    const envText = await readFile(envPath, 'utf8');
+    return parseEnvFile(envText);
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') return {};
+    throw error;
+  }
 }
 
-function redactDatabaseUrl(rawUrl) {
-  const url = new URL(rawUrl);
-  return {
-    protocol: url.protocol,
-    host: url.hostname,
-    database: url.pathname.replace(/^\//, ''),
-    sslmode: url.searchParams.get('sslmode') ?? null,
-  };
-}
+function createPrismaClient(importTarget) {
+  if (importTarget.adapter === 'pg') {
+    return new PrismaClient({
+      adapter: new PrismaPg({
+        connectionString: importTarget.databaseUrl,
+        connectionTimeoutMillis: 10_000,
+        idleTimeoutMillis: 5_000,
+        max: 5,
+      }),
+    });
+  }
 
-function assertIronSprueTarget(rawUrl) {
-  const url = new URL(rawUrl);
-  if (!/neon\.tech$/i.test(url.hostname)) {
-    throw new Error('Iron Sprue launch import must target the dedicated Neon host.');
-  }
-  if (/tcg[-_]?hobby/i.test(url.hostname) || /tcg[-_]?hobby/i.test(url.pathname)) {
-    throw new Error('Iron Sprue launch import resolved a TCG Hobby-looking database target.');
-  }
-  const disallowedNames = ['TCG_HOBBY_DATABASE_URL', 'TCG_DATABASE_URL', 'DIRECT_DATABASE_URL'];
-  for (const name of disallowedNames) {
-    if (process.env[name]?.trim() && process.env[name].trim() === rawUrl) {
-      throw new Error(`Iron Sprue launch import must not reuse ${name}.`);
-    }
-  }
+  return new PrismaClient({
+    adapter: new PrismaNeon({
+      connectionString: importTarget.databaseUrl,
+      allowExitOnIdle: true,
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 5_000,
+      max: 5,
+    }),
+  });
 }
 
 function assertManifest(manifest) {
@@ -100,41 +106,35 @@ async function main() {
   const manifest = JSON.parse(manifestText);
   assertManifest(manifest);
 
-  const databaseUrl = await loadIronSprueDatabaseUrl();
-  assertIronSprueTarget(databaseUrl);
-  const prisma = new PrismaClient({
-    adapter: new PrismaNeon({
-      connectionString: databaseUrl,
-      allowExitOnIdle: true,
-      connectionTimeoutMillis: 10_000,
-      idleTimeoutMillis: 5_000,
-      max: 5,
-    }),
-  });
+  const dryRun = isDryRun(process.argv);
+  const targetMode = parseImportTarget(process.argv, process.env);
+  const fileEnv = targetMode === 'neon' ? await loadFileEnv() : {};
+  const importTarget = resolveIronSprueImportTarget({ targetMode, env: process.env, fileEnv, dryRun });
 
-  const dryRun = process.argv.includes('--dry-run');
   const sourceChecksum = manifest.sourceChecksum || checksumManifest(manifestText);
-  const target = redactDatabaseUrl(databaseUrl);
+  const target = redactDatabaseUrl(importTarget.databaseUrl);
 
+  if (dryRun) {
+    console.log(
+      JSON.stringify(
+        {
+          mode: 'dry-run',
+          targetMode: importTarget.mode,
+          target,
+          batch: manifest.importBatchId,
+          products: manifest.products.length,
+          units: manifest.summary.physicalUnitsSupplied,
+          reviewRequired: manifest.summary.reviewRequiredRows,
+        },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+
+  const prisma = createPrismaClient(importTarget);
   try {
-    if (dryRun) {
-      console.log(
-        JSON.stringify(
-          {
-            mode: 'dry-run',
-            target,
-            batch: manifest.importBatchId,
-            products: manifest.products.length,
-            units: manifest.summary.physicalUnitsSupplied,
-            reviewRequired: manifest.summary.reviewRequiredRows,
-          },
-          null,
-          2,
-        ),
-      );
-      return;
-    }
-
     await prisma.$transaction(
       async (tx) => {
         const supplierBySlug = new Map();
@@ -333,28 +333,46 @@ async function main() {
           });
 
           const source = sourceReference(manifest, product);
-          await tx.ironSprueAdminContentReview.deleteMany({ where: { storeCode: STORE_CODE, productId: record.id } });
-          await tx.ironSprueAdminContentReview.create({
-            data: {
-              storeCode: STORE_CODE,
-              productId: record.id,
-              fieldName: 'launch-import',
-              proposedValue: {
-                sourceRow: product.sourceRow,
-                retailPriceMinor: product.retailPriceMinor,
-                supplierUnitCostMinor: product.supplierUnitCostMinor,
-                sourceMediaLinks: product.sourceMediaLinks ?? [],
-                validationWarnings: product.validationWarnings,
-              },
-              sourceReference: source,
-              status: product.validationWarnings.length > 0 ? 'CONFLICT' : 'PENDING',
-              conflictReason: product.validationWarnings.join(' | ') || null,
-            },
+          const existingReview = await tx.ironSprueAdminContentReview.findFirst({
+            where: { storeCode: STORE_CODE, productId: record.id, fieldName: 'launch-import' },
+            select: { id: true },
           });
+          const reviewData = {
+            proposedValue: {
+              sourceRow: product.sourceRow,
+              retailPriceMinor: product.retailPriceMinor,
+              supplierUnitCostMinor: product.supplierUnitCostMinor,
+              sourceMediaLinks: product.sourceMediaLinks ?? [],
+              validationWarnings: product.validationWarnings,
+            },
+            sourceReference: source,
+            status: product.validationWarnings.length > 0 ? 'CONFLICT' : 'PENDING',
+            conflictReason: product.validationWarnings.join(' | ') || null,
+          };
+          if (existingReview) {
+            await tx.ironSprueAdminContentReview.update({
+              where: { id: existingReview.id },
+              data: reviewData,
+            });
+          } else {
+            await tx.ironSprueAdminContentReview.create({
+              data: {
+                storeCode: STORE_CODE,
+                productId: record.id,
+                fieldName: 'launch-import',
+                ...reviewData,
+              },
+            });
+          }
 
-          await tx.ironSprueAdminMediaAsset.deleteMany({ where: { storeCode: STORE_CODE, productId: record.id } });
-          await tx.ironSprueAdminMediaAsset.create({
-            data: {
+          await tx.ironSprueAdminMediaAsset.upsert({
+            where: {
+              storeCode_storageKey: {
+                storeCode: STORE_CODE,
+                storageKey: `archive/products/${product.sku.toLowerCase()}/original/source-required.json`,
+              },
+            },
+            create: {
               storeCode: STORE_CODE,
               productId: record.id,
               role: 'manufacturer-original',
@@ -371,14 +389,46 @@ async function main() {
                   ? 'Source link recorded from provisional PO; manufacturer/source media still needs acquisition and R2 upload.'
                   : 'Manufacturer/source media still needs acquisition and R2 upload.',
             },
+            update: {
+              productId: record.id,
+              role: 'manufacturer-original',
+              url: product.imageUrl,
+              altText: `${product.brand} ${product.name}`,
+              mimeType: 'application/json',
+              approvalState: 'PENDING',
+              isPrimary: false,
+              sortOrder: 10,
+              lastError: product.imageUrl
+                ? null
+                : product.sourceMediaLinks?.length
+                  ? 'Source link recorded from provisional PO; manufacturer/source media still needs acquisition and R2 upload.'
+                  : 'Manufacturer/source media still needs acquisition and R2 upload.',
+            },
           });
-          await tx.ironSprueAdminMediaAsset.create({
-            data: {
+          await tx.ironSprueAdminMediaAsset.upsert({
+            where: {
+              storeCode_storageKey: {
+                storeCode: STORE_CODE,
+                storageKey: `published/products/${product.sku.toLowerCase()}/catalogue-primary-placeholder.json`,
+              },
+            },
+            create: {
               storeCode: STORE_CODE,
               productId: record.id,
               role: 'catalogue-primary',
               url: product.imageUrl,
               storageKey: `published/products/${product.sku.toLowerCase()}/catalogue-primary-placeholder.json`,
+              altText: `${product.name} storefront primary image`,
+              mimeType: product.imageUrl ? 'image/jpeg' : 'application/json',
+              approvalState: product.imageUrl ? 'PENDING' : 'FAILED',
+              isPrimary: Boolean(product.imageUrl),
+              sortOrder: 20,
+              lastError: product.imageUrl ? null : 'Image 2 storefront primary is required before publication.',
+            },
+            update: {
+              productId: record.id,
+              role: 'catalogue-primary',
+              url: product.imageUrl,
               altText: `${product.name} storefront primary image`,
               mimeType: product.imageUrl ? 'image/jpeg' : 'application/json',
               approvalState: product.imageUrl ? 'PENDING' : 'FAILED',
@@ -402,6 +452,7 @@ async function main() {
       JSON.stringify(
         {
           mode: 'imported',
+          targetMode: importTarget.mode,
           target,
           batch: manifest.importBatchId,
           products: counts[0],

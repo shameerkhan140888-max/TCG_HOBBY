@@ -56,7 +56,7 @@ function rejectTcghobbyUrlReuse(value: string, variableName: string) {
   for (const tcgName of TCG_DATABASE_ENV_NAMES) {
     const tcgValue = process.env[tcgName]?.trim();
     if (tcgValue && tcgValue === value) {
-      throw new Error(`${variableName} must not reuse ${tcgName}; Iron Sprue requires a dedicated Neon project.`);
+      throw new Error(`${variableName} must not reuse ${tcgName}; Iron Sprue requires a dedicated configured database target.`);
     }
   }
 }

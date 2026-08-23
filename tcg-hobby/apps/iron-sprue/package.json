@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
+    "@prisma/adapter-pg": "^6.19.3",
     "@tcg-hobby/types": "*",
     "@tcg-hobby/ui": "*",
     "@tcg-hobby/utils": "*",

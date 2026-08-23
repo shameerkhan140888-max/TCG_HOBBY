@@ -28,7 +28,7 @@ describe('Iron Sprue runtime isolation config', () => {
     process.env.IRON_SPRUE_DIRECT_DATABASE_URL = 'postgresql://iron-direct.example/db';
     process.env.IRON_SPRUE_WORKER_READ_DATABASE_URL = 'postgresql://iron-read.example/db';
 
-    expect(() => getIronSprueDatabaseConfig()).toThrow(/dedicated Neon project/);
+    expect(() => getIronSprueDatabaseConfig()).toThrow(/dedicated configured database target/);
   });
 
   it('allows local private R2 access before the public media URL is configured', () => {

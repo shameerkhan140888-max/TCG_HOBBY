@@ -24,22 +24,47 @@ Run a redacted dry-run first:
 npm run import:launch-catalogue:dry-run -w @capital-hobby/iron-sprue
 ```
 
-Then run the import only after confirming the target host is the dedicated Iron Sprue Neon environment:
+The legacy Neon target remains available for non-Railway environments that still deliberately use the dedicated Iron Sprue Neon database. Run it only after confirming the target host is the dedicated Iron Sprue Neon environment:
 
 ```powershell
-npm run import:launch-catalogue -w @capital-hobby/iron-sprue
+npm run import:launch-catalogue -w @capital-hobby/iron-sprue -- --target=neon
+```
+
+For the current Railway production PostgreSQL database, the importer must be run from the Railway production environment so it can use Railway's own `DATABASE_URL`. This is the production path. It is a deliberate production mode, not a generic connection-string override. Run the dry-run first:
+
+```bash
+npm run import:launch-catalogue -w @capital-hobby/iron-sprue -- --target=railway-production --dry-run
+```
+
+Then, only after confirming the redacted target and counts, run the production import with the explicit opt-in:
+
+```bash
+IRON_SPRUE_ALLOW_RAILWAY_PRODUCTION_IMPORT=CONFIRM_IRON_SPRUE_RAILWAY_PRODUCTION_IMPORT npm run import:launch-catalogue -w @capital-hobby/iron-sprue -- --target=railway-production
 ```
 
 The importer:
 
-- reads `IRON_SPRUE_DATABASE_URL` from `apps/iron-sprue/.env.local` unless explicitly supplied;
+- reads `IRON_SPRUE_DATABASE_URL` from `apps/iron-sprue/.env.local` only for the legacy explicit Neon target;
+- reads Railway production `DATABASE_URL` only when `--target=railway-production` is supplied;
+- requires `RAILWAY_ENVIRONMENT_NAME=production` for Railway production mode;
+- requires `IRON_SPRUE_RAILWAY_PRODUCTION_DATABASE_FINGERPRINT` to match the SHA-256 hash of Railway production `DATABASE_URL`;
+- requires `IRON_SPRUE_ALLOW_RAILWAY_PRODUCTION_IMPORT=CONFIRM_IRON_SPRUE_RAILWAY_PRODUCTION_IMPORT` before a non-dry-run Railway production import;
 - rejects TCG Hobby-looking database targets;
 - upserts only `IRON_SPRUE` records;
 - upserts brands, categories, supplier, products, inventory, content-review rows and media placeholders;
 - preserves the source workbook row reference;
 - records provisional PO source/media links in the content-review metadata where available;
 - is safe to retry by SKU, slug, source checksum and media storage key;
+- does not reset, truncate or delete production catalogue/import data;
 - does not enable checkout, Stripe or Resend.
+
+Generate the Railway production database fingerprint inside Railway, without printing the URL itself:
+
+```bash
+node -e "const { createHash } = require('node:crypto'); if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL missing'); console.log(createHash('sha256').update(process.env.DATABASE_URL.trim()).digest('hex'))"
+```
+
+Store that output as `IRON_SPRUE_RAILWAY_PRODUCTION_DATABASE_FINGERPRINT` in the Railway production environment before running the dry-run/import commands. This fingerprint is a guard value, not a database credential.
 
 ## Publication Gate
 
