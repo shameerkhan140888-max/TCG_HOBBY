@@ -1,7 +1,7 @@
 import { Prisma, ProductCondition } from '@prisma/client';
 import { slugify } from '@tcg-hobby/utils';
-import { prisma } from './client';
-import { derivePublicStockState } from './product-import';
+import { prisma } from './client.js';
+import { derivePublicStockState } from './product-import.js';
 
 export const PRODUCT_CSV_IMPORT_HEADERS = [
   'name',

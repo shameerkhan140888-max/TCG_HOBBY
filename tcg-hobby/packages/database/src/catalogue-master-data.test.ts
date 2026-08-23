@@ -3,7 +3,7 @@ import {
   createCatalogueMasterDataRecord,
   resolveMasterDataByImportValues,
   resolveProductMasterDataInput,
-} from './catalogue-master-data';
+} from './catalogue-master-data.js';
 
 const activeGame = { id: 'game-1', name: 'Pokemon TCG', slug: 'pokemon-tcg', active: true, sortOrder: 1, _count: { products: 0 } };
 const inactiveGame = { id: 'game-2', name: 'Inactive Game', slug: 'inactive-game', active: false, sortOrder: 2, _count: { products: 0 } };

@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MEGA_GRENINJA_PRODUCT_SLUG } from './commerce';
+import { MEGA_GRENINJA_PRODUCT_SLUG } from './commerce.js';
 import {
   createPendingCheckoutOrder,
   finalizePaidCheckoutOrder,
   releaseExpiredCheckoutOrderReservations,
-} from './orders';
+} from './orders.js';
 
 function createDbMock() {
   const db = {

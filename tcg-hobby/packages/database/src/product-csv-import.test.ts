@@ -4,7 +4,7 @@ import {
   createProductCsvImportPlan,
   executeProductCsvImport,
   parseProductCsv,
-} from './product-csv-import';
+} from './product-csv-import.js';
 
 function csv(overrides: Record<string, string> = {}) {
   const values: Record<string, string> = {
@@ -78,7 +78,7 @@ function planningDb(products: Array<{ id: string; sku: string; barcode: string |
       findMany: vi.fn().mockResolvedValue([{ id: 'supplier-1', slug: 'tcg-hobby' }]),
     },
     game: {
-      findMany: vi.fn().mockResolvedValue([{ id: 'game-1', name: 'Pokémon TCG', slug: 'pokemon-tcg', active: true, sortOrder: 10, _count: { products: 0 } }]),
+      findMany: vi.fn().mockResolvedValue([{ id: 'game-1', name: 'PokÃ©mon TCG', slug: 'pokemon-tcg', active: true, sortOrder: 10, _count: { products: 0 } }]),
     },
     brand: {
       findMany: vi.fn().mockResolvedValue([{ id: 'brand-1', name: 'Pokemon TCG', slug: 'pokemon-tcg', active: true, sortOrder: 10, _count: { products: 0 } }]),
@@ -142,7 +142,7 @@ describe('product CSV import', () => {
       product: { findMany: vi.fn().mockResolvedValue([]) },
       category: { findMany: vi.fn().mockResolvedValue([]) },
       supplier: { findMany: vi.fn().mockResolvedValue([]) },
-      game: { findMany: vi.fn().mockResolvedValue([{ id: 'game-1', name: 'Pokémon TCG', slug: 'pokemon-tcg', active: true, sortOrder: 10, _count: { products: 0 } }]) },
+      game: { findMany: vi.fn().mockResolvedValue([{ id: 'game-1', name: 'PokÃ©mon TCG', slug: 'pokemon-tcg', active: true, sortOrder: 10, _count: { products: 0 } }]) },
       brand: { findMany: vi.fn().mockResolvedValue([{ id: 'brand-1', name: 'Pokemon TCG', slug: 'pokemon-tcg', active: true, sortOrder: 10, _count: { products: 0 } }]) },
       productType: { findMany: vi.fn().mockResolvedValue([{ id: 'type-1', name: 'Premium Collection', slug: 'premium-collection', active: true, sortOrder: 10, group: 'sealed', _count: { products: 0 } }]) },
       productLanguage: { findMany: vi.fn().mockResolvedValue([{ id: 'language-1', name: 'English', code: 'en', active: true, sortOrder: 10, _count: { products: 0 } }]) },
@@ -182,7 +182,7 @@ describe('product CSV import', () => {
     const plan = await createProductCsvImportPlan(csv({ setSlug: 'magic-set' }), db);
 
     expect(plan.summary.errorRows).toBe(1);
-    expect(plan.rows[0]?.errors).toContain('Set "Magic Set" does not belong to Game "Pokémon TCG".');
+    expect(plan.rows[0]?.errors).toContain('Set "Magic Set" does not belong to Game "PokÃ©mon TCG".');
   });
 
   it('does not execute a transaction when preview contains row errors', async () => {

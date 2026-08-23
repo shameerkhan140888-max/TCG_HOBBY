@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
-import { prisma } from './client';
+import { prisma } from './client.js';
 
 export type ManagedProductImageInput = {
   productId: string;

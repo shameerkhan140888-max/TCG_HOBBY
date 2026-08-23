@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
-import { prisma } from './client';
+import { prisma } from './client.js';
 
 export const PRODUCT_FACT_KEYS = [
   'manufacturer', 'manufacturerSku', 'boosterPackCount', 'cardsPerPack', 'boxContents', 'recommendedAge',

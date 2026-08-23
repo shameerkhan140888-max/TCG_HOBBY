@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import Stripe from 'stripe';
-import { assertStripeEventMatchesStore, getStoreStripeConfig } from './store-stripe-config';
+import { assertStripeEventMatchesStore, getStoreStripeConfig } from './store-stripe-config.js';
 
 const ORIGINAL_ENV = { ...process.env };
 

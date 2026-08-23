@@ -21,7 +21,7 @@ export {
   saveStorefrontBanner,
   SHOP_LANDING_DEFAULTS,
   STOREFRONT_BANNER_ICONS,
-} from './storefront-content';
+} from './storefront-content.js';
 export type {
   HeroDisplayMode,
   HeroFocalPoint,
@@ -34,7 +34,7 @@ export type {
   ShopLandingScope,
   StorefrontBannerIcon,
   StorefrontBannerInput,
-} from './storefront-content';
+} from './storefront-content.js';
 export {
   MarketingCampaignStatus,
   MarketingSubscriberStatus,
@@ -42,7 +42,7 @@ export {
   ProductRecommendationType,
 } from '@prisma/client';
 export type { Prisma } from '@prisma/client';
-export { prisma } from './client';
+export { prisma } from './client.js';
 export {
   calculateCollectionStats,
   getCollectionImportSuggestions,
@@ -52,8 +52,8 @@ export {
   removeCollectionItem,
   updateCollectionItemQuantity,
   upsertCollectionItem as addCollectionItem,
-} from './collection';
-export type { UpsertCollectionItemInput } from './collection';
+} from './collection.js';
+export type { UpsertCollectionItemInput } from './collection.js';
 export {
   addCardToDeck,
   calculateDeckStatistics,
@@ -65,7 +65,7 @@ export {
   updateDeckCardQuantity,
   updateDeckDetails,
   validateDeckCardQuantity,
-} from './deck';
+} from './deck.js';
 export {
   calculateAllocationState,
   calculateCountdownParts,
@@ -79,7 +79,7 @@ export {
   setNotificationSubscriptionPreference,
   toggleNotificationSubscription,
   updateAdminRelease,
-} from './releases';
+} from './releases.js';
 export {
   calculateApproximateCollectionValue,
   calculateTrend,
@@ -92,7 +92,7 @@ export {
   toggleWatchlistItem,
   updateNotificationCenterPreference,
   updateWatchlistItemPreferences,
-} from './market';
+} from './market.js';
 export {
   adjustProductStock,
   archiveAdminProduct,
@@ -118,7 +118,7 @@ export {
   updateProductMerchandisingSettings,
   updateAdminProductRecommendation,
   updateAdminSupplier,
-} from './admin';
+} from './admin.js';
 export type {
   AdminMerchandisingProductSummary,
   AdminProductDetail,
@@ -128,7 +128,7 @@ export type {
   AdminProductRecommendationUpdateInput,
   AdminProductListItem,
   AdminProductsResult,
-} from './admin';
+} from './admin.js';
 export {
   calculateMarginMinor,
   calculateMarkupPercent,
@@ -136,7 +136,7 @@ export {
   getPricingRules,
   getProductPricingSnapshot,
   refreshProductPricing,
-} from './pricing';
+} from './pricing.js';
 export {
   buildCartReservationExpiry,
   calculateCartSubtotal,
@@ -155,7 +155,7 @@ export {
   summarizeOrderTotals,
   validateQuantityAgainstAvailability,
   validateQuantityAgainstPurchaseLimit,
-} from './commerce';
+} from './commerce.js';
 export {
   addProductToBuylist,
   getAdminBuylists,
@@ -169,7 +169,7 @@ export {
   submitBuylistRequest,
   updateAdminBuylist,
   updateBuylistItemQuantity,
-} from './buylist';
+} from './buylist.js';
 export {
   addProductToCart,
   clearCart,
@@ -181,7 +181,7 @@ export {
   resolveGuestCart,
   removeCartItem,
   updateCartItemQuantity,
-} from './cart';
+} from './cart.js';
 export {
   attachStripeSessionToOrder,
   cancelCheckoutOrderAttempt,
@@ -198,26 +198,26 @@ export {
   releaseCheckoutOrderReservation,
   releaseExpiredCheckoutOrderReservations,
   retrieveStripeCheckoutSession,
-} from './orders';
+} from './orders.js';
 export {
   constructStripeWebhookEvent,
   isStripeCheckoutConfigured,
   requireStripeSecretKey,
   requireStripeWebhookSecret,
-} from './stripe-provider';
+} from './stripe-provider.js';
 export {
   assertStripeEventMatchesStore,
   getStoreStripeConfig,
-} from './store-stripe-config';
+} from './store-stripe-config.js';
 export type {
   CommerceEnvironment,
   CommerceStoreCode,
   StoreStripeConfig,
-} from './store-stripe-config';
+} from './store-stripe-config.js';
 export {
   processStripeWebhookEvent,
-} from './stripe-webhook';
-export type { StripeWebhookProcessingResult } from './stripe-webhook';
+} from './stripe-webhook.js';
+export type { StripeWebhookProcessingResult } from './stripe-webhook.js';
 export {
   addIronSprueProductToCart,
   buildIronSprueStripeMetadata,
@@ -244,13 +244,13 @@ export {
   resolveIronSprueGuestCart,
   refundIronSprueOrderForMerchant,
   updateIronSprueCartItemQuantity,
-} from './iron-sprue-commerce';
+} from './iron-sprue-commerce.js';
 export type {
   IronSprueCheckoutSessionResult,
   IronSprueOrderWithItems,
   IronSpruePaymentIntentCheckoutResult,
   IronSprueStripeWebhookProcessingResult,
-} from './iron-sprue-commerce';
+} from './iron-sprue-commerce.js';
 export type {
   CheckoutReservation,
   CheckoutReservationItem,
@@ -258,14 +258,14 @@ export type {
   CustomerOrderSummary,
   OrderShippingAddress,
   OrderWithItems,
-} from './orders';
+} from './orders.js';
 export {
   ORDER_CONFIRMATION_EMAIL_PURPOSE,
   claimOrderConfirmationEmail,
   markTransactionalEmailFailed,
   markTransactionalEmailSent,
-} from './transactional-email';
-export type { TransactionalEmailClaim } from './transactional-email';
+} from './transactional-email.js';
+export type { TransactionalEmailClaim } from './transactional-email.js';
 export {
   getCatalogueCategories,
   getCatalogueHomeData,
@@ -274,7 +274,7 @@ export {
   getCatalogueProducts,
   getFeaturedCatalogueProducts,
   getHomepageHeroProducts,
-} from './catalogue';
+} from './catalogue.js';
 export {
   AccessoryStrategy,
   FeaturedStrategy,
@@ -294,7 +294,7 @@ export {
   getRecommendedProducts,
   getRelatedProducts,
   isMerchandisingProductEligible,
-} from './merchandising';
+} from './merchandising.js';
 export type {
   MerchandisingCampaignInfluence,
   MerchandisingCampaignProductInfluence,
@@ -305,14 +305,14 @@ export type {
   RecommendationAnalyticsEvent,
   RecommendationAnalyticsEventContext,
   StorefrontSafeMerchandisingProduct,
-} from './merchandising';
+} from './merchandising.js';
 export {
   calculateAvailableStockForVisibility,
   getStorefrontListingProductWhere,
   getStorefrontPublicProductWhere,
   isProductPubliclyRouteable,
   isProductVisibleInStorefrontListings,
-} from './product-visibility';
+} from './product-visibility.js';
 export {
   createCatalogueMasterDataRecord,
   getCatalogueMasterDataOptions,
@@ -322,14 +322,14 @@ export {
   resolveProductMasterDataInput,
   setCatalogueMasterDataActive,
   updateCatalogueMasterDataRecord,
-} from './catalogue-master-data';
+} from './catalogue-master-data.js';
 export type {
   CatalogueMasterDataInput,
   CatalogueMasterDataKind,
   CatalogueMasterDataOptions,
   CatalogueMasterDataOverview,
   CatalogueMasterDataRecord,
-} from './catalogue-master-data';
+} from './catalogue-master-data.js';
 export {
   createProductImportPlan,
   derivePublicStockState,
@@ -343,7 +343,7 @@ export {
   validateProductImportFolder,
   validateProductImportManifest,
   validateProductMediaManifest,
-} from './product-import';
+} from './product-import.js';
 export type {
   NormalisedProductImportInput,
   ProductImportAdapter,
@@ -364,14 +364,14 @@ export type {
   ProductMediaThumbnailUsage,
   PurchaseLimitScope,
   ShippingPromotionType,
-} from './product-import';
+} from './product-import.js';
 export {
   PRODUCT_CSV_IMPORT_HEADERS,
   buildProductCsvTemplate,
   createProductCsvImportPlan,
   executeProductCsvImport,
   parseProductCsv,
-} from './product-csv-import';
+} from './product-csv-import.js';
 export type {
   ProductCsvImportMatchType,
   ProductCsvImportOptions,
@@ -380,7 +380,7 @@ export type {
   ProductCsvImportResult,
   ProductCsvImportRow,
   ProductCsvImportRowStatus,
-} from './product-csv-import';
+} from './product-csv-import.js';
 export {
   assertProductImportLookupData,
   canonicalBrands,
@@ -392,7 +392,7 @@ export {
   canonicalSuppliers,
   seedCanonicalLookupData,
   verifyCanonicalLookupData,
-} from './canonical-seed';
+} from './canonical-seed.js';
 export type {
   CanonicalBrand,
   CanonicalCategory,
@@ -401,7 +401,7 @@ export type {
   CanonicalProductSet,
   CanonicalProductType,
   CanonicalSupplier,
-} from './canonical-seed';
+} from './canonical-seed.js';
 export {
   DEFAULT_MARKETING_TAGS,
   createMarketingCampaignDraft,
@@ -424,7 +424,7 @@ export {
   updateMarketingSubscriberTags,
   upsertMarketingSubscriberSignup,
   validateSubscriberEmail,
-} from './marketing';
+} from './marketing.js';
 export {
   addProductToWishlist,
   getWishlistItems,
@@ -432,8 +432,8 @@ export {
   isProductWishlisted,
   removeProductFromWishlist,
   toggleWishlistItem,
-} from './wishlist';
-export type { WishlistItem } from './wishlist';
+} from './wishlist.js';
+export type { WishlistItem } from './wishlist.js';
 
 export {
   completeProductImageDeletion,
@@ -445,8 +445,8 @@ export {
   reorderProductImages,
   setPrimaryProductImage,
   updateProductImageAltText,
-} from './product-media';
-export type { ManagedProductImageInput } from './product-media';
+} from './product-media.js';
+export type { ManagedProductImageInput } from './product-media.js';
 export {
   applyContentGeneration,
   countRecentContentGenerations,
@@ -459,19 +459,20 @@ export {
   restoreContentGeneration,
   setProductReviewLifecycle,
   validateProductFacts,
-} from './product-content';
+} from './product-content.js';
 export type {
   FactVerificationState,
   GeneratedContentField,
   GeneratedProductContent,
   ProductFactInput,
   ProductFactKey,
-} from './product-content';
+} from './product-content.js';
 
-export * from './product-image-resolution';
+export * from './product-image-resolution.js';
 
-export * from './admin-identity';
-export * from './account-recovery';
-export * from './iron-sprue-admin';
-export * from './iron-sprue-email-templates';
-export * from './iron-sprue-transactional-email';
+export * from './admin-identity.js';
+export * from './account-recovery.js';
+export * from './iron-sprue-admin.js';
+export * from './iron-sprue-email-templates.js';
+export * from './iron-sprue-transactional-email.js';
+

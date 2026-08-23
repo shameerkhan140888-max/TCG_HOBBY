@@ -1,5 +1,5 @@
 import type { CatalogueProduct } from '@tcg-hobby/types';
-import { prisma } from './client';
+import { prisma } from './client.js';
 
 type WishlistProductRow = {
   id: string;

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { calculateAvailableStock, calculateGrossProfitMinor, calculateMarginPercentage, resolveAdminSellingPriceMinor } from './admin-math';
+import { calculateAvailableStock, calculateGrossProfitMinor, calculateMarginPercentage, resolveAdminSellingPriceMinor } from './admin-math.js';
 import {
   adjustProductStock,
   calculateVatExclusiveMinor,
@@ -13,7 +13,7 @@ import {
   searchAdminMerchandisingProducts,
   setProductPublication,
   updateProductMerchandisingSettings,
-} from './admin';
+} from './admin.js';
 
 const originalNodeEnv = process.env.NODE_ENV;
 

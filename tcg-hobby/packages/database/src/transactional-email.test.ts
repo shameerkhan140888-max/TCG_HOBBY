@@ -3,7 +3,7 @@ import {
   claimOrderConfirmationEmail,
   markTransactionalEmailFailed,
   markTransactionalEmailSent,
-} from './transactional-email';
+} from './transactional-email.js';
 
 function createDb(status = 'PENDING', claimCount = 1) {
   return {

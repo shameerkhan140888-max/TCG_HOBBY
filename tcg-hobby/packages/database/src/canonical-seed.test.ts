@@ -10,7 +10,7 @@ import {
   canonicalSuppliers,
   seedCanonicalLookupData,
   verifyCanonicalLookupData,
-} from './canonical-seed';
+} from './canonical-seed.js';
 
 function createSlugDelegate(initialValues: string[] = []) {
   const values = new Set(initialValues);

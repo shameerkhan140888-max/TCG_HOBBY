@@ -1,10 +1,10 @@
 import type Stripe from 'stripe';
-import { prisma } from './client';
+import { prisma } from './client.js';
 import {
   finalizePaidCheckoutOrder,
   getOrderByStripeCheckoutSessionId,
   releaseCheckoutOrderReservation,
-} from './orders';
+} from './orders.js';
 
 type DatabaseClient = typeof prisma;
 

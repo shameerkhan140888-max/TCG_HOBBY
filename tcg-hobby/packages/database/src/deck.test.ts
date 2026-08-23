@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { addCardToDeck, calculateDeckStatistics, generateDeckSlug, validateDeckCardQuantity } from './deck';
+import { addCardToDeck, calculateDeckStatistics, generateDeckSlug, validateDeckCardQuantity } from './deck.js';
 
 function createDbMock() {
   return {

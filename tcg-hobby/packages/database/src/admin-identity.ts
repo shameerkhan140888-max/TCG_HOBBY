@@ -1,5 +1,5 @@
 import type { Prisma, UserRole } from '@prisma/client';
-import { prisma } from './client';
+import { prisma } from './client.js';
 
 export type PromoteUserInput = { email: string; role: Extract<UserRole, 'ADMIN' | 'STAFF'>; actorEmail?: string | null; source?: string };
 type PromotionDatabase = { $transaction<T>(callback: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> };

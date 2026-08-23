@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { applyContentGeneration, getProductContentWorkspace, restoreContentGeneration, validateProductFacts, type GeneratedProductContent } from './product-content';
+import { applyContentGeneration, getProductContentWorkspace, restoreContentGeneration, validateProductFacts, type GeneratedProductContent } from './product-content.js';
 
 const generated: GeneratedProductContent = { shortDescription: 'New short copy', fullDescription: 'New full copy', contents: ['One verified item'], highlights: ['Verified highlight'], specificationSummary: 'Verified summary', seoTitle: 'SEO title', metaDescription: 'Meta description', searchTags: ['pokemon'], suggestedSlug: 'suggested-only', imageAltText: 'Front of the verified product box', missingFactWarnings: [] };
 

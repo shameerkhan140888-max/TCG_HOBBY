@@ -5,7 +5,7 @@ import {
   isStripeCheckoutConfigured,
   requireStripeSecretKey,
   requireStripeWebhookSecret,
-} from './stripe-provider';
+} from './stripe-provider.js';
 
 const originalSecretKey = process.env.STRIPE_SECRET_KEY;
 const originalWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;

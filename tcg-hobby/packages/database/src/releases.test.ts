@@ -7,7 +7,7 @@ import {
   getReleaseCalendar,
   setNotificationSubscriptionPreference,
   toggleNotificationSubscription,
-} from './releases';
+} from './releases.js';
 
 const originalNodeEnv = process.env.NODE_ENV;
 const originalReleaseSource = process.env.TCG_HOBBY_RELEASE_DATA_SOURCE;

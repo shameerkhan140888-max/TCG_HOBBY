@@ -21,7 +21,7 @@ import {
   updateIronSprueAdminMediaApproval,
   upsertIronSprueAdminHero,
   upsertIronSprueAdminTypographySettings,
-} from './iron-sprue-admin';
+} from './iron-sprue-admin.js';
 
 const originalEnv = { ...process.env };
 

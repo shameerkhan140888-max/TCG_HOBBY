@@ -8,7 +8,7 @@ import {
   seedCategories,
   toCatalogueCategory,
   toMoney,
-} from './seed-data';
+} from './seed-data.js';
 
 describe('database seed data', () => {
   it('builds catalogue categories with product counts in the UI shape', () => {
@@ -40,8 +40,8 @@ describe('database seed data', () => {
     const product = seedProducts.find((item) => item.slug === MEGA_GRENINJA_PREMIUM_COLLECTION_SLUG);
 
     expect(product).toMatchObject({
-      name: 'Pokémon TCG: Mega Greninja ex Premium Collection',
-      game: 'Pokémon TCG',
+      name: 'PokÃ©mon TCG: Mega Greninja ex Premium Collection',
+      game: 'PokÃ©mon TCG',
       priceMinor: 4999,
       featured: true,
       published: true,
@@ -60,10 +60,10 @@ describe('database seed data', () => {
       '/products/pokemon/mega-greninja-ex-premium-collection/rear-packaging.webp',
     ]);
     expect(seedProductImages.filter((image) => image.productSlug === MEGA_GRENINJA_PREMIUM_COLLECTION_SLUG).map((image) => image.altText)).toEqual([
-      'Pokémon TCG Mega Greninja ex Premium Collection box',
-      'Eight Pokémon TCG booster packs included in the Mega Greninja ex Premium Collection',
+      'PokÃ©mon TCG Mega Greninja ex Premium Collection box',
+      'Eight PokÃ©mon TCG booster packs included in the Mega Greninja ex Premium Collection',
       'Mega Greninja ex promotional card and oversized lenticular promotional card',
-      'Rear packaging of the Pokémon TCG Mega Greninja ex Premium Collection',
+      'Rear packaging of the PokÃ©mon TCG Mega Greninja ex Premium Collection',
     ]);
   });
 });

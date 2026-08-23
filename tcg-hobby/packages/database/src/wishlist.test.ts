@@ -6,7 +6,7 @@ import {
   isProductWishlisted,
   removeProductFromWishlist,
   toggleWishlistItem,
-} from './wishlist';
+} from './wishlist.js';
 
 function createDbMock(overrides: Record<string, unknown> = {}) {
   return {

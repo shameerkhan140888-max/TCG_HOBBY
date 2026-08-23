@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { Prisma, type IronSprueAdminProduct, type UserRole } from '@prisma/client';
 import { slugify } from '@tcg-hobby/utils';
-import { getIronSprueAdminPrisma } from './client';
+import { getIronSprueAdminPrisma } from './client.js';
 import {
   generateIronSprueOrderNumber,
   refundIronSprueOrderForMerchant,
-} from './iron-sprue-commerce';
-import { calculateVatEstimateMinor } from './commerce';
+} from './iron-sprue-commerce.js';
+import { calculateVatEstimateMinor } from './commerce.js';
 
 export const IRON_SPRUE_STORE_CODE = 'IRON_SPRUE' as const;
 

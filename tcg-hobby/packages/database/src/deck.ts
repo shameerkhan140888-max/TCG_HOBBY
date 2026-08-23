@@ -1,9 +1,9 @@
 import type { CollectionItem, DeckDetail, DeckSummary, DeckVisibility } from '@tcg-hobby/types';
 import { slugify } from '@tcg-hobby/utils';
-import { prisma } from './client';
-import { calculateLineTotal } from './commerce';
-import { getCustomerCollectionItems } from './collection';
-import { seedCategories, seedDeckCards, seedDecks, seedProducts } from './seed-data';
+import { prisma } from './client.js';
+import { calculateLineTotal } from './commerce.js';
+import { getCustomerCollectionItems } from './collection.js';
+import { seedCategories, seedDeckCards, seedDecks, seedProducts } from './seed-data.js';
 
 type DeckCardRow = {
   id: string;

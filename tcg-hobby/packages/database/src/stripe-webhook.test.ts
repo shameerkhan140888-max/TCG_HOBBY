@@ -9,7 +9,7 @@ const orderMocks = vi.hoisted(() => ({
 
 vi.mock('./orders', () => orderMocks);
 
-import { processStripeWebhookEvent } from './stripe-webhook';
+import { processStripeWebhookEvent } from './stripe-webhook.js';
 
 function stripeEvent(type: Stripe.Event.Type, object: Record<string, unknown>, id = 'evt_1') {
   return {

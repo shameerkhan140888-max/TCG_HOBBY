@@ -9,7 +9,7 @@ import {
   saveHomepageHeroPlacement,
   detachHomepageHeroImage,
   setManagedHomepageHeroImage,
-} from './storefront-content';
+} from './storefront-content.js';
 
 describe('storefront content', () => {
   it('uses the canonical shipping message only before any banner has been configured', async () => {
@@ -21,7 +21,7 @@ describe('storefront content', () => {
     } as any;
 
     await expect(getActiveStorefrontBanner(new Date('2026-07-27T12:00:00Z'), db)).resolves.toMatchObject({
-      message: 'Free standard delivery on orders over £50',
+      message: 'Free standard delivery on orders over Â£50',
       active: true,
     });
 
@@ -459,7 +459,7 @@ describe('storefront content', () => {
 
     await expect(getPublicShopLandingPage('pokemon', db)).resolves.toMatchObject({
       id: null,
-      heading: 'Explore Pokémon TCG',
+      heading: 'Explore PokÃ©mon TCG',
       active: true,
     });
   });

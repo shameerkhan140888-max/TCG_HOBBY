@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { consumePasswordResetToken } from './account-recovery';
+import { consumePasswordResetToken } from './account-recovery.js';
 
 function database(claimed: number) {
   const tx = {

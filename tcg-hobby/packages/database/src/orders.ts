@@ -10,7 +10,7 @@ import type {
   ShippingMethodCode,
 } from '@tcg-hobby/types';
 import type { Prisma } from '@prisma/client';
-import { prisma } from './client';
+import { prisma } from './client.js';
 import {
   buildCartReservationExpiry,
   calculateCartSubtotal,
@@ -22,10 +22,10 @@ import {
   getShippingMethodsForCountry,
   validateQuantityAgainstAvailability,
   validateQuantityAgainstPurchaseLimit,
-} from './commerce';
-import type { CartSnapshot } from './cart';
-import { resolveOrderLineImage, resolveProductCardImage } from './product-image-resolution';
-import { requireStripeSecretKey } from './stripe-provider';
+} from './commerce.js';
+import type { CartSnapshot } from './cart.js';
+import { resolveOrderLineImage, resolveProductCardImage } from './product-image-resolution.js';
+import { requireStripeSecretKey } from './stripe-provider.js';
 
 type CheckoutAddressInput = CheckoutAddress;
 

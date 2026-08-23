@@ -4,7 +4,7 @@ vi.mock('./pricing', () => ({
   refreshProductPricing: vi.fn().mockResolvedValue({}),
 }));
 
-import { createAdminProduct, updateAdminProduct } from './admin';
+import { createAdminProduct, updateAdminProduct } from './admin.js';
 
 const contents = ['1 foil promotional card', '8 booster packs'];
 

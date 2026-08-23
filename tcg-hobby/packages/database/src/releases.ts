@@ -7,8 +7,8 @@ import type {
 } from '@tcg-hobby/types';
 import type { Prisma } from '@prisma/client';
 import { slugify } from '@tcg-hobby/utils';
-import { prisma } from './client';
-import { seedCategories, seedProducts, seedReleases, seedReleaseProducts, seedSuppliers } from './seed-data';
+import { prisma } from './client.js';
+import { seedCategories, seedProducts, seedReleases, seedReleaseProducts, seedSuppliers } from './seed-data.js';
 
 const releaseInclude = {
   category: true,

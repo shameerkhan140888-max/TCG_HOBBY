@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { MarketingCampaignStatus, MarketingSubscriberStatus, type Prisma, type PrismaClient } from '@prisma/client';
-import { prisma } from './client';
+import { prisma } from './client.js';
 
 export const DEFAULT_MARKETING_TAGS = [
   { slug: 'launch', label: 'Launch', description: 'Launch list signups and launch-day updates.' },

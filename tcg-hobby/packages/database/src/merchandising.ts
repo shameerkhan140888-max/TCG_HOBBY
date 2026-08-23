@@ -3,9 +3,9 @@ import type {
   PrismaClient,
   ProductRecommendationType,
 } from '@prisma/client';
-import { prisma } from './client';
-import { derivePublicStockState } from './product-import';
-import { resolveProductCardImage } from './product-image-resolution';
+import { prisma } from './client.js';
+import { derivePublicStockState } from './product-import.js';
+import { resolveProductCardImage } from './product-image-resolution.js';
 
 export type MerchandisingPlacement =
   | 'PRODUCT_RELATED'

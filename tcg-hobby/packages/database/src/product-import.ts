@@ -3,8 +3,8 @@ import { existsSync } from 'node:fs';
 import { copyFile, mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { Prisma, type PrismaClient } from '@prisma/client';
-import { prisma } from './client';
-import { assertProductImportLookupData } from './canonical-seed';
+import { prisma } from './client.js';
+import { assertProductImportLookupData } from './canonical-seed.js';
 
 export type ProductImportGame = 'POKEMON' | 'MAGIC' | 'ONE_PIECE' | 'LORCANA' | 'YUGIOH' | 'ACCESSORIES';
 export type ProductLifecycleState =
@@ -879,7 +879,7 @@ function toProductData(input: NormalisedProductImportInput, categoryId: string, 
     sku: input.sku,
     slug: input.slug,
     name: input.name,
-    game: input.game === 'POKEMON' ? 'Pokémon TCG' : input.game.replace(/_/g, ' '),
+    game: input.game === 'POKEMON' ? 'PokÃ©mon TCG' : input.game.replace(/_/g, ' '),
     setName: input.productType ?? null,
     description: input.shortDescription,
     longDescription: input.fullDescription,

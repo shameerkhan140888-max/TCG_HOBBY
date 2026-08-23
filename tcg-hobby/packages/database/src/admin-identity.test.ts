@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { promoteExistingUser } from './admin-identity';
+import { promoteExistingUser } from './admin-identity.js';
 function database(target: any, adminCount=0, actor: any=null){const tx:any={user:{findUnique:vi.fn(async({where}:any)=>where.email===target?.email?target:actor),count:vi.fn(async()=>adminCount),update:vi.fn(async({data}:any)=>({...target,...data}))},adminRoleChange:{create:vi.fn(async()=>({}))}};return {tx,db:{$transaction:async(cb:any)=>cb(tx)}};}
 describe('Admin role provisioning',()=>{
   it('bootstraps the first verified ADMIN and records an audit entry',async()=>{const {tx,db}=database({id:'user-1',email:'owner@example.test',emailVerified:new Date(),role:'CUSTOMER'});const result=await promoteExistingUser({email:'OWNER@example.test',role:'ADMIN'},db as any);expect(result.changed).toBe(true);expect(tx.adminRoleChange.create).toHaveBeenCalledOnce();});

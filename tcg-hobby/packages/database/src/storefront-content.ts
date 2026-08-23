@@ -1,7 +1,7 @@
-import { prisma } from './client';
-import { FREE_STANDARD_DELIVERY_THRESHOLD_MINOR } from './commerce';
-import { resolveProductCardImage, resolveProductImageUrl } from './product-image-resolution';
-import { getStorefrontPublicProductWhere } from './product-visibility';
+import { prisma } from './client.js';
+import { FREE_STANDARD_DELIVERY_THRESHOLD_MINOR } from './commerce.js';
+import { resolveProductCardImage, resolveProductImageUrl } from './product-image-resolution.js';
+import { getStorefrontPublicProductWhere } from './product-visibility.js';
 import { buildStorefrontProductPath } from '@tcg-hobby/utils';
 
 export const STOREFRONT_BANNER_ICONS = ['DELIVERY', 'PARCEL', 'ANNOUNCEMENT', 'OFFER', 'INFORMATION'] as const;
@@ -21,8 +21,8 @@ export const SHOP_LANDING_DEFAULTS = {
     supportingText: 'Search sealed products, accessories and new releases from across our growing catalogue.',
   },
   pokemon: {
-    heading: 'Explore Pokémon TCG',
-    supportingText: 'Discover booster packs, boxes, collections, accessories and the latest Pokémon TCG releases.',
+    heading: 'Explore PokÃ©mon TCG',
+    supportingText: 'Discover booster packs, boxes, collections, accessories and the latest PokÃ©mon TCG releases.',
   },
   'magic-the-gathering': {
     heading: 'Explore Magic: The Gathering',
@@ -170,7 +170,7 @@ export async function getActiveStorefrontBanner(now = new Date(), db = prisma) {
     id: 'shipping-threshold-default',
     label: null,
     icon: 'DELIVERY',
-    message: `Free standard delivery on orders over £${FREE_STANDARD_DELIVERY_THRESHOLD_MINOR / 100}`,
+    message: `Free standard delivery on orders over Â£${FREE_STANDARD_DELIVERY_THRESHOLD_MINOR / 100}`,
     ctaLabel: null,
     ctaHref: null,
     active: true,

@@ -2,13 +2,13 @@ import { ProductRecommendationType } from '@prisma/client';
 import type { OrderStatus as PrismaOrderStatus, PaymentStatus as PrismaPaymentStatus, Prisma } from '@prisma/client';
 import type { PaginationMeta, PaymentStatus, FulfilmentStatus, ProductCondition } from '@tcg-hobby/types';
 import { slugify } from '@tcg-hobby/utils';
-import { prisma } from './client';
-import { calculateMarginPercentage, calculateAvailableStock } from './admin-math';
-import { derivePublicStockState } from './product-import';
-import { getRelatedProducts, isMerchandisingProductEligible } from './merchandising';
-import { refreshProductPricing } from './pricing';
-import { resolveProductMasterDataInput } from './catalogue-master-data';
-import { resolveOrderLineImage } from './product-image-resolution';
+import { prisma } from './client.js';
+import { calculateMarginPercentage, calculateAvailableStock } from './admin-math.js';
+import { derivePublicStockState } from './product-import.js';
+import { getRelatedProducts, isMerchandisingProductEligible } from './merchandising.js';
+import { refreshProductPricing } from './pricing.js';
+import { resolveProductMasterDataInput } from './catalogue-master-data.js';
+import { resolveOrderLineImage } from './product-image-resolution.js';
 import {
   seedCategories,
   seedInventory,
@@ -18,7 +18,7 @@ import {
   seedProducts,
   seedSuppliers,
   seedUsers,
-} from './seed-data';
+} from './seed-data.js';
 
 const adminProductInclude = {
   category: true,

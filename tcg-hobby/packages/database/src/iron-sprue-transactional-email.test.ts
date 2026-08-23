@@ -8,7 +8,7 @@ import {
   type IronSprueEmailOrderItem,
   type IronSprueEmailOrder,
   type IronSprueEmailTemplateConfig,
-} from './iron-sprue-email-templates';
+} from './iron-sprue-email-templates.js';
 import {
   claimIronSprueTransactionalEmail,
   markIronSprueTransactionalEmailFailed,
@@ -17,7 +17,7 @@ import {
   sendIronSprueCustomerRequestAcknowledgementEmail,
   sendIronSprueDispatchEmail,
   sendIronSprueOrderConfirmationEmail,
-} from './iron-sprue-transactional-email';
+} from './iron-sprue-transactional-email.js';
 
 type TestOrder = IronSprueEmailOrder & {
   id: string;

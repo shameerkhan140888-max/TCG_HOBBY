@@ -1,7 +1,7 @@
 import type { BuylistStatus, CurrencyCode, PaginationMeta } from '@tcg-hobby/types';
 import { sumMinorAmounts } from '@tcg-hobby/utils';
-import { prisma } from './client';
-import { getProductPricingSnapshot } from './pricing';
+import { prisma } from './client.js';
+import { getProductPricingSnapshot } from './pricing.js';
 
 type BuylistProductRow = {
   id: string;

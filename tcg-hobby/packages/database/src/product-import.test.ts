@@ -7,7 +7,7 @@ import {
   derivePublicStockState,
   validateProductMediaManifest,
   validateProductImportFolder,
-} from './product-import';
+} from './product-import.js';
 
 const tempFolders: string[] = [];
 

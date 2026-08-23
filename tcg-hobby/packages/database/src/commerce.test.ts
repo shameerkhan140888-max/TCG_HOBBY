@@ -12,7 +12,7 @@ import {
   MEGA_GRENINJA_PRODUCT_SLUG,
   validateQuantityAgainstAvailability,
   validateQuantityAgainstPurchaseLimit,
-} from './commerce';
+} from './commerce.js';
 
 describe('commerce helpers', () => {
   it('calculates cart totals from line items', () => {

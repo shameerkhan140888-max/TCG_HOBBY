@@ -16,4 +16,5 @@ ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholde
 
 RUN npm run db:generate
 RUN npm run build -w @tcg-hobby/auth
+RUN npm run build -w @tcg-hobby/database
 RUN npm run build -w @tcg-hobby/api

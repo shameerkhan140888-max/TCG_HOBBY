@@ -1,15 +1,15 @@
 import type { CartLineItem, CartSummary, PublicBasketInputItem } from '@tcg-hobby/types';
 import type { Prisma } from '@prisma/client';
-import { prisma } from './client';
+import { prisma } from './client.js';
 import {
   calculateCartSummary,
   calculateLineTotal,
   hasFreeUkStandardShipping,
   validateQuantityAgainstAvailability,
   validateQuantityAgainstPurchaseLimit,
-} from './commerce';
-import { getStorefrontPublicProductWhere } from './product-visibility';
-import { resolveProductCardImage } from './product-image-resolution';
+} from './commerce.js';
+import { getStorefrontPublicProductWhere } from './product-visibility.js';
+import { resolveProductCardImage } from './product-image-resolution.js';
 
 const cartRecordInclude = {
   items: {

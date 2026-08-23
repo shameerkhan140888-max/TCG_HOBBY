@@ -8,18 +8,18 @@ import type {
 } from '@tcg-hobby/types';
 import { slugify } from '@tcg-hobby/utils';
 import type { Prisma } from '@prisma/client';
-import { prisma } from './client';
-import { hasFreeUkStandardShipping } from './commerce';
+import { prisma } from './client.js';
+import { hasFreeUkStandardShipping } from './commerce.js';
 import {
   resolveProductCardImage,
   resolveProductImageUrl,
-} from './product-image-resolution';
+} from './product-image-resolution.js';
 import {
   getStorefrontListingProductWhere,
   getStorefrontPublicProductWhere,
   isProductPubliclyRouteable,
   isProductVisibleInStorefrontListings,
-} from './product-visibility';
+} from './product-visibility.js';
 import {
   seedCategories,
   seedInventory,
@@ -29,7 +29,7 @@ import {
   toCatalogueCategory,
   toCatalogueProduct,
   toCatalogueProductDetail,
-} from './seed-data';
+} from './seed-data.js';
 
 const catalogueProductInclude = {
   category: true,

@@ -9,11 +9,11 @@ import type {
   WatchlistItem,
   WatchlistSubjectType,
 } from '@tcg-hobby/types';
-import { prisma } from './client';
-import { calculateCollectionStats, getCustomerCollectionItems } from './collection';
-import { getCustomerDecks } from './deck';
-import { getWishlistProductIds } from './wishlist';
-import { seedCollectionInsightSnapshots, seedMarketSnapshots, seedNotificationCenterPreferences, seedProducts, seedReleases, seedWatchlistItems } from './seed-data';
+import { prisma } from './client.js';
+import { calculateCollectionStats, getCustomerCollectionItems } from './collection.js';
+import { getCustomerDecks } from './deck.js';
+import { getWishlistProductIds } from './wishlist.js';
+import { seedCollectionInsightSnapshots, seedMarketSnapshots, seedNotificationCenterPreferences, seedProducts, seedReleases, seedWatchlistItems } from './seed-data.js';
 
 type MarketSnapshotRow = {
   id: string;

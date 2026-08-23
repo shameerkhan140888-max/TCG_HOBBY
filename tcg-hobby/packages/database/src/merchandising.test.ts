@@ -13,7 +13,7 @@ import {
   getStaffPickProducts,
   isMerchandisingProductEligible,
   type MerchandisingStrategy,
-} from './merchandising';
+} from './merchandising.js';
 
 type ProductFixture = ReturnType<typeof product>;
 

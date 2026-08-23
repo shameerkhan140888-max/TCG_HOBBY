@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
-import { prisma } from './client';
+import { prisma } from './client.js';
 
 export const ORDER_CONFIRMATION_EMAIL_PURPOSE = 'ORDER_CONFIRMATION';
 const STALE_DELIVERY_CLAIM_MS = 10 * 60 * 1000;

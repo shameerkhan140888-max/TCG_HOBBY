@@ -10,7 +10,7 @@ export {
   isSafeStorefrontMediaUrl,
   SHOP_LANDING_DEFAULTS,
   STOREFRONT_BANNER_ICONS,
-} from './storefront-content';
+} from './storefront-content.js';
 export type {
   HeroDisplayMode,
   HeroFocalPoint,
@@ -18,7 +18,7 @@ export type {
   HeroOverlayStrength,
   ShopLandingScope,
   StorefrontBannerIcon,
-} from './storefront-content';
+} from './storefront-content.js';
 export {
   MarketingCampaignStatus,
   MarketingSubscriberStatus,
@@ -26,7 +26,7 @@ export {
   ProductRecommendationType,
 } from '@prisma/client';
 export type { Prisma } from '@prisma/client';
-export { prisma } from './client';
+export { prisma } from './client.js';
 export {
   calculateCollectionStats,
   getCollectionImportSuggestions,
@@ -36,8 +36,8 @@ export {
   removeCollectionItem,
   updateCollectionItemQuantity,
   upsertCollectionItem as addCollectionItem,
-} from './collection';
-export type { UpsertCollectionItemInput } from './collection';
+} from './collection.js';
+export type { UpsertCollectionItemInput } from './collection.js';
 export {
   addCardToDeck,
   calculateDeckStatistics,
@@ -49,7 +49,7 @@ export {
   updateDeckCardQuantity,
   updateDeckDetails,
   validateDeckCardQuantity,
-} from './deck';
+} from './deck.js';
 export {
   calculateAllocationState,
   calculateCountdownParts,
@@ -59,7 +59,7 @@ export {
   getReleaseCalendar,
   setNotificationSubscriptionPreference,
   toggleNotificationSubscription,
-} from './releases';
+} from './releases.js';
 export {
   calculateApproximateCollectionValue,
   calculateTrend,
@@ -72,7 +72,7 @@ export {
   toggleWatchlistItem,
   updateNotificationCenterPreference,
   updateWatchlistItemPreferences,
-} from './market';
+} from './market.js';
 export {
   calculateCartSubtotal,
   calculateOrderTotal,
@@ -88,7 +88,7 @@ export {
   summarizeOrderTotals,
   validateQuantityAgainstAvailability,
   validateQuantityAgainstPurchaseLimit,
-} from './commerce';
+} from './commerce.js';
 export {
   addProductToBuylist,
   getBuylistById,
@@ -99,7 +99,7 @@ export {
   removeProductFromBuylist,
   submitBuylistRequest,
   updateBuylistItemQuantity,
-} from './buylist';
+} from './buylist.js';
 export {
   addProductToCart,
   clearCart,
@@ -111,7 +111,7 @@ export {
   resolveGuestCart,
   removeCartItem,
   updateCartItemQuantity,
-} from './cart';
+} from './cart.js';
 export {
   attachStripeSessionToOrder,
   cancelCheckoutOrderAttempt,
@@ -128,15 +128,15 @@ export {
   releaseCheckoutOrderReservation,
   releaseExpiredCheckoutOrderReservations,
   retrieveStripeCheckoutSession,
-} from './orders';
+} from './orders.js';
 export {
   constructStripeWebhookEvent,
   isStripeCheckoutConfigured,
   requireStripeSecretKey,
   requireStripeWebhookSecret,
-} from './stripe-provider';
-export { processStripeWebhookEvent } from './stripe-webhook';
-export type { StripeWebhookProcessingResult } from './stripe-webhook';
+} from './stripe-provider.js';
+export { processStripeWebhookEvent } from './stripe-webhook.js';
+export type { StripeWebhookProcessingResult } from './stripe-webhook.js';
 export type {
   CheckoutReservation,
   CheckoutReservationItem,
@@ -144,14 +144,14 @@ export type {
   CustomerOrderSummary,
   OrderShippingAddress,
   OrderWithItems,
-} from './orders';
+} from './orders.js';
 export {
   ORDER_CONFIRMATION_EMAIL_PURPOSE,
   claimOrderConfirmationEmail,
   markTransactionalEmailFailed,
   markTransactionalEmailSent,
-} from './transactional-email';
-export type { TransactionalEmailClaim } from './transactional-email';
+} from './transactional-email.js';
+export type { TransactionalEmailClaim } from './transactional-email.js';
 export {
   getCatalogueCategories,
   getCatalogueHomeData,
@@ -160,7 +160,7 @@ export {
   getCatalogueProducts,
   getFeaturedCatalogueProducts,
   getHomepageHeroProducts,
-} from './catalogue';
+} from './catalogue.js';
 export {
   AccessoryStrategy,
   FeaturedStrategy,
@@ -180,7 +180,7 @@ export {
   getRecommendedProducts,
   getRelatedProducts,
   isMerchandisingProductEligible,
-} from './merchandising';
+} from './merchandising.js';
 export type {
   MerchandisingCampaignInfluence,
   MerchandisingCampaignProductInfluence,
@@ -191,17 +191,17 @@ export type {
   RecommendationAnalyticsEvent,
   RecommendationAnalyticsEventContext,
   StorefrontSafeMerchandisingProduct,
-} from './merchandising';
+} from './merchandising.js';
 export {
   calculateAvailableStockForVisibility,
   getStorefrontListingProductWhere,
   getStorefrontPublicProductWhere,
   isProductPubliclyRouteable,
   isProductVisibleInStorefrontListings,
-} from './product-visibility';
+} from './product-visibility.js';
 export {
   getCatalogueMasterDataOptions,
-} from './catalogue-master-data';
+} from './catalogue-master-data.js';
 export {
   DEFAULT_MARKETING_TAGS,
   createMarketingCampaignDraft,
@@ -217,7 +217,7 @@ export {
   unsubscribeMarketingSubscriberByToken,
   upsertMarketingSubscriberSignup,
   validateSubscriberEmail,
-} from './marketing';
+} from './marketing.js';
 export {
   addProductToWishlist,
   getWishlistItems,
@@ -225,7 +225,7 @@ export {
   isProductWishlisted,
   removeProductFromWishlist,
   toggleWishlistItem,
-} from './wishlist';
-export type { WishlistItem } from './wishlist';
-export * from './product-image-resolution';
-export * from './account-recovery';
+} from './wishlist.js';
+export type { WishlistItem } from './wishlist.js';
+export * from './product-image-resolution.js';
+export * from './account-recovery.js';

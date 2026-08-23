@@ -9,7 +9,7 @@ import {
   unsubscribeMarketingSubscriberByToken,
   upsertMarketingSubscriberSignup,
   validateSubscriberEmail,
-} from './marketing';
+} from './marketing.js';
 
 function createSignupDb(existing: any = null) {
   const tx = {

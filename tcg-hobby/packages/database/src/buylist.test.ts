@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { addProductToBuylist, getBuylistSearchProducts, submitBuylistRequest } from './buylist';
-import { getProductPricingSnapshot } from './pricing';
+import { addProductToBuylist, getBuylistSearchProducts, submitBuylistRequest } from './buylist.js';
+import { getProductPricingSnapshot } from './pricing.js';
 
 vi.mock('./pricing', () => ({
   getProductPricingSnapshot: vi.fn(),

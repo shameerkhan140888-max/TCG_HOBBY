@@ -4,7 +4,7 @@ import {
   getStorefrontPublicProductWhere,
   isProductPubliclyRouteable,
   isProductVisibleInStorefrontListings,
-} from './product-visibility';
+} from './product-visibility.js';
 
 const baseProduct = {
   published: true,

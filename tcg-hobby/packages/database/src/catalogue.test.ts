@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { getCatalogueProducts, getCatalogueProductBySlug } from './catalogue';
+import { getCatalogueProducts, getCatalogueProductBySlug } from './catalogue.js';
 
 const originalNodeEnv = process.env.NODE_ENV;
 const originalDataSource = process.env.TCG_HOBBY_CATALOGUE_DATA_SOURCE;

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { calculateCollectionStats, upsertCollectionItem, updateCollectionItemQuantity } from './collection';
+import { calculateCollectionStats, upsertCollectionItem, updateCollectionItemQuantity } from './collection.js';
 
 function createDbMock() {
   return {

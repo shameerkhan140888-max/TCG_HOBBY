@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateMarginMinor, calculateMarkupPercent, evaluatePricingSnapshot } from './pricing';
+import { calculateMarginMinor, calculateMarkupPercent, evaluatePricingSnapshot } from './pricing.js';
 
 describe('pricing engine', () => {
   it('calculates margin and markup in minor units', () => {

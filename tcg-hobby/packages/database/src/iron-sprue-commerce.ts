@@ -12,7 +12,7 @@ import type {
   ShippingMethodCode,
 } from '@tcg-hobby/types';
 import type { Prisma } from '@prisma/client';
-import { getIronSprueAdminPrisma } from './client';
+import { getIronSprueAdminPrisma } from './client.js';
 import {
   buildCartReservationExpiry,
   calculateCartSubtotal,
@@ -21,8 +21,8 @@ import {
   getShippingMethodByCode,
   getShippingMethodsForCountry,
   validateQuantityAgainstAvailability,
-} from './commerce';
-import { assertStripeEventMatchesStore, getStoreStripeConfig, type CommerceEnvironment } from './store-stripe-config';
+} from './commerce.js';
+import { assertStripeEventMatchesStore, getStoreStripeConfig, type CommerceEnvironment } from './store-stripe-config.js';
 
 export const IRON_SPRUE_STORE_CODE = 'IRON_SPRUE';
 const CURRENCY: CurrencyCode = 'GBP';
@@ -610,7 +610,7 @@ async function resolveIronSprueDiscount(input: {
   if (!record || !record.enabled) throw new Error('Discount code is not valid.');
   if (record.expiresAt && record.expiresAt.getTime() < Date.now()) throw new Error('Discount code has expired.');
   if (record.minimumSpendMinor != null && input.subtotalMinor < record.minimumSpendMinor) {
-    throw new Error(`Discount code requires a basket subtotal of at least £${(record.minimumSpendMinor / 100).toFixed(2)}.`);
+    throw new Error(`Discount code requires a basket subtotal of at least Â£${(record.minimumSpendMinor / 100).toFixed(2)}.`);
   }
   if (record.oneUsePerCustomer) {
     const email = input.email.trim().toLowerCase();

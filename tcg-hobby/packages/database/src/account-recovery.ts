@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { prisma } from './client';
+import { prisma } from './client.js';
 
 type RecoveryDatabase = {
   $transaction<T>(callback: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T>;

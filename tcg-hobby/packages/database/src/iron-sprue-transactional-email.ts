@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client';
-import { getIronSprueAdminPrisma } from './client';
-import { IRON_SPRUE_STORE_CODE } from './iron-sprue-commerce';
+import { getIronSprueAdminPrisma } from './client.js';
+import { IRON_SPRUE_STORE_CODE } from './iron-sprue-commerce.js';
 import {
   buildIronSprueCancellationEmail,
   buildIronSprueCustomerRequestEmail,
@@ -11,7 +11,7 @@ import {
   type IronSprueEmailOrder,
   type IronSprueEmailTemplate,
   type IronSprueEmailTemplateConfig,
-} from './iron-sprue-email-templates';
+} from './iron-sprue-email-templates.js';
 
 export const IRON_SPRUE_ORDER_CONFIRMATION_EMAIL_PURPOSE = 'ORDER_CONFIRMATION';
 export const IRON_SPRUE_ORDER_CANCELLATION_EMAIL_PURPOSE = 'ORDER_CANCELLATION';

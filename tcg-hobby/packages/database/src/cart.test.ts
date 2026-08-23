@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { addProductToCart, clearCart, getCustomerCartDetails, resolveGuestCart, updateCartItemQuantity } from './cart';
+import { addProductToCart, clearCart, getCustomerCartDetails, resolveGuestCart, updateCartItemQuantity } from './cart.js';
 
 function createDbMock() {
   return {

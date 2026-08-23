@@ -4,7 +4,7 @@ import {
   reorderProductImages,
   setPrimaryProductImage,
   updateProductImageAltText,
-} from './product-media';
+} from './product-media.js';
 
 describe('managed product image operations', () => {
   it('requires every active image exactly once when reordering', async () => {

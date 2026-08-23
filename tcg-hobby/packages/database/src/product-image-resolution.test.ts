@@ -5,7 +5,7 @@ import {
   resolveProductCardImage,
   resolveProductImageUrl,
   selectPrimaryProductImage,
-} from './product-image-resolution';
+} from './product-image-resolution.js';
 
 const images = [
   { id: 'b', url: 'https://cdn.example.test/gallery.webp', thumbnailUrl: null, altText: 'Gallery', isPrimary: false, sortOrder: 1, deletionState: 'ACTIVE' },

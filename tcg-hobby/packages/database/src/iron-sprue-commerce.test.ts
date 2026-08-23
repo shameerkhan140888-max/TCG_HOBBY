@@ -13,7 +13,7 @@ import {
   refundIronSprueOrderForMerchant,
   releaseIronSprueCheckoutOrderReservation,
   resolveIronSprueGuestCart,
-} from './iron-sprue-commerce';
+} from './iron-sprue-commerce.js';
 
 function stripeEvent(type: Stripe.Event.Type, object: Record<string, unknown>, id = 'evt_iron_1') {
   return {
