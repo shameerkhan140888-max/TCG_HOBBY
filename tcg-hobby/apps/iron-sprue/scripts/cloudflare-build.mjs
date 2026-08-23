@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 const storefrontRoot = fileURLToPath(new URL('..', import.meta.url));
 const storefrontRootUrl = new URL('..', import.meta.url);
 const workspaceRoot = fileURLToPath(new URL('../..', storefrontRootUrl));
+const prismaGenerateDatabaseUrl = 'postgresql://prisma-generate:prisma-generate@localhost:5432/prisma_generate';
 
 const mode = process.argv[2] ?? 'build';
 const commands = {
@@ -22,7 +23,10 @@ if (!Object.hasOwn(commands, mode)) {
 process.env.TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES = '1';
 process.env.NEXTJS_ENV ??= 'production';
 
-runWorkspaceCommand('npm', ['run', 'build', '-w', '@tcg-hobby/database'], workspaceRoot);
+// Prisma generate validates DATABASE_URL syntax but does not connect to the database.
+runWorkspaceCommand('npm', ['run', 'build', '-w', '@tcg-hobby/database'], workspaceRoot, {
+  DATABASE_URL: prismaGenerateDatabaseUrl,
+});
 
 if (mode !== 'build') {
   process.env.TCG_HOBBY_PRISMA_RUNTIME = 'worker';
@@ -74,10 +78,10 @@ function findPrismaWasmDirectory() {
   return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0];
 }
 
-function runWorkspaceCommand(command, args, cwd) {
+function runWorkspaceCommand(command, args, cwd, envOverrides = {}) {
   const result = spawnSync(command, args, {
     cwd,
-    env: process.env,
+    env: { ...process.env, ...envOverrides },
     shell: true,
     stdio: 'inherit',
   });
