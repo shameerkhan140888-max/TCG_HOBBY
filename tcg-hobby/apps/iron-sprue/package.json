@@ -6,6 +6,7 @@
     "build": "next build",
     "build:coming-soon": "node scripts/build-coming-soon.mjs",
     "cloudflare:build": "node ./scripts/cloudflare-build.mjs build",
+    "cloudflare:deploy": "node ./scripts/cloudflare-build.mjs deploy",
     "cloudflare:preview": "node ./scripts/cloudflare-build.mjs preview",
     "cloudflare:dry-run": "node ./scripts/cloudflare-build.mjs dry-run",
     "dev": "next dev",

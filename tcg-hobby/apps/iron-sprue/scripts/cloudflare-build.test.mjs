@@ -28,9 +28,36 @@ describe('Iron Sprue Cloudflare build wrapper', () => {
   });
 
   it('hides local env files before invoking OpenNext so secrets cannot be bundled', () => {
-    expect(source).toContain('withLocalEnvFilesHidden(() =>');
+    expect(source).toContain('withLocalEnvFilesHidden(runSelectedCommand)');
     expect(source).toContain("'.env.local'");
     expect(source).toContain('renameSync(source, hidden)');
     expect(source).toContain('renameSync(hidden, source)');
+  });
+
+  it('exposes an OpenNext deploy mode so Git deployments publish the Worker, not static assets only', () => {
+    expect(source).toContain("deploy: ['opennextjs-cloudflare', ['deploy']]");
+    expect(source).toContain("build: ['opennextjs-cloudflare', ['build']]");
+  });
+
+  it('passes additional CLI arguments through to OpenNext or Wrangler', () => {
+    expect(source).toContain('const passthroughArgs = process.argv.slice(3)');
+    expect(source).toContain('[...args, ...passthroughArgs]');
+  });
+
+  it('throws command failures so hidden local env files are restored before exit', () => {
+    expect(source).toContain('class CommandFailedError extends Error');
+    expect(source).toContain('throw new CommandFailedError(result.status ?? 1)');
+    expect(source).toContain('error instanceof CommandFailedError');
+  });
+
+  it('restores hidden local env files when a packaging command is interrupted', () => {
+    expect(source).toContain("['SIGINT', 130]");
+    expect(source).toContain("['SIGTERM', 143]");
+    expect(source).toContain('restoreHiddenLocalEnvFiles()');
+  });
+
+  it('does not hide local env files for long-running preview sessions', () => {
+    expect(source).toContain("if (mode === 'preview')");
+    expect(source).toContain('withLocalEnvFilesHidden(runSelectedCommand)');
   });
 });
