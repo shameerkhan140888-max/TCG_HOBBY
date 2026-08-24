@@ -6,6 +6,7 @@ import {
   IRON_SPRUE_HERO_MERCHANDISING_BADGES,
   IRON_SPRUE_TYPOGRAPHY_OPTIONS,
   IRON_SPRUE_COURIERS,
+  isIronSprueDisplayableImageAsset,
   isIronSprueStorefrontContentReviewField,
   listIronSprueAdminContentReviews,
   listIronSprueAdminInventory,
@@ -16,6 +17,7 @@ import {
 import { Button, Card, CardContent, Container, PageHeader, Section, StatusBadge } from '@tcg-hobby/ui';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { IronSprueAdminDatabaseUnavailable, isIronSprueAdminDatabaseUnavailable } from './iron-sprue-admin-database-unavailable';
 import {
   adjustIronSprueStockAction,
   cancelIronSprueOrderAction,
@@ -38,6 +40,9 @@ import {
   updateIronSprueOrderFulfilmentAction,
   updateIronSprueProductFlagsAction,
   updateIronSpruePublicationStateAction,
+  approveIronSprueProductReviewAction,
+  attachIronSprueExistingR2MediaAction,
+  reconcileIronSprueExistingR2MediaAction,
   uploadIronSprueProductMediaAction,
   bulkApproveIronSprueContentReviewsAction,
   bulkApproveIronSprueMediaAction,
@@ -60,7 +65,8 @@ function date(value: Date | string | null | undefined) {
   return new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 }
 
-function ironSprueMediaPreviewUrl(asset: { url: string | null; storageKey: string | null }) {
+function ironSprueMediaPreviewUrl(asset: { url: string | null; storageKey: string | null; mimeType?: string | null }) {
+  if (!isIronSprueDisplayableImageAsset(asset)) return null;
   return ironSprueAdminPreviewUrl(asset.url, asset.storageKey);
 }
 
@@ -339,7 +345,178 @@ function ProductFlagForm({ product }: { product: Awaited<ReturnType<typeof listI
   );
 }
 
-function ProductAdminCard({ product }: { product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number] }) {
+function ProductReviewActionPanel({
+  product,
+  reason,
+}: {
+  product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number];
+  reason: { code: string; category: string; message: string; source: string; actionable: boolean; actionHref?: string };
+}) {
+  const sourceField = reason.source.startsWith('contentReviews.') ? reason.source.replace('contentReviews.', '') : null;
+  const review = sourceField
+    ? product.contentReviews.find((item) => item.fieldName === sourceField && item.status !== 'APPROVED')
+    : null;
+  const primaryMediaCandidates = product.mediaAssets.filter((asset) =>
+    asset.role === 'catalogue-primary' && isIronSprueDisplayableImageAsset(asset),
+  );
+  const pendingPrimaryMedia = primaryMediaCandidates.find((asset) => asset.approvalState !== 'APPROVED')
+    ?? primaryMediaCandidates.find((asset) => asset.approvalState === 'APPROVED' && !asset.isPrimary);
+  const unusablePrimaryMedia = product.mediaAssets.find((asset) => asset.role === 'catalogue-primary' && !isIronSprueDisplayableImageAsset(asset));
+
+  if (review) {
+    return (
+      <form action={approveIronSprueProductReviewAction} className="mt-2 flex flex-wrap items-center gap-2">
+        <input type="hidden" name="productSku" value={product.sku} />
+        <input type="hidden" name="reviewId" value={review.id} />
+        <Button type="submit" size="sm" variant="primary">Approve {reason.category} review</Button>
+        <span className="text-xs text-amber-200/80">Approves {review.fieldName} and refreshes product readiness.</span>
+      </form>
+    );
+  }
+
+  if (reason.category === 'media') {
+    if (pendingPrimaryMedia) {
+      return (
+        <form action={approveIronSprueProductReviewAction} className="mt-2 flex flex-wrap items-center gap-2">
+          <input type="hidden" name="productSku" value={product.sku} />
+          <input type="hidden" name="mediaId" value={pendingPrimaryMedia.id} />
+          <Button type="submit" size="sm" variant="primary">Approve primary image</Button>
+          <span className="text-xs text-amber-200/80">Marks this catalogue-primary image as approved and primary.</span>
+        </form>
+      );
+    }
+
+    return (
+      <div className="mt-2 grid gap-2">
+        {unusablePrimaryMedia ? (
+          <p className="text-xs text-amber-200/80">
+            The current catalogue-primary record is not an image file ({unusablePrimaryMedia.mimeType ?? 'unknown type'}). Upload a real product image below.
+          </p>
+        ) : null}
+        <ProductMediaUploadForm product={product} role="catalogue-primary" />
+      </div>
+    );
+  }
+
+  return reason.actionHref ? <a className="mt-1 inline-block text-xs font-bold text-accent" href={reason.actionHref}>Open correction area</a> : null;
+}
+
+function ProductMediaReadinessPanel({
+  product,
+  r2Candidates,
+}: {
+  product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number];
+  r2Candidates: Map<string, IronSprueR2Object[]>;
+}) {
+  const displayableAssets = product.mediaAssets.filter(isIronSprueDisplayableImageAsset);
+  const placeholderAssets = product.mediaAssets.filter((asset) => !isIronSprueDisplayableImageAsset(asset));
+  const linkedStorageKeys = new Set(product.mediaAssets.map((asset) => asset.storageKey).filter((key): key is string => Boolean(key)));
+  const roles = ['catalogue-primary', 'workshop-photography', 'completed-result', 'manufacturer-original'] as const;
+
+  return (
+    <div className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-bold text-neutral-100">Product media</p>
+        <div className="flex flex-wrap gap-2">
+          {displayableAssets.length ? <StatePill>{`${displayableAssets.length} IMAGE${displayableAssets.length === 1 ? '' : 'S'}`}</StatePill> : <StatePill>NO IMAGE ROWS</StatePill>}
+          {placeholderAssets.length ? <StatePill>{`${placeholderAssets.length} PLACEHOLDER${placeholderAssets.length === 1 ? '' : 'S'}`}</StatePill> : null}
+        </div>
+      </div>
+      {displayableAssets.length ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {displayableAssets.map((asset) => {
+            const previewUrl = ironSprueMediaPreviewUrl(asset);
+            return (
+              <div key={asset.id} className="grid gap-2 rounded-md border border-surface-line bg-black/30 p-2">
+                <div className="flex h-40 items-center justify-center rounded-md border border-surface-line bg-white p-2">
+                  {previewUrl ? (
+                    <img src={previewUrl} alt={asset.altText ?? product.customerTitle} className="max-h-full max-w-full object-contain" />
+                  ) : (
+                    <span className="text-center text-sm text-neutral-500">No preview URL</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <StatePill>{asset.approvalState}</StatePill>
+                  <StatePill>{asset.role}</StatePill>
+                  {asset.isPrimary ? <StatePill>PRIMARY</StatePill> : null}
+                </div>
+                <p className="break-all text-xs text-neutral-500">{asset.storageKey ?? asset.url ?? 'No storage key'}</p>
+                <MediaActionForms mediaId={asset.id} />
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="rounded-md border border-amber-500/30 bg-amber-950/20 p-2 text-sm text-amber-100">
+          No real displayable image row is currently linked to this product in Railway.
+        </p>
+      )}
+      {placeholderAssets.length ? (
+        <details className="rounded-md border border-surface-line bg-black/20 p-2 text-xs text-neutral-400">
+          <summary className="cursor-pointer font-semibold text-neutral-200">Source/placeholder records</summary>
+          <div className="mt-2 grid gap-1">
+            {placeholderAssets.map((asset) => (
+              <p key={asset.id} className="break-all">{asset.role} - {asset.approvalState} - {asset.mimeType ?? 'unknown'} - {asset.storageKey ?? asset.url ?? 'No key'}</p>
+            ))}
+          </div>
+        </details>
+      ) : null}
+      {roles.map((role) => (
+        <ExistingR2MediaCandidates
+          key={role}
+          candidates={r2Candidates.get(`${normalizedProductSku(product.sku)}:${role}`) ?? []}
+          linkedStorageKeys={linkedStorageKeys}
+          product={product}
+          role={role}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ProductCommercialInventoryPanel({ product }: { product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number] }) {
+  const available = product.inventory?.availableStock ?? 0;
+  const reserved = product.inventory?.reservedStock ?? 0;
+  const sellable = Math.max(available - reserved, 0);
+  return (
+    <div className="grid gap-2 rounded-md border border-surface-line bg-surface-ink p-3 text-sm text-neutral-300 md:grid-cols-2">
+      <p><span className="font-semibold text-neutral-100">Sell price:</span> {money(product.grossPriceMinor, product.currency)}</p>
+      <p><span className="font-semibold text-neutral-100">VAT rate:</span> {product.vatRate}%</p>
+      <p><span className="font-semibold text-neutral-100">Supplier cost:</span> {money(product.supplierUnitCostMinor, product.currency)}</p>
+      <p><span className="font-semibold text-neutral-100">Landed cost:</span> {money(product.landedCostMinor, product.currency)}</p>
+      <p><span className="font-semibold text-neutral-100">Stock on hand:</span> {available}</p>
+      <p><span className="font-semibold text-neutral-100">Reserved:</span> {reserved}</p>
+      <p><span className="font-semibold text-neutral-100">Sellable:</span> {sellable}</p>
+      <p><span className="font-semibold text-neutral-100">Hide when out of stock:</span> {product.hideWhenOutOfStock ? 'Yes' : 'No'}</p>
+    </div>
+  );
+}
+
+function ProductReviewRowsPanel({ product }: { product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number] }) {
+  if (!product.contentReviews.length) return <EmptyNote>No review/import rows recorded for this product.</EmptyNote>;
+  return (
+    <div className="grid gap-2 rounded-md border border-surface-line bg-surface-ink p-3">
+      <p className="text-sm font-bold text-neutral-100">Review and import rows</p>
+      {product.contentReviews.map((review) => (
+        <div key={review.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-surface-line bg-black/30 p-2 text-sm">
+          <span className="text-neutral-300">{review.fieldName}</span>
+          <div className="flex flex-wrap gap-2">
+            <StatePill>{review.status}</StatePill>
+            {review.conflictReason ? <span className="text-amber-200">{review.conflictReason}</span> : null}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProductAdminCard({
+  product,
+  r2Candidates,
+}: {
+  product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number];
+  r2Candidates: Map<string, IronSprueR2Object[]>;
+}) {
   const readiness = 'readiness' in product && product.readiness && typeof product.readiness === 'object'
     ? product.readiness as {
         status: string;
@@ -388,6 +565,9 @@ function ProductAdminCard({ product }: { product: Awaited<ReturnType<typeof list
       <div className="grid gap-4 border-t border-surface-line p-4 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div className="space-y-3">
           <p className="max-w-4xl text-sm leading-6 text-neutral-300">{product.shortDescription ?? 'No short description recorded.'}</p>
+          <ProductDescriptorContentPreview product={product} />
+          <ProductCommercialInventoryPanel product={product} />
+          <ProductReviewRowsPanel product={product} />
           {readiness?.blockingReasons.length ? (
             <div className="rounded-md border border-amber-500/40 bg-amber-950/20 p-3">
               <p className="text-xs font-bold uppercase tracking-wide text-amber-200">Outstanding actions</p>
@@ -399,7 +579,7 @@ function ProductAdminCard({ product }: { product: Awaited<ReturnType<typeof list
                       <span>{reason.message}</span>
                     </div>
                     <p className="mt-1 text-xs text-amber-200/80">Source: {reason.source}</p>
-                    {reason.actionHref ? <a className="mt-1 inline-block text-xs font-bold text-accent" href={reason.actionHref}>Open correction area</a> : null}
+                    <ProductReviewActionPanel product={product} reason={reason} />
                   </li>
                 ))}
               </ul>
@@ -417,6 +597,7 @@ function ProductAdminCard({ product }: { product: Awaited<ReturnType<typeof list
           <ProductFlagForm product={product} />
         </div>
         <div className="grid content-start gap-3">
+          <ProductMediaReadinessPanel product={product} r2Candidates={r2Candidates} />
           <form action={publishIronSprueProductAction} className="grid gap-2">
             <input type="hidden" name="productId" value={product.id} />
             <Button type="submit" disabled={!canPublish} variant={canPublish ? 'primary' : 'outline'}>Publish product</Button>
@@ -438,29 +619,43 @@ function ProductAdminCard({ product }: { product: Awaited<ReturnType<typeof list
 }
 
 async function ProductsSection({ searchParams }: { searchParams?: SearchParams }) {
-  const { categories, brands, suppliers } = await getIronSprueAdminReferenceData();
   const search = param(searchParams, 'q');
   const brandId = param(searchParams, 'brandId');
   const categoryId = param(searchParams, 'categoryId');
   const supplierId = param(searchParams, 'supplierId');
   const publicationState = param(searchParams, 'state');
   const normalizedPublicationState = publicationState === 'READY' ? 'READY_TO_PUBLISH' : publicationState;
-  const result = await listIronSprueAdminProducts({
-    ...(search ? { search } : {}),
-    ...(brandId ? { brandId } : {}),
-    ...(categoryId ? { categoryId } : {}),
-    ...(supplierId ? { supplierId } : {}),
-    ...(normalizedPublicationState && ['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY_TO_PUBLISH', 'PUBLISHED', 'ARCHIVED'].includes(normalizedPublicationState)
-      ? { publicationState: normalizedPublicationState as 'DRAFT' | 'CONTENT_PENDING' | 'MEDIA_PENDING' | 'REVIEW_REQUIRED' | 'READY_TO_PUBLISH' | 'PUBLISHED' | 'ARCHIVED' }
-      : {}),
-    pageSize: 81,
-  });
+  const [{ categories, brands, suppliers }, result, r2ProductObjects] = await Promise.all([
+    getIronSprueAdminReferenceData(),
+    listIronSprueAdminProducts({
+      ...(search ? { search } : {}),
+      ...(brandId ? { brandId } : {}),
+      ...(categoryId ? { categoryId } : {}),
+      ...(supplierId ? { supplierId } : {}),
+      ...(normalizedPublicationState && ['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY_TO_PUBLISH', 'PUBLISHED', 'ARCHIVED'].includes(normalizedPublicationState)
+        ? { publicationState: normalizedPublicationState as 'DRAFT' | 'CONTENT_PENDING' | 'MEDIA_PENDING' | 'REVIEW_REQUIRED' | 'READY_TO_PUBLISH' | 'PUBLISHED' | 'ARCHIVED' }
+        : {}),
+      pageSize: 81,
+    }),
+    listIronSprueR2Objects('products/', 1000).catch(() => []),
+  ]);
   if (!result.products.length) return <EmptyNote>No Iron Sprue products found.</EmptyNote>;
+  const r2Candidates = r2CandidatesByProductRole(r2ProductObjects);
+  const r2CandidateCount = [...r2Candidates.values()].reduce((total, candidates) => total + candidates.length, 0);
 
   return (
     <div className="space-y-4">
       <Card>
         <CardContent>
+          <div className="mb-4 grid gap-3 rounded-md border border-emerald-500/30 bg-emerald-950/10 p-3 lg:grid-cols-[1fr_auto]">
+            <div>
+              <p className="font-bold text-emerald-100">Existing R2 product images detected: {r2CandidateCount}</p>
+              <p className="mt-1 text-sm text-neutral-400">Confident SKU-matched images can be reconciled into canonical Railway media rows from here. JSON/source manifests stay visible as placeholders but do not satisfy media readiness.</p>
+            </div>
+            <form action={reconcileIronSprueExistingR2MediaAction} className="self-end">
+              <Button type="submit" variant="primary">Reconcile R2 media</Button>
+            </form>
+          </div>
           <div className="mb-4 flex flex-wrap gap-2">
             {[
               ['READY_TO_PUBLISH', 'Ready to publish'],
@@ -528,7 +723,7 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
             itemLabel="eligible products"
             totalCount={result.products.filter((product) => ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState)).length}
           />
-          {result.products.map((product) => <ProductAdminCard key={product.id} product={product} />)}
+          {result.products.map((product) => <ProductAdminCard key={product.id} product={product} r2Candidates={r2Candidates} />)}
         </div>
       </AdminDisclosure>
     </div>
@@ -879,14 +1074,94 @@ function ProductMediaUploadForm({
   );
 }
 
+type IronSprueMediaRole = 'catalogue-primary' | 'workshop-photography' | 'manufacturer-original' | 'completed-result';
+type IronSprueR2Object = Awaited<ReturnType<typeof listIronSprueR2Objects>>[number];
+
+function normalizedProductSku(value: string | null | undefined) {
+  return (value ?? '').trim().toLowerCase();
+}
+
+function r2RoleFromProductKey(key: string): IronSprueMediaRole | null {
+  const parts = key.split('/');
+  if (parts[0] !== 'products' || parts.length < 4) return null;
+  if (!/\.(avif|gif|jpe?g|png|webp)$/i.test(key)) return null;
+  if (parts[2] === 'image-2') return 'catalogue-primary';
+  if (parts[2] === 'workshop') return 'workshop-photography';
+  if (parts[2] === 'original' || parts[2] === 'manufacturer-original') return 'manufacturer-original';
+  if (parts[2] === 'completed-result') return 'completed-result';
+  return null;
+}
+
+function r2CandidatesByProductRole(objects: IronSprueR2Object[]) {
+  const candidates = new Map<string, IronSprueR2Object[]>();
+  for (const object of objects) {
+    const role = r2RoleFromProductKey(object.key);
+    if (!role) continue;
+    const sku = normalizedProductSku(object.key.split('/')[1]);
+    const mapKey = `${sku}:${role}`;
+    candidates.set(mapKey, [...(candidates.get(mapKey) ?? []), object]);
+  }
+
+  for (const [key, values] of candidates) {
+    candidates.set(key, [...values].sort((left, right) => (right.updatedAt?.getTime() ?? 0) - (left.updatedAt?.getTime() ?? 0) || left.key.localeCompare(right.key)));
+  }
+  return candidates;
+}
+
+function ExistingR2MediaCandidates({
+  candidates,
+  linkedStorageKeys,
+  product,
+  role,
+}: {
+  candidates: IronSprueR2Object[];
+  linkedStorageKeys?: Set<string>;
+  product: { id: string; sku: string; customerTitle: string } | null | undefined;
+  role: IronSprueMediaRole;
+}) {
+  const unlinkedCandidates = candidates.filter((candidate) => !linkedStorageKeys?.has(candidate.key));
+  if (!product || !unlinkedCandidates.length) return null;
+
+  return (
+    <div className="mt-3 rounded-md border border-emerald-500/30 bg-emerald-950/10 p-3">
+      <p className="text-xs font-bold uppercase tracking-wide text-emerald-200">Existing R2 image candidates</p>
+      <p className="mt-1 text-xs text-neutral-400">These files already exist in the Iron Sprue R2 bucket but are not linked as canonical Railway media rows for this role.</p>
+      <div className="mt-3 grid gap-3">
+        {unlinkedCandidates.slice(0, 4).map((candidate) => (
+          <div key={candidate.key} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-2 sm:grid-cols-[96px_1fr]">
+            <div className="flex h-24 w-24 items-center justify-center rounded-md border border-surface-line bg-white p-1">
+              <img src={candidate.previewUrl} alt={`${product.customerTitle} ${role}`} className="max-h-full max-w-full object-contain" />
+            </div>
+            <div className="space-y-2">
+              <p className="break-all text-xs text-neutral-400">{candidate.key}</p>
+              <form action={attachIronSprueExistingR2MediaAction} className="flex flex-wrap items-end gap-2">
+                <input type="hidden" name="productId" value={product.id} />
+                <input type="hidden" name="role" value={role} />
+                <input type="hidden" name="storageKey" value={candidate.key} />
+                <input type="hidden" name="altText" value={`${product.customerTitle} ${role.replace('-', ' ')}`} />
+                <Button type="submit" size="sm" variant="outline">Attach R2 image for review</Button>
+              </form>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
-  const media = await listIronSprueAdminMediaAssets({ pageSize: 500 });
+  const [media, r2ProductObjects] = await Promise.all([
+    listIronSprueAdminMediaAssets({ pageSize: 500 }),
+    listIronSprueR2Objects('products/', 500).catch(() => []),
+  ]);
   const mode = fullReviewModeFromSearch(searchParams);
   const pendingCount = reviewableIronSprueMediaAssets(media, 'pending').length;
   const approvedCount = media.filter((asset) => asset.approvalState === 'APPROVED').length;
   const rejectedCount = media.filter((asset) => asset.approvalState === 'REJECTED').length;
   const reviewableMedia = reviewableIronSprueMediaAssets(media, mode);
   const productGroups = groupMediaByProduct(reviewableMedia, media, mode);
+  const r2Candidates = r2CandidatesByProductRole(r2ProductObjects);
+  const r2CandidateCount = [...r2Candidates.values()].reduce((total, items) => total + items.length, 0);
   const hiddenCount = media.length - reviewableMedia.length;
   const bulkApprovableMediaCount = reviewableMedia.filter((asset) => asset.approvalState !== 'APPROVED').length;
   const bulkPublishableProductCount = new Set(productGroups
@@ -923,6 +1198,11 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
           Hidden from this review tab: {hiddenCount} record{hiddenCount === 1 ? '' : 's'} outside the selected approval state.
         </p>
       ) : null}
+      {r2CandidateCount > 0 ? (
+        <p className="rounded-md border border-emerald-500/30 bg-emerald-950/10 p-3 text-sm text-emerald-100">
+          R2 product image inventory found: {r2CandidateCount} image object{r2CandidateCount === 1 ? '' : 's'} in the Iron Sprue bucket. Unlinked images are shown beside matching products so they can be attached for review.
+        </p>
+      ) : null}
       {productGroups.map((group) => (
         <Card key={group.product?.id ?? group.assets[0]?.id}>
           <CardContent className="space-y-4">
@@ -938,15 +1218,25 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
               ).map((role) => {
                 const asset = group.assets.find((item) => item.role === role);
                 if (!asset) {
+                  const existingR2Candidates = group.product
+                    ? r2Candidates.get(`${normalizedProductSku(group.product.sku)}:${role}`) ?? []
+                    : [];
+                  const linkedStorageKeys = new Set(group.assets.map((item) => item.storageKey).filter((key): key is string => Boolean(key)));
                   return (
                     <div key={role} className="rounded-md border border-dashed border-surface-line bg-surface-ink p-4">
                       <StatePill>{role}</StatePill>
                       <p className="mt-4 text-sm text-neutral-400">No current {role === 'catalogue-primary' ? 'Image 2' : 'workshop'} media record is available for this product.</p>
+                      <ExistingR2MediaCandidates candidates={existingR2Candidates} linkedStorageKeys={linkedStorageKeys} product={group.product} role={role} />
                       <ProductMediaUploadForm product={group.product} role={role} />
                     </div>
                   );
                 }
                 const previewUrl = ironSprueMediaPreviewUrl(asset);
+                const displayableImage = isIronSprueDisplayableImageAsset(asset);
+                const existingR2Candidates = group.product
+                  ? r2Candidates.get(`${normalizedProductSku(group.product.sku)}:${role}`) ?? []
+                  : [];
+                const linkedStorageKeys = new Set(group.assets.map((item) => item.storageKey).filter((key): key is string => Boolean(key)));
                 return (
                   <div key={asset.id} className="grid gap-4 rounded-md border border-surface-line bg-surface-ink p-3 sm:grid-cols-[220px_1fr]">
                     <div className="rounded-md border border-surface-line bg-white p-2">
@@ -954,7 +1244,7 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
                         <img src={previewUrl} alt={asset.altText ?? asset.product?.customerTitle ?? asset.role} className="h-52 w-full object-contain" />
                       ) : (
                         <div className="flex h-52 items-center justify-center px-4 text-center text-sm text-neutral-500">
-                          No storage key
+                          {asset.storageKey || asset.url ? 'No displayable image preview' : 'No storage key'}
                         </div>
                       )}
                     </div>
@@ -977,7 +1267,14 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
                       </div>
                       <p className="text-sm text-neutral-400">{asset.width ?? '?'}x{asset.height ?? '?'} - {asset.mimeType ?? 'unknown'}</p>
                       <p className="break-all text-xs text-neutral-500">{asset.storageKey ?? asset.url ?? 'No storage key'}</p>
-                      <MediaActionForms mediaId={asset.id} />
+                      {!displayableImage ? (
+                        <p className="rounded-md border border-amber-500/30 bg-amber-950/20 p-2 text-xs font-semibold text-amber-100">
+                          This record is metadata or a placeholder, not a displayable product image. It cannot satisfy storefront media readiness.
+                        </p>
+                      ) : (
+                        <MediaActionForms mediaId={asset.id} />
+                      )}
+                      <ExistingR2MediaCandidates candidates={existingR2Candidates} linkedStorageKeys={linkedStorageKeys} product={asset.product} role={role} />
                       <ProductMediaUploadForm product={asset.product} role={role} />
                     </div>
                   </div>
@@ -1170,9 +1467,9 @@ function productSlugFromPlacement(placement: HomepagePlacementRecord, prefix: st
   return placement.ctaHref?.replace('/products/', '').split(/[?#]/)[0] ?? placement.placementKey.replace(prefix, '');
 }
 
-function productPrimaryPreview(product: { mediaAssets?: Array<{ approvalState: string; role: string; url: string | null; storageKey: string | null }> }) {
-  return product.mediaAssets?.find((asset) => asset.approvalState === 'APPROVED' && asset.role === 'catalogue-primary')
-    ?? product.mediaAssets?.find((asset) => asset.role === 'catalogue-primary')
+function productPrimaryPreview(product: { mediaAssets?: Array<{ approvalState: string; role: string; url: string | null; storageKey: string | null; mimeType?: string | null }> }) {
+  return product.mediaAssets?.find((asset) => asset.approvalState === 'APPROVED' && asset.role === 'catalogue-primary' && isIronSprueDisplayableImageAsset(asset))
+    ?? product.mediaAssets?.find((asset) => asset.role === 'catalogue-primary' && isIronSprueDisplayableImageAsset(asset))
     ?? null;
 }
 
@@ -2311,19 +2608,29 @@ export async function IronSprueAdminSection({ section, searchParams }: { section
   const card = cards.find((item) => item.key === section);
   if (!card) notFound();
 
+  let sectionContent: ReactNode = null;
+  try {
+    if (section === 'products') sectionContent = await ProductsSection({ ...(searchParams ? { searchParams } : {}) });
+    if (section === 'inventory' || section === 'goods-received') sectionContent = await InventorySection();
+    if (['categories', 'brands', 'suppliers'].includes(section)) sectionContent = await ReferenceSection({ section });
+    if (section === 'media') sectionContent = await MediaSection({ ...(searchParams ? { searchParams } : {}) });
+    if (section === 'content-review') sectionContent = await ContentReviewSection({ ...(searchParams ? { searchParams } : {}) });
+    if (['homepage', 'heroes', 'special-offers', 'audit-log', 'import-batches'].includes(section)) sectionContent = await StorefrontSection({ section });
+    if (section === 'settings') sectionContent = await SettingsSection();
+    if (section === 'orders') sectionContent = await OrdersSection({ ...(searchParams ? { searchParams } : {}) });
+  } catch (error) {
+    if (isIronSprueAdminDatabaseUnavailable(error)) {
+      return <IronSprueAdminDatabaseUnavailable error={error} />;
+    }
+    throw error;
+  }
+
   return (
     <Section className="py-8">
       <Container className="space-y-6">
         <PageHeader eyebrow="Iron Sprue Admin" title={card.label} description={card.description} />
         <StatusMessage {...(searchParams ? { searchParams } : {})} />
-        {section === 'products' ? <ProductsSection {...(searchParams ? { searchParams } : {})} /> : null}
-        {section === 'inventory' || section === 'goods-received' ? <InventorySection /> : null}
-        {['categories', 'brands', 'suppliers'].includes(section) ? <ReferenceSection section={section} /> : null}
-        {section === 'media' ? <MediaSection {...(searchParams ? { searchParams } : {})} /> : null}
-        {section === 'content-review' ? <ContentReviewSection {...(searchParams ? { searchParams } : {})} /> : null}
-        {['homepage', 'heroes', 'special-offers', 'audit-log', 'import-batches'].includes(section) ? <StorefrontSection section={section} /> : null}
-        {section === 'settings' ? <SettingsSection /> : null}
-        {section === 'orders' ? <OrdersSection {...(searchParams ? { searchParams } : {})} /> : null}
+        {sectionContent}
       </Container>
     </Section>
   );

@@ -12,6 +12,7 @@ import {
   IRON_SPRUE_STORE_CODE,
   getIronSprueProductReadiness,
   ironSpruePublicProductWhere,
+  isIronSprueDisplayableImageAsset,
   resolveIronSpruePublicMediaUrl,
   selectIronSpruePrimaryCatalogueMedia,
 } from './iron-sprue-admin.js';
@@ -81,6 +82,7 @@ function resolvePagination(totalItems: number, page: number, pageSize: number): 
 }
 
 function mediaUrl(asset: IronSprueMediaAssetRow | null | undefined): string | null {
+  if (!isIronSprueDisplayableImageAsset(asset)) return null;
   return resolveIronSpruePublicMediaUrl(asset);
 }
 

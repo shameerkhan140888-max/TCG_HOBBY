@@ -12,9 +12,12 @@ import {
   getIronSprueProductReadiness,
   getIronSprueAdminDashboard,
   getIronSprueAdminPermissionMatrix,
+  isIronSprueDisplayableImageAsset,
   listIronSprueAdminProducts,
   receiveIronSprueStock,
+  reconcileIronSprueR2ProductMedia,
   reconcileIronSprueInventoryAvailableStock,
+  resolveIronSpruePublicMediaUrl,
   resolveIronSprueCustomerOrderRequest,
   resolveIronSprueAdminPermissions,
   publishIronSprueAdminProduct,
@@ -104,6 +107,98 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     expect(evaluateIronSprueProductReadiness(readyProduct()).every((check) => check.passed)).toBe(true);
   });
 
+  it('resolves R2-backed image rows to the public media origin and rejects JSON placeholders', () => {
+    process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL = 'https://media.ironsprue.co.uk/';
+
+    expect(resolveIronSpruePublicMediaUrl({
+      url: 'r2://products/is-aos-05603/image-2/iron-sprue-image-2.png',
+      storageKey: 'products/is-aos-05603/image-2/iron-sprue-image-2.png',
+    })).toBe('https://media.ironsprue.co.uk/products/is-aos-05603/image-2/iron-sprue-image-2.png');
+    expect(isIronSprueDisplayableImageAsset({
+      mimeType: 'application/json',
+      storageKey: 'published/products/is-aos-05603/catalogue-primary-placeholder.json',
+    })).toBe(false);
+  });
+
+  it('does not let pending launch-import bookkeeping block an otherwise ready product', () => {
+    const product = readyProduct({
+      contentReviews: [
+        { id: 'review-1', fieldName: 'launch-import', status: 'PENDING', proposedValue: {}, sourceReference: 'row-1' },
+      ],
+    });
+
+    const readiness = getIronSprueProductReadiness(product);
+
+    expect(readiness.isReadyToPublish).toBe(true);
+    expect(readiness.blockingReasons).toEqual([]);
+  });
+
+  it('reconciles confident R2 product images into approved canonical Railway media rows', async () => {
+    const product = readyProduct({
+      id: 'product-1',
+      sku: 'IS-AOS-05603',
+      customerTitle: 'Pagani Zonda F',
+      mediaAssets: [
+        {
+          id: 'placeholder-1',
+          role: 'catalogue-primary',
+          approvalState: 'FAILED',
+          isPrimary: false,
+          storageKey: 'published/products/is-aos-05603/catalogue-primary-placeholder.json',
+          url: null,
+          sortOrder: 0,
+          mimeType: 'application/json',
+        },
+      ],
+      contentReviews: [],
+    });
+    const upsertedRecords: any[] = [];
+    const client = {
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([product]),
+        findFirst: vi.fn().mockResolvedValue({ ...product, mediaAssets: [] }),
+        update: vi.fn().mockResolvedValue(product),
+      },
+      ironSprueAdminMediaAsset: {
+        upsert: vi.fn(async ({ create }) => {
+          const record = { id: `media-${upsertedRecords.length + 1}`, ...create };
+          upsertedRecords.push(record);
+          return record;
+        }),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+
+    const result = await reconcileIronSprueR2ProductMedia([
+      { key: 'products/is-aos-05603/image-2/iron-sprue-image-2-ddc9b0dbc551.png', size: 1000 },
+      { key: 'products/is-aos-05603/workshop/iron-sprue-workshop-99517f01b1dc.png', size: 2000 },
+      { key: 'products/is-aos-99999/image-2/missing.png', size: 500 },
+      { key: 'products/is-aos-05603/source-required.json', size: 100 },
+    ], actor, client as never);
+
+    expect(result.upsertedMedia).toBe(2);
+    expect(result.affectedProducts).toBe(1);
+    expect(result.unmatched).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'products/is-aos-99999/image-2/missing.png' }),
+      expect.objectContaining({ key: 'products/is-aos-05603/source-required.json' }),
+    ]));
+    expect(client.ironSprueAdminMediaAsset.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({
+        productId: 'product-1',
+        role: 'catalogue-primary',
+        approvalState: 'APPROVED',
+        isPrimary: true,
+        storageKey: 'products/is-aos-05603/image-2/iron-sprue-image-2-ddc9b0dbc551.png',
+        url: 'r2://products/is-aos-05603/image-2/iron-sprue-image-2-ddc9b0dbc551.png',
+      }),
+    }));
+    expect(client.ironSprueAdminMediaAsset.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ productId: 'product-1', role: 'catalogue-primary' }),
+      data: { isPrimary: false },
+    }));
+  });
+
   it('returns one structured readiness answer for media, content, commercial, review and inventory blockers', () => {
     expect(getIronSprueProductReadiness(readyProduct())).toMatchObject({
       status: 'READY',
@@ -118,6 +213,24 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       mediaAssets: [{ id: 'media-1', role: 'catalogue-primary', approvalState: 'APPROVED', isPrimary: true, storageKey: null, url: null, sortOrder: 0 }],
     })).blockingReasons).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: 'media.primary_unresolvable', category: 'media' }),
+    ]));
+    expect(getIronSprueProductReadiness(readyProduct({
+      mediaAssets: [{
+        id: 'media-json',
+        role: 'catalogue-primary',
+        approvalState: 'APPROVED',
+        isPrimary: true,
+        storageKey: 'archive/products/is-aos-05603/original/source-required.json',
+        url: null,
+        mimeType: 'application/json',
+        sortOrder: 0,
+      }],
+    })).blockingReasons).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        code: 'media.primary_unresolvable',
+        category: 'media',
+        message: 'Approved primary catalogue media must be a resolvable image file.',
+      }),
     ]));
     expect(getIronSprueProductReadiness(readyProduct({ contentReviews: [{ fieldName: 'sourceRow', status: 'CONFLICT' }] })).blockingReasons).toEqual(expect.arrayContaining([
       expect.objectContaining({ category: 'commercial', source: 'contentReviews.sourceRow' }),
@@ -144,6 +257,12 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       'fullDescription content review is conflict.',
       'shortDescription content review is pending.',
     ]));
+  });
+
+  it('classifies displayable media without treating import source markers as product images', () => {
+    expect(isIronSprueDisplayableImageAsset({ storageKey: 'products/is-aos-1/catalogue-primary.webp', mimeType: 'image/webp' })).toBe(true);
+    expect(isIronSprueDisplayableImageAsset({ storageKey: 'products/is-aos-1/catalogue-primary.png', mimeType: null })).toBe(true);
+    expect(isIronSprueDisplayableImageAsset({ storageKey: 'archive/products/is-aos-1/original/source-required.json', mimeType: 'application/json' })).toBe(false);
   });
 
   it('blocks READY_TO_PUBLISH or PUBLISHED when readiness checks fail', async () => {
@@ -493,6 +612,9 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       role: 'catalogue-primary',
       approvalState: 'REVIEW_REQUIRED',
       isPrimary: false,
+      storageKey: 'products/is-aos-05628/catalogue-primary.webp',
+      url: null,
+      mimeType: 'image/webp',
       product: { id: 'product-1' },
     };
     const client = {
@@ -526,6 +648,31 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         isPrimary: true,
       }),
     }));
+  });
+
+  it('rejects approving a non-image catalogue-primary record as storefront media', async () => {
+    const media = {
+      id: 'media-json',
+      productId: 'product-1',
+      role: 'catalogue-primary',
+      approvalState: 'PENDING',
+      isPrimary: false,
+      storageKey: 'archive/products/is-aos-05603/original/source-required.json',
+      url: null,
+      mimeType: 'application/json',
+    };
+    const client = {
+      ironSprueAdminMediaAsset: {
+        findFirst: vi.fn().mockResolvedValue(media),
+        updateMany: vi.fn(),
+        update: vi.fn(),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn() },
+    };
+
+    await expect(updateIronSprueAdminMediaApproval('media-json', 'APPROVED', actor, client as never)).rejects.toThrow(/Only image files/);
+    expect(client.ironSprueAdminMediaAsset.update).not.toHaveBeenCalled();
+    expect(client.ironSprueAdminAuditLog.create).not.toHaveBeenCalled();
   });
 
   it('updates category storefront visibility with an audit trail', async () => {

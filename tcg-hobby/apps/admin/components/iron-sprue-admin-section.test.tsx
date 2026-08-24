@@ -43,6 +43,10 @@ vi.mock('@tcg-hobby/database', () => ({
     'buildType',
     'productType',
   ].includes(fieldName),
+  isIronSprueDisplayableImageAsset: (asset: { mimeType?: string | null; url?: string | null; storageKey?: string | null }) => {
+    if (asset.mimeType) return asset.mimeType.startsWith('image/');
+    return /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(asset.url ?? asset.storageKey ?? '');
+  },
   listIronSprueAdminContentReviews: mocks.listIronSprueAdminContentReviews,
   listIronSprueAdminInventory: vi.fn(),
   listIronSprueAdminMediaAssets: mocks.listIronSprueAdminMediaAssets,
@@ -56,10 +60,12 @@ vi.mock('../lib/iron-sprue-media-storage.server', () => ({
 }));
 
 vi.mock('../lib/iron-sprue-admin-actions.server', () => ({
+  attachIronSprueExistingR2MediaAction: vi.fn(),
   bulkApproveIronSprueContentReviewsAction: vi.fn(),
   bulkApproveIronSprueMediaAction: vi.fn(),
   bulkPublishIronSprueProductsAction: vi.fn(),
   publishIronSprueProductAction: vi.fn(),
+  reconcileIronSprueExistingR2MediaAction: vi.fn(),
   saveIronSprueFeaturedProductPlacementAction: vi.fn(),
   saveIronSprueHeroAction: vi.fn(),
   saveIronSprueHomepagePlacementAction: vi.fn(),
@@ -184,11 +190,23 @@ describe('IronSprueAdminSection operational controls', () => {
         updatedAt: new Date('2026-08-11T00:00:00.000Z'),
       },
     ]);
+    mocks.listIronSprueR2Objects.mockResolvedValue([
+      {
+        key: 'products/is-aos-05603/image-2/iron-sprue-image-2-ddc9b0dbc551.png',
+        size: 128,
+        updatedAt: new Date('2026-08-11T00:00:00.000Z'),
+        previewUrl: '/iron-sprue-admin/media/preview?key=products%2Fis-aos-05603%2Fimage-2%2Firon-sprue-image-2-ddc9b0dbc551.png',
+      },
+    ]);
 
     const markup = await renderAsync(await IronSprueAdminSection({ section: 'media' }));
 
     expect(markup).toContain('Pagani Zonda F');
     expect(markup).toContain('products%2Fis-aos-05603%2Fimage-2%2Fmaster.webp');
+    expect(markup).toContain('R2 product image inventory found');
+    expect(markup).toContain('Existing R2 image candidates');
+    expect(markup).toContain('iron-sprue-image-2-ddc9b0dbc551.png');
+    expect(markup).toContain('Attach R2 image for review');
     expect(markup).toContain('Select all displayed');
     expect(markup).toContain('Approve selected');
     expect(markup).toContain('Publish selected products');
@@ -481,16 +499,40 @@ describe('IronSprueAdminSection operational controls', () => {
           customerTitle: 'Toyota 2000GT Red',
           sourceTitle: 'Toyota 2000GT Red',
           shortDescription: 'Ready retail copy.',
+          fullDescription: 'Full PDP descriptor copy for the product.',
+          featureBullets: ['Display-ready model kit'],
+          specifications: { scale: '1:24' },
+          seoTitle: 'Toyota 2000GT Red model kit',
+          metaDescription: 'Aoshima Toyota 2000GT Red model kit.',
+          buildType: 'Model kit',
           publicationState: 'READY_TO_PUBLISH',
+          readiness: { isReadyToPublish: true, status: 'READY', blockingReasons: [] },
           readinessBlockers: [],
           brand: { name: 'Aoshima' },
           category: { name: 'Model Kits' },
           supplier: null,
           grossPriceMinor: 1999,
+          supplierUnitCostMinor: 1055,
+          landedCostMinor: 1200,
+          vatRate: 20,
           currency: 'GBP',
-          inventory: { availableStock: 2 },
-          mediaAssets: [],
-          contentReviews: [],
+          inventory: { availableStock: 2, reservedStock: 1 },
+          mediaAssets: [
+            {
+              id: 'placeholder-media',
+              role: 'catalogue-primary',
+              approvalState: 'FAILED',
+              isPrimary: false,
+              storageKey: 'published/products/is-aos-05628/catalogue-primary-placeholder.json',
+              url: null,
+              altText: null,
+              width: null,
+              height: null,
+              mimeType: 'application/json',
+              sortOrder: 0,
+            },
+          ],
+          contentReviews: [{ id: 'review-1', fieldName: 'launch-import', status: 'PENDING', conflictReason: null }],
           featured: false,
           newArrival: false,
           comingSoon: false,
@@ -499,6 +541,14 @@ describe('IronSprueAdminSection operational controls', () => {
         },
       ],
     });
+    mocks.listIronSprueR2Objects.mockResolvedValue([
+      {
+        key: 'products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.png',
+        size: 128,
+        updatedAt: new Date('2026-08-11T00:00:00.000Z'),
+        previewUrl: '/iron-sprue-admin/media/preview?key=products%2Fis-aos-05628%2Fimage-2%2Firon-sprue-image-2-acf115ef37eb.png',
+      },
+    ]);
 
     const markup = await renderAsync(await IronSprueAdminSection({ section: 'products', searchParams: { state: 'READY_TO_PUBLISH' } }));
 
@@ -507,6 +557,15 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Publish selected');
     expect(markup).toContain('data-bulk-group="iron-sprue-product-bulk-publish"');
     expect(markup).toContain('READY_TO_PUBLISH');
+    expect(markup).toContain('Existing R2 product images detected:');
+    expect(markup).toContain('Reconcile R2 media');
+    expect(markup).toContain('Full PDP descriptor copy for the product.');
+    expect(markup).toContain('Sell price:');
+    expect(markup).toContain('Stock on hand:');
+    expect(markup).toContain('Source/placeholder records');
+    expect(markup).toContain('catalogue-primary-placeholder.json');
+    expect(markup).toContain('Existing R2 image candidates');
+    expect(markup).toContain('iron-sprue-image-2-acf115ef37eb.png');
   });
 
   it('renders storefront placement and brand carousel controls', async () => {

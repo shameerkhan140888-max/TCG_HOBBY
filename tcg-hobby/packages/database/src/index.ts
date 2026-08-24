@@ -44,6 +44,7 @@ export {
 export type { Prisma } from '@prisma/client';
 export {
   getIronSprueAdminDatabaseTargetInfo,
+  getIronSprueAdminPrisma,
   prisma,
 } from './client.js';
 export type { IronSprueAdminDatabaseTargetInfo } from './client.js';
@@ -488,6 +489,7 @@ export * from './product-image-resolution.js';
 
 export * from './admin-identity.js';
 export * from './account-recovery.js';
+export * from './iron-sprue-media.js';
 export * from './iron-sprue-admin.js';
 export * from './iron-sprue-email-templates.js';
 export * from './iron-sprue-transactional-email.js';

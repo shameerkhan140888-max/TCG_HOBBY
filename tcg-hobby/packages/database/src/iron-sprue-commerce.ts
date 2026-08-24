@@ -18,13 +18,20 @@ import {
   calculateCartSubtotal,
   calculatePromotionalShippingMinor,
   calculateVatEstimateMinor,
-  getShippingMethodByCode,
   getShippingMethodsForCountry,
   validateQuantityAgainstAvailability,
 } from './commerce.js';
 import { assertStripeEventMatchesStore, getStoreStripeConfig, type CommerceEnvironment } from './store-stripe-config.js';
+import { isIronSprueDisplayableImageAsset, resolveIronSpruePublicMediaUrl } from './iron-sprue-media.js';
 
 export const IRON_SPRUE_STORE_CODE = 'IRON_SPRUE';
+export const IRON_SPRUE_VAT_NUMBER = '525 2040 33';
+export const IRON_SPRUE_LEGAL_COMPANY_NUMBER = '17336948';
+export const IRON_SPRUE_SELLER_LEGAL_NAME = 'Capital Hobby Group Ltd';
+export const IRON_SPRUE_REGISTERED_OFFICE = '4-6 Greatorex Street, London, United Kingdom, E1 5NF';
+export const IRON_SPRUE_VAT_RATE = 20;
+export const IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR = 399;
+export const IRON_SPRUE_UK_EXPRESS_DELIVERY_MINOR = 599;
 const CURRENCY: CurrencyCode = 'GBP';
 
 type DatabaseClient = ReturnType<typeof getIronSprueAdminPrisma>;
@@ -40,11 +47,18 @@ type IronSprueProductForCart = Prisma.IronSprueAdminProductGetPayload<{
   };
 }>;
 
+type IronSprueInvoiceRecord = Prisma.IronSprueVatInvoiceGetPayload<{
+  include: {
+    lines: true;
+  };
+}>;
+
 type IronSprueOrderRecord = Prisma.IronSprueOrderGetPayload<{
   include: {
     items: true;
   };
 }> & {
+  invoices?: IronSprueInvoiceRecord[];
   customerRequests?: Array<{
     id: string;
     requestType: string;
@@ -132,7 +146,66 @@ export type IronSprueOrderWithItems = {
     customerMessage: string | null;
     createdAt: Date;
   }>;
+  invoice: {
+    invoiceNumber: string;
+    invoiceDate: Date;
+    sellerLegalName: string;
+    sellerCompanyNumber: string;
+    sellerVatNumber: string;
+    sellerRegisteredOffice: string;
+    customerName: string;
+    customerEmail: string;
+    billingLine1: string;
+    billingLine2: string | null;
+    billingCity: string;
+    billingRegion: string | null;
+    billingPostalCode: string;
+    billingCountry: string;
+    subtotalNetMinor: number;
+    subtotalVatMinor: number;
+    subtotalGrossMinor: number;
+    shippingNetMinor: number;
+    shippingVatMinor: number;
+    shippingGrossMinor: number;
+    discountNetMinor: number;
+    discountVatMinor: number;
+    discountGrossMinor: number;
+    orderNetTotalMinor: number;
+    vatTotalMinor: number;
+    grossTotalMinor: number;
+    currency: CurrencyCode;
+    lines: Array<{
+      description: string;
+      sku: string | null;
+      quantity: number;
+      unitGrossMinor: number;
+      netMinor: number;
+      vatRate: number;
+      vatMinor: number;
+      grossMinor: number;
+    }>;
+  } | null;
 };
+
+type IronSprueInvoiceOrderRecord = Prisma.IronSprueOrderGetPayload<{
+  include: {
+    items: true;
+  };
+}>;
+
+function vatBreakdownFromGross(grossMinor: number, ratePercent = IRON_SPRUE_VAT_RATE) {
+  const gross = Math.max(Math.trunc(grossMinor), 0);
+  const vatMinor = calculateVatEstimateMinor(gross, ratePercent);
+  return {
+    grossMinor: gross,
+    vatMinor,
+    netMinor: gross - vatMinor,
+  };
+}
+
+function ironSprueInvoiceNumber(sequence: number, invoiceDate = new Date()) {
+  return `IS-VAT-${invoiceDate.getUTCFullYear()}-${String(sequence).padStart(6, '0')}`;
+}
 
 export type IronSprueCheckoutSessionResult = {
   orderNumber: string;
@@ -194,14 +267,8 @@ function safeProductIdentifierWhere(identifiers: string[]) {
 }
 
 function resolveProductImage(product: IronSprueProductForCart) {
-  const mediaUrl = (asset: IronSprueProductForCart['mediaAssets'][number]) => {
-    if (asset.url?.trim()) return asset.url.trim();
-    const storageKey = asset.storageKey?.trim().replace(/^\/+/, '');
-    return storageKey ? `/media/iron-sprue/${storageKey.split('/').map(encodeURIComponent).join('/')}` : null;
-  };
-
   const preferred = [...product.mediaAssets]
-    .map((asset) => ({ asset, url: mediaUrl(asset) }))
+    .map((asset) => ({ asset, url: isIronSprueDisplayableImageAsset(asset) ? resolveIronSpruePublicMediaUrl(asset) : null }))
     .filter(({ asset, url }) => asset.approvalState === 'APPROVED' && url)
     .sort((a, b) => {
       const roleScore = (role: string) => {
@@ -352,7 +419,22 @@ export async function clearIronSprueCart(userId: string, db: DatabaseClient = ge
 }
 
 export function getIronSprueAvailableShippingMethods(country: string, qualifyingSubtotalMinor = 0) {
-  return getShippingMethodsForCountry(country, qualifyingSubtotalMinor);
+  return getShippingMethodsForCountry(country, qualifyingSubtotalMinor).map((method) => {
+    if (method.code === 'UK_STANDARD' && method.amountMinor > 0) {
+      return { ...method, amountMinor: IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR };
+    }
+    if (method.code === 'UK_EXPRESS' && method.amountMinor > 0) {
+      return {
+        ...method,
+        amountMinor: qualifyingSubtotalMinor >= 5000 ? IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR : IRON_SPRUE_UK_EXPRESS_DELIVERY_MINOR,
+      };
+    }
+    return method;
+  });
+}
+
+function getIronSprueShippingMethodByCode(code: ShippingMethodCode, country: string, qualifyingSubtotalMinor = 0) {
+  return getIronSprueAvailableShippingMethods(country, qualifyingSubtotalMinor).find((method) => method.code === code) ?? null;
 }
 
 function requireCheckoutAddress(input: CheckoutAddress): CheckoutAddress {
@@ -525,6 +607,7 @@ async function createIronSprueStripePaymentIntent(params: {
 }
 
 function mapOrderRecord(order: IronSprueOrderRecord): IronSprueOrderWithItems {
+  const invoice = order.invoices?.[0] ?? null;
   return {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -575,6 +658,47 @@ function mapOrderRecord(order: IronSprueOrderRecord): IronSprueOrderWithItems {
       customerMessage: request.customerMessage,
       createdAt: request.createdAt,
     })),
+    invoice: invoice && invoice.invoiceNumber ? {
+      invoiceNumber: invoice.invoiceNumber,
+      invoiceDate: invoice.invoiceDate,
+      sellerLegalName: invoice.sellerLegalName,
+      sellerCompanyNumber: invoice.sellerCompanyNumber,
+      sellerVatNumber: invoice.sellerVatNumber,
+      sellerRegisteredOffice: invoice.sellerRegisteredOffice,
+      customerName: invoice.customerName,
+      customerEmail: invoice.customerEmail,
+      billingLine1: invoice.billingLine1,
+      billingLine2: invoice.billingLine2,
+      billingCity: invoice.billingCity,
+      billingRegion: invoice.billingRegion,
+      billingPostalCode: invoice.billingPostalCode,
+      billingCountry: invoice.billingCountry,
+      subtotalNetMinor: invoice.subtotalNetMinor,
+      subtotalVatMinor: invoice.subtotalVatMinor,
+      subtotalGrossMinor: invoice.subtotalGrossMinor,
+      shippingNetMinor: invoice.shippingNetMinor,
+      shippingVatMinor: invoice.shippingVatMinor,
+      shippingGrossMinor: invoice.shippingGrossMinor,
+      discountNetMinor: invoice.discountNetMinor,
+      discountVatMinor: invoice.discountVatMinor,
+      discountGrossMinor: invoice.discountGrossMinor,
+      orderNetTotalMinor: invoice.orderNetTotalMinor,
+      vatTotalMinor: invoice.vatTotalMinor,
+      grossTotalMinor: invoice.grossTotalMinor,
+      currency: invoice.currency as CurrencyCode,
+      lines: invoice.lines
+        .sort((left, right) => left.sortOrder - right.sortOrder)
+        .map((line) => ({
+          description: line.description,
+          sku: line.sku,
+          quantity: line.quantity,
+          unitGrossMinor: line.unitGrossMinor,
+          netMinor: line.netMinor,
+          vatRate: line.vatRate,
+          vatMinor: line.vatMinor,
+          grossMinor: line.grossMinor,
+        })),
+    } : null,
     items: order.items.map((item) => ({
       id: item.id,
       productId: item.productId,
@@ -650,7 +774,7 @@ async function createIronSpruePendingCheckoutOrder(input: CreateIronSprueCheckou
   await releaseExpiredIronSprueCheckoutOrderReservations(db);
   const shippingAddress = requireCheckoutAddress(input.shippingAddress);
   const subtotalMinor = input.cart.subtotalMinor;
-  const shippingMethod = getShippingMethodByCode(input.shippingMethodCode, shippingAddress.country, subtotalMinor);
+  const shippingMethod = getIronSprueShippingMethodByCode(input.shippingMethodCode, shippingAddress.country, subtotalMinor);
   if (!shippingMethod) throw new Error('Selected delivery method is not available for this address.');
   const discount = await resolveIronSprueDiscount({
     code: input.discountCode ?? null,
@@ -660,9 +784,9 @@ async function createIronSpruePendingCheckoutOrder(input: CreateIronSprueCheckou
     db,
   });
   const shippingMinor = calculatePromotionalShippingMinor(shippingMethod, input.cart.items, shippingAddress.country, subtotalMinor);
-  const taxMinor = calculateVatEstimateMinor(subtotalMinor);
   const discountMinor = discount?.discountMinor ?? 0;
   const totalMinor = subtotalMinor + shippingMinor - discountMinor;
+  const taxMinor = calculateVatEstimateMinor(totalMinor);
   const checkoutAttemptId = input.checkoutAttemptId?.trim() || randomUUID();
   const orderNumber = generateIronSprueOrderNumber();
   const skuByProductId = new Map<string, string>();
@@ -737,6 +861,81 @@ async function createIronSpruePendingCheckoutOrder(input: CreateIronSprueCheckou
     totalMinor,
     shippingAddress,
   };
+}
+
+async function ensureIronSprueVatInvoice(order: IronSprueInvoiceOrderRecord, tx: Prisma.TransactionClient) {
+  const existing = await tx.ironSprueVatInvoice.findUnique({
+    where: { orderId: order.id },
+    include: { lines: true },
+  });
+  if (existing) return existing;
+
+  const invoiceDate = new Date();
+  const subtotal = vatBreakdownFromGross(order.subtotalMinor);
+  const shipping = vatBreakdownFromGross(order.shippingMinor);
+  const discount = vatBreakdownFromGross(order.discountMinor ?? 0);
+  const grossTotalMinor = order.totalMinor;
+  const vatTotalMinor = calculateVatEstimateMinor(grossTotalMinor);
+  const orderNetTotalMinor = grossTotalMinor - vatTotalMinor;
+  const invoice = await tx.ironSprueVatInvoice.create({
+    data: {
+      storeCode: IRON_SPRUE_STORE_CODE,
+      orderId: order.id,
+      invoiceDate,
+      orderNumber: order.orderNumber,
+      sellerLegalName: IRON_SPRUE_SELLER_LEGAL_NAME,
+      sellerCompanyNumber: IRON_SPRUE_LEGAL_COMPANY_NUMBER,
+      sellerVatNumber: IRON_SPRUE_VAT_NUMBER,
+      sellerRegisteredOffice: IRON_SPRUE_REGISTERED_OFFICE,
+      customerName: order.shippingFullName,
+      customerEmail: order.shippingEmail,
+      billingLine1: order.shippingLine1,
+      billingLine2: order.shippingLine2,
+      billingCity: order.shippingCity,
+      billingRegion: order.shippingRegion,
+      billingPostalCode: order.shippingPostalCode,
+      billingCountry: order.shippingCountry,
+      subtotalNetMinor: subtotal.netMinor,
+      subtotalVatMinor: subtotal.vatMinor,
+      subtotalGrossMinor: subtotal.grossMinor,
+      shippingNetMinor: shipping.netMinor,
+      shippingVatMinor: shipping.vatMinor,
+      shippingGrossMinor: shipping.grossMinor,
+      discountNetMinor: discount.netMinor,
+      discountVatMinor: discount.vatMinor,
+      discountGrossMinor: discount.grossMinor,
+      orderNetTotalMinor,
+      vatTotalMinor,
+      grossTotalMinor,
+      currency: order.currency,
+      lines: {
+        create: order.items.map((item, index) => {
+          const line = vatBreakdownFromGross(item.totalMinor);
+          return {
+            orderItemId: item.id,
+            lineType: 'PRODUCT',
+            description: item.productName,
+            sku: item.productSku,
+            quantity: item.quantity,
+            unitGrossMinor: item.unitPriceMinor,
+            netMinor: line.netMinor,
+            vatRate: IRON_SPRUE_VAT_RATE,
+            vatMinor: line.vatMinor,
+            grossMinor: line.grossMinor,
+            sortOrder: index,
+          };
+        }),
+      },
+    },
+    include: { lines: true },
+  });
+
+  const invoiceNumber = ironSprueInvoiceNumber(invoice.sequence, invoice.invoiceDate);
+  return tx.ironSprueVatInvoice.update({
+    where: { id: invoice.id },
+    data: { invoiceNumber },
+    include: { lines: true },
+  });
 }
 
 export async function createIronSprueHostedCheckoutSession(input: CreateIronSprueCheckoutOrderInput & {
@@ -1336,20 +1535,23 @@ export async function reconcileIronSprueReservedStock(db: DatabaseClient = getIr
 
 export async function finalizePaidIronSprueCheckoutOrder(input: { orderId: string; paymentIntentId: string | null; stripeCheckoutSessionId: string | null }, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const order = await db.$transaction(async (tx) => {
-    const current = await tx.ironSprueOrder.findUnique({ where: { id: input.orderId }, include: { items: true } });
+    const current = await tx.ironSprueOrder.findUnique({ where: { id: input.orderId }, include: { items: true, invoices: { include: { lines: true } } } });
     if (!current) throw new Error('IRON_SPRUE_ORDER_NOT_FOUND');
     if (current.paymentStatus === 'SUCCEEDED') {
+      await ensureIronSprueVatInvoice(current, tx);
       if ((input.paymentIntentId && !current.paymentIntentId) || (input.stripeCheckoutSessionId && !current.stripeCheckoutSessionId)) {
-        return tx.ironSprueOrder.update({
+        await tx.ironSprueOrder.update({
           where: { id: input.orderId },
           data: {
             ...(input.paymentIntentId && !current.paymentIntentId ? { paymentIntentId: input.paymentIntentId } : {}),
             ...(input.stripeCheckoutSessionId && !current.stripeCheckoutSessionId ? { stripeCheckoutSessionId: input.stripeCheckoutSessionId } : {}),
           },
-          include: { items: true },
         });
       }
-      return current;
+      return tx.ironSprueOrder.findUniqueOrThrow({
+        where: { id: input.orderId },
+        include: { items: true, invoices: { include: { lines: true }, orderBy: { invoiceDate: 'desc' }, take: 1 } },
+      });
     }
     for (const item of current.items) {
       const inventory = await tx.ironSprueAdminInventory.findUnique({ where: { productId: item.productId } });
@@ -1400,7 +1602,7 @@ export async function finalizePaidIronSprueCheckoutOrder(input: { orderId: strin
         });
       }
     }
-    return tx.ironSprueOrder.update({
+    const updated = await tx.ironSprueOrder.update({
       where: { id: input.orderId },
       data: {
         status: 'PAID',
@@ -1412,6 +1614,11 @@ export async function finalizePaidIronSprueCheckoutOrder(input: { orderId: strin
         reservationExpiresAt: null,
       },
       include: { items: true },
+    });
+    await ensureIronSprueVatInvoice(updated, tx);
+    return tx.ironSprueOrder.findUniqueOrThrow({
+      where: { id: input.orderId },
+      include: { items: true, invoices: { include: { lines: true }, orderBy: { invoiceDate: 'desc' }, take: 1 } },
     });
   });
   return mapOrderRecord(order);
@@ -1518,12 +1725,18 @@ export async function processIronSprueStripeWebhookEvent(event: Stripe.Event, db
 }
 
 export async function getIronSprueOrderByStripeCheckoutSessionId(sessionId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
-  const order = await db.ironSprueOrder.findUnique({ where: { stripeCheckoutSessionId: sessionId }, include: { items: true } });
+  const order = await db.ironSprueOrder.findUnique({
+    where: { stripeCheckoutSessionId: sessionId },
+    include: { items: true, invoices: { include: { lines: true }, orderBy: { invoiceDate: 'desc' }, take: 1 } },
+  });
   return order ? mapOrderRecord(order) : null;
 }
 
 export async function getIronSprueOrderByStripePaymentIntentId(paymentIntentId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
-  const order = await db.ironSprueOrder.findUnique({ where: { paymentIntentId }, include: { items: true } });
+  const order = await db.ironSprueOrder.findUnique({
+    where: { paymentIntentId },
+    include: { items: true, invoices: { include: { lines: true }, orderBy: { invoiceDate: 'desc' }, take: 1 } },
+  });
   return order ? mapOrderRecord(order) : null;
 }
 
@@ -1539,7 +1752,11 @@ export async function getIronSprueCustomerOrders(userId: string, db: DatabaseCli
 export async function getIronSprueCustomerOrderByNumber(userId: string, orderNumber: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const order = await db.ironSprueOrder.findFirst({
     where: { storeCode: IRON_SPRUE_STORE_CODE, userId, orderNumber },
-    include: { items: true, customerRequests: { orderBy: { createdAt: 'desc' } } },
+    include: {
+      items: true,
+      invoices: { include: { lines: true }, orderBy: { invoiceDate: 'desc' }, take: 1 },
+      customerRequests: { orderBy: { createdAt: 'desc' } },
+    },
   });
   return order ? mapOrderRecord(order) : null;
 }

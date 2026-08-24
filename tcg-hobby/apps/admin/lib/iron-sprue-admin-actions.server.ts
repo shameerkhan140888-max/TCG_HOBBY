@@ -13,6 +13,7 @@ import {
   sendIronSprueOrderConfirmationEmail,
   publishIronSprueAdminProduct,
   publishIronSprueAdminProducts,
+  reconcileIronSprueR2ProductMedia,
   setIronSprueProductPublicationState,
   isIronSprueAdminFulfilmentState,
   updateIronSprueAdminBrandControls,
@@ -31,7 +32,7 @@ import {
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdminSession } from './auth.server';
-import { assertIronSprueR2ObjectExists, uploadIronSprueAdminImage } from './iron-sprue-media-storage.server';
+import { assertIronSprueR2ObjectExists, listIronSprueR2Objects, uploadIronSprueAdminImage } from './iron-sprue-media-storage.server';
 
 function boolFromForm(value: FormDataEntryValue | null) {
   return value === 'on' || value === 'true' || value === '1';
@@ -135,6 +136,31 @@ export async function updateIronSprueContentReviewAction(formData: FormData) {
   revalidatePath('/iron-sprue-admin/content-review');
   revalidateIronSprueStorefront();
   redirect(adminStatusPath('content-review', 'saved', 'Content review saved.'));
+}
+
+export async function approveIronSprueProductReviewAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const productSku = stringFromForm(formData.get('productSku'));
+  const reviewId = stringFromForm(formData.get('reviewId'));
+  const mediaId = stringFromForm(formData.get('mediaId'));
+  try {
+    if (reviewId) {
+      await updateIronSprueAdminContentReviewStatus(reviewId, 'APPROVED', actor);
+    } else if (mediaId) {
+      await updateIronSprueAdminMediaApproval(mediaId, 'APPROVED', actor);
+    } else {
+      throw new Error('Select a review or media item to approve.');
+    }
+  } catch (error) {
+    redirect(adminStatusPath('products', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/products');
+  revalidatePath('/iron-sprue-admin/media');
+  revalidatePath('/iron-sprue-admin/content-review');
+  revalidateIronSprueStorefront();
+  const query = productSku ? `?q=${encodeURIComponent(productSku)}&saved=${encodeURIComponent('Review approval saved.')}` : `?saved=${encodeURIComponent('Review approval saved.')}`;
+  redirect(`/iron-sprue-admin/products${query}`);
 }
 
 export async function bulkApproveIronSprueContentReviewsAction(formData: FormData) {
@@ -276,6 +302,73 @@ export async function uploadIronSprueProductMediaAction(formData: FormData) {
   revalidatePath('/iron-sprue-admin/media');
   revalidateIronSprueStorefront();
   redirect(adminStatusPath('media', 'saved', 'Media upload saved for review.'));
+}
+
+export async function attachIronSprueExistingR2MediaAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const productId = stringFromForm(formData.get('productId'));
+  const role = stringFromForm(formData.get('role'));
+  const storageKey = stringFromForm(formData.get('storageKey')).trim();
+  const altText = stringFromForm(formData.get('altText'));
+  try {
+    if (!productId) throw new Error('productId is required.');
+    if (!storageKey) throw new Error('Select an existing R2 image.');
+    if (!['catalogue-primary', 'workshop-photography', 'manufacturer-original', 'completed-result'].includes(role)) {
+      throw new Error('Unsupported Iron Sprue media role.');
+    }
+    if (!/\.(avif|gif|jpe?g|png|webp)$/i.test(storageKey)) {
+      throw new Error('Only existing R2 image objects can be attached for media review.');
+    }
+    await assertIronSprueR2ObjectExists(storageKey);
+    await createIronSprueAdminMediaAsset(
+      {
+        productId,
+        role,
+        storageKey,
+        url: `r2://${storageKey}`,
+        altText,
+        mimeType: storageKey.toLowerCase().endsWith('.webp')
+          ? 'image/webp'
+          : storageKey.toLowerCase().endsWith('.png')
+            ? 'image/png'
+            : storageKey.toLowerCase().endsWith('.gif')
+              ? 'image/gif'
+              : storageKey.toLowerCase().endsWith('.avif')
+                ? 'image/avif'
+                : 'image/jpeg',
+        approvalState: 'REVIEW_REQUIRED',
+        isPrimary: false,
+      },
+      actor,
+    );
+  } catch (error) {
+    redirect(adminStatusPath('media', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/media');
+  revalidateIronSprueStorefront();
+  redirect(adminStatusPath('media', 'saved', 'Existing R2 media attached for review.'));
+}
+
+export async function reconcileIronSprueExistingR2MediaAction() {
+  const actor = await requireIronSprueActor();
+  try {
+    const objects = await listIronSprueR2Objects('products/', 1000);
+    const result = await reconcileIronSprueR2ProductMedia(objects.map((object) => ({
+      key: object.key,
+      size: object.size,
+      updatedAt: object.updatedAt,
+    })), actor);
+    const issues = result.ambiguous.length + result.unmatched.length;
+    const issueText = issues ? ` ${issues} object${issues === 1 ? '' : 's'} need review.` : '';
+    revalidatePath('/iron-sprue-admin');
+    revalidatePath('/iron-sprue-admin/products');
+    revalidatePath('/iron-sprue-admin/media');
+    revalidateIronSprueStorefront();
+    redirect(adminStatusPath('products', 'saved', `Reconciled ${result.upsertedMedia} R2 media object${result.upsertedMedia === 1 ? '' : 's'} across ${result.affectedProducts} product${result.affectedProducts === 1 ? '' : 's'}.${issueText}`));
+  } catch (error) {
+    redirect(adminStatusPath('products', 'error', actionError(error)));
+  }
 }
 
 export async function saveIronSprueHomepagePlacementAction(formData: FormData) {

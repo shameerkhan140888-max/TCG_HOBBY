@@ -7,6 +7,11 @@ import {
   refundIronSprueOrderForMerchant,
 } from './iron-sprue-commerce.js';
 import { calculateVatEstimateMinor } from './commerce.js';
+import {
+  inferIronSprueImageMimeType,
+  isIronSprueDisplayableImageAsset,
+  resolveIronSpruePublicMediaUrl,
+} from './iron-sprue-media.js';
 
 export const IRON_SPRUE_STORE_CODE = 'IRON_SPRUE' as const;
 
@@ -284,6 +289,21 @@ export type IronSprueAdminContentReviewItem = Prisma.IronSprueAdminContentReview
     };
   };
 }>;
+
+export type IronSprueR2ProductMediaObject = {
+  key: string;
+  size?: number | null;
+  updatedAt?: Date | string | null;
+};
+
+export type IronSprueR2MediaReconciliationResult = {
+  scannedObjects: number;
+  matchedObjects: number;
+  upsertedMedia: number;
+  affectedProducts: number;
+  unmatched: Array<{ key: string; reason: string }>;
+  ambiguous: Array<{ sku: string; role: string; keys: string[]; reason: string }>;
+};
 export type IronSprueAdminMediaAssetInput = {
   productId?: string | null;
   role: string;
@@ -461,16 +481,11 @@ export function requireIronSpruePermission(
   }
 }
 
-export function resolveIronSpruePublicMediaUrl(asset: { url?: string | null; storageKey?: string | null } | null | undefined): string | null {
-  if (!asset) return null;
-  if (asset.url?.trim()) return asset.url.trim();
-  const storageKey = asset.storageKey?.trim().replace(/^\/+/, '');
-  return storageKey ? `/media/iron-sprue/${storageKey.split('/').map(encodeURIComponent).join('/')}` : null;
-}
+export { isIronSprueDisplayableImageAsset, resolveIronSpruePublicMediaUrl } from './iron-sprue-media.js';
 
 export function selectIronSpruePrimaryCatalogueMedia(product: Pick<ProductWithReadiness, 'mediaAssets'>) {
   return [...product.mediaAssets]
-    .filter((asset) => asset.role === 'catalogue-primary' && asset.approvalState === 'APPROVED' && asset.isPrimary)
+    .filter((asset) => asset.role === 'catalogue-primary' && asset.approvalState === 'APPROVED' && asset.isPrimary && isIronSprueDisplayableImageAsset(asset))
     .map((asset) => ({ asset, url: resolveIronSpruePublicMediaUrl(asset) }))
     .filter((item): item is { asset: ProductWithReadiness['mediaAssets'][number]; url: string } => Boolean(item.url))
     .sort((left, right) => left.asset.sortOrder - right.asset.sortOrder || left.asset.id.localeCompare(right.asset.id))[0] ?? null;
@@ -490,16 +505,16 @@ function blocker(input: IronSprueReadinessBlocker): IronSprueReadinessBlocker {
 
 export function getIronSprueProductReadiness(product: ProductWithReadiness): IronSprueProductReadinessResult {
   const blockingReasons: IronSprueReadinessBlocker[] = [];
-  const mediaActionHref = `/iron-sprue-admin/media?productId=${encodeURIComponent(product.id)}`;
-  const contentActionHref = `/iron-sprue-admin/content-review?productId=${encodeURIComponent(product.id)}`;
   const productActionHref = `/iron-sprue-admin/products?q=${encodeURIComponent(product.sku)}`;
+  const mediaActionHref = productActionHref;
+  const contentActionHref = productActionHref;
   const inventoryActionHref = `/iron-sprue-admin/inventory?q=${encodeURIComponent(product.sku)}`;
   const primaryMedia = selectIronSpruePrimaryCatalogueMedia(product);
-  const approvedPrimaryWithoutUrl = product.mediaAssets.some(
-    (asset) => asset.role === 'catalogue-primary' && asset.approvalState === 'APPROVED' && asset.isPrimary && !resolveIronSpruePublicMediaUrl(asset),
+  const approvedPrimaryUnusable = product.mediaAssets.some(
+    (asset) => asset.role === 'catalogue-primary' && asset.approvalState === 'APPROVED' && asset.isPrimary && (!resolveIronSpruePublicMediaUrl(asset) || !isIronSprueDisplayableImageAsset(asset)),
   );
   const pendingPrimaryMedia = product.mediaAssets.filter(
-    (asset) => asset.role === 'catalogue-primary' && asset.approvalState !== 'APPROVED',
+    (asset) => asset.role === 'catalogue-primary' && (asset.approvalState !== 'APPROVED' || !isIronSprueDisplayableImageAsset(asset)),
   ).length;
   const availableStock = product.inventory?.availableStock ?? 0;
   const reservedStock = product.inventory?.reservedStock ?? 0;
@@ -534,10 +549,10 @@ export function getIronSprueProductReadiness(product: ProductWithReadiness): Iro
   }
   if (!primaryMedia) {
     blockingReasons.push(blocker({
-      code: approvedPrimaryWithoutUrl ? 'media.primary_unresolvable' : 'media.primary_missing',
+      code: approvedPrimaryUnusable ? 'media.primary_unresolvable' : 'media.primary_missing',
       category: 'media',
-      message: approvedPrimaryWithoutUrl
-        ? 'Approved primary catalogue media has no resolvable URL or storage key.'
+      message: approvedPrimaryUnusable
+        ? 'Approved primary catalogue media must be a resolvable image file.'
         : `${Math.max(pendingPrimaryMedia, 1)} required primary catalogue media asset${Math.max(pendingPrimaryMedia, 1) === 1 ? '' : 's'} pending.`,
       source: 'mediaAssets.catalogue-primary',
       actionable: true,
@@ -564,6 +579,7 @@ export function getIronSprueProductReadiness(product: ProductWithReadiness): Iro
         actionHref: contentActionHref,
       }));
     } else if (isIronSprueCommercialReviewField(fieldName)) {
+      if (review.status === 'PENDING') continue;
       blockingReasons.push(blocker({
         code: `commercial.review_${String(review.status).toLowerCase()}`,
         category: 'commercial',
@@ -653,15 +669,31 @@ export function ironSpruePublicProductWhere(): Prisma.IronSprueAdminProductWhere
         role: 'catalogue-primary',
         approvalState: 'APPROVED',
         isPrimary: true,
-        OR: [
-          { url: { not: null } },
-          { storageKey: { not: null } },
+        AND: [
+          {
+            OR: [
+              { mimeType: { startsWith: 'image/' } },
+              { mimeType: null },
+            ],
+          },
+          {
+            OR: [
+              { url: { not: null } },
+              { storageKey: { not: null } },
+            ],
+          },
+          {
+            NOT: [
+              { storageKey: { endsWith: '.json' } },
+              { url: { endsWith: '.json' } },
+            ],
+          },
         ],
       },
     },
     contentReviews: {
       none: {
-        status: { in: ['PENDING', 'CONFLICT', 'REJECTED'] },
+        status: { in: ['CONFLICT', 'REJECTED'] },
       },
     },
   };
@@ -1942,7 +1974,173 @@ export async function createIronSprueAdminMediaAsset(
     },
   });
 
+  if (record.productId) {
+    await synchronizeIronSprueProductPublicationReadiness(record.productId, actor, client);
+  }
+
   return record;
+}
+
+function normalizedIronSprueSku(value: string | null | undefined) {
+  return String(value ?? '').trim().toLowerCase();
+}
+
+function inferIronSprueR2ProductMedia(key: string): { sku: string; role: string; sortOrder: number } | null {
+  const cleanKey = key.trim().replace(/^\/+/, '');
+  if (!/\.(avif|gif|jpe?g|png|svg|webp)$/i.test(cleanKey)) return null;
+  const parts = cleanKey.split('/');
+  if (parts[0] !== 'products' || !parts[1] || !parts[2]) return null;
+  const roleFolder = parts[2].toLowerCase();
+  if (roleFolder === 'image-2') return { sku: normalizedIronSprueSku(parts[1]), role: 'catalogue-primary', sortOrder: 0 };
+  if (roleFolder === 'workshop') return { sku: normalizedIronSprueSku(parts[1]), role: 'workshop-photography', sortOrder: 20 };
+  if (roleFolder === 'completed-result') return { sku: normalizedIronSprueSku(parts[1]), role: 'completed-result', sortOrder: 30 };
+  return null;
+}
+
+export async function reconcileIronSprueR2ProductMedia(
+  objects: IronSprueR2ProductMediaObject[],
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+): Promise<IronSprueR2MediaReconciliationResult> {
+  const products = await client.ironSprueAdminProduct.findMany({
+    where: { storeCode: IRON_SPRUE_STORE_CODE },
+    include: productReadinessInclude,
+    orderBy: { sku: 'asc' },
+  });
+  const productsBySku = new Map(products.map((product) => [normalizedIronSprueSku(product.sku), product]));
+  const candidateGroups = new Map<string, Array<IronSprueR2ProductMediaObject & { role: string; sku: string; sortOrder: number }>>();
+  const unmatched: IronSprueR2MediaReconciliationResult['unmatched'] = [];
+  const ambiguous: IronSprueR2MediaReconciliationResult['ambiguous'] = [];
+
+  for (const object of objects) {
+    const key = object.key.trim().replace(/^\/+/, '');
+    const candidate = inferIronSprueR2ProductMedia(key);
+    if (!candidate) {
+      unmatched.push({ key, reason: 'Not a supported displayable product image path.' });
+      continue;
+    }
+    const product = productsBySku.get(candidate.sku);
+    if (!product) {
+      unmatched.push({ key, reason: 'No canonical Railway product exists for the SKU in this R2 path.' });
+      continue;
+    }
+    const mapKey = `${product.id}:${candidate.role}`;
+    candidateGroups.set(mapKey, [...(candidateGroups.get(mapKey) ?? []), { ...object, key, ...candidate }]);
+  }
+
+  const affectedProductIds = new Set<string>();
+  let upsertedMedia = 0;
+  let matchedObjects = 0;
+
+  for (const product of products) {
+    for (const role of ['catalogue-primary', 'workshop-photography', 'completed-result']) {
+      const candidates = [...(candidateGroups.get(`${product.id}:${role}`) ?? [])]
+        .sort((left, right) => {
+          const leftTime = left.updatedAt ? new Date(left.updatedAt).getTime() : 0;
+          const rightTime = right.updatedAt ? new Date(right.updatedAt).getTime() : 0;
+          return rightTime - leftTime || left.key.localeCompare(right.key);
+        });
+      if (!candidates.length) continue;
+
+      if (role === 'catalogue-primary' && candidates.length > 1) {
+        ambiguous.push({
+          sku: product.sku,
+          role,
+          keys: candidates.map((candidate) => candidate.key),
+          reason: 'Multiple catalogue-primary R2 image candidates exist; choose the primary product image manually.',
+        });
+        continue;
+      }
+
+      for (const [index, candidate] of candidates.entries()) {
+        matchedObjects += 1;
+        const isPrimary = role === 'catalogue-primary';
+        const approvalState = 'APPROVED';
+        const record = await client.ironSprueAdminMediaAsset.upsert({
+          where: { storeCode_storageKey: { storeCode: IRON_SPRUE_STORE_CODE, storageKey: candidate.key } },
+          create: {
+            storeCode: IRON_SPRUE_STORE_CODE,
+            productId: product.id,
+            role,
+            url: `r2://${candidate.key}`,
+            storageKey: candidate.key,
+            altText: `${product.customerTitle} ${role.replace(/-/g, ' ')}`,
+            mimeType: inferIronSprueImageMimeType(candidate.key),
+            byteSize: candidate.size ?? null,
+            approvalState,
+            isPrimary,
+            sortOrder: candidate.sortOrder + index,
+            uploadedById: actor.id,
+            approvedById: actor.id,
+            approvedAt: new Date(),
+            lastError: null,
+          },
+          update: {
+            productId: product.id,
+            role,
+            url: `r2://${candidate.key}`,
+            altText: `${product.customerTitle} ${role.replace(/-/g, ' ')}`,
+            mimeType: inferIronSprueImageMimeType(candidate.key),
+            byteSize: candidate.size ?? null,
+            approvalState,
+            isPrimary,
+            sortOrder: candidate.sortOrder + index,
+            uploadedById: actor.id,
+            approvedById: actor.id,
+            approvedAt: new Date(),
+            lastError: null,
+          },
+        });
+        upsertedMedia += 1;
+        affectedProductIds.add(product.id);
+
+        if (isPrimary) {
+          await client.ironSprueAdminMediaAsset.updateMany({
+            where: {
+              storeCode: IRON_SPRUE_STORE_CODE,
+              productId: product.id,
+              role: 'catalogue-primary',
+              id: { not: record.id },
+            },
+            data: { isPrimary: false },
+          });
+        }
+      }
+    }
+  }
+
+  for (const productId of affectedProductIds) {
+    await synchronizeIronSprueProductPublicationReadiness(productId, actor, client);
+  }
+
+  if (upsertedMedia > 0) {
+    await client.ironSprueAdminAuditLog.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        actorId: actor.id,
+        action: 'media.r2_reconciliation',
+        entityType: 'media',
+        summary: `Reconciled ${upsertedMedia} existing R2 Iron Sprue media object${upsertedMedia === 1 ? '' : 's'} into canonical product media.`,
+        after: {
+          scannedObjects: objects.length,
+          matchedObjects,
+          upsertedMedia,
+          affectedProducts: affectedProductIds.size,
+          unmatchedCount: unmatched.length,
+          ambiguousCount: ambiguous.length,
+        },
+      },
+    });
+  }
+
+  return {
+    scannedObjects: objects.length,
+    matchedObjects,
+    upsertedMedia,
+    affectedProducts: affectedProductIds.size,
+    unmatched,
+    ambiguous,
+  };
 }
 
 export async function listIronSprueAdminContentReviews(
@@ -1990,6 +2188,9 @@ export async function updateIronSprueAdminMediaApproval(
     include: { product: true },
   });
   if (!media) throw new Error('Iron Sprue media asset not found.');
+  if (nextState === 'APPROVED' && media.role === 'catalogue-primary' && !isIronSprueDisplayableImageAsset(media)) {
+    throw new Error('Only image files can be approved as catalogue-primary storefront media.');
+  }
 
   const now = new Date();
   if (nextState === 'APPROVED' && media.productId && media.role === 'catalogue-primary') {

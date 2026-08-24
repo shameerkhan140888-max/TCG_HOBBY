@@ -51,6 +51,7 @@ function ironSprueProduct(overrides: Record<string, unknown> = {}) {
         altText: 'Toyota 2000GT Red clean catalogue image',
         approvalState: 'APPROVED',
         isPrimary: true,
+        mimeType: 'image/webp',
         sortOrder: 0,
       },
     ],
@@ -89,7 +90,7 @@ describe('Iron Sprue production catalogue adapter', () => {
         metaDescription: { not: null },
         contentReviews: {
           none: {
-            status: { in: ['PENDING', 'CONFLICT', 'REJECTED'] },
+            status: { in: ['CONFLICT', 'REJECTED'] },
           },
         },
         mediaAssets: {
@@ -97,9 +98,25 @@ describe('Iron Sprue production catalogue adapter', () => {
             role: 'catalogue-primary',
             approvalState: 'APPROVED',
             isPrimary: true,
-            OR: [
-              { url: { not: null } },
-              { storageKey: { not: null } },
+            AND: [
+              {
+                OR: [
+                  { mimeType: { startsWith: 'image/' } },
+                  { mimeType: null },
+                ],
+              },
+              {
+                OR: [
+                  { url: { not: null } },
+                  { storageKey: { not: null } },
+                ],
+              },
+              {
+                NOT: [
+                  { storageKey: { endsWith: '.json' } },
+                  { url: { endsWith: '.json' } },
+                ],
+              },
             ],
           },
         },
