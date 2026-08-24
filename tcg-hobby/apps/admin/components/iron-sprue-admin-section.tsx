@@ -340,10 +340,20 @@ function ProductFlagForm({ product }: { product: Awaited<ReturnType<typeof listI
 }
 
 function ProductAdminCard({ product }: { product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number] }) {
+  const readiness = 'readiness' in product && product.readiness && typeof product.readiness === 'object'
+    ? product.readiness as {
+        status: string;
+        isReadyToPublish: boolean;
+        blockingReasons: Array<{ code: string; category: string; message: string; source: string; actionable: boolean; actionHref?: string }>;
+      }
+    : null;
   const blockers = 'readinessBlockers' in product && Array.isArray(product.readinessBlockers)
     ? product.readinessBlockers as string[]
     : [];
-  const canPublish = ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState) && blockers.length === 0;
+  const canPublish = readiness
+    ? Boolean(readiness.isReadyToPublish && ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState))
+    : ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState) && blockers.length === 0;
+  const blockerCount = readiness?.blockingReasons.length ?? blockers.length;
 
   return (
     <details className="group rounded-md border border-surface-line bg-surface-ink">
@@ -365,6 +375,7 @@ function ProductAdminCard({ product }: { product: Awaited<ReturnType<typeof list
             ) : null}
             <h2 className="text-lg font-bold">{product.customerTitle}</h2>
             <StatePill>{product.publicationState}</StatePill>
+            <StatePill>{product.publicationState === 'PUBLISHED' ? 'PUBLISHED' : blockerCount ? `BLOCKED - ${blockerCount} outstanding` : 'READY TO PUBLISH'}</StatePill>
           </div>
           <p className="mt-1 text-sm text-neutral-400">{product.sku} - {product.brand?.name ?? 'No brand'} - {product.category?.name ?? 'No category'} - {money(product.grossPriceMinor, product.currency)}</p>
         </div>
@@ -377,9 +388,25 @@ function ProductAdminCard({ product }: { product: Awaited<ReturnType<typeof list
       <div className="grid gap-4 border-t border-surface-line p-4 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div className="space-y-3">
           <p className="max-w-4xl text-sm leading-6 text-neutral-300">{product.shortDescription ?? 'No short description recorded.'}</p>
-          {blockers.length ? (
+          {readiness?.blockingReasons.length ? (
             <div className="rounded-md border border-amber-500/40 bg-amber-950/20 p-3">
-              <p className="text-xs font-bold uppercase tracking-wide text-amber-200">Publication blockers</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-200">Outstanding actions</p>
+              <ul className="mt-2 grid gap-2 text-sm text-amber-100">
+                {readiness.blockingReasons.map((reason) => (
+                  <li key={`${reason.code}:${reason.source}`} className="rounded border border-amber-500/20 bg-black/20 p-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-amber-300">{reason.category}</span>
+                      <span>{reason.message}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-amber-200/80">Source: {reason.source}</p>
+                    {reason.actionHref ? <a className="mt-1 inline-block text-xs font-bold text-accent" href={reason.actionHref}>Open correction area</a> : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : blockers.length ? (
+            <div className="rounded-md border border-amber-500/40 bg-amber-950/20 p-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-200">Outstanding actions</p>
               <ul className="mt-2 grid gap-1 text-sm text-amber-100">
                 {blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}
               </ul>
@@ -399,10 +426,10 @@ function ProductAdminCard({ product }: { product: Awaited<ReturnType<typeof list
             <input type="hidden" name="productId" value={product.id} />
             <Field label="Manual override">
               <select name="publicationState" defaultValue={product.publicationState === 'READY' ? 'READY_TO_PUBLISH' : product.publicationState} className={fieldClass}>
-                {['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY_TO_PUBLISH', 'PUBLISHED', 'ARCHIVED'].map((state) => <option key={state} value={state}>{state}</option>)}
+                {['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY_TO_PUBLISH', 'ARCHIVED'].map((state) => <option key={state} value={state}>{state}</option>)}
               </select>
             </Field>
-            <Button type="submit" variant="outline">Update state</Button>
+            <Button type="submit" variant="outline">Update non-public state</Button>
           </form>
         </div>
       </div>

@@ -14,8 +14,8 @@ import {
   verifyPassword,
   type FieldErrors,
 } from '@tcg-hobby/auth';
-import { prisma } from '@tcg-hobby/database/storefront';
 import { requireIronSprueCustomerSession } from './auth';
+import { importLocalStorefrontDatabase } from './local-database';
 import { claimVerifiedIronSprueGuestOrders } from './orders';
 
 type AuthFormState = {
@@ -46,6 +46,7 @@ function sessionCookieOptions(expires: Date) {
 async function createCustomerSession(userId: string) {
   const sessionToken = generateSessionToken();
   const expires = createSessionExpiry();
+  const { prisma } = await importLocalStorefrontDatabase();
   await prisma.session.create({ data: { sessionToken, userId, expires } });
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE_NAME, sessionToken, sessionCookieOptions(expires));
@@ -54,7 +55,10 @@ async function createCustomerSession(userId: string) {
 export async function logoutIronSprueCustomerAction() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  if (token) await prisma.session.deleteMany({ where: { sessionToken: token } });
+  if (token) {
+    const { prisma } = await importLocalStorefrontDatabase();
+    await prisma.session.deleteMany({ where: { sessionToken: token } });
+  }
   cookieStore.delete(SESSION_COOKIE_NAME);
   redirect('/login');
 }
@@ -66,6 +70,7 @@ export async function loginIronSprueCustomerAction(_state: IronSprueAuthState, f
   });
   if (!result.ok) return { fieldErrors: result.fieldErrors, values: { email: result.email } };
 
+  const { prisma } = await importLocalStorefrontDatabase();
   const user = await prisma.user.findUnique({ where: { email: result.email } });
   if (!user?.passwordHash || !verifyPassword(result.password, user.passwordHash) || user.role !== 'CUSTOMER') {
     return { formError: 'The email or password you entered is incorrect.', fieldErrors: {}, values: { email: result.email } };
@@ -87,6 +92,7 @@ export async function registerIronSprueCustomerAction(_state: IronSprueAuthState
   if (!consent) fieldErrors.privacyConsent = 'Confirm you understand how Iron Sprue handles your account information.';
   if (!result.ok || Object.keys(fieldErrors).length) return { fieldErrors, values: { email: result.email } };
 
+  const { prisma } = await importLocalStorefrontDatabase();
   const existing = await prisma.user.findUnique({ where: { email: result.email } });
   if (existing) return { formError: 'An account with that email already exists.', fieldErrors: {}, values: { email: result.email } };
 
@@ -109,6 +115,7 @@ export async function updateIronSprueProfileAction(_state: IronSprueAuthState, f
   const session = await requireIronSprueCustomerSession('/account');
   const result = validateProfileInput({ name: String(formData.get('name') ?? '') });
   if (!result.ok) return { fieldErrors: result.fieldErrors, values: { name: result.name } };
+  const { prisma } = await importLocalStorefrontDatabase();
   await prisma.user.update({ where: { id: session.user.id }, data: { name: result.name } });
   return { fieldErrors: {}, success: 'Profile saved.', values: { name: result.name } };
 }

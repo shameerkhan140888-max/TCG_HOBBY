@@ -9,16 +9,7 @@
   ],
   "find_additional_modules": true,
   "preserve_file_names": true,
-  "base_dir": ".open-next/.worker-files",
-  "rules": [
-    {
-      "type": "CompiledWasm",
-      "globs": [
-        "node_modules/.prisma/client/*.wasm"
-      ],
-      "fallthrough": true
-    }
-  ],
+  "base_dir": ".open-next",
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -31,10 +22,10 @@
   ],
   "vars": {
     "NEXTJS_ENV": "production",
-    "TCG_HOBBY_PRISMA_RUNTIME": "worker",
     "TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES": "1",
     "IRON_SPRUE_ENVIRONMENT": "staging",
     "IRON_SPRUE_STORE_ID": "IRON_SPRUE",
+    "IRON_SPRUE_PRODUCTION_API_BASE_URL": "https://considerate-unity-production-b734.up.railway.app",
     "IRON_SPRUE_SITE_URL": "https://staging.ironsprue.co.uk",
     "NEXT_PUBLIC_IRON_SPRUE_SITE_URL": "https://staging.ironsprue.co.uk",
     "IRON_SPRUE_EMAIL_ASSET_BASE_URL": "https://staging.ironsprue.co.uk",

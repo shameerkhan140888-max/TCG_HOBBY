@@ -1,12 +1,21 @@
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, renameSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
 const storefrontRoot = fileURLToPath(new URL('..', import.meta.url));
 const storefrontRootUrl = new URL('..', import.meta.url);
 const workspaceRoot = fileURLToPath(new URL('../..', storefrontRootUrl));
 const prismaGenerateDatabaseUrl = 'postgresql://prisma-generate:prisma-generate@localhost:5432/prisma_generate';
+const productionApiBaseUrl = 'https://considerate-unity-production-b734.up.railway.app';
+const localEnvFileNames = ['.env', '.env.local', '.env.production', '.env.development'];
+const internalWorkspaceBuilds = [
+  { workspace: '@tcg-hobby/types' },
+  { workspace: '@tcg-hobby/utils' },
+  { workspace: '@tcg-hobby/ui' },
+  { workspace: '@tcg-hobby/auth' },
+  { workspace: '@tcg-hobby/database', env: { DATABASE_URL: prismaGenerateDatabaseUrl } },
+];
 
 const mode = process.argv[2] ?? 'build';
 const commands = {
@@ -22,60 +31,42 @@ if (!Object.hasOwn(commands, mode)) {
 
 process.env.TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES = '1';
 process.env.NEXTJS_ENV ??= 'production';
+process.env.IRON_SPRUE_PRODUCTION_API_BASE_URL ??= productionApiBaseUrl;
 
 // Prisma generate validates DATABASE_URL syntax but does not connect to the database.
-runWorkspaceCommand('npm', ['run', 'build', '-w', '@tcg-hobby/database'], workspaceRoot, {
-  DATABASE_URL: prismaGenerateDatabaseUrl,
-});
-
-if (mode !== 'build') {
-  process.env.TCG_HOBBY_PRISMA_RUNTIME = 'worker';
-  ensurePrismaWasmModuleDirectory();
+for (const workspaceBuild of internalWorkspaceBuilds) {
+  runWorkspaceCommand('npm', ['run', 'build', '-w', workspaceBuild.workspace], workspaceRoot, workspaceBuild.env);
 }
 
 const [command, args] = commands[mode];
-runWorkspaceCommand(command, args, storefrontRoot);
-
-if (mode === 'build') {
-  copyPrismaWasmAssets();
-}
+withLocalEnvFilesHidden(() => {
+  runWorkspaceCommand(command, args, storefrontRoot);
+});
 
 process.exit(0);
 
-function getPrismaWasmModuleDirectory() {
-  return join(storefrontRoot, '.open-next', '.worker-files', 'node_modules', '.prisma', 'client');
-}
+function withLocalEnvFilesHidden(callback) {
+  const hiddenFiles = [];
+  const candidateRoots = [...new Set([workspaceRoot, storefrontRoot])];
+  const suffix = `.cloudflare-build-hidden-${process.pid}`;
 
-function ensurePrismaWasmModuleDirectory() {
-  mkdirSync(getPrismaWasmModuleDirectory(), { recursive: true });
-}
+  try {
+    for (const root of candidateRoots) {
+      for (const fileName of localEnvFileNames) {
+        const source = join(root, fileName);
+        if (!existsSync(source)) continue;
+        const hidden = join(root, `${fileName}${suffix}`);
+        renameSync(source, hidden);
+        hiddenFiles.push({ source, hidden });
+      }
+    }
 
-function copyPrismaWasmAssets() {
-  const sourceDirectory = findPrismaWasmDirectory();
-  const targetDirectory = getPrismaWasmModuleDirectory();
-
-  if (!existsSync(sourceDirectory)) return;
-
-  const wasmFiles = readdirSync(sourceDirectory).filter((file) => file === 'query_compiler_bg.wasm');
-  if (wasmFiles.length === 0) return;
-
-  mkdirSync(targetDirectory, { recursive: true });
-
-  for (const file of wasmFiles) {
-    cpSync(join(sourceDirectory, file), join(targetDirectory, file));
+    callback();
+  } finally {
+    for (const { source, hidden } of hiddenFiles.reverse()) {
+      if (existsSync(hidden)) renameSync(hidden, source);
+    }
   }
-
-  console.log(`Copied ${wasmFiles.length} Prisma WASM asset(s) into the OpenNext worker bundle.`);
-}
-
-function findPrismaWasmDirectory() {
-  const candidates = [
-    join(storefrontRoot, '.next', 'server', 'static', 'wasm'),
-    join(storefrontRoot, '.next', 'server', 'chunks', 'static', 'wasm'),
-    join(workspaceRoot, 'node_modules', '.prisma', 'client'),
-  ];
-
-  return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0];
 }
 
 function runWorkspaceCommand(command, args, cwd, envOverrides = {}) {

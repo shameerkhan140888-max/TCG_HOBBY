@@ -1,4 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import {
   addIronSprueProductToCart,
   cancelIronSprueCheckoutSession,
@@ -59,11 +60,90 @@ function isCustomerCheckoutError(message: string) {
   );
 }
 
+const INTERNAL_SIGNATURE_WINDOW_MS = 5 * 60 * 1000;
+const HEX_SHA256_PATTERN = /^[a-f0-9]{64}$/;
+
+function headerValue(headers: Record<string, string | string[] | undefined>, name: string) {
+  const value = headers[name.toLowerCase()] ?? headers[name];
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function safeEqualHex(left: string, right: string) {
+  if (!HEX_SHA256_PATTERN.test(left) || !HEX_SHA256_PATTERN.test(right)) return false;
+  return timingSafeEqual(Buffer.from(left, 'hex'), Buffer.from(right, 'hex'));
+}
+
+function canonicalIronSprueProxyRequest(input: {
+  keyId: string;
+  method: string;
+  pathname: string;
+  query: string;
+  bodyDigest: string;
+  timestamp: string;
+  nonce: string;
+  store: string;
+  environment: string;
+}) {
+  return [
+    input.keyId,
+    input.method.toUpperCase(),
+    input.pathname,
+    input.query.replace(/^\?/, ''),
+    input.bodyDigest,
+    input.timestamp,
+    input.nonce,
+    input.store,
+    input.environment,
+  ].join('\n');
+}
+
 function requireIronSprueProxy(headers: Record<string, string | string[] | undefined>) {
-  const store = headers['x-iron-sprue-internal-store'];
-  const keyId = headers['x-iron-sprue-internal-key-id'];
+  const store = headerValue(headers, 'x-iron-sprue-internal-store');
+  const keyId = headerValue(headers, 'x-iron-sprue-internal-key-id');
+  const environment = headerValue(headers, 'x-iron-sprue-internal-environment');
+  const method = headerValue(headers, 'x-iron-sprue-internal-method');
+  const pathname = headerValue(headers, 'x-iron-sprue-internal-pathname');
+  const query = headerValue(headers, 'x-iron-sprue-internal-query') ?? '';
+  const bodyDigest = headerValue(headers, 'x-iron-sprue-internal-body-sha256');
+  const timestamp = headerValue(headers, 'x-iron-sprue-internal-timestamp');
+  const nonce = headerValue(headers, 'x-iron-sprue-internal-nonce');
+  const signature = headerValue(headers, 'x-iron-sprue-internal-signature');
   const expectedKeyId = process.env.IRON_SPRUE_INTERNAL_API_KEY_ID?.trim();
-  if (store !== 'IRON_SPRUE' || !expectedKeyId || keyId !== expectedKeyId) {
+  const secret = process.env.IRON_SPRUE_INTERNAL_API_SECRET?.trim();
+  const expectedEnvironment = process.env.IRON_SPRUE_ENVIRONMENT?.trim() || process.env.NODE_ENV || 'production';
+  if (
+    store !== 'IRON_SPRUE'
+    || !expectedKeyId
+    || !secret
+    || keyId !== expectedKeyId
+    || environment !== expectedEnvironment
+    || !method
+    || !pathname
+    || !HEX_SHA256_PATTERN.test(bodyDigest ?? '')
+    || !timestamp
+    || !nonce
+    || !signature
+  ) {
+    throw new UnauthorizedException('Iron Sprue commerce proxy authentication failed.');
+  }
+  const timestampMs = Date.parse(timestamp);
+  if (!Number.isFinite(timestampMs) || Math.abs(Date.now() - timestampMs) > INTERNAL_SIGNATURE_WINDOW_MS) {
+    throw new UnauthorizedException('Iron Sprue commerce proxy authentication failed.');
+  }
+  const expectedSignature = createHmac('sha256', secret)
+    .update(canonicalIronSprueProxyRequest({
+      keyId,
+      method,
+      pathname,
+      query,
+      bodyDigest: bodyDigest ?? '',
+      timestamp,
+      nonce,
+      store,
+      environment,
+    }))
+    .digest('hex');
+  if (!safeEqualHex(signature, expectedSignature)) {
     throw new UnauthorizedException('Iron Sprue commerce proxy authentication failed.');
   }
 }
@@ -120,7 +200,8 @@ export class IronSprueCommerceService {
     return this.basket(headers, authorization);
   }
 
-  async shipping(country: string, subtotalMinor = 0): Promise<ShippingMethod[]> {
+  async shipping(headers: Record<string, string | string[] | undefined>, country: string, subtotalMinor = 0): Promise<ShippingMethod[]> {
+    requireIronSprueProxy(headers);
     return getIronSprueAvailableShippingMethods(country.trim().toUpperCase() || 'GB', Math.max(Math.trunc(subtotalMinor), 0));
   }
 

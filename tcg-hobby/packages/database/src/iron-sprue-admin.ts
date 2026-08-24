@@ -149,6 +149,36 @@ export type IronSprueReadinessCheck = {
   detail: string;
 };
 
+export type IronSprueReadinessStatus = 'READY' | 'BLOCKED' | 'PUBLISHED';
+
+export type IronSprueReadinessBlockerCategory =
+  | 'identity'
+  | 'content'
+  | 'media'
+  | 'commercial'
+  | 'inventory'
+  | 'review'
+  | 'publication';
+
+export type IronSprueReadinessBlocker = {
+  code: string;
+  category: IronSprueReadinessBlockerCategory;
+  message: string;
+  source: string;
+  actionable: boolean;
+  actionHref?: string;
+};
+
+export type IronSprueProductReadinessResult = {
+  status: IronSprueReadinessStatus;
+  publicationState: IronSpruePublicationState;
+  isReadyToPublish: boolean;
+  isPubliclyVisible: boolean;
+  primaryMediaId: string | null;
+  primaryImageUrl: string | null;
+  blockingReasons: IronSprueReadinessBlocker[];
+};
+
 const IRON_SPRUE_STOREFRONT_CONTENT_REVIEW_FIELDS = [
   'customerTitle',
   'title',
@@ -171,6 +201,11 @@ const IRON_SPRUE_STOREFRONT_CONTENT_REVIEW_FIELDS = [
 export function isIronSprueStorefrontContentReviewField(fieldName: string) {
   const normalized = String(fieldName ?? '').replace(/[^a-z0-9]/gi, '').toLowerCase();
   return IRON_SPRUE_STOREFRONT_CONTENT_REVIEW_FIELDS.some((field) => normalized === field.toLowerCase());
+}
+
+function isIronSprueCommercialReviewField(fieldName: string) {
+  const normalized = String(fieldName ?? '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+  return /(price|cost|margin|vat|tax|inventory|stock|sourcerow|import|supplierunitcost|retailpriceminor)/i.test(normalized);
 }
 
 export type IronSprueAdminCapabilityStatus = 'ready' | 'empty' | 'blocked' | 'deferred';
@@ -426,76 +461,210 @@ export function requireIronSpruePermission(
   }
 }
 
-export function evaluateIronSprueProductReadiness(product: ProductWithReadiness): IronSprueReadinessCheck[] {
-  const cataloguePrimary = product.mediaAssets.find(
-    (asset) => asset.role === 'catalogue-primary' && asset.approvalState === 'APPROVED' && asset.isPrimary,
-  );
-  const unresolvedContent = product.contentReviews.some((review) => (
-    isIronSprueStorefrontContentReviewField(review.fieldName) && review.status !== 'APPROVED'
-  ));
+export function resolveIronSpruePublicMediaUrl(asset: { url?: string | null; storageKey?: string | null } | null | undefined): string | null {
+  if (!asset) return null;
+  if (asset.url?.trim()) return asset.url.trim();
+  const storageKey = asset.storageKey?.trim().replace(/^\/+/, '');
+  return storageKey ? `/media/iron-sprue/${storageKey.split('/').map(encodeURIComponent).join('/')}` : null;
+}
 
+export function selectIronSpruePrimaryCatalogueMedia(product: Pick<ProductWithReadiness, 'mediaAssets'>) {
+  return [...product.mediaAssets]
+    .filter((asset) => asset.role === 'catalogue-primary' && asset.approvalState === 'APPROVED' && asset.isPrimary)
+    .map((asset) => ({ asset, url: resolveIronSpruePublicMediaUrl(asset) }))
+    .filter((item): item is { asset: ProductWithReadiness['mediaAssets'][number]; url: string } => Boolean(item.url))
+    .sort((left, right) => left.asset.sortOrder - right.asset.sortOrder || left.asset.id.localeCompare(right.asset.id))[0] ?? null;
+}
+
+function hasStructuredValue(value: unknown) {
+  if (value == null) return false;
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === 'object') return Object.keys(value).length > 0;
+  return true;
+}
+
+function blocker(input: IronSprueReadinessBlocker): IronSprueReadinessBlocker {
+  return input;
+}
+
+export function getIronSprueProductReadiness(product: ProductWithReadiness): IronSprueProductReadinessResult {
+  const blockingReasons: IronSprueReadinessBlocker[] = [];
+  const mediaActionHref = `/iron-sprue-admin/media?productId=${encodeURIComponent(product.id)}`;
+  const contentActionHref = `/iron-sprue-admin/content-review?productId=${encodeURIComponent(product.id)}`;
+  const productActionHref = `/iron-sprue-admin/products?q=${encodeURIComponent(product.sku)}`;
+  const inventoryActionHref = `/iron-sprue-admin/inventory?q=${encodeURIComponent(product.sku)}`;
+  const primaryMedia = selectIronSpruePrimaryCatalogueMedia(product);
+  const approvedPrimaryWithoutUrl = product.mediaAssets.some(
+    (asset) => asset.role === 'catalogue-primary' && asset.approvalState === 'APPROVED' && asset.isPrimary && !resolveIronSpruePublicMediaUrl(asset),
+  );
+  const pendingPrimaryMedia = product.mediaAssets.filter(
+    (asset) => asset.role === 'catalogue-primary' && asset.approvalState !== 'APPROVED',
+  ).length;
+  const availableStock = product.inventory?.availableStock ?? 0;
+  const reservedStock = product.inventory?.reservedStock ?? 0;
+  const sellableStock = Math.max(availableStock - reservedStock, 0);
+
+  if (!product.customerTitle?.trim()) {
+    blockingReasons.push(blocker({ code: 'identity.customer_title_missing', category: 'identity', message: 'Customer title is required.', source: 'customerTitle', actionable: true, actionHref: productActionHref }));
+  }
+  if (!product.sku?.trim()) {
+    blockingReasons.push(blocker({ code: 'identity.sku_missing', category: 'identity', message: 'SKU is required.', source: 'sku', actionable: true, actionHref: productActionHref }));
+  }
+  if (!product.slug?.trim()) {
+    blockingReasons.push(blocker({ code: 'identity.slug_missing', category: 'identity', message: 'Slug is required.', source: 'slug', actionable: true, actionHref: productActionHref }));
+  }
+  if (!product.brandId) {
+    blockingReasons.push(blocker({ code: 'identity.brand_missing', category: 'identity', message: 'Brand is required.', source: 'brandId', actionable: true, actionHref: productActionHref }));
+  }
+  if (!product.categoryId) {
+    blockingReasons.push(blocker({ code: 'identity.category_missing', category: 'identity', message: 'Category is required.', source: 'categoryId', actionable: true, actionHref: productActionHref }));
+  }
+  if (!product.shortDescription?.trim()) {
+    blockingReasons.push(blocker({ code: 'content.short_description_missing', category: 'content', message: 'Short product description is required.', source: 'shortDescription', actionable: true, actionHref: contentActionHref }));
+  }
+  if (!product.fullDescription?.trim()) {
+    blockingReasons.push(blocker({ code: 'content.full_description_missing', category: 'content', message: 'Full PDP description is required.', source: 'fullDescription', actionable: true, actionHref: contentActionHref }));
+  }
+  if (!hasStructuredValue(product.specifications)) {
+    blockingReasons.push(blocker({ code: 'content.specifications_missing', category: 'content', message: 'Product specifications are required.', source: 'specifications', actionable: true, actionHref: contentActionHref }));
+  }
+  if (!product.seoTitle?.trim() || !product.metaDescription?.trim()) {
+    blockingReasons.push(blocker({ code: 'content.seo_missing', category: 'content', message: 'SEO title and meta description are required.', source: 'seoTitle/metaDescription', actionable: true, actionHref: contentActionHref }));
+  }
+  if (!primaryMedia) {
+    blockingReasons.push(blocker({
+      code: approvedPrimaryWithoutUrl ? 'media.primary_unresolvable' : 'media.primary_missing',
+      category: 'media',
+      message: approvedPrimaryWithoutUrl
+        ? 'Approved primary catalogue media has no resolvable URL or storage key.'
+        : `${Math.max(pendingPrimaryMedia, 1)} required primary catalogue media asset${Math.max(pendingPrimaryMedia, 1) === 1 ? '' : 's'} pending.`,
+      source: 'mediaAssets.catalogue-primary',
+      actionable: true,
+      actionHref: mediaActionHref,
+    }));
+  }
+  if (product.grossPriceMinor == null || product.grossPriceMinor <= 0) {
+    blockingReasons.push(blocker({ code: 'commercial.price_missing', category: 'commercial', message: 'Valid sell price is required.', source: 'grossPriceMinor', actionable: true, actionHref: productActionHref }));
+  }
+  if (sellableStock <= 0) {
+    blockingReasons.push(blocker({ code: 'inventory.stock_unavailable', category: 'inventory', message: 'Sellable stock must be greater than zero.', source: 'inventory.availableStock/reservedStock', actionable: true, actionHref: inventoryActionHref }));
+  }
+
+  for (const review of product.contentReviews) {
+    if (review.status === 'APPROVED') continue;
+    const fieldName = String(review.fieldName ?? 'review');
+    if (isIronSprueStorefrontContentReviewField(fieldName)) {
+      blockingReasons.push(blocker({
+        code: `content.review_${String(review.status).toLowerCase()}`,
+        category: 'content',
+        message: `${fieldName} content review is ${String(review.status).toLowerCase()}.`,
+        source: `contentReviews.${fieldName}`,
+        actionable: true,
+        actionHref: contentActionHref,
+      }));
+    } else if (isIronSprueCommercialReviewField(fieldName)) {
+      blockingReasons.push(blocker({
+        code: `commercial.review_${String(review.status).toLowerCase()}`,
+        category: 'commercial',
+        message: `${fieldName} commercial/import review is ${String(review.status).toLowerCase()}.`,
+        source: `contentReviews.${fieldName}`,
+        actionable: true,
+        actionHref: productActionHref,
+      }));
+    } else {
+      blockingReasons.push(blocker({
+        code: `review.required_${String(review.status).toLowerCase()}`,
+        category: 'review',
+        message: `${fieldName} review is ${String(review.status).toLowerCase()}.`,
+        source: `contentReviews.${fieldName}`,
+        actionable: true,
+        actionHref: productActionHref,
+      }));
+    }
+  }
+
+  const isReadyToPublish = blockingReasons.length === 0;
+  const normalizedState = normalizeStoredPublicationState(product.publicationState) === 'READY' ? 'READY_TO_PUBLISH' : normalizePublicationState(product.publicationState);
+  return {
+    status: normalizedState === 'PUBLISHED' && isReadyToPublish ? 'PUBLISHED' : isReadyToPublish ? 'READY' : 'BLOCKED',
+    publicationState: deriveIronSpruePublicationStateFromBlockers(blockingReasons),
+    isReadyToPublish,
+    isPubliclyVisible: normalizedState === 'PUBLISHED' && isReadyToPublish,
+    primaryMediaId: primaryMedia?.asset.id ?? null,
+    primaryImageUrl: primaryMedia?.url ?? null,
+    blockingReasons,
+  };
+}
+
+function deriveIronSpruePublicationStateFromBlockers(blockingReasons: IronSprueReadinessBlocker[]): IronSpruePublicationState {
+  if (!blockingReasons.length) return 'READY_TO_PUBLISH';
+  if (blockingReasons.some((reason) => reason.category === 'media')) return 'MEDIA_PENDING';
+  if (blockingReasons.some((reason) => reason.category === 'content' && (reason.code.includes('conflict') || reason.code.includes('rejected')))) return 'REVIEW_REQUIRED';
+  if (blockingReasons.some((reason) => reason.category === 'content')) return 'CONTENT_PENDING';
+  return 'REVIEW_REQUIRED';
+}
+
+export function evaluateIronSprueProductReadiness(product: ProductWithReadiness): IronSprueReadinessCheck[] {
+  const readiness = getIronSprueProductReadiness(product);
+  const failed = new Set(readiness.blockingReasons.map((reason) => reason.category));
   return [
-    { key: 'identity', label: 'Confirmed identity', passed: Boolean(product.customerTitle && product.sku && product.slug), detail: 'Title, SKU and slug are required.' },
-    { key: 'brand', label: 'Brand assigned', passed: Boolean(product.brandId), detail: 'A product cannot publish without a brand.' },
-    { key: 'category', label: 'Category assigned', passed: Boolean(product.categoryId), detail: 'A product cannot publish without a category.' },
-    { key: 'descriptions', label: 'Required descriptions', passed: Boolean(product.shortDescription && product.fullDescription), detail: 'Short and full descriptions are required.' },
-    { key: 'specifications', label: 'Required specifications', passed: Boolean(product.specifications), detail: 'Structured specifications must be reviewed.' },
-    { key: 'media', label: 'Image 2 primary media', passed: Boolean(cataloguePrimary), detail: 'An approved catalogue-primary Image 2 must be primary.' },
-    { key: 'seo', label: 'Minimum SEO', passed: Boolean(product.seoTitle && product.metaDescription), detail: 'SEO title and meta description are required.' },
-    { key: 'content-conflicts', label: 'No unresolved factual conflicts', passed: !unresolvedContent, detail: 'Pending or conflicted content review blocks readiness.' },
+    { key: 'identity', label: 'Confirmed identity', passed: !failed.has('identity'), detail: 'Title, SKU, slug, brand and category are required.' },
+    { key: 'descriptions', label: 'Required descriptions', passed: !readiness.blockingReasons.some((reason) => reason.code.startsWith('content.short') || reason.code.startsWith('content.full')), detail: 'Short and full descriptions are required.' },
+    { key: 'specifications', label: 'Required specifications', passed: !readiness.blockingReasons.some((reason) => reason.code === 'content.specifications_missing'), detail: 'Structured specifications must be reviewed.' },
+    { key: 'media', label: 'Image 2 primary media', passed: !failed.has('media'), detail: 'An approved catalogue-primary Image 2 must be primary and publicly resolvable.' },
+    { key: 'seo', label: 'Minimum SEO', passed: !readiness.blockingReasons.some((reason) => reason.code === 'content.seo_missing'), detail: 'SEO title and meta description are required.' },
+    { key: 'commercial', label: 'Commercial/import checks', passed: !failed.has('commercial'), detail: 'Price and import/commercial conflicts must be resolved.' },
+    { key: 'inventory', label: 'Sellable inventory', passed: !failed.has('inventory'), detail: 'Sellable stock is required before publication.' },
+    { key: 'content-conflicts', label: 'No unresolved review blockers', passed: !failed.has('content') && !failed.has('review'), detail: 'Pending or conflicted reviews block readiness.' },
   ];
 }
 
 export function isIronSprueProductReady(product: ProductWithReadiness) {
-  return evaluateIronSprueProductReadiness(product).every((check) => check.passed);
+  return getIronSprueProductReadiness(product).isReadyToPublish;
 }
 
 export function summarizeIronSprueProductReadinessBlockers(product: ProductWithReadiness) {
-  const checks = evaluateIronSprueProductReadiness(product);
-  const blockers: string[] = [];
-  const approvedPrimaryMedia = product.mediaAssets.filter(
-    (asset) => asset.role === 'catalogue-primary' && asset.approvalState === 'APPROVED' && asset.isPrimary,
-  ).length;
-  const pendingRequiredMedia = product.mediaAssets.filter(
-    (asset) => asset.role === 'catalogue-primary' && asset.approvalState !== 'APPROVED',
-  ).length;
-  const storefrontContentReviews = product.contentReviews.filter((review) => isIronSprueStorefrontContentReviewField(review.fieldName));
-  const pendingContent = storefrontContentReviews.filter((review) => review.status === 'PENDING').length;
-  const conflictedContent = storefrontContentReviews.filter((review) => review.status === 'CONFLICT').length;
-  const rejectedContent = storefrontContentReviews.filter((review) => review.status === 'REJECTED').length;
-
-  for (const check of checks.filter((item) => !item.passed)) {
-    if (check.key === 'media') {
-      blockers.push(
-        approvedPrimaryMedia
-          ? 'approved Image 2 must be marked as the primary catalogue image'
-          : `${Math.max(pendingRequiredMedia, 1)} required media asset${Math.max(pendingRequiredMedia, 1) === 1 ? '' : 's'} pending`,
-      );
-    } else if (check.key === 'content-conflicts') {
-      if (conflictedContent) blockers.push(`${conflictedContent} identity/content conflict${conflictedContent === 1 ? '' : 's'} unresolved`);
-      if (pendingContent) blockers.push(`${pendingContent} content approval${pendingContent === 1 ? '' : 's'} required`);
-      if (rejectedContent) blockers.push(`${rejectedContent} rejected content review${rejectedContent === 1 ? '' : 's'} unresolved`);
-    } else {
-      blockers.push(check.detail);
-    }
-  }
-
-  return [...new Set(blockers)];
+  return [...new Set(getIronSprueProductReadiness(product).blockingReasons.map((reason) => reason.message))];
 }
 
 export function deriveIronSprueProductReadinessState(product: ProductWithReadiness): IronSpruePublicationState {
-  const checks = evaluateIronSprueProductReadiness(product);
-  if (checks.every((check) => check.passed)) return 'READY_TO_PUBLISH';
-  if (!checks.find((check) => check.key === 'media')?.passed) return 'MEDIA_PENDING';
-  if (
-    !checks.find((check) => check.key === 'descriptions')?.passed ||
-    !checks.find((check) => check.key === 'specifications')?.passed ||
-    !checks.find((check) => check.key === 'seo')?.passed ||
-    product.contentReviews.some((review) => isIronSprueStorefrontContentReviewField(review.fieldName) && review.status === 'PENDING')
-  ) {
-    return 'CONTENT_PENDING';
-  }
-  return 'REVIEW_REQUIRED';
+  return getIronSprueProductReadiness(product).publicationState;
+}
+
+export function ironSpruePublicProductWhere(): Prisma.IronSprueAdminProductWhereInput {
+  return {
+    storeCode: IRON_SPRUE_STORE_CODE,
+    publicationState: 'PUBLISHED',
+    archivedAt: null,
+    grossPriceMinor: { gt: 0 },
+    customerTitle: { not: '' },
+    sku: { not: '' },
+    slug: { not: '' },
+    brandId: { not: null },
+    categoryId: { not: null },
+    shortDescription: { not: null },
+    fullDescription: { not: null },
+    seoTitle: { not: null },
+    metaDescription: { not: null },
+    inventory: { is: { availableStock: { gt: 0 } } },
+    mediaAssets: {
+      some: {
+        role: 'catalogue-primary',
+        approvalState: 'APPROVED',
+        isPrimary: true,
+        OR: [
+          { url: { not: null } },
+          { storageKey: { not: null } },
+        ],
+      },
+    },
+    contentReviews: {
+      none: {
+        status: { in: ['PENDING', 'CONFLICT', 'REJECTED'] },
+      },
+    },
+  };
 }
 
 export async function synchronizeIronSprueProductPublicationReadiness(
@@ -510,7 +679,8 @@ export async function synchronizeIronSprueProductPublicationReadiness(
   if (!product) throw new Error('Iron Sprue product not found.');
   if (product.publicationState === 'ARCHIVED') return product;
 
-  const derivedState = deriveIronSprueProductReadinessState(product);
+  const readiness = getIronSprueProductReadiness(product);
+  const derivedState = readiness.publicationState;
   const nextState = product.publicationState === 'PUBLISHED' && derivedState === 'READY_TO_PUBLISH' ? 'PUBLISHED' : derivedState;
   if (product.publicationState === nextState) return product;
 
@@ -533,7 +703,7 @@ export async function synchronizeIronSprueProductPublicationReadiness(
       productId: product.id,
       summary: `Synchronized Iron Sprue product ${product.sku} readiness to ${nextState}.`,
       before: { publicationState: product.publicationState },
-      after: { publicationState: nextState, blockers: summarizeIronSprueProductReadinessBlockers(updated) },
+      after: { publicationState: nextState, blockers: getIronSprueProductReadiness(updated).blockingReasons },
     },
   });
   return updated;
@@ -746,9 +916,9 @@ export async function setIronSprueProductPublicationState(
   });
   if (!product) throw new Error('Iron Sprue product not found.');
 
-  const checks = evaluateIronSprueProductReadiness(product);
-  if ((state === 'READY_TO_PUBLISH' || state === 'PUBLISHED') && checks.some((check) => !check.passed)) {
-    throw new Error(`Iron Sprue product is not ${state.toLowerCase()}: ${checks.filter((check) => !check.passed).map((check) => check.key).join(', ')}`);
+  const readiness = getIronSprueProductReadiness(product);
+  if ((state === 'READY_TO_PUBLISH' || state === 'PUBLISHED') && !readiness.isReadyToPublish) {
+    throw new Error(`Iron Sprue product is not ${state.toLowerCase()}: ${readiness.blockingReasons.map((reason) => reason.message).join('; ')}`);
   }
 
   return client.$transaction(async (tx) => {
@@ -772,7 +942,7 @@ export async function setIronSprueProductPublicationState(
         productId: product.id,
         summary: `Changed Iron Sprue product ${product.sku} to ${state}.`,
         before: { publicationState: product.publicationState },
-        after: { publicationState: storedState },
+        after: { publicationState: storedState, readiness },
       },
     });
     return updated;
@@ -806,7 +976,7 @@ export async function publishIronSprueAdminProducts(
       product,
       blockers: product.publicationState === 'ARCHIVED'
         ? ['archived products cannot be bulk-published']
-        : summarizeIronSprueProductReadinessBlockers(product),
+        : getIronSprueProductReadiness(product).blockingReasons.map((reason) => reason.message),
     }))
     .filter((item) => item.blockers.length > 0);
   if (blocked.length) {
@@ -1033,11 +1203,15 @@ export async function listIronSprueAdminProducts(
   ]);
 
   return {
-    products: products.map((product) => ({
-      ...product,
-      readinessState: deriveIronSprueProductReadinessState(product),
-      readinessBlockers: summarizeIronSprueProductReadinessBlockers(product),
-    })),
+    products: products.map((product) => {
+      const readiness = getIronSprueProductReadiness(product);
+      return {
+        ...product,
+        readiness,
+        readinessState: readiness.publicationState,
+        readinessBlockers: readiness.blockingReasons.map((reason) => reason.message),
+      };
+    }),
     pagination: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) },
   };
 }

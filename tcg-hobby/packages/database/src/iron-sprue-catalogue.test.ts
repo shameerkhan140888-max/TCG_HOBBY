@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getIronSprueCatalogueFilterOptions,
+  getIronSprueCatalogueHomeData,
   getIronSprueCatalogueProductBySlug,
   getIronSprueCatalogueProducts,
 } from './iron-sprue-catalogue.js';
@@ -16,15 +17,18 @@ function ironSprueProduct(overrides: Record<string, unknown> = {}) {
     supplierProductCode: '05628',
     barcode: null,
     mpn: '05628',
+    brandId: 'brand-aos',
+    categoryId: 'cat-model',
+    supplierId: 'supplier-1',
     shortDescription: 'A plastic model kit.',
     fullDescription: 'Toyota 2000GT Red model kit.',
     featureBullets: ['1:24 scale'],
-    specifications: null,
+    specifications: { scale: '1:24' },
     buildType: 'Model Kits',
     tags: [],
     searchKeywords: ['toyota', 'aoshima'],
-    seoTitle: null,
-    metaDescription: null,
+    seoTitle: 'Toyota 2000GT Red model kit',
+    metaDescription: 'Aoshima Toyota 2000GT Red plastic model kit.',
     grossPriceMinor: 1999,
     vatRate: 20,
     currency: 'GBP',
@@ -37,6 +41,7 @@ function ironSprueProduct(overrides: Record<string, unknown> = {}) {
     category: { id: 'cat-model', name: 'Model Kits', slug: 'model-kits', description: 'Model kits', sortOrder: 10 },
     supplier: { id: 'supplier-1', name: 'Tasma Products' },
     inventory: { availableStock: 2, reservedStock: 1 },
+    contentReviews: [],
     mediaAssets: [
       {
         id: 'media-1',
@@ -77,7 +82,27 @@ describe('Iron Sprue production catalogue adapter', () => {
         storeCode: 'IRON_SPRUE',
         publicationState: 'PUBLISHED',
         archivedAt: null,
-        grossPriceMinor: { not: null },
+        grossPriceMinor: { gt: 0 },
+        shortDescription: { not: null },
+        fullDescription: { not: null },
+        seoTitle: { not: null },
+        metaDescription: { not: null },
+        contentReviews: {
+          none: {
+            status: { in: ['PENDING', 'CONFLICT', 'REJECTED'] },
+          },
+        },
+        mediaAssets: {
+          some: {
+            role: 'catalogue-primary',
+            approvalState: 'APPROVED',
+            isPrimary: true,
+            OR: [
+              { url: { not: null } },
+              { storageKey: { not: null } },
+            ],
+          },
+        },
       }),
     }));
     expect(result.products).toHaveLength(1);
@@ -118,6 +143,34 @@ describe('Iron Sprue production catalogue adapter', () => {
     }));
   });
 
+  it('requires approved primary catalogue media before a published product is public', async () => {
+    const client = {
+      ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue([]) },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    await getIronSprueCatalogueProducts({
+      search: '',
+      category: '',
+      sort: 'featured',
+      page: 1,
+      pageSize: 20,
+    }, client as never);
+
+    expect(client.ironSprueAdminProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        publicationState: 'PUBLISHED',
+        mediaAssets: expect.objectContaining({
+          some: expect.objectContaining({
+            role: 'catalogue-primary',
+            approvalState: 'APPROVED',
+            isPrimary: true,
+          }),
+        }),
+      }),
+    }));
+  });
+
   it('resolves product detail from Iron Sprue admin records only', async () => {
     const client = {
       ironSprueAdminProduct: { findFirst: vi.fn().mockResolvedValue(ironSprueProduct()) },
@@ -134,6 +187,25 @@ describe('Iron Sprue production catalogue adapter', () => {
     }));
     expect(result?.sku).toBe('IS-AOS-05628');
     expect(result?.images[0]?.url).toBe('/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp');
+  });
+
+  it('uses the same canonical primary image for home, catalogue and product detail', async () => {
+    const product = ironSprueProduct({ featured: true });
+    const client = {
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([product]),
+        findFirst: vi.fn().mockResolvedValue(product),
+      },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    const home = await getIronSprueCatalogueHomeData(client as never);
+    const catalogue = await getIronSprueCatalogueProducts({ search: '', category: '', sort: 'featured', page: 1, pageSize: 20 }, client as never);
+    const detail = await getIronSprueCatalogueProductBySlug(product.slug, client as never);
+
+    expect(home.featuredProducts[0]?.imageUrl).toBe('/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp');
+    expect(catalogue.products[0]?.imageUrl).toBe('/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp');
+    expect(detail?.images[0]?.url).toBe('/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp');
   });
 
   it('builds filters from Iron Sprue brands and categories', async () => {

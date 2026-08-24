@@ -4,7 +4,8 @@ import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { SESSION_COOKIE_NAME, type SessionUser } from '@tcg-hobby/auth';
-import { prisma } from '@tcg-hobby/database/storefront';
+import { importLocalStorefrontDatabase } from './local-database';
+import { shouldUseIronSprueProductionApi } from './production-api';
 
 export type IronSprueCustomerSession = {
   user: SessionUser & { emailVerified: Date | null };
@@ -13,10 +14,13 @@ export type IronSprueCustomerSession = {
 };
 
 export const getCurrentIronSprueCustomerSession = cache(async (): Promise<IronSprueCustomerSession | null> => {
+  if (shouldUseIronSprueProductionApi()) return null;
+
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
 
+  const { prisma } = await importLocalStorefrontDatabase();
   const session = await prisma.session.findUnique({
     where: { sessionToken: token },
     include: { user: true },

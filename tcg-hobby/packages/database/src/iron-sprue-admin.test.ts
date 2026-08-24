@@ -9,6 +9,7 @@ import {
   createIronSprueManualOrder,
   deriveIronSprueProductReadinessState,
   evaluateIronSprueProductReadiness,
+  getIronSprueProductReadiness,
   getIronSprueAdminDashboard,
   getIronSprueAdminPermissionMatrix,
   listIronSprueAdminProducts,
@@ -20,6 +21,7 @@ import {
   publishIronSprueAdminProducts,
   setIronSprueProductPublicationState,
   summarizeIronSprueProductReadinessBlockers,
+  synchronizeIronSprueProductPublicationReadiness,
   updateIronSprueAdminCategoryControls,
   updateIronSprueAdminOrderFulfilmentStatus,
   updateIronSprueAdminMediaApproval,
@@ -49,13 +51,16 @@ function readyProduct(overrides: Record<string, unknown> = {}) {
     supplierId: 'supplier-1',
     grossPriceMinor: 2650,
     vatRate: 20,
+    currency: 'GBP',
+    publicationState: 'DRAFT',
     shortDescription: 'Short copy',
     fullDescription: 'Full copy',
     specifications: { scale: '1/32' },
     seoTitle: 'Aoshima Kit',
     metaDescription: 'Aoshima kit for modellers',
+    inventory: { availableStock: 2, reservedStock: 0 },
     mediaAssets: [
-      { role: 'catalogue-primary', approvalState: 'APPROVED', isPrimary: true },
+      { id: 'media-1', role: 'catalogue-primary', approvalState: 'APPROVED', isPrimary: true, storageKey: 'products/is-aoshima-1/image-2/primary.png', url: null, sortOrder: 0 },
     ],
     contentReviews: [],
     ...overrides,
@@ -99,19 +104,45 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     expect(evaluateIronSprueProductReadiness(readyProduct()).every((check) => check.passed)).toBe(true);
   });
 
+  it('returns one structured readiness answer for media, content, commercial, review and inventory blockers', () => {
+    expect(getIronSprueProductReadiness(readyProduct())).toMatchObject({
+      status: 'READY',
+      isReadyToPublish: true,
+      primaryImageUrl: '/media/iron-sprue/products/is-aoshima-1/image-2/primary.png',
+      blockingReasons: [],
+    });
+    expect(getIronSprueProductReadiness(readyProduct({ mediaAssets: [] })).blockingReasons).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'media.primary_missing', category: 'media', source: 'mediaAssets.catalogue-primary' }),
+    ]));
+    expect(getIronSprueProductReadiness(readyProduct({
+      mediaAssets: [{ id: 'media-1', role: 'catalogue-primary', approvalState: 'APPROVED', isPrimary: true, storageKey: null, url: null, sortOrder: 0 }],
+    })).blockingReasons).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'media.primary_unresolvable', category: 'media' }),
+    ]));
+    expect(getIronSprueProductReadiness(readyProduct({ contentReviews: [{ fieldName: 'sourceRow', status: 'CONFLICT' }] })).blockingReasons).toEqual(expect.arrayContaining([
+      expect.objectContaining({ category: 'commercial', source: 'contentReviews.sourceRow' }),
+    ]));
+    expect(getIronSprueProductReadiness(readyProduct({ contentReviews: [{ fieldName: 'identity-match', status: 'CONFLICT' }] })).blockingReasons).toEqual(expect.arrayContaining([
+      expect.objectContaining({ category: 'review', source: 'contentReviews.identity-match' }),
+    ]));
+    expect(getIronSprueProductReadiness(readyProduct({ inventory: { availableStock: 0, reservedStock: 0 } })).blockingReasons).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'inventory.stock_unavailable', category: 'inventory' }),
+    ]));
+  });
+
   it('derives publication states and blockers from media and content readiness', () => {
     expect(deriveIronSprueProductReadinessState(readyProduct())).toBe('READY_TO_PUBLISH');
     expect(deriveIronSprueProductReadinessState(readyProduct({ mediaAssets: [] }))).toBe('MEDIA_PENDING');
     expect(deriveIronSprueProductReadinessState(readyProduct({ fullDescription: null }))).toBe('CONTENT_PENDING');
     expect(deriveIronSprueProductReadinessState(readyProduct({ contentReviews: [{ fieldName: 'fullDescription', status: 'CONFLICT' }] }))).toBe('REVIEW_REQUIRED');
-    expect(deriveIronSprueProductReadinessState(readyProduct({ contentReviews: [{ fieldName: 'image-2-candidate', status: 'CONFLICT' }] }))).toBe('READY_TO_PUBLISH');
+    expect(deriveIronSprueProductReadinessState(readyProduct({ contentReviews: [{ fieldName: 'image-2-candidate', status: 'CONFLICT' }] }))).toBe('REVIEW_REQUIRED');
     expect(summarizeIronSprueProductReadinessBlockers(readyProduct({
       mediaAssets: [],
       contentReviews: [{ fieldName: 'fullDescription', status: 'CONFLICT' }, { fieldName: 'shortDescription', status: 'PENDING' }, { fieldName: 'image-2-candidate', status: 'CONFLICT' }],
     }))).toEqual(expect.arrayContaining([
-      '1 required media asset pending',
-      '1 identity/content conflict unresolved',
-      '1 content approval required',
+      '1 required primary catalogue media asset pending.',
+      'fullDescription content review is conflict.',
+      'shortDescription content review is pending.',
     ]));
   });
 
@@ -125,6 +156,24 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     await expect(setIronSprueProductPublicationState('product-1', 'READY_TO_PUBLISH', actor, client as never)).rejects.toThrow(/media/);
     expect(client.ironSprueAdminProduct.findFirst).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: 'product-1', storeCode: 'IRON_SPRUE' },
+    }));
+  });
+
+  it('reconciles stale published products back to the canonical blocked state', async () => {
+    const stale = readyProduct({ publicationState: 'PUBLISHED', mediaAssets: [] });
+    const txProduct = readyProduct({ ...stale, publicationState: 'MEDIA_PENDING' });
+    const client = {
+      ironSprueAdminProduct: {
+        findFirst: vi.fn().mockResolvedValue(stale),
+        update: vi.fn().mockResolvedValue(txProduct),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+
+    await synchronizeIronSprueProductPublicationReadiness('product-1', actor, client as never);
+
+    expect(client.ironSprueAdminProduct.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ publicationState: 'MEDIA_PENDING' }),
     }));
   });
 
@@ -207,7 +256,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       $transaction: vi.fn(),
     };
 
-    await expect(publishIronSprueAdminProducts(['ready-1', 'blocked-1'], actor, client as never)).rejects.toThrow(/identity\/content conflict/);
+    await expect(publishIronSprueAdminProducts(['ready-1', 'blocked-1'], actor, client as never)).rejects.toThrow(/fullDescription content review is conflict/);
     expect(client.$transaction).not.toHaveBeenCalled();
   });
 

@@ -1,6 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { NextResponse, type NextRequest } from 'next/server';
-import { copyProxyRequestHeaders, getNodeApiOrigin, isAllowedProxyRoute, requireInternalSigningConfig, signInternalRequest } from '../../../lib/node-proxy';
+import {
+  copyProxyRequestHeaders,
+  digestInternalRequestBody,
+  getNodeApiOrigin,
+  isAllowedProxyRoute,
+  requireInternalSigningConfig,
+  signInternalRequest,
+} from '../../../lib/node-proxy';
 
 const MAX_BODY_BYTES = 64 * 1024;
 
@@ -25,11 +32,16 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   }
 
   const body = request.method === 'GET' || request.method === 'HEAD' ? '' : await request.text();
+  const bodyDigest = await digestInternalRequestBody(body);
   const timestamp = new Date().toISOString();
   const nonce = randomUUID();
   const headers = copyProxyRequestHeaders(request.headers);
+  headers.set('x-iron-sprue-internal-method', request.method.toUpperCase());
+  headers.set('x-iron-sprue-internal-pathname', pathname);
+  headers.set('x-iron-sprue-internal-query', request.nextUrl.search.replace(/^\?/, ''));
   headers.set('x-iron-sprue-internal-timestamp', timestamp);
   headers.set('x-iron-sprue-internal-nonce', nonce);
+  headers.set('x-iron-sprue-internal-body-sha256', bodyDigest);
   headers.set('x-iron-sprue-internal-key-id', signingConfig.keyId);
   headers.set('x-iron-sprue-internal-store', signingConfig.store);
   headers.set('x-iron-sprue-internal-environment', signingConfig.environment);
@@ -40,6 +52,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     timestamp,
     nonce,
     body,
+    bodyDigest,
     ...signingConfig,
   }));
   headers.set('x-iron-sprue-store', signingConfig.store);

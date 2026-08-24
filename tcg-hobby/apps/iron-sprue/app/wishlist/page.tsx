@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
-import { prisma } from '@tcg-hobby/database/storefront';
 import { getCurrentIronSprueCustomerSession } from '../../lib/auth';
+import { importLocalStorefrontDatabase } from '../../lib/local-database';
+import { shouldUseIronSprueProductionApi } from '../../lib/production-api';
 import { removeIronSprueWishlistItemAction } from '../../lib/wishlist-actions';
 
 function money(value: number | null | undefined, currency = 'GBP') {
@@ -11,11 +12,27 @@ function money(value: number | null | undefined, currency = 'GBP') {
 export default async function WishlistPage() {
   const session = await getCurrentIronSprueCustomerSession();
   if (!session) redirect('/login?next=/wishlist');
+  if (shouldUseIronSprueProductionApi()) return <WishlistItems items={[]} />;
+  const { prisma } = await importLocalStorefrontDatabase();
   const items = await prisma.ironSprueWishlistItem.findMany({
     where: { storeCode: 'IRON_SPRUE', userId: session.user.id },
     orderBy: { createdAt: 'desc' },
     include: { product: { include: { brand: true, category: true } } },
   });
+  return <WishlistItems items={items} />;
+}
+
+function WishlistItems({ items }: { items: Array<{
+  id: string;
+  product: {
+    customerTitle: string;
+    slug: string;
+    grossPriceMinor: number | null;
+    currency: string;
+    brand: { name: string } | null;
+    category: { name: string } | null;
+  };
+}> }) {
   return (
     <section className="section-block">
       <div className="section-head">

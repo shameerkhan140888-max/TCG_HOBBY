@@ -95,7 +95,7 @@ function bytesToHex(bytes: ArrayBuffer) {
   return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-async function sha256Hex(value: string) {
+export async function digestInternalRequestBody(value: string) {
   return bytesToHex(await crypto.subtle.digest('SHA-256', encoder.encode(value)));
 }
 
@@ -110,11 +110,12 @@ export type InternalRequestSignatureInput = {
   secret: string;
   store: string;
   environment: string;
+  bodyDigest?: string;
 };
 
 export async function canonicalizeInternalRequest(input: Omit<InternalRequestSignatureInput, 'secret'>) {
   const canonicalQuery = input.query?.replace(/^\?/, '') ?? '';
-  const bodyDigest = await sha256Hex(input.body);
+  const bodyDigest = input.bodyDigest ?? await digestInternalRequestBody(input.body);
   return [
     input.keyId,
     input.method.toUpperCase(),

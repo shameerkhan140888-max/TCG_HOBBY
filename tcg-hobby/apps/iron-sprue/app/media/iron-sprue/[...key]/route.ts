@@ -1,6 +1,4 @@
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -17,6 +15,19 @@ function readLocalIronSprueEnv() {
   if (localIronSprueEnv) return localIronSprueEnv;
 
   localIronSprueEnv = {};
+  if (process.env.NODE_ENV === 'production') return localIronSprueEnv;
+
+  let existsSync: typeof import('node:fs').existsSync;
+  let readFileSync: typeof import('node:fs').readFileSync;
+  let join: typeof import('node:path').join;
+
+  try {
+    ({ existsSync, readFileSync } = require('node:fs') as typeof import('node:fs'));
+    ({ join } = require('node:path') as typeof import('node:path'));
+  } catch {
+    return localIronSprueEnv;
+  }
+
   const candidates = [
     join(process.cwd(), 'apps', 'iron-sprue', '.env.local'),
     join(process.cwd(), '.env.local'),

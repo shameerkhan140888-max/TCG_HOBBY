@@ -37,8 +37,8 @@ export class IronSprueCommerceController {
   }
 
   @Get('shipping-methods')
-  shipping(@Query('country') country = 'GB', @Query('subtotalMinor') subtotalMinor = '0') {
-    return this.commerce.shipping(country, Number(subtotalMinor) || 0);
+  shipping(@Headers() headers: Record<string, string | string[] | undefined>, @Query('country') country = 'GB', @Query('subtotalMinor') subtotalMinor = '0') {
+    return this.commerce.shipping(headers, country, Number(subtotalMinor) || 0);
   }
 
   @Post('checkout/session')

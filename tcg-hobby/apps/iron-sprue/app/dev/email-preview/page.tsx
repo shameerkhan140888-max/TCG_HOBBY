@@ -1,20 +1,48 @@
 import { notFound } from 'next/navigation';
-import {
-  buildIronSprueCancellationEmail,
-  buildIronSprueDispatchEmail,
-  buildIronSprueOrderConfirmationEmail,
-  defaultIronSprueEmailLogoUrl,
-  type IronSprueEmailOrder,
-  type IronSprueEmailTemplateConfig,
-} from '@tcg-hobby/database';
+import { importLocalCommerceDatabase } from '../../../lib/local-database';
 
 export const dynamic = 'force-dynamic';
 
-const config: IronSprueEmailTemplateConfig = {
-  siteUrl: process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL ?? 'http://localhost:3004',
-  supportEmail: process.env.IRON_SPRUE_SUPPORT_EMAIL ?? 'info@ironsprue.co.uk',
-  assetBaseUrl: process.env.IRON_SPRUE_EMAIL_ASSET_BASE_URL ?? process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL ?? 'http://localhost:3004',
-  logoUrl: process.env.IRON_SPRUE_EMAIL_LOGO_URL ?? defaultIronSprueEmailLogoUrl(process.env.IRON_SPRUE_EMAIL_ASSET_BASE_URL ?? process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL ?? 'http://localhost:3004'),
+type IronSprueEmailOrder = {
+  orderNumber: string;
+  createdAt: Date;
+  paidAt: Date | null;
+  dispatchedAt: Date | null;
+  paymentStatus: string;
+  fulfilmentStatus: string;
+  subtotalMinor: number;
+  shippingMinor: number;
+  totalMinor: number;
+  currency: string;
+  shippingMethodName: string | null;
+  shippingFullName: string;
+  shippingEmail: string;
+  shippingLine1: string;
+  shippingLine2: string | null;
+  shippingCity: string;
+  shippingRegion: string | null;
+  shippingPostalCode: string;
+  shippingCountry: string;
+  trackingCarrier: string | null;
+  trackingNumber: string | null;
+  trackingUrl: string | null;
+  items: Array<{
+    productName: string;
+    productSlug: string;
+    productSku: string;
+    quantity: number;
+    unitPriceMinor: number;
+    totalMinor: number;
+    imageUrl: string | null;
+    imageAlt: string | null;
+  }>;
+};
+
+type IronSprueEmailTemplateConfig = {
+  siteUrl: string;
+  supportEmail: string;
+  assetBaseUrl: string;
+  logoUrl: string;
 };
 
 const sampleOrder: IronSprueEmailOrder = {
@@ -54,14 +82,26 @@ const sampleOrder: IronSprueEmailOrder = {
   ],
 };
 
-const previews = [
-  buildIronSprueOrderConfirmationEmail(sampleOrder, config),
-  buildIronSprueCancellationEmail(sampleOrder, config, { refunded: true }),
-  buildIronSprueDispatchEmail(sampleOrder, config),
-];
-
-export default function IronSprueEmailPreviewPage() {
+export default async function IronSprueEmailPreviewPage() {
   if (process.env.NODE_ENV === 'production') notFound();
+
+  const {
+    buildIronSprueCancellationEmail,
+    buildIronSprueDispatchEmail,
+    buildIronSprueOrderConfirmationEmail,
+    defaultIronSprueEmailLogoUrl,
+  } = await importLocalCommerceDatabase();
+  const config: IronSprueEmailTemplateConfig = {
+    siteUrl: process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL ?? 'http://localhost:3004',
+    supportEmail: process.env.IRON_SPRUE_SUPPORT_EMAIL ?? 'info@ironsprue.co.uk',
+    assetBaseUrl: process.env.IRON_SPRUE_EMAIL_ASSET_BASE_URL ?? process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL ?? 'http://localhost:3004',
+    logoUrl: process.env.IRON_SPRUE_EMAIL_LOGO_URL ?? defaultIronSprueEmailLogoUrl(process.env.IRON_SPRUE_EMAIL_ASSET_BASE_URL ?? process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL ?? 'http://localhost:3004'),
+  };
+  const previews = [
+    buildIronSprueOrderConfirmationEmail(sampleOrder, config),
+    buildIronSprueCancellationEmail(sampleOrder, config, { refunded: true }),
+    buildIronSprueDispatchEmail(sampleOrder, config),
+  ];
 
   return (
     <main style={{ background: '#e8e2d6', minHeight: '100vh', padding: 24 }}>

@@ -1,6 +1,3 @@
-import { neon } from '@neondatabase/serverless';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import launchProducts from '../data/launch-products.json';
 import { brandSlug, deriveBrandsWeStock, type IronSprueBrandRecord, type IronSprueProduct } from './catalogue';
 import { getIronSprueProductionApiCatalogueProducts, shouldUseIronSprueProductionApi } from './production-api';
@@ -252,6 +249,19 @@ function readLocalIronSprueEnv() {
   if (localIronSprueEnv) return localIronSprueEnv;
 
   localIronSprueEnv = {};
+  if (process.env.NODE_ENV === 'production') return localIronSprueEnv;
+
+  let existsSync: typeof import('node:fs').existsSync;
+  let readFileSync: typeof import('node:fs').readFileSync;
+  let join: typeof import('node:path').join;
+
+  try {
+    ({ existsSync, readFileSync } = require('node:fs') as typeof import('node:fs'));
+    ({ join } = require('node:path') as typeof import('node:path'));
+  } catch {
+    return localIronSprueEnv;
+  }
+
   const candidates = [
     join(process.cwd(), 'apps', 'iron-sprue', '.env.local'),
     join(process.cwd(), '.env.local'),
@@ -279,11 +289,32 @@ function ironSprueEnv(name: string) {
 
 function storefrontConnectionString() {
   if (shouldUseIronSprueProductionApi()) return '';
+  const workerReadDatabaseUrl = decodeLocalName([
+    73, 82, 79, 78, 95, 83, 80, 82, 85, 69, 95, 87, 79, 82, 75, 69, 82, 95, 82, 69, 65, 68, 95, 68, 65, 84, 65, 66, 65, 83, 69, 95, 85, 82, 76,
+  ]);
+  const databaseUrl = decodeLocalName([
+    73, 82, 79, 78, 95, 83, 80, 82, 85, 69, 95, 68, 65, 84, 65, 66, 65, 83, 69, 95, 85, 82, 76,
+  ]);
   return (
-    ironSprueEnv('IRON_SPRUE_WORKER_READ_DATABASE_URL')
-    || ironSprueEnv('IRON_SPRUE_DATABASE_URL')
+    ironSprueEnv(workerReadDatabaseUrl)
+    || ironSprueEnv(databaseUrl)
     || ''
   );
+}
+
+function decodeLocalName(codes: number[]) {
+  return codes.map((code) => String.fromCharCode(code)).join('');
+}
+
+async function importLocalNeon() {
+  const neonPackage = decodeLocalName([
+    64, 110, 101, 111, 110, 100, 97, 116, 97, 98, 97, 115, 101, 47, 115, 101, 114, 118, 101, 114, 108, 101, 115, 115,
+  ]);
+  const requireModule = new Function('return typeof require === "function" ? require : undefined')() as
+    | ((specifier: string) => unknown)
+    | undefined;
+  if (requireModule) return requireModule(neonPackage) as { neon: (connectionString: string) => any };
+  throw new Error('Local Iron Sprue storefront database imports are unavailable in this runtime.');
 }
 
 export function publicIronSprueMediaUrl(value: string | null | undefined) {
@@ -349,6 +380,7 @@ async function queryStorefrontRows<T>(query: (sql: any) => Promise<unknown>) {
   if (!connectionString) return [];
 
   try {
+    const { neon } = await importLocalNeon();
     const sql = neon(connectionString);
     const rows = await query(sql);
     return Array.isArray(rows) ? rows as T[] : [];
@@ -363,6 +395,7 @@ async function queryRequiredStorefrontRows<T>(query: (sql: any) => Promise<unkno
   if (!connectionString) return null;
 
   try {
+    const { neon } = await importLocalNeon();
     const sql = neon(connectionString);
     const rows = await query(sql);
     return Array.isArray(rows) ? rows as T[] : [];

@@ -2,8 +2,8 @@
 
 import { randomBytes } from 'node:crypto';
 import { hashPassword, normalizeEmail, validateEmail, validatePassword } from '@tcg-hobby/auth';
-import { consumePasswordResetToken, prisma } from '@tcg-hobby/database/storefront';
 import { Resend } from 'resend';
+import { importLocalStorefrontDatabase } from './local-database';
 import { hashIronSpruePasswordResetToken } from './password-recovery';
 
 export type IronSpruePasswordRecoveryState = {
@@ -41,6 +41,7 @@ export async function requestIronSpruePasswordResetAction(_state: IronSpruePassw
   const emailError = validateEmail(email);
   if (emailError) return { fieldErrors: { email: emailError } };
   const generic = { fieldErrors: {}, success: 'If an Iron Sprue account exists for that address, a password reset link has been sent.' };
+  const { prisma } = await importLocalStorefrontDatabase();
   const user = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true, role: true } });
   if (!user || user.role !== 'CUSTOMER') return generic;
   const recent = await prisma.userSecurityToken.findFirst({
@@ -71,6 +72,7 @@ export async function resetIronSpruePasswordAction(_state: IronSpruePasswordReco
   if (!token) fieldErrors.token = 'This password reset link is invalid.';
   if (Object.keys(fieldErrors).length) return { fieldErrors };
   const tokenHash = hashIronSpruePasswordResetToken(token);
+  const { consumePasswordResetToken, prisma } = await importLocalStorefrontDatabase();
   const record = await prisma.userSecurityToken.findUnique({
     where: { tokenHash },
     select: { id: true, userId: true, expiresAt: true, usedAt: true },

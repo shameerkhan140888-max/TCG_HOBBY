@@ -1,11 +1,8 @@
 'use server';
 
-import {
-  createIronSprueCustomerOrderRequest,
-  sendIronSprueCustomerRequestAcknowledgementEmail,
-} from '@tcg-hobby/database';
 import { redirect } from 'next/navigation';
 import { requireIronSprueCustomerSession } from './auth';
+import { importLocalCommerceDatabase } from './local-database';
 
 function value(formData: FormData, name: string) {
   return String(formData.get(name) ?? '').trim();
@@ -19,6 +16,10 @@ export async function submitIronSprueOrderRequestAction(formData: FormData) {
   const session = await requireIronSprueCustomerSession(orderNumber ? `/account/orders/${encodeURIComponent(orderNumber)}` : '/account/orders');
   try {
     if (requestType !== 'CANCELLATION' && requestType !== 'RETURN') throw new Error('Unsupported request type.');
+    const {
+      createIronSprueCustomerOrderRequest,
+      sendIronSprueCustomerRequestAcknowledgementEmail,
+    } = await importLocalCommerceDatabase();
     const request = await createIronSprueCustomerOrderRequest({
       userId: session.user.id,
       orderNumber,
