@@ -353,7 +353,11 @@ export async function attachIronSprueExistingR2MediaAction(formData: FormData) {
 export async function reconcileIronSprueExistingR2MediaAction() {
   const actor = await requireIronSprueActor();
   try {
-    const objects = await listIronSprueR2Objects('products/', 1000);
+    const [productObjects, archiveProductObjects] = await Promise.all([
+      listIronSprueR2Objects('products/', 1000),
+      listIronSprueR2Objects('archive/products/', 1000),
+    ]);
+    const objects = [...productObjects, ...archiveProductObjects];
     const result = await reconcileIronSprueR2ProductMedia(objects.map((object) => ({
       key: object.key,
       size: object.size,

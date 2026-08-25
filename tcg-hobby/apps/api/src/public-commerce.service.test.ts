@@ -1,6 +1,19 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import type { CatalogueProduct, CatalogueProductDetail } from '@tcg-hobby/types';
 import { publicStockState, toPublicProductDetail, toPublicProductSummary } from './public-commerce.service.js';
+
+const originalPublicCommerceStoreCode = process.env.PUBLIC_COMMERCE_STORE_CODE;
+const originalIronSpruePublicMediaBase = process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL;
+const originalPublicStorefrontUrl = process.env.PUBLIC_STOREFRONT_URL;
+
+afterEach(() => {
+  if (originalPublicCommerceStoreCode === undefined) delete process.env.PUBLIC_COMMERCE_STORE_CODE;
+  else process.env.PUBLIC_COMMERCE_STORE_CODE = originalPublicCommerceStoreCode;
+  if (originalIronSpruePublicMediaBase === undefined) delete process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL;
+  else process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL = originalIronSpruePublicMediaBase;
+  if (originalPublicStorefrontUrl === undefined) delete process.env.PUBLIC_STOREFRONT_URL;
+  else process.env.PUBLIC_STOREFRONT_URL = originalPublicStorefrontUrl;
+});
 
 function product(overrides: Partial<CatalogueProduct> = {}): CatalogueProduct {
   return {
@@ -42,6 +55,21 @@ describe('public commerce projection', () => {
     expect(result).not.toHaveProperty('stockOnHand');
     expect(result).not.toHaveProperty('reservedStock');
     expect(result).not.toHaveProperty('supplierName');
+  });
+
+  it('serves Iron Sprue product media from the public R2 media origin instead of the staging app route', () => {
+    process.env.PUBLIC_COMMERCE_STORE_CODE = 'IRON_SPRUE';
+    process.env.PUBLIC_STOREFRONT_URL = 'https://staging.ironsprue.co.uk';
+    process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL = 'https://media.ironsprue.co.uk';
+
+    const result = toPublicProductSummary(product({
+      game: 'Iron Sprue',
+      imageUrl: '/media/iron-sprue/products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.png',
+    }));
+
+    expect(result.image?.url).toBe(
+      'https://media.ironsprue.co.uk/products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.png',
+    );
   });
 
   it('does not mark unreleased products as purchasable', () => {

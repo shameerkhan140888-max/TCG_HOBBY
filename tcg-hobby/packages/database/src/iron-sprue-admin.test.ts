@@ -173,11 +173,12 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     const result = await reconcileIronSprueR2ProductMedia([
       { key: 'products/is-aos-05603/image-2/iron-sprue-image-2-ddc9b0dbc551.png', size: 1000 },
       { key: 'products/is-aos-05603/workshop/iron-sprue-workshop-99517f01b1dc.png', size: 2000 },
+      { key: 'archive/products/is-aos-05603/original/manufacturer-source.jpg', size: 1800 },
       { key: 'products/is-aos-99999/image-2/missing.png', size: 500 },
       { key: 'products/is-aos-05603/source-required.json', size: 100 },
     ], actor, client as never);
 
-    expect(result.upsertedMedia).toBe(2);
+    expect(result.upsertedMedia).toBe(3);
     expect(result.affectedProducts).toBe(1);
     expect(result.unmatched).toEqual(expect.arrayContaining([
       expect.objectContaining({ key: 'products/is-aos-99999/image-2/missing.png' }),
@@ -191,6 +192,16 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         isPrimary: true,
         storageKey: 'products/is-aos-05603/image-2/iron-sprue-image-2-ddc9b0dbc551.png',
         url: 'r2://products/is-aos-05603/image-2/iron-sprue-image-2-ddc9b0dbc551.png',
+      }),
+    }));
+    expect(client.ironSprueAdminMediaAsset.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({
+        productId: 'product-1',
+        role: 'manufacturer-original',
+        approvalState: 'APPROVED',
+        isPrimary: false,
+        storageKey: 'archive/products/is-aos-05603/original/manufacturer-source.jpg',
+        url: 'r2://archive/products/is-aos-05603/original/manufacturer-source.jpg',
       }),
     }));
     expect(client.ironSprueAdminMediaAsset.updateMany).toHaveBeenCalledWith(expect.objectContaining({

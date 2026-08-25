@@ -541,12 +541,19 @@ describe('IronSprueAdminSection operational controls', () => {
         },
       ],
     });
-    mocks.listIronSprueR2Objects.mockResolvedValue([
+    mocks.listIronSprueR2Objects.mockResolvedValueOnce([
       {
         key: 'products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.png',
         size: 128,
         updatedAt: new Date('2026-08-11T00:00:00.000Z'),
         previewUrl: '/iron-sprue-admin/media/preview?key=products%2Fis-aos-05628%2Fimage-2%2Firon-sprue-image-2-acf115ef37eb.png',
+      },
+    ]).mockResolvedValueOnce([
+      {
+        key: 'archive/products/is-aos-05628/original/manufacturer-source.jpg',
+        size: 256,
+        updatedAt: new Date('2026-08-10T00:00:00.000Z'),
+        previewUrl: '/iron-sprue-admin/media/preview?key=archive%2Fproducts%2Fis-aos-05628%2Foriginal%2Fmanufacturer-source.jpg',
       },
     ]);
 
@@ -566,6 +573,8 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('catalogue-primary-placeholder.json');
     expect(markup).toContain('Existing R2 image candidates');
     expect(markup).toContain('iron-sprue-image-2-acf115ef37eb.png');
+    expect(markup).toContain('manufacturer-source.jpg');
+    expect(markup).toContain('manufacturer-original');
   });
 
   it('renders storefront placement and brand carousel controls', async () => {

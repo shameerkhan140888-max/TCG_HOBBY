@@ -64,8 +64,21 @@ const SORTS: PublicCatalogueFilterOptions['sorts'] = [
 ];
 const SORT_VALUES = new Set<CatalogueSort>(SORTS.map((sort) => sort.value));
 
+const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
+const IRON_SPRUE_PUBLIC_MEDIA_ORIGIN = 'https://media.ironsprue.co.uk';
+
+function ironSpruePublicMediaBaseUrl() {
+  return (process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL?.trim() || IRON_SPRUE_PUBLIC_MEDIA_ORIGIN).replace(/\/+$/, '');
+}
+
 function assetUrl(url: string): string {
   if (/^https?:\/\//i.test(url)) return url;
+  if (
+    process.env.PUBLIC_COMMERCE_STORE_CODE === 'IRON_SPRUE'
+    && url.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)
+  ) {
+    return `${ironSpruePublicMediaBaseUrl()}/${url.slice(IRON_SPRUE_MEDIA_ROUTE_PREFIX.length)}`;
+  }
   const base = process.env.PUBLIC_STOREFRONT_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tcg-hobby.co.uk';
   return new URL(url, base).toString();
 }

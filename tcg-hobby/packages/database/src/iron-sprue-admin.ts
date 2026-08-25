@@ -1989,10 +1989,18 @@ function inferIronSprueR2ProductMedia(key: string): { sku: string; role: string;
   const cleanKey = key.trim().replace(/^\/+/, '');
   if (!/\.(avif|gif|jpe?g|png|svg|webp)$/i.test(cleanKey)) return null;
   const parts = cleanKey.split('/');
+  if (parts[0] === 'archive' && parts[1] === 'products' && parts[2] && parts[3]) {
+    const roleFolder = parts[3].toLowerCase();
+    if (roleFolder === 'original' || roleFolder === 'manufacturer-original') {
+      return { sku: normalizedIronSprueSku(parts[2]), role: 'manufacturer-original', sortOrder: 40 };
+    }
+    return null;
+  }
   if (parts[0] !== 'products' || !parts[1] || !parts[2]) return null;
   const roleFolder = parts[2].toLowerCase();
   if (roleFolder === 'image-2') return { sku: normalizedIronSprueSku(parts[1]), role: 'catalogue-primary', sortOrder: 0 };
   if (roleFolder === 'workshop') return { sku: normalizedIronSprueSku(parts[1]), role: 'workshop-photography', sortOrder: 20 };
+  if (roleFolder === 'original' || roleFolder === 'manufacturer-original') return { sku: normalizedIronSprueSku(parts[1]), role: 'manufacturer-original', sortOrder: 40 };
   if (roleFolder === 'completed-result') return { sku: normalizedIronSprueSku(parts[1]), role: 'completed-result', sortOrder: 30 };
   return null;
 }
@@ -2033,7 +2041,7 @@ export async function reconcileIronSprueR2ProductMedia(
   let matchedObjects = 0;
 
   for (const product of products) {
-    for (const role of ['catalogue-primary', 'workshop-photography', 'completed-result']) {
+    for (const role of ['catalogue-primary', 'workshop-photography', 'completed-result', 'manufacturer-original']) {
       const candidates = [...(candidateGroups.get(`${product.id}:${role}`) ?? [])]
         .sort((left, right) => {
           const leftTime = left.updatedAt ? new Date(left.updatedAt).getTime() : 0;

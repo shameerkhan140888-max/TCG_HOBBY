@@ -625,7 +625,7 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
   const supplierId = param(searchParams, 'supplierId');
   const publicationState = param(searchParams, 'state');
   const normalizedPublicationState = publicationState === 'READY' ? 'READY_TO_PUBLISH' : publicationState;
-  const [{ categories, brands, suppliers }, result, r2ProductObjects] = await Promise.all([
+  const [{ categories, brands, suppliers }, result, r2ProductObjects, r2ArchiveProductObjects] = await Promise.all([
     getIronSprueAdminReferenceData(),
     listIronSprueAdminProducts({
       ...(search ? { search } : {}),
@@ -638,9 +638,10 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
       pageSize: 81,
     }),
     listIronSprueR2Objects('products/', 1000).catch(() => []),
+    listIronSprueR2Objects('archive/products/', 1000).catch(() => []),
   ]);
   if (!result.products.length) return <EmptyNote>No Iron Sprue products found.</EmptyNote>;
-  const r2Candidates = r2CandidatesByProductRole(r2ProductObjects);
+  const r2Candidates = r2CandidatesByProductRole([...r2ProductObjects, ...r2ArchiveProductObjects]);
   const r2CandidateCount = [...r2Candidates.values()].reduce((total, candidates) => total + candidates.length, 0);
 
   return (
@@ -1083,8 +1084,12 @@ function normalizedProductSku(value: string | null | undefined) {
 
 function r2RoleFromProductKey(key: string): IronSprueMediaRole | null {
   const parts = key.split('/');
-  if (parts[0] !== 'products' || parts.length < 4) return null;
   if (!/\.(avif|gif|jpe?g|png|webp)$/i.test(key)) return null;
+  if (parts[0] === 'archive' && parts[1] === 'products' && parts.length >= 5) {
+    if (parts[3] === 'original' || parts[3] === 'manufacturer-original') return 'manufacturer-original';
+    return null;
+  }
+  if (parts[0] !== 'products' || parts.length < 4) return null;
   if (parts[2] === 'image-2') return 'catalogue-primary';
   if (parts[2] === 'workshop') return 'workshop-photography';
   if (parts[2] === 'original' || parts[2] === 'manufacturer-original') return 'manufacturer-original';
@@ -1097,7 +1102,8 @@ function r2CandidatesByProductRole(objects: IronSprueR2Object[]) {
   for (const object of objects) {
     const role = r2RoleFromProductKey(object.key);
     if (!role) continue;
-    const sku = normalizedProductSku(object.key.split('/')[1]);
+    const parts = object.key.split('/');
+    const sku = normalizedProductSku(parts[0] === 'archive' && parts[1] === 'products' ? parts[2] : parts[1]);
     const mapKey = `${sku}:${role}`;
     candidates.set(mapKey, [...(candidates.get(mapKey) ?? []), object]);
   }
@@ -1150,9 +1156,10 @@ function ExistingR2MediaCandidates({
 }
 
 async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
-  const [media, r2ProductObjects] = await Promise.all([
+  const [media, r2ProductObjects, r2ArchiveProductObjects] = await Promise.all([
     listIronSprueAdminMediaAssets({ pageSize: 500 }),
     listIronSprueR2Objects('products/', 500).catch(() => []),
+    listIronSprueR2Objects('archive/products/', 500).catch(() => []),
   ]);
   const mode = fullReviewModeFromSearch(searchParams);
   const pendingCount = reviewableIronSprueMediaAssets(media, 'pending').length;
@@ -1160,7 +1167,7 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
   const rejectedCount = media.filter((asset) => asset.approvalState === 'REJECTED').length;
   const reviewableMedia = reviewableIronSprueMediaAssets(media, mode);
   const productGroups = groupMediaByProduct(reviewableMedia, media, mode);
-  const r2Candidates = r2CandidatesByProductRole(r2ProductObjects);
+  const r2Candidates = r2CandidatesByProductRole([...r2ProductObjects, ...r2ArchiveProductObjects]);
   const r2CandidateCount = [...r2Candidates.values()].reduce((total, items) => total + items.length, 0);
   const hiddenCount = media.length - reviewableMedia.length;
   const bulkApprovableMediaCount = reviewableMedia.filter((asset) => asset.approvalState !== 'APPROVED').length;
