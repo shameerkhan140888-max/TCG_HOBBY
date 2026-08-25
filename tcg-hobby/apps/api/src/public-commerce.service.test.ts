@@ -59,7 +59,7 @@ describe('public commerce projection', () => {
     expect(result).not.toHaveProperty('supplierName');
   });
 
-  it('serves Iron Sprue product media from the public R2 media origin instead of the staging app route', () => {
+  it('serves Iron Sprue product media through the storefront media route', () => {
     process.env.PUBLIC_COMMERCE_STORE_CODE = 'IRON_SPRUE';
     process.env.PUBLIC_STOREFRONT_URL = 'https://staging.ironsprue.co.uk';
     process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL = 'https://media.ironsprue.co.uk';
@@ -70,7 +70,21 @@ describe('public commerce projection', () => {
     }));
 
     expect(result.image?.url).toBe(
-      'https://media.ironsprue.co.uk/products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.png',
+      'https://staging.ironsprue.co.uk/media/iron-sprue/products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.png',
+    );
+  });
+
+  it('rewrites stale Iron Sprue media-origin product URLs through the storefront media route', () => {
+    process.env.PUBLIC_COMMERCE_STORE_CODE = 'IRON_SPRUE';
+    process.env.PUBLIC_STOREFRONT_URL = 'https://staging.ironsprue.co.uk';
+
+    const result = toPublicProductSummary(product({
+      game: 'Iron Sprue',
+      imageUrl: 'https://media.ironsprue.co.uk/products/is-pin-s1025/image-2/iron-sprue-image-2-4d59ae9d34d5.png',
+    }));
+
+    expect(result.image?.url).toBe(
+      'https://staging.ironsprue.co.uk/media/iron-sprue/products/is-pin-s1025/image-2/iron-sprue-image-2-4d59ae9d34d5.png',
     );
   });
 
