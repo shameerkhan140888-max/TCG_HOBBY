@@ -8,6 +8,7 @@ import {
   legalCompanyDescription,
   legalCompanyName,
   legalCompanyNumber,
+  legalVatNumber,
   legalRegisteredOffice,
   primaryContactEmail,
   siteName,
@@ -62,7 +63,7 @@ const termsSections: TermsSection[] = [
     number: '1',
     heading: 'About Us',
     body: [
-      `${legalCompanyDescription} It is a company registered in England and Wales under company number ${legalCompanyNumber}.`,
+      `${legalCompanyDescription} It is a company registered in England and Wales under company number ${legalCompanyNumber}. VAT No. ${legalVatNumber}.`,
       `Our registered office is ${legalRegisteredOffice.join(', ')}.`,
       <>
         You can contact us at{' '}
@@ -184,7 +185,7 @@ const termsSections: TermsSection[] = [
     number: '14',
     heading: 'Contact Details',
     body: [
-      `${legalCompanyDescription} Company number ${legalCompanyNumber}. Registered office: ${legalRegisteredOffice.join(', ')}.`,
+      `${legalCompanyDescription} Company number ${legalCompanyNumber}. VAT No. ${legalVatNumber}. Registered office: ${legalRegisteredOffice.join(', ')}.`,
       <>
         Primary contact:{' '}
         <a href={`mailto:${primaryContactEmail}`} className="text-accent-soft underline decoration-accent/50 underline-offset-4 hover:text-accent">

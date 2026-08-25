@@ -41,6 +41,7 @@ export default function AboutPage() {
           <dl className="company-facts legal-facts">
             <div><dt>Legal name</dt><dd>{company.legalName}</dd></div>
             <div><dt>Company number</dt><dd>{company.companyNumber}</dd></div>
+            <div><dt>VAT No.</dt><dd>{company.vatNumber}</dd></div>
             <div><dt>Jurisdiction</dt><dd>{company.jurisdiction}</dd></div>
             <div><dt>Registered office</dt><dd><address>{company.registeredOffice.join(", ")}</address></dd></div>
           </dl>

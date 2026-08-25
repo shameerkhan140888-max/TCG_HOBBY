@@ -15,7 +15,7 @@ export default function PrivacyPage() {
       <PageIntro eyebrow="Privacy" title="A simple corporate website." description="How information is handled when you use this website or contact the group." />
       <article className="site-shell legal-copy">
         <h2>About this website</h2>
-        <p>This corporate website is operated by {company.legalName}, company number {company.companyNumber}. It does not provide customer accounts, ecommerce checkout, analytics tracking or a marketing mailing list.</p>
+        <p>This corporate website is operated by {company.legalName}, company number {company.companyNumber}. VAT No. {company.vatNumber}. It does not provide customer accounts, ecommerce checkout, analytics tracking or a marketing mailing list.</p>
         <h2>Technical information</h2>
         <p>Our hosting provider may process basic technical request information needed to deliver, secure and maintain the website. We do not use that information to create customer profiles on this corporate site.</p>
         <h2>Email enquiries</h2>

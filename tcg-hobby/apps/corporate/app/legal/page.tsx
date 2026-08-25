@@ -15,7 +15,7 @@ export default function LegalPage() {
       <PageIntro eyebrow="Legal" title="Company information." description="Confirmed legal details for Capital Hobby Group Ltd and this corporate website." />
       <article className="site-shell legal-copy">
         <h2>Company disclosure</h2>
-        <p>{company.legalName} is registered in England and Wales under company number {company.companyNumber}.</p>
+        <p>{company.legalName} is registered in England and Wales under company number {company.companyNumber}. VAT No. {company.vatNumber}.</p>
         <h2>Registered office</h2>
         <address>{company.registeredOffice.join(", ")}</address>
         <h2>Trading divisions</h2>

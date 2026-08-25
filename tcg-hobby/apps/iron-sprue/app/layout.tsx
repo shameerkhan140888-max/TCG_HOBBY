@@ -180,6 +180,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <p>Capital Hobby Group Ltd</p>
               <p>Trading as Iron Sprue</p>
               <p>Company Number 17336948</p>
+              <p>VAT No. {ironSprueBrand.vatNumber}</p>
               <p>Registered in England &amp; Wales</p>
               <p><span>Registered Office:</span><br />4-6 Greatorex Street, London<br />United Kingdom, E1 5NF</p>
             </div>

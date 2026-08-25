@@ -26,7 +26,7 @@ export default function ContactPage() {
           </section>
           <section>
             <h2>Company details</h2>
-            <p>Iron Sprue is a trading division of {ironSprueBrand.legalEntity}. Registered office: 4-6 Greatorex Street, London, United Kingdom, E1 5NF. Company number 17336948.</p>
+            <p>Iron Sprue is a trading division of {ironSprueBrand.legalEntity}. Registered office: {ironSprueBrand.registeredOffice.join(', ')}. Company number {ironSprueBrand.companyNumber}. VAT No. {ironSprueBrand.vatNumber}.</p>
           </section>
           <section>
             <h2>Security reminder</h2>

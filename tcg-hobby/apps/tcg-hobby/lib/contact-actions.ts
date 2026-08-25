@@ -104,7 +104,7 @@ export async function sendContactEnquiryAction(formData: FormData) {
           <p><strong>Message:</strong></p>
           <p>${safeMessage}</p>
           <hr style="border:0;border-top:1px solid #e5e5e5;margin:20px 0" />
-          <p style="font-size:12px;color:#525252;margin:0">Capital Hobby Group Ltd<br />Trading as TCG Hobby<br />Company Number 17336948</p>
+          <p style="font-size:12px;color:#525252;margin:0">Capital Hobby Group Ltd<br />Trading as TCG Hobby<br />Company Number 17336948<br />VAT No. 525 2040 33</p>
         </div>
       `,
       text: [
@@ -119,6 +119,7 @@ export async function sendContactEnquiryAction(formData: FormData) {
         'Capital Hobby Group Ltd',
         'Trading as TCG Hobby',
         'Company Number 17336948',
+        'VAT No. 525 2040 33',
       ].join('\n'),
     });
   } catch {

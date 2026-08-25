@@ -8,6 +8,7 @@ import {
   legalCompanyDescription,
   legalCompanyName,
   legalCompanyNumber,
+  legalVatNumber,
   legalRegisteredOffice,
   primaryContactEmail,
   siteName,
@@ -63,7 +64,7 @@ const policySections: PolicySection[] = [
     heading: 'Who We Are',
     body: [
       <>
-        {legalCompanyDescription} It is a company registered in England and Wales under company number {legalCompanyNumber}. Our registered office is{' '}
+        {legalCompanyDescription} It is a company registered in England and Wales under company number {legalCompanyNumber}. VAT No. {legalVatNumber}. Our registered office is{' '}
         {legalRegisteredOffice.join(', ')}.
       </>,
       <>

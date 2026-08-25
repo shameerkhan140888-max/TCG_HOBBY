@@ -12,7 +12,7 @@ export default function PrivacyPage() {
         <article className="legal-board">
           <section>
             <h2>Who controls your data</h2>
-            <p>{ironSprueBrand.legalEntity} is the data controller for Iron Sprue. Registered office: 4-6 Greatorex Street, London, United Kingdom, E1 5NF. Company number 17336948.</p>
+            <p>{ironSprueBrand.legalEntity} is the data controller for Iron Sprue. Registered office: {ironSprueBrand.registeredOffice.join(', ')}. Company number {ironSprueBrand.companyNumber}. VAT No. {ironSprueBrand.vatNumber}.</p>
             <p>For privacy questions, contact <a href={`mailto:${ironSprueBrand.contactEmail}`}>{ironSprueBrand.contactEmail}</a>.</p>
           </section>
           <section>

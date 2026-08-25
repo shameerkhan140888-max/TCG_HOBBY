@@ -40,5 +40,7 @@ describe('customer information pages', () => {
     expect(markup).toContain('Capital Hobby Group Ltd');
     expect(markup).toContain('Company Number');
     expect(markup).toContain('17336948');
+    expect(markup).toContain('VAT No.');
+    expect(markup).toContain('525 2040 33');
   });
 });

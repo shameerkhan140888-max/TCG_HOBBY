@@ -102,8 +102,10 @@ describe('Iron Sprue static coming-soon page', () => {
     expect(cookies).toContain('Cookie policy');
     expect(contact).toContain('Contact Iron Sprue');
     expect(privacy).toContain('company number 17336948');
+    expect(privacy).toContain('VAT No. 525 2040 33');
     expect(cookies).toContain('does not use browser local storage');
     expect(contact).toContain('4-6 Greatorex Street');
+    expect(contact).toContain('VAT No. 525 2040 33');
     expect(contact).toContain('info@ironsprue.co.uk');
     expect(cookies).toContain('does not use browser local storage');
     expect(`${privacy}\n${cookies}\n${contact}`).not.toMatch(/Stripe|Prisma|DATABASE_URL|AUTH_SECRET|localhost|127\.0\.0\.1/i);

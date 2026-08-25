@@ -14,6 +14,7 @@ describe("corporate site", () => {
     const markup = renderToStaticMarkup(<><HomePage /><SiteFooter /></>);
     expect(markup).toContain("Capital Hobby Group Ltd");
     expect(markup).toContain("17336948");
+    expect(markup).toContain("VAT No. 525 2040 33");
     expect(markup).toContain("TCG Hobby");
     expect(markup).toContain("Iron Sprue");
     expect(markup).toContain("https://tcg-hobby.co.uk");
@@ -38,6 +39,7 @@ describe("corporate site", () => {
     expect(markup).toContain("Built from the hobbies, not outside them.");
     expect(markup).toContain("specialist hobbies deserve shops that understand why the details matter");
     expect(markup).toContain("Registered company information");
+    expect(markup).toContain("525 2040 33");
     expect(markup).toContain("legal-facts");
     expect(markup).toContain("4-6 Greatorex Street");
     expect(markup).toContain("info@capitalhobbygroup.co.uk");

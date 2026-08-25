@@ -62,6 +62,7 @@ describe('transactional email templates', () => {
     });
     expect(email.subject).toBe('Welcome to TCG Hobby');
     expect(email.html).toContain('Company number 17336948');
+    expect(email.html).toContain('VAT No. 525 2040 33');
     expect(email.html).toContain('unsubscribe?token=safe-token');
     expect(email.text).toContain('Contact: info@tcg-hobby.co.uk');
     expect(email.text).not.toContain('<table');
@@ -78,6 +79,7 @@ describe('transactional email templates', () => {
     expect(email.html).toContain('14 Aurora Street');
     expect(email.html).not.toContain('View order details');
     expect(email.text).toContain('Payment status: Paid');
+    expect(email.text).toContain('VAT No. 525 2040 33');
   });
 
   it('shows a safe image fallback and only gives account orders an account link', () => {

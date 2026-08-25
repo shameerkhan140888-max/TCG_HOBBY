@@ -62,6 +62,7 @@ describe('SiteFooter', () => {
     expect(markup).toContain('Capital Hobby Group Ltd');
     expect(markup).toContain('Trading as TCG Hobby');
     expect(markup).toContain('Company Number 17336948');
+    expect(markup).toContain('VAT No. 525 2040 33');
     expect(markup).toContain('Registered Office:</span> 4-6 Greatorex Street, London, United Kingdom, E1 5NF');
     expect(markup).toContain('max-w-[108rem]');
     expect(markup).toContain('2xl:max-w-[112rem]');

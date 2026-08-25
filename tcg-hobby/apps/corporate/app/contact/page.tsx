@@ -52,6 +52,7 @@ export default function ContactPage() {
             <p className="eyebrow">Registered office</p>
             <h2 id="office-title">{company.legalName}</h2>
             <p>Company number {company.companyNumber}</p>
+            <p>VAT No. {company.vatNumber}</p>
           </div>
           <address>
             {company.registeredOffice.map((line) => <span key={line}>{line}</span>)}

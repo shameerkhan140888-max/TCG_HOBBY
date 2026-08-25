@@ -13,7 +13,7 @@ export default function TermsPage() {
           <section>
             <h2>About Iron Sprue</h2>
             <p>Iron Sprue is operated by {ironSprueBrand.legalEntity}, a company registered in England and Wales. Iron Sprue is a specialist model-kit, puzzle, hobby-tool and workshop-supplies storefront.</p>
-            <p>Contact us at <a href={`mailto:${ironSprueBrand.contactEmail}`}>{ironSprueBrand.contactEmail}</a>. Registered office: 4-6 Greatorex Street, London, United Kingdom, E1 5NF. Company number 17336948.</p>
+            <p>Contact us at <a href={`mailto:${ironSprueBrand.contactEmail}`}>{ironSprueBrand.contactEmail}</a>. Registered office: {ironSprueBrand.registeredOffice.join(', ')}. Company number {ironSprueBrand.companyNumber}. VAT No. {ironSprueBrand.vatNumber}.</p>
           </section>
           <section>
             <h2>Using the website</h2>

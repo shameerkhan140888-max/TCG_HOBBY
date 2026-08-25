@@ -8,6 +8,7 @@ import {
   legalCompanyNumber,
   legalRegisteredOffice,
   legalTradingName,
+  legalVatNumber,
   siteName,
 } from '../../lib/site';
 
@@ -155,6 +156,10 @@ export default function AboutPage() {
                     <div className="rounded-lg bg-black/20 p-4">
                       <dt className="text-neutral-500">Company Number</dt>
                       <dd className="mt-1 font-semibold text-neutral-50">{legalCompanyNumber}</dd>
+                    </div>
+                    <div className="rounded-lg bg-black/20 p-4">
+                      <dt className="text-neutral-500">VAT No.</dt>
+                      <dd className="mt-1 font-semibold text-neutral-50">{legalVatNumber}</dd>
                     </div>
                     <div className="rounded-lg bg-black/20 p-4 sm:col-span-2">
                       <dt className="text-neutral-500">Registered Office</dt>

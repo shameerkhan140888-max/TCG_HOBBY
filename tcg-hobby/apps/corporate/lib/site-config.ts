@@ -38,6 +38,7 @@ export function createCorporateConfig(environment: CorporateEnvironment = proces
     company: Object.freeze({
       legalName: "Capital Hobby Group Ltd",
       companyNumber: "17336948",
+      vatNumber: "525 2040 33",
       jurisdiction: "Registered in England and Wales",
       registeredOffice: Object.freeze([
         "4-6 Greatorex Street",

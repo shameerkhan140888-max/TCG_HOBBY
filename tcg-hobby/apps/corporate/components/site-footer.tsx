@@ -10,6 +10,7 @@ export function SiteFooter() {
         <p>
           <span>Copyright {new Date().getFullYear()} {company.legalName}</span>
           <span>Company number {company.companyNumber}</span>
+          <span>VAT No. {company.vatNumber}</span>
         </p>
         <a href={`mailto:${contact.informationEmail}`}>{contact.informationEmail}</a>
       </div>

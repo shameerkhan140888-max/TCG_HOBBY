@@ -117,7 +117,7 @@ function emailShell(input: EmailShellInput) {
             <tr>
               <td style="padding:20px 24px;background:#111115;color:#a3a3a3;font-size:12px;line-height:1.65;border-top:1px solid #2d2d33">
                 <p style="margin:0 0 6px;color:#f5f5f5;font-weight:700">Capital Hobby Group Ltd trading as TCG Hobby</p>
-                <p style="margin:0 0 6px">Registered in England and Wales. Company number 17336948.</p>
+                <p style="margin:0 0 6px">Registered in England and Wales. Company number 17336948. VAT No. 525 2040 33.</p>
                 <p style="margin:0">${escapeEmailHtml(input.footerNote)}</p>
               </td>
             </tr>
@@ -167,7 +167,7 @@ export function buildSignupEmail(input: {
     'The TCG Hobby Team',
     '',
     'Capital Hobby Group Ltd trading as TCG Hobby',
-    'Registered in England and Wales. Company number 17336948.',
+    'Registered in England and Wales. Company number 17336948. VAT No. 525 2040 33.',
     'This email was sent because you signed up through the TCG Hobby website.',
     'Contact: info@tcg-hobby.co.uk',
     `Unsubscribe: ${unsubscribeUrl}`,
@@ -271,7 +271,7 @@ export function buildOrderConfirmationEmail(order: OrderWithItems, siteUrl: stri
     'Support: support@tcg-hobby.co.uk',
     '',
     'Capital Hobby Group Ltd trading as TCG Hobby',
-    'Registered in England and Wales. Company number 17336948.',
+    'Registered in England and Wales. Company number 17336948. VAT No. 525 2040 33.',
   ].join('\n');
 
   return {

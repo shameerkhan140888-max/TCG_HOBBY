@@ -86,6 +86,7 @@ export function SiteFooter() {
               <p className="font-semibold text-neutral-300">Capital Hobby Group Ltd</p>
               <p>Trading as TCG Hobby</p>
               <p>Company Number 17336948</p>
+              <p>VAT No. 525 2040 33</p>
               <p>Registered in England &amp; Wales</p>
               <p>
                 <span className="text-neutral-400">Registered Office:</span> 4-6 Greatorex Street, London, United Kingdom, E1 5NF

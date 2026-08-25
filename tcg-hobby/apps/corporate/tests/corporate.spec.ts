@@ -16,6 +16,7 @@ test.describe("Capital Hobby Group corporate site", () => {
     await expect(page.getByText("Launching Soon")).toBeVisible();
     await expect(page.getByRole("link", { name: /Visit Iron Sprue/ })).toHaveAttribute("href", "https://www.ironsprue.co.uk");
     await expect(page.getByText("Company number 17336948")).toBeVisible();
+    await expect(page.getByText("VAT No. 525 2040 33")).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Primary navigation" }).getByText("Our Brands")).toHaveCount(0);
     await expect(page.getByRole("navigation", { name: "Legal links" }).getByText("Cookies")).toBeVisible();
     await expect(page.locator("img")).toHaveCount(3);
