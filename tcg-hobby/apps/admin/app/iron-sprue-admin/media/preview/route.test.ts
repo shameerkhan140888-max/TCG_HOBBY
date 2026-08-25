@@ -2,12 +2,12 @@ import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  requireAdminSession: vi.fn(),
+  requireIronSprueAdminSession: vi.fn(),
   send: vi.fn(),
 }));
 
 vi.mock('../../../../lib/auth.server', () => ({
-  requireAdminSession: mocks.requireAdminSession,
+  requireIronSprueAdminSession: mocks.requireIronSprueAdminSession,
 }));
 
 vi.mock('@aws-sdk/client-s3', () => ({
@@ -26,7 +26,7 @@ import { GET } from './route';
 
 describe('Iron Sprue Admin media preview route', () => {
   beforeEach(() => {
-    mocks.requireAdminSession.mockResolvedValue({
+    mocks.requireIronSprueAdminSession.mockResolvedValue({
       user: { id: 'admin-1', email: 'admin@example.test', role: 'ADMIN' },
       sessionToken: 'session',
       expires: new Date('2099-01-01T00:00:00.000Z'),
@@ -56,7 +56,7 @@ describe('Iron Sprue Admin media preview route', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('image/png');
-    expect(mocks.requireAdminSession).toHaveBeenCalledWith('/iron-sprue-admin/media', '/iron-sprue-admin/login');
+    expect(mocks.requireIronSprueAdminSession).toHaveBeenCalledWith('/iron-sprue-admin/media', '/iron-sprue-admin/login');
     expect(mocks.send).toHaveBeenCalledOnce();
   });
 

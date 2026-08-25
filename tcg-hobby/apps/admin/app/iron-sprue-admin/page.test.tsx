@@ -3,12 +3,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  requireAdminSession: vi.fn(),
+  requireIronSprueAdminSession: vi.fn(),
   dashboard: vi.fn(({ session }: { session: { user: { email: string } } }) => <section>Iron dashboard for {session.user.email}</section>),
 }));
 
 vi.mock('../../lib/auth.server', () => ({
-  requireAdminSession: mocks.requireAdminSession,
+  requireIronSprueAdminSession: mocks.requireIronSprueAdminSession,
 }));
 
 vi.mock('../../components/iron-sprue-admin-dashboard', () => ({
@@ -24,7 +24,7 @@ import IronSprueAdminPage from './page';
 describe('direct Iron Sprue Admin page', () => {
   beforeEach(() => {
     vi.stubGlobal('React', React);
-    mocks.requireAdminSession.mockResolvedValue({
+    mocks.requireIronSprueAdminSession.mockResolvedValue({
       user: { id: 'admin-1', email: 'admin@example.test', name: 'Admin User', role: 'ADMIN' },
       sessionToken: 'session',
       expires: new Date('2099-01-01T00:00:00.000Z'),
@@ -34,7 +34,7 @@ describe('direct Iron Sprue Admin page', () => {
   it('uses the Iron Sprue login flow and renders the independent shell', async () => {
     const markup = renderToStaticMarkup(await IronSprueAdminPage());
 
-    expect(mocks.requireAdminSession).toHaveBeenCalledWith('/iron-sprue-admin', '/iron-sprue-admin/login');
+    expect(mocks.requireIronSprueAdminSession).toHaveBeenCalledWith('/iron-sprue-admin', '/iron-sprue-admin/login');
     expect(markup).toContain('data-shell="iron-sprue"');
     expect(markup).toContain('Iron dashboard for admin@example.test');
   });

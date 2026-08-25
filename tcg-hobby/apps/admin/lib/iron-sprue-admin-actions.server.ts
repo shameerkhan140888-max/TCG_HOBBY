@@ -31,7 +31,7 @@ import {
 } from '@tcg-hobby/database';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireAdminSession } from './auth.server';
+import { requireIronSprueAdminSession } from './auth.server';
 import { assertIronSprueR2ObjectExists, listIronSprueR2Objects, uploadIronSprueAdminImage } from './iron-sprue-media-storage.server';
 
 function boolFromForm(value: FormDataEntryValue | null) {
@@ -66,7 +66,7 @@ function fileFromForm(value: FormDataEntryValue | null) {
 }
 
 async function requireIronSprueActor() {
-  const session = await requireAdminSession('/iron-sprue-admin', '/iron-sprue-admin/login');
+  const session = await requireIronSprueAdminSession('/iron-sprue-admin', '/iron-sprue-admin/login');
   return session.user;
 }
 

@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  getCurrentAdminSession: vi.fn(),
+  getCurrentIronSprueAdminSession: vi.fn(),
   redirect: vi.fn((path: string) => {
     throw new Error(`redirect:${path}`);
   }),
@@ -14,11 +14,11 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('../../../lib/auth.server', () => ({
-  getCurrentAdminSession: mocks.getCurrentAdminSession,
+  getCurrentIronSprueAdminSession: mocks.getCurrentIronSprueAdminSession,
 }));
 
 vi.mock('../../../components/admin-login-form', () => ({
-  AdminLoginForm: ({ callbackUrl }: { callbackUrl: string }) => <form data-callback={callbackUrl}>Login form</form>,
+  IronSprueAdminLoginForm: ({ callbackUrl }: { callbackUrl: string }) => <form data-callback={callbackUrl}>Login form</form>,
 }));
 
 import IronSprueAdminLoginPage from './page';
@@ -26,7 +26,7 @@ import IronSprueAdminLoginPage from './page';
 describe('Iron Sprue Admin login page', () => {
   beforeEach(() => {
     vi.stubGlobal('React', React);
-    mocks.getCurrentAdminSession.mockResolvedValue(null);
+    mocks.getCurrentIronSprueAdminSession.mockResolvedValue(null);
   });
 
   it('renders an Iron Sprue branded login with an Iron Sprue callback', async () => {
@@ -39,7 +39,7 @@ describe('Iron Sprue Admin login page', () => {
   });
 
   it('redirects an already-authenticated admin back to Iron Sprue Admin', async () => {
-    mocks.getCurrentAdminSession.mockResolvedValue({ user: { id: 'admin-1', email: 'admin@example.test', role: 'ADMIN' } });
+    mocks.getCurrentIronSprueAdminSession.mockResolvedValue({ user: { id: 'admin-1', email: 'admin@example.test', role: 'ADMIN' } });
 
     await expect(IronSprueAdminLoginPage({ searchParams: Promise.resolve({ callbackUrl: '/iron-sprue-admin/products' }) })).rejects.toThrow('redirect:/iron-sprue-admin/products');
     expect(mocks.redirect).toHaveBeenCalledWith('/iron-sprue-admin/products');

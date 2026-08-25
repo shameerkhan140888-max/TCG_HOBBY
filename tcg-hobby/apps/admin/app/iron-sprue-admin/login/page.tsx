@@ -1,7 +1,7 @@
 import { Card, CardContent, PageShell } from '@tcg-hobby/ui';
 import { redirect } from 'next/navigation';
-import { AdminLoginForm } from '../../../components/admin-login-form';
-import { getCurrentAdminSession } from '../../../lib/auth.server';
+import { IronSprueAdminLoginForm } from '../../../components/admin-login-form';
+import { getCurrentIronSprueAdminSession } from '../../../lib/auth.server';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -9,7 +9,7 @@ export default async function IronSprueAdminLoginPage({ searchParams }: { search
   const params = await searchParams;
   const raw = Array.isArray(params.callbackUrl) ? params.callbackUrl[0] : params.callbackUrl;
   const callbackUrl = raw?.startsWith('/iron-sprue-admin') && !raw.startsWith('//') ? raw : '/iron-sprue-admin';
-  if (await getCurrentAdminSession()) redirect(callbackUrl);
+  if (await getCurrentIronSprueAdminSession()) redirect(callbackUrl);
 
   return (
     <PageShell className="grid min-h-screen place-items-center bg-[#070907] px-4 py-10">
@@ -31,7 +31,7 @@ export default async function IronSprueAdminLoginPage({ searchParams }: { search
               Sign in with an authorised staff account to manage the Iron Sprue workspace.
             </p>
           </div>
-          <AdminLoginForm
+          <IronSprueAdminLoginForm
             callbackUrl={callbackUrl}
             passwordResetUrl={`${(process.env.IRON_SPRUE_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL ?? 'https://ironsprue.co.uk').replace(/\/$/, '')}/forgot-password`}
           />

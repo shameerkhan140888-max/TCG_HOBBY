@@ -2,7 +2,7 @@ import { resetIronSprueAdminPrisma } from '@tcg-hobby/database';
 import { IronSprueAdminSection } from '../../../components/iron-sprue-admin-section';
 import { IronSprueAdminDatabaseUnavailable, isIronSprueAdminDatabaseUnavailable } from '../../../components/iron-sprue-admin-database-unavailable';
 import { IronSprueAdminShell } from '../../../components/iron-sprue-admin-shell';
-import { requireAdminSession } from '../../../lib/auth.server';
+import { requireIronSprueAdminSession } from '../../../lib/auth.server';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,7 @@ export default async function IronSprueAdminSectionPage({
 }) {
   const { section } = await params;
   const query = searchParams ? await searchParams : {};
-  const session = await requireAdminSession(`/iron-sprue-admin/${section}`, '/iron-sprue-admin/login');
+  const session = await requireIronSprueAdminSession(`/iron-sprue-admin/${section}`, '/iron-sprue-admin/login');
   let content;
   try {
     content = await IronSprueAdminSection({ section, searchParams: query });

@@ -3,7 +3,7 @@
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button, Input } from '@tcg-hobby/ui';
-import { loginAdminAction, type AdminLoginState } from '../lib/auth-actions.server';
+import { loginAdminAction, loginIronSprueAdminAction, type AdminLoginState } from '../lib/auth-actions.server';
 
 const initialState: AdminLoginState = { fieldErrors: {}, values: { email: '' } };
 
@@ -14,6 +14,25 @@ function SubmitButton() {
 
 export function AdminLoginForm({ callbackUrl, passwordResetUrl }: { callbackUrl: string; passwordResetUrl: string }) {
   const [state, action] = useActionState(loginAdminAction, initialState);
+  return <AdminLoginFields action={action} callbackUrl={callbackUrl} passwordResetUrl={passwordResetUrl} state={state} />;
+}
+
+export function IronSprueAdminLoginForm({ callbackUrl, passwordResetUrl }: { callbackUrl: string; passwordResetUrl: string }) {
+  const [state, action] = useActionState(loginIronSprueAdminAction, initialState);
+  return <AdminLoginFields action={action} callbackUrl={callbackUrl} passwordResetUrl={passwordResetUrl} state={state} />;
+}
+
+function AdminLoginFields({
+  action,
+  callbackUrl,
+  passwordResetUrl,
+  state,
+}: {
+  action: (payload: FormData) => void;
+  callbackUrl: string;
+  passwordResetUrl: string;
+  state: AdminLoginState;
+}) {
   return (
     <form action={action} className="space-y-4" noValidate>
       <input type="hidden" name="callbackUrl" value={callbackUrl} />

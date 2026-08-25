@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "web": {
+      "root": ".",
+      "framework": "nextjs",
+      "installCommand": "cd ../.. && npm ci",
+      "buildCommand": "cd ../.. && npm run build -w @tcg-hobby/database && npm run build -w @tcg-hobby/admin",
+      "outputDirectory": ".next"
+    }
+  }
+}

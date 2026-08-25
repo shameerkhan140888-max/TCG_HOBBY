@@ -321,6 +321,24 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     });
   });
 
+  it('requires the explicit admin database target for hosted Iron Sprue Admin deployments', () => {
+    process.env.VERCEL = '1';
+    process.env.DATABASE_URL = 'postgresql://root@railway-public.example/railway';
+    process.env.IRON_SPRUE_DATABASE_URL = 'postgresql://iron@neon.example/neondb';
+    delete process.env.IRON_SPRUE_ADMIN_DATABASE_URL;
+
+    expect(() => getIronSprueAdminDatabaseTargetInfo()).toThrow(/requires IRON_SPRUE_ADMIN_DATABASE_URL/);
+  });
+
+  it('rejects tunnel and Neon targets for hosted Iron Sprue Admin deployments', () => {
+    process.env.VERCEL = '1';
+    process.env.IRON_SPRUE_ADMIN_DATABASE_URL = 'postgresql://postgres@127.0.0.1:64843/railway';
+    expect(() => getIronSprueAdminDatabaseTargetInfo()).toThrow(/localhost Railway tunnel/);
+
+    process.env.IRON_SPRUE_ADMIN_DATABASE_URL = 'postgresql://iron@example.eu-west-2.aws.neon.tech/neondb';
+    expect(() => getIronSprueAdminDatabaseTargetInfo()).toThrow(/cannot use Neon/);
+  });
+
   it('publishes a ready product through the canonical product publication state', async () => {
     const product = readyProduct({ publicationState: 'READY_TO_PUBLISH', readyApprovedAt: new Date('2026-08-20T00:00:00.000Z') });
     const tx = {

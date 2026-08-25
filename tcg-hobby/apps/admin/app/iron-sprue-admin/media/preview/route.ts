@@ -2,7 +2,7 @@ import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminSession } from '../../../../lib/auth.server';
+import { requireIronSprueAdminSession } from '../../../../lib/auth.server';
 
 export const dynamic = 'force-dynamic';
 let localIronSprueEnv: Record<string, string> | null = null;
@@ -73,7 +73,7 @@ function normalizeStorageKey(value: string | null) {
 }
 
 export async function GET(request: NextRequest) {
-  await requireAdminSession('/iron-sprue-admin/media', '/iron-sprue-admin/login');
+  await requireIronSprueAdminSession('/iron-sprue-admin/media', '/iron-sprue-admin/login');
 
   const key = normalizeStorageKey(request.nextUrl.searchParams.get('key'));
   if (!key) return NextResponse.json({ error: 'Invalid media key.' }, { status: 400 });

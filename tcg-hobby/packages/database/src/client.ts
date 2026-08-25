@@ -123,6 +123,12 @@ export type IronSprueAdminDatabaseTargetInfo = {
   database: string;
 };
 
+function isHostedIronSprueAdminRuntime() {
+  return process.env.IRON_SPRUE_ADMIN_REQUIRE_EXPLICIT_DATABASE_URL === 'true'
+    || process.env.VERCEL === '1'
+    || Boolean(process.env.VERCEL_ENV);
+}
+
 function parseDatabaseTarget(connectionString: string) {
   try {
     const url = new URL(connectionString);
@@ -146,11 +152,25 @@ function classifyIronSprueAdminEnvironment(raw: string | undefined) {
   return 'UNKNOWN' as const;
 }
 
+function assertHostedIronSprueAdminDatabaseTarget(target: IronSprueAdminDatabaseTargetInfo) {
+  if (!isHostedIronSprueAdminRuntime()) return;
+  if (target.source !== 'IRON_SPRUE_ADMIN_DATABASE_URL') {
+    throw new Error('Hosted Iron Sprue Admin requires IRON_SPRUE_ADMIN_DATABASE_URL. Refusing fallback database targets.');
+  }
+  const host = target.host.toLowerCase();
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') {
+    throw new Error('Hosted Iron Sprue Admin cannot use a localhost Railway tunnel database target.');
+  }
+  if (host.includes('neon.tech') || target.database.toLowerCase() === 'neondb') {
+    throw new Error('Hosted Iron Sprue Admin cannot use Neon as its canonical database target.');
+  }
+}
+
 export function getIronSprueAdminDatabaseTargetInfo(): IronSprueAdminDatabaseTargetInfo {
   const explicitAdminUrl = process.env.IRON_SPRUE_ADMIN_DATABASE_URL?.trim();
   const dedicatedIronSprueUrl = process.env.IRON_SPRUE_DATABASE_URL?.trim();
   const rootUrl = process.env.DATABASE_URL?.trim();
-  const source = explicitAdminUrl
+  const source: IronSprueAdminDatabaseTargetInfo['source'] = explicitAdminUrl
     ? 'IRON_SPRUE_ADMIN_DATABASE_URL'
     : dedicatedIronSprueUrl
       ? 'IRON_SPRUE_DATABASE_URL'
@@ -164,13 +184,15 @@ export function getIronSprueAdminDatabaseTargetInfo(): IronSprueAdminDatabaseTar
     || process.env.IRON_SPRUE_ENVIRONMENT?.trim()
     || process.env.NODE_ENV
     || 'unknown';
-  return {
+  const target = {
     connectionString,
     source,
     environment,
     label: classifyIronSprueAdminEnvironment(environment),
     ...parseDatabaseTarget(connectionString),
   };
+  assertHostedIronSprueAdminDatabaseTarget(target);
+  return target;
 }
 
 function getDefaultPrismaClient() {

@@ -3,8 +3,8 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createSessionExpiry, generateSessionToken, SESSION_COOKIE_NAME, validateLoginInput, verifyPassword } from '@tcg-hobby/auth';
-import { prisma } from '@tcg-hobby/database';
-import { requireAdminSession } from './auth.server';
+import { getIronSprueAdminPrisma, prisma } from '@tcg-hobby/database';
+import { requireAdminSession, requireIronSprueAdminSession } from './auth.server';
 
 export type AdminLoginState = {
   formError?: string;
@@ -14,6 +14,10 @@ export type AdminLoginState = {
 
 function safeReturnTo(value: FormDataEntryValue | null): string {
   return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//') ? value : '/admin';
+}
+
+function safeIronSprueReturnTo(value: FormDataEntryValue | null): string {
+  return typeof value === 'string' && value.startsWith('/iron-sprue-admin') && !value.startsWith('//') ? value : '/iron-sprue-admin';
 }
 
 function cookieOptions(expires: Date) {
@@ -37,6 +41,24 @@ export async function loginAdminAction(_state: AdminLoginState, formData: FormDa
   redirect(returnTo);
 }
 
+export async function loginIronSprueAdminAction(_state: AdminLoginState, formData: FormData): Promise<AdminLoginState> {
+  const result = validateLoginInput({ email: String(formData.get('email') ?? ''), password: String(formData.get('password') ?? '') });
+  if (!result.ok) return { fieldErrors: result.fieldErrors, values: { email: result.email } };
+
+  const returnTo = safeIronSprueReturnTo(formData.get('callbackUrl'));
+  const db = getIronSprueAdminPrisma();
+  const user = await db.user.findUnique({ where: { email: result.email } });
+  if (!user?.passwordHash || !user.emailVerified || (user.role !== 'ADMIN' && user.role !== 'STAFF') || !verifyPassword(result.password, user.passwordHash)) {
+    return { formError: 'The email or password you entered is incorrect.', fieldErrors: {}, values: { email: result.email } };
+  }
+
+  const sessionToken = generateSessionToken();
+  const expires = createSessionExpiry();
+  await db.session.create({ data: { sessionToken, userId: user.id, expires } });
+  (await cookies()).set(SESSION_COOKIE_NAME, sessionToken, cookieOptions(expires));
+  redirect(returnTo);
+}
+
 export async function logoutAdminAction(): Promise<never> {
   const session = await requireAdminSession();
   await prisma.session.deleteMany({ where: { sessionToken: session.sessionToken } });
@@ -45,8 +67,8 @@ export async function logoutAdminAction(): Promise<never> {
 }
 
 export async function logoutIronSprueAdminAction(): Promise<never> {
-  const session = await requireAdminSession('/iron-sprue-admin', '/iron-sprue-admin/login');
-  await prisma.session.deleteMany({ where: { sessionToken: session.sessionToken } });
+  const session = await requireIronSprueAdminSession('/iron-sprue-admin', '/iron-sprue-admin/login');
+  await getIronSprueAdminPrisma().session.deleteMany({ where: { sessionToken: session.sessionToken } });
   (await cookies()).delete(SESSION_COOKIE_NAME);
   redirect('/iron-sprue-admin/login');
 }
