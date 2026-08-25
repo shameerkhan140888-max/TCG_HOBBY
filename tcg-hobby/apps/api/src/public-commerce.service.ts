@@ -67,26 +67,13 @@ const SORT_VALUES = new Set<CatalogueSort>(SORTS.map((sort) => sort.value));
 const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
 const IRON_SPRUE_PUBLIC_MEDIA_ORIGIN = 'https://media.ironsprue.co.uk';
 
-function ironSprueStorefrontBaseUrl() {
-  return (
-    process.env.PUBLIC_STOREFRONT_URL?.trim()
-    || process.env.IRON_SPRUE_SITE_URL?.trim()
-    || process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL?.trim()
-    || ''
-  ).replace(/\/+$/, '');
-}
-
-function ironSprueStorefrontMediaUrl(url: string) {
-  if (url.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) {
-    const base = ironSprueStorefrontBaseUrl();
-    return base ? `${base}${url}` : url;
-  }
+function ironSprueStorefrontMediaPath(url: string) {
+  if (url.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return url;
   try {
     const parsed = new URL(url);
+    if (parsed.pathname.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return `${parsed.pathname}${parsed.search}`;
     if (parsed.origin === IRON_SPRUE_PUBLIC_MEDIA_ORIGIN) {
-      const route = `${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${parsed.pathname.replace(/^\/+/, '')}`;
-      const base = ironSprueStorefrontBaseUrl();
-      return base ? `${base}${route}` : route;
+      return `${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${parsed.pathname.replace(/^\/+/, '')}${parsed.search}`;
     }
   } catch {
     return url;
@@ -97,9 +84,9 @@ function ironSprueStorefrontMediaUrl(url: string) {
 function assetUrl(url: string): string {
   if (
     process.env.PUBLIC_COMMERCE_STORE_CODE === 'IRON_SPRUE'
-    && (url.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX) || url.startsWith(`${IRON_SPRUE_PUBLIC_MEDIA_ORIGIN}/`))
+    && (url.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX) || url.startsWith(`${IRON_SPRUE_PUBLIC_MEDIA_ORIGIN}/`) || url.includes(IRON_SPRUE_MEDIA_ROUTE_PREFIX))
   ) {
-    return ironSprueStorefrontMediaUrl(url);
+    return ironSprueStorefrontMediaPath(url);
   }
   if (/^https?:\/\//i.test(url)) return url;
   const base = process.env.PUBLIC_STOREFRONT_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tcg-hobby.co.uk';

@@ -59,7 +59,7 @@ describe('public commerce projection', () => {
     expect(result).not.toHaveProperty('supplierName');
   });
 
-  it('serves Iron Sprue product media through the storefront media route', () => {
+  it('serves Iron Sprue product media through the same-origin storefront media route', () => {
     process.env.PUBLIC_COMMERCE_STORE_CODE = 'IRON_SPRUE';
     process.env.PUBLIC_STOREFRONT_URL = 'https://staging.ironsprue.co.uk';
     process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL = 'https://media.ironsprue.co.uk';
@@ -70,11 +70,11 @@ describe('public commerce projection', () => {
     }));
 
     expect(result.image?.url).toBe(
-      'https://staging.ironsprue.co.uk/media/iron-sprue/products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.png',
+      '/media/iron-sprue/products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.png',
     );
   });
 
-  it('rewrites stale Iron Sprue media-origin product URLs through the storefront media route', () => {
+  it('rewrites stale Iron Sprue media-origin product URLs through the same-origin storefront media route', () => {
     process.env.PUBLIC_COMMERCE_STORE_CODE = 'IRON_SPRUE';
     process.env.PUBLIC_STOREFRONT_URL = 'https://staging.ironsprue.co.uk';
 
@@ -84,7 +84,20 @@ describe('public commerce projection', () => {
     }));
 
     expect(result.image?.url).toBe(
-      'https://staging.ironsprue.co.uk/media/iron-sprue/products/is-pin-s1025/image-2/iron-sprue-image-2-4d59ae9d34d5.png',
+      '/media/iron-sprue/products/is-pin-s1025/image-2/iron-sprue-image-2-4d59ae9d34d5.png',
+    );
+  });
+
+  it('normalizes absolute staging media route URLs to same-origin paths', () => {
+    process.env.PUBLIC_COMMERCE_STORE_CODE = 'IRON_SPRUE';
+
+    const result = toPublicProductSummary(product({
+      game: 'Iron Sprue',
+      imageUrl: 'https://staging.ironsprue.co.uk/media/iron-sprue/products/is-cub-mc133h/image-2/iron-sprue-image-2-37d0a60e4ffb.png',
+    }));
+
+    expect(result.image?.url).toBe(
+      '/media/iron-sprue/products/is-cub-mc133h/image-2/iron-sprue-image-2-37d0a60e4ffb.png',
     );
   });
 
