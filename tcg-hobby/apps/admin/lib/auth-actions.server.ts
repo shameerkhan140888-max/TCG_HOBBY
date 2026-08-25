@@ -24,6 +24,7 @@ export async function loginAdminAction(_state: AdminLoginState, formData: FormDa
   const result = validateLoginInput({ email: String(formData.get('email') ?? ''), password: String(formData.get('password') ?? '') });
   if (!result.ok) return { fieldErrors: result.fieldErrors, values: { email: result.email } };
 
+  const returnTo = safeReturnTo(formData.get('callbackUrl'));
   const user = await prisma.user.findUnique({ where: { email: result.email } });
   if (!user?.passwordHash || !user.emailVerified || (user.role !== 'ADMIN' && user.role !== 'STAFF') || !verifyPassword(result.password, user.passwordHash)) {
     return { formError: 'The email or password you entered is incorrect.', fieldErrors: {}, values: { email: result.email } };
@@ -33,7 +34,7 @@ export async function loginAdminAction(_state: AdminLoginState, formData: FormDa
   const expires = createSessionExpiry();
   await prisma.session.create({ data: { sessionToken, userId: user.id, expires } });
   (await cookies()).set(SESSION_COOKIE_NAME, sessionToken, cookieOptions(expires));
-  redirect(safeReturnTo(formData.get('callbackUrl')));
+  redirect(returnTo);
 }
 
 export async function logoutAdminAction(): Promise<never> {

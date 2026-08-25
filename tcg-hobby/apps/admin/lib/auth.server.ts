@@ -12,6 +12,20 @@ export type AdminSession = {
   expires: Date;
 };
 
+export function isAdminDatabaseUnavailable(error: unknown) {
+  const details = error as { code?: string; meta?: unknown };
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    details.code === 'P1001' ||
+    details.code === 'EACCES' ||
+    message.includes("Can't reach database server") ||
+    message.includes('DatabaseNotReachable') ||
+    message.includes('P1001') ||
+    message.includes('EACCES') ||
+    JSON.stringify(details.meta ?? {}).includes('DatabaseNotReachable')
+  );
+}
+
 export const getCurrentAdminSession = cache(async (): Promise<AdminSession | null> => {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;

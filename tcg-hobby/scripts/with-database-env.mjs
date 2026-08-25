@@ -11,10 +11,19 @@ if (!command) {
 }
 
 const env = { ...process.env };
+const isAdminWorkspace = resolve(process.cwd()) === resolve(defaultWorkspaceRoot, 'apps/admin');
 
 try {
-  loadRootDatabaseEnv({ rootDir: defaultWorkspaceRoot, env, logger: console.log });
   applyEnvFile(resolve(defaultWorkspaceRoot, 'apps/iron-sprue/.env.local'), env);
+  loadRootDatabaseEnv({
+    rootDir: defaultWorkspaceRoot,
+    env,
+    logger: isAdminWorkspace ? undefined : console.log,
+    requireDatabaseUrl: !isAdminWorkspace,
+  });
+  if (isAdminWorkspace && !env.DATABASE_URL && !env.IRON_SPRUE_ADMIN_DATABASE_URL) {
+    throw new Error('IRON_SPRUE_ADMIN_DATABASE_URL is required for local Iron Sprue admin development when DATABASE_URL is not configured.');
+  }
   configureWindowsPrismaEngine({ rootDir: defaultWorkspaceRoot, env });
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));

@@ -58,6 +58,26 @@ describe('database environment loader', () => {
     expect(() => loadRootDatabaseEnv({ rootDir, env: {} })).toThrow('DATABASE_URL is not configured');
   });
 
+  it('can opt into using IRON_SPRUE_ADMIN_DATABASE_URL as a local Prisma metadata fallback', async () => {
+    const rootDir = await createRoot({
+      '.env.local': 'IRON_SPRUE_ADMIN_DATABASE_URL="postgresql://user:pass@127.0.0.1:5432/railway?schema=public"',
+    });
+    const env = {};
+
+    const result = loadRootDatabaseEnv({ rootDir, env, fallbackDatabaseUrlKeys: ['IRON_SPRUE_ADMIN_DATABASE_URL'] });
+
+    expect(result.target).toBe('127.0.0.1');
+    expect(env.DATABASE_URL).toContain('127.0.0.1');
+  });
+
+  it('does not use IRON_SPRUE_ADMIN_DATABASE_URL unless a caller explicitly opts in', async () => {
+    const rootDir = await createRoot({
+      '.env.local': 'IRON_SPRUE_ADMIN_DATABASE_URL="postgresql://user:pass@127.0.0.1:5432/railway?schema=public"',
+    });
+
+    expect(() => loadRootDatabaseEnv({ rootDir, env: {} })).toThrow('DATABASE_URL is not configured');
+  });
+
   it('rejects invalid explicit DATABASE_URL values instead of overriding them', async () => {
     const rootDir = await createRoot({
       '.env.local': 'DATABASE_URL="postgresql://user:pass@file.example.test:5432/tcg?schema=public"',

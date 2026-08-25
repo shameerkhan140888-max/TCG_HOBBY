@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 
 const root = process.cwd();
 const paths = [
@@ -44,6 +45,30 @@ for (const port of [3000, 3001, 4000, 8081]) {
   }
 }
 
+async function removeGeneratedDirectory(target) {
+  const attempts = 4;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await rm(target, { recursive: true, force: true, maxRetries: 2, retryDelay: 150 });
+      return;
+    } catch (error) {
+      const code = error && typeof error === 'object' && 'code' in error ? error.code : null;
+      if (code === 'ENOENT') return;
+      if (attempt < attempts && ['EBUSY', 'ENOTEMPTY', 'EPERM'].includes(String(code))) {
+        await delay(250 * attempt);
+        continue;
+      }
+
+      if (['EBUSY', 'ENOTEMPTY', 'EPERM'].includes(String(code))) {
+        console.warn(`Unable to fully remove generated dev directory ${target}: ${code}. Continuing dev startup.`);
+        return;
+      }
+
+      throw error;
+    }
+  }
+}
+
 for (const target of paths) {
-  await rm(target, { recursive: true, force: true });
+  await removeGeneratedDirectory(target);
 }

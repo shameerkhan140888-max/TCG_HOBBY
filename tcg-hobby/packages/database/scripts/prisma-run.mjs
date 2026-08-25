@@ -14,17 +14,23 @@ const prismaCli = require.resolve('prisma/build/index.js');
 const generatedClientDir = resolve(rootDir, 'node_modules/.prisma/client');
 const generatedEnginePath = resolve(generatedClientDir, 'query_engine-windows.dll.node');
 const bundledEnginePath = resolve(rootDir, 'node_modules/@prisma/engines/query_engine-windows.dll.node');
+const prismaArgs = process.argv.slice(2);
+const commandArgs = prismaArgs.length ? prismaArgs : ['generate'];
+const command = commandArgs[0] ?? 'generate';
+const canUseAdminUrlForLocalPrismaMetadata = command === 'generate' || command === 'validate';
 
 try {
-  loadRootDatabaseEnv({ rootDir, env, logger: console.log });
+  loadRootDatabaseEnv({
+    rootDir,
+    env,
+    logger: console.log,
+    fallbackDatabaseUrlKeys: canUseAdminUrlForLocalPrismaMetadata ? ['IRON_SPRUE_ADMIN_DATABASE_URL'] : [],
+  });
   configureWindowsPrismaEngine({ rootDir, env });
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 }
-
-const prismaArgs = process.argv.slice(2);
-const commandArgs = prismaArgs.length ? prismaArgs : ['generate'];
 
 if (process.platform === 'win32' && commandArgs[0] === 'generate' && existsSync(generatedClientDir)) {
   try {

@@ -75,6 +75,7 @@ export function loadRootDatabaseEnv(options = {}) {
   const rootDir = options.rootDir ?? defaultWorkspaceRoot;
   const env = options.env ?? process.env;
   const requireDatabaseUrl = options.requireDatabaseUrl ?? true;
+  const fallbackDatabaseUrlKeys = options.fallbackDatabaseUrlKeys ?? [];
   const logger = options.logger;
   const explicitDatabaseUrl = env.DATABASE_URL;
   const envLocalPath = resolve(rootDir, '.env.local');
@@ -88,6 +89,21 @@ export function loadRootDatabaseEnv(options = {}) {
 
   applyEnvFile(envLocalPath, env);
   applyEnvFile(envPath, env);
+
+  if (!env.DATABASE_URL) {
+    for (const key of fallbackDatabaseUrlKeys) {
+      const fallbackValue = env[key];
+      if (fallbackValue) {
+        if (!isPostgresDatabaseUrl(fallbackValue)) {
+          throw new DatabaseEnvironmentError(
+            `Invalid ${key} loaded from root environment files. Expected a PostgreSQL URL starting with postgresql:// or postgres://.`,
+          );
+        }
+        env.DATABASE_URL = fallbackValue;
+        break;
+      }
+    }
+  }
 
   if (env.DATABASE_URL && !isPostgresDatabaseUrl(env.DATABASE_URL)) {
     throw new DatabaseEnvironmentError(

@@ -70,7 +70,7 @@ function createPrismaClient(connectionString = process.env.DATABASE_URL?.trim())
     const isWorkerRuntime = isCloudflareWorkerRuntime();
     const normalizedConnectionString = isWorkerRuntime
       ? normalizeCloudflareWorkerConnectionString(connectionString)
-      : connectionString;
+      : normalizeNodePostgresConnectionString(connectionString);
 
     // Cloudflare Workers use PrismaNeonHTTP for the proven storefront read path.
     // Transaction-dependent commerce writes stay on the Node/Nest runtime.
@@ -101,6 +101,15 @@ function createPrismaClient(connectionString = process.env.DATABASE_URL?.trim())
 function normalizeCloudflareWorkerConnectionString(connectionString: string) {
   const url = new URL(connectionString);
   url.searchParams.delete('channel_binding');
+  return url.toString();
+}
+
+function normalizeNodePostgresConnectionString(connectionString: string) {
+  const url = new URL(connectionString);
+  const sslMode = url.searchParams.get('sslmode')?.toLowerCase();
+  if ((sslMode === 'prefer' || sslMode === 'require' || sslMode === 'verify-ca') && !url.searchParams.has('uselibpqcompat')) {
+    url.searchParams.set('uselibpqcompat', 'true');
+  }
   return url.toString();
 }
 
@@ -162,11 +171,29 @@ export function getIronSprueAdminDatabaseTargetInfo(): IronSprueAdminDatabaseTar
   };
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+function getDefaultPrismaClient() {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient();
+  }
 
-if (!globalForPrisma.prisma) {
-  globalForPrisma.prisma = prisma;
+  return globalForPrisma.prisma;
 }
+
+export const prisma = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      const client = getDefaultPrismaClient();
+      const value = client[prop as keyof PrismaClient];
+      return typeof value === 'function' ? value.bind(client) : value;
+    },
+    set(_target, prop, value) {
+      const client = getDefaultPrismaClient() as PrismaClient & Record<PropertyKey, unknown>;
+      client[prop] = value;
+      return true;
+    },
+  },
+) as PrismaClient;
 
 export function getIronSprueAdminPrisma() {
   const { connectionString } = getIronSprueAdminDatabaseTargetInfo();
