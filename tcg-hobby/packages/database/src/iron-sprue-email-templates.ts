@@ -68,6 +68,9 @@ const brand = {
   muted: '#5f625d',
 };
 
+const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
+const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
+
 function money(minor: number, currency = 'GBP') {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(minor / 100);
 }
@@ -120,6 +123,16 @@ function productHref(item: IronSprueEmailOrderItem, config: IronSprueEmailTempla
 
 function imageSrc(item: IronSprueEmailOrderItem, config: IronSprueEmailTemplateConfig) {
   if (!item.imageUrl) return null;
+  if (item.imageUrl.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return `${assetBaseUrl(config)}${item.imageUrl}`;
+  try {
+    const parsed = new URL(item.imageUrl);
+    if (parsed.hostname.toLowerCase() === IRON_SPRUE_MEDIA_HOST) {
+      const key = parsed.pathname.replace(/^\/+/, '');
+      return key ? `${assetBaseUrl(config)}${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : null;
+    }
+  } catch {
+    // Non-URL values fall through to the relative-path handling below.
+  }
   if (/^https?:\/\//i.test(item.imageUrl)) return item.imageUrl;
   if (item.imageUrl.startsWith('/')) return `${assetBaseUrl(config)}${item.imageUrl}`;
   return null;

@@ -22,7 +22,7 @@ import {
   validateQuantityAgainstAvailability,
 } from './commerce.js';
 import { assertStripeEventMatchesStore, getStoreStripeConfig, type CommerceEnvironment } from './store-stripe-config.js';
-import { isIronSprueDisplayableImageAsset, resolveIronSpruePublicMediaUrl } from './iron-sprue-media.js';
+import { isIronSprueDisplayableImageAsset, resolveIronSpruePublicMediaUrl, resolveIronSprueStorefrontMediaUrl } from './iron-sprue-media.js';
 
 export const IRON_SPRUE_STORE_CODE = 'IRON_SPRUE';
 export const IRON_SPRUE_VAT_NUMBER = '525 2040 33';
@@ -281,8 +281,11 @@ function resolveProductImage(product: IronSprueProductForCart) {
         || Number(b.asset.isPrimary) - Number(a.asset.isPrimary)
         || a.asset.sortOrder - b.asset.sortOrder;
     })[0];
+  const storefrontBaseUrl = process.env.PUBLIC_STOREFRONT_URL
+    ?? process.env.IRON_SPRUE_SITE_URL
+    ?? process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL;
   return {
-    url: preferred?.url ?? null,
+    url: resolveIronSprueStorefrontMediaUrl(preferred?.url ?? null, storefrontBaseUrl),
     altText: preferred?.asset.altText ?? product.customerTitle,
     storageKey: preferred?.asset.storageKey ?? null,
   };

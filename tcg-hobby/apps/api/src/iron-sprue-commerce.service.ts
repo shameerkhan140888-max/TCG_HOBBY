@@ -37,6 +37,23 @@ function publicStockState(line: { inStock: boolean }): PublicStockState {
   return line.inStock ? 'IN_STOCK' : 'OUT_OF_STOCK';
 }
 
+const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
+const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
+
+function publicIronSprueMediaUrl(value: string | null | undefined) {
+  const raw = value?.trim();
+  if (!raw) return null;
+  if (raw.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return raw;
+  try {
+    const parsed = new URL(raw);
+    if (parsed.hostname.toLowerCase() !== IRON_SPRUE_MEDIA_HOST) return raw;
+    const key = parsed.pathname.replace(/^\/+/, '');
+    return key ? `${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : null;
+  } catch {
+    return raw;
+  }
+}
+
 function requireAddress(input: CheckoutAddress): CheckoutAddress {
   const required: Array<keyof CheckoutAddress> = ['fullName', 'email', 'line1', 'city', 'postalCode', 'country'];
   if (required.some((key) => typeof input?.[key] !== 'string' || !input[key].trim())) {
@@ -91,7 +108,10 @@ function toPublicOrderDetail(order: Awaited<ReturnType<typeof getIronSprueOrderB
       ...order.invoice,
       invoiceDate: order.invoice.invoiceDate.toISOString(),
     } : null,
-    items: order.items,
+    items: order.items.map((item) => ({
+      ...item,
+      imageUrl: publicIronSprueMediaUrl(item.imageUrl),
+    })),
   };
 }
 
@@ -189,11 +209,15 @@ export class IronSprueCommerceService {
 
   toPublicBasket(cart: CartSummary & { cartId?: string | null }): PublicBasket {
     return {
-      items: cart.items.map((item) => ({
-        ...item,
-        image: item.imageUrl ? { id: `${item.productId}-basket`, url: item.imageUrl, altText: item.imageAlt ?? item.productName, sortOrder: 1, isPrimary: true } : null,
-        stockState: publicStockState(item),
-      })),
+      items: cart.items.map((item) => {
+        const imageUrl = publicIronSprueMediaUrl(item.imageUrl);
+        return {
+          ...item,
+          imageUrl,
+          image: imageUrl ? { id: `${item.productId}-basket`, url: imageUrl, altText: item.imageAlt ?? item.productName, sortOrder: 1, isPrimary: true } : null,
+          stockState: publicStockState(item),
+        };
+      }),
       subtotalMinor: cart.subtotalMinor,
       currency: cart.currency,
       totalItems: cart.totalItems,

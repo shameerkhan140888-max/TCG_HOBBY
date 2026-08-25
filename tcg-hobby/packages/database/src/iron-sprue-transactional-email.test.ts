@@ -345,6 +345,18 @@ describe('Iron Sprue email templates', () => {
     expect(template.html).toContain('https://ironsprue.example.test/media/iron-sprue/toyota-red.webp');
   });
 
+  it('rewrites persisted public media-host product images through the storefront media route', () => {
+    const item: TestOrder['items'][number] = {
+      ...sampleOrder().items[0]!,
+      imageUrl: 'https://media.ironsprue.co.uk/products/is-aos-05628/image-2/toyota-red.webp',
+    };
+    const template = buildIronSprueOrderConfirmationEmail(sampleOrder({
+      items: [item],
+    }), config);
+    expect(template.html).toContain('https://ironsprue.example.test/media/iron-sprue/products/is-aos-05628/image-2/toyota-red.webp');
+    expect(template.html).not.toContain('https://media.ironsprue.co.uk/products/is-aos-05628/image-2/toyota-red.webp');
+  });
+
   it('resolves persisted relative product images against the email asset base when provided', () => {
     const item: TestOrder['items'][number] = {
       ...sampleOrder().items[0]!,

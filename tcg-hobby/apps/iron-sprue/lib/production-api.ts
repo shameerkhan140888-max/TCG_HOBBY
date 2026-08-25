@@ -8,6 +8,8 @@ import type {
 import type { IronSprueProduct } from './catalogue';
 
 export const IRON_SPRUE_PRODUCTION_API_BASE_URL = 'IRON_SPRUE_PRODUCTION_API_BASE_URL';
+const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
+const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
 
 function configuredProductionApiBaseUrl() {
   return process.env[IRON_SPRUE_PRODUCTION_API_BASE_URL]?.trim().replace(/\/+$/, '') ?? '';
@@ -49,8 +51,22 @@ async function fetchProductionApiJson<T>(path: string, init?: RequestInit): Prom
   return response.json() as Promise<T>;
 }
 
+export function storefrontMediaUrl(value: string | null | undefined) {
+  const raw = value?.trim();
+  if (!raw) return undefined;
+  if (raw.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return raw;
+  try {
+    const parsed = new URL(raw);
+    if (parsed.hostname.toLowerCase() !== IRON_SPRUE_MEDIA_HOST) return raw;
+    const key = parsed.pathname.replace(/^\/+/, '');
+    return key ? `${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : undefined;
+  } catch {
+    return raw;
+  }
+}
+
 function imageUrl(image: PublicProductImage | null | undefined) {
-  return image?.url || undefined;
+  return storefrontMediaUrl(image?.url);
 }
 
 function stockQuantity(product: PublicProductSummary) {
@@ -77,7 +93,7 @@ export function ironSprueProductFromPublicSummary(product: PublicProductSummary)
     priceMinor: product.price.amountMinor,
     retailPriceMinor: product.price.amountMinor,
     shortDescription: product.availabilityMessage ?? product.category.name,
-    imageReferences: product.image ? [product.image.url] : [],
+    imageReferences: product.image ? [storefrontMediaUrl(product.image.url)].filter((url): url is string => Boolean(url)) : [],
     publicationState: 'PUBLISHED',
     published: true,
   };
@@ -93,7 +109,7 @@ export function ironSprueProductFromPublicDetail(product: PublicProductDetail): 
     sku: product.sku ?? product.id,
     shortDescription: product.shortDescription ?? product.availabilityMessage ?? product.category.name,
     features: product.contents,
-    imageReferences: product.images.map((image) => image.url),
+    imageReferences: product.images.map((image) => storefrontMediaUrl(image.url)).filter((url): url is string => Boolean(url)),
   };
   const primaryImage = imageUrl(product.image);
   const description = product.longDescription || product.shortDescription;

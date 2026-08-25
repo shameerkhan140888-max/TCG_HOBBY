@@ -16,6 +16,39 @@ export function resolveIronSpruePublicMediaUrl(asset: { url?: string | null; sto
   return rawUrl || null;
 }
 
+const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
+const IRON_SPRUE_MEDIA_PUBLIC_HOSTS = new Set(['media.ironsprue.co.uk']);
+
+function encodedStorageKeyPath(storageKey: string) {
+  return storageKey.split('/').map(encodeURIComponent).join('/');
+}
+
+export function ironSprueMediaProxyPath(value: string | null | undefined) {
+  const raw = value?.trim();
+  if (!raw) return null;
+  if (raw.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return raw;
+  if (raw.startsWith('r2://')) {
+    const key = raw.slice('r2://'.length).replace(/^\/+/, '');
+    return key ? `${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${encodedStorageKeyPath(key)}` : null;
+  }
+
+  try {
+    const parsed = new URL(raw);
+    if (!IRON_SPRUE_MEDIA_PUBLIC_HOSTS.has(parsed.hostname.toLowerCase())) return null;
+    const key = parsed.pathname.replace(/^\/+/, '');
+    return key ? `${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : null;
+  } catch {
+    return null;
+  }
+}
+
+export function resolveIronSprueStorefrontMediaUrl(value: string | null | undefined, storefrontBaseUrl?: string | null) {
+  const proxyPath = ironSprueMediaProxyPath(value);
+  if (!proxyPath) return value?.trim() || null;
+  const base = storefrontBaseUrl?.trim().replace(/\/+$/, '');
+  return base ? new URL(proxyPath, base).toString() : proxyPath;
+}
+
 export function isIronSprueDisplayableImageAsset(
   asset: { url?: string | null; storageKey?: string | null; mimeType?: string | null } | null | undefined,
 ): boolean {

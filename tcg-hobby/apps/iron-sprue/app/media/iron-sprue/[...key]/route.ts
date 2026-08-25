@@ -1,11 +1,24 @@
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
 const BUCKET = 'iron-sprue-product-media';
+const R2_BINDING = 'IRON_SPRUE_PRODUCT_MEDIA';
 const ALLOWED_PREFIX = /^(archive|products|processed|published|marketing|brands)\//;
 let localIronSprueEnv: Record<string, string> | null = null;
+
+type BoundR2Object = {
+  body: ReadableStream;
+  size?: number;
+  httpMetadata?: { contentType?: string };
+  writeHttpMetadata?: (headers: Headers) => void;
+};
+
+type BoundR2Bucket = {
+  get: (key: string) => Promise<BoundR2Object | null>;
+};
 
 function parseEnvValue(value: string) {
   return value.trim().replace(/^['"]|['"]$/g, '');
@@ -82,11 +95,28 @@ function mediaClient() {
   };
 }
 
-export async function GET(_request: NextRequest, context: { params: Promise<{ key: string[] }> }) {
-  const { key: keyParts } = await context.params;
-  const key = normalizeStorageKey(keyParts);
-  if (!key) return NextResponse.json({ error: 'Invalid media key.' }, { status: 400 });
+async function boundMediaBucket() {
+  try {
+    const context = await getCloudflareContext({ async: true });
+    return (context.env as Record<string, unknown>)[R2_BINDING] as BoundR2Bucket | undefined;
+  } catch {
+    return undefined;
+  }
+}
 
+async function streamFromBoundR2(key: string) {
+  const bucket = await boundMediaBucket();
+  if (!bucket) return null;
+  const object = await bucket.get(key);
+  if (!object?.body) return NextResponse.json({ error: 'Media object was not found.' }, { status: 404 });
+  const headers = new Headers({ 'Cache-Control': 'public, max-age=300' });
+  object.writeHttpMetadata?.(headers);
+  if (!headers.has('Content-Type')) headers.set('Content-Type', object.httpMetadata?.contentType ?? 'application/octet-stream');
+  if (object.size != null) headers.set('Content-Length', String(object.size));
+  return new Response(object.body, { headers });
+}
+
+async function streamFromS3Fallback(key: string) {
   const { bucket, client } = mediaClient();
   const object = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
   const body = object.Body?.transformToWebStream();
@@ -99,4 +129,20 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ ke
   if (object.ContentLength != null) headers.set('Content-Length', object.ContentLength.toString());
 
   return new Response(body, { headers });
+}
+
+export async function GET(_request: NextRequest, context: { params: Promise<{ key: string[] }> }) {
+  const { key: keyParts } = await context.params;
+  const key = normalizeStorageKey(keyParts);
+  if (!key) return NextResponse.json({ error: 'Invalid media key.' }, { status: 400 });
+
+  try {
+    return await streamFromBoundR2(key) ?? await streamFromS3Fallback(key);
+  } catch (error) {
+    console.error('iron_sprue_media_delivery_failed', {
+      key,
+      reason: error instanceof Error ? error.message : 'unknown_error',
+    });
+    return NextResponse.json({ error: 'Media delivery is temporarily unavailable.' }, { status: 502 });
+  }
 }

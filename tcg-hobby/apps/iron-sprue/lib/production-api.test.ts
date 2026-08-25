@@ -28,7 +28,7 @@ function product(overrides: Record<string, unknown> = {}) {
     featured: false,
     releaseStatus: 'RELEASED',
     releaseDate: null,
-    image: { id: 'img-1', url: 'https://media.example/toyota.webp', altText: 'Toyota image', sortOrder: 1, isPrimary: true },
+    image: { id: 'img-1', url: 'https://media.ironsprue.co.uk/products/is-aos-05627/image-2/toyota.webp', altText: 'Toyota image', sortOrder: 1, isPrimary: true },
     purchaseLimit: null,
     freeUkStandardShipping: false,
     availabilityMessage: null,
@@ -84,6 +84,7 @@ describe('Iron Sprue production API client', () => {
       stockQuantity: 2,
       availableQuantity: 2,
       published: true,
+      imageUrl: '/media/iron-sprue/products/is-aos-05627/image-2/toyota.webp',
     });
   });
 
@@ -115,7 +116,7 @@ describe('Iron Sprue production API client', () => {
         shortDescription: 'Customer PDP summary.',
         longDescription: 'Customer PDP long description.',
         contents: ['Plastic parts', 'Decals'],
-        images: [{ id: 'img-1', url: 'https://media.example/toyota.webp', altText: 'Toyota image', sortOrder: 1, isPrimary: true }],
+        images: [{ id: 'img-1', url: 'https://media.ironsprue.co.uk/products/is-aos-05627/image-2/toyota.webp', altText: 'Toyota image', sortOrder: 1, isPrimary: true }],
         relatedProducts: [],
       }),
     });
@@ -130,7 +131,7 @@ describe('Iron Sprue production API client', () => {
     expect(result).toMatchObject({
       description: 'Customer PDP long description.',
       features: ['Plastic parts', 'Decals'],
-      imageReferences: ['https://media.example/toyota.webp'],
+      imageReferences: ['/media/iron-sprue/products/is-aos-05627/image-2/toyota.webp'],
     });
   });
 });

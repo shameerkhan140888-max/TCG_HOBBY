@@ -16,6 +16,7 @@ import {
   resolveIronSpruePublicMediaUrl,
   selectIronSpruePrimaryCatalogueMedia,
 } from './iron-sprue-admin.js';
+import { resolveIronSprueStorefrontMediaUrl } from './iron-sprue-media.js';
 
 type DatabaseClient = ReturnType<typeof getIronSprueAdminPrisma>;
 
@@ -83,7 +84,10 @@ function resolvePagination(totalItems: number, page: number, pageSize: number): 
 
 function mediaUrl(asset: IronSprueMediaAssetRow | null | undefined): string | null {
   if (!isIronSprueDisplayableImageAsset(asset)) return null;
-  return resolveIronSpruePublicMediaUrl(asset);
+  return resolveIronSprueStorefrontMediaUrl(
+    resolveIronSpruePublicMediaUrl(asset),
+    process.env.PUBLIC_STOREFRONT_URL ?? process.env.IRON_SPRUE_SITE_URL ?? process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL,
+  );
 }
 
 const INTERNAL_COPY_PHRASES = [
