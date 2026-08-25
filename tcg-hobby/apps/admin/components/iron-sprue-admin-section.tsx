@@ -1027,14 +1027,25 @@ function ProductDescriptorContentPreview({
 
 function ContentReviewCard({
   bulkPublishFormId,
+  defaultOpen = false,
   review,
 }: {
   bulkPublishFormId: string;
+  defaultOpen?: boolean;
   review: Awaited<ReturnType<typeof listIronSprueAdminContentReviews>>[number];
 }) {
   return (
-    <Card key={review.id}>
-      <CardContent className="space-y-3">
+    <AdminDisclosure
+      defaultOpen={defaultOpen}
+      summary={(
+        <span className="flex flex-wrap items-center gap-3">
+          <span>{review.product.customerTitle}</span>
+          <span className="text-xs text-neutral-400">{review.product.sku} - {review.fieldName}</span>
+          <StatePill>{review.status}</StatePill>
+        </span>
+      )}
+    >
+      <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div><h2 className="font-bold">{review.product.customerTitle}</h2><p className="text-sm text-neutral-400">{review.product.sku} - {review.fieldName}</p></div>
           <div className="flex flex-wrap items-center gap-2">
@@ -1067,8 +1078,8 @@ function ContentReviewCard({
             </form>
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </AdminDisclosure>
   );
 }
 
@@ -1103,7 +1114,10 @@ function ProductDescriptorCoverage({
 }) {
   const rows = products
     .map((product) => ({ product, missingFields: descriptorMissingFields(product) }))
-    .filter(({ product, missingFields }) => product.publicationState === 'CONTENT_PENDING' || product.publicationState === 'REVIEW_REQUIRED' || missingFields.length)
+    .filter(({ product, missingFields }) => (
+      missingFields.length > 0 &&
+      ['DRAFT', 'CONTENT_PENDING', 'REVIEW_REQUIRED', 'READY_TO_PUBLISH', 'READY'].includes(product.publicationState)
+    ))
     .slice(0, 24);
 
   if (!rows.length) {
@@ -1118,8 +1132,8 @@ function ProductDescriptorCoverage({
   }
 
   return (
-    <Card>
-      <CardContent className="space-y-4">
+    <AdminDisclosure summary={<span>PDP descriptor gaps <span className="text-neutral-500">({rows.length})</span></span>}>
+      <div className="space-y-4">
         <div>
           <h2 className="font-bold">PDP descriptor coverage</h2>
           <p className="text-sm text-neutral-400">Product-level view of the customer-facing title, descriptions, bullets, specifications, SEO, brand, category and type that populate PDPs.</p>
@@ -1148,8 +1162,8 @@ function ProductDescriptorCoverage({
             </div>
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </AdminDisclosure>
   );
 }
 
@@ -1325,9 +1339,19 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
           R2 product image inventory found: {r2CandidateCount} image object{r2CandidateCount === 1 ? '' : 's'} in the Iron Sprue bucket. Unlinked images are shown beside matching products so they can be attached for review.
         </p>
       ) : null}
-      {productGroups.map((group) => (
-        <Card key={group.product?.id ?? group.assets[0]?.id}>
-          <CardContent className="space-y-4">
+      {productGroups.map((group, index) => (
+        <AdminDisclosure
+          defaultOpen={mode === 'pending' && index === 0}
+          key={group.product?.id ?? group.assets[0]?.id}
+          summary={(
+            <span className="flex flex-wrap items-center gap-3">
+              <span>{group.product?.customerTitle ?? 'Unassigned media'}</span>
+              <span className="text-xs text-neutral-400">{group.product?.sku ?? 'No SKU'} - {group.assets.length} review item{group.assets.length === 1 ? '' : 's'}</span>
+              {group.product?.publicationState ? <StatePill>{group.product.publicationState}</StatePill> : null}
+            </span>
+          )}
+        >
+          <div className="space-y-4">
             <div>
               <h2 className="font-bold">{group.product?.customerTitle ?? 'Unassigned media'}</h2>
               <p className="text-sm text-neutral-400">{group.product?.sku ?? 'No SKU'} - {group.product?.publicationState ?? 'No product state'}</p>
@@ -1403,8 +1427,8 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </AdminDisclosure>
       ))}
     </div>
   );
@@ -1457,7 +1481,14 @@ async function ContentReviewSection({ searchParams }: { searchParams?: SearchPar
       />
       {!reviews.length ? <EmptyNote>{mode === 'approved' ? 'No approved Iron Sprue content reviews found.' : mode === 'rejected' ? 'No rejected Iron Sprue content reviews found.' : mode === 'all' ? 'No Iron Sprue content review records found.' : 'No Iron Sprue content reviews currently require approval.'}</EmptyNote> : null}
       <ProductDescriptorCoverage bulkPublishFormId="iron-sprue-content-product-bulk-publish" products={productPage.products} />
-      {reviews.map((review) => <ContentReviewCard bulkPublishFormId="iron-sprue-content-product-bulk-publish" key={review.id} review={review} />)}
+      {reviews.map((review, index) => (
+        <ContentReviewCard
+          bulkPublishFormId="iron-sprue-content-product-bulk-publish"
+          defaultOpen={mode === 'pending' && index === 0}
+          key={review.id}
+          review={review}
+        />
+      ))}
     </div>
   );
 }

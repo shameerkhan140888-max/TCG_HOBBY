@@ -33,6 +33,13 @@ export type IronSprueEmailOrder = {
   trackingCarrier?: string | null;
   trackingNumber?: string | null;
   trackingUrl?: string | null;
+  returns?: Array<{
+    restock?: boolean | null;
+    lines?: Array<{
+      quantity: number;
+      restock?: boolean | null;
+    }>;
+  }>;
   items: IronSprueEmailOrderItem[];
 };
 
@@ -263,6 +270,8 @@ function customerPaymentStatus(status: string) {
 }
 
 function customerFulfilmentStatus(status: string) {
+  if (status === 'RETURNED') return 'Returned';
+  if (status === 'REFUNDED') return 'Refunded';
   if (status === 'SHIPPED') return 'Dispatched';
   if (status === 'CANCELLED') return 'Cancelled';
   if (status === 'PACKED') return 'Packed';
@@ -351,6 +360,26 @@ function textAddress(order: IronSprueEmailOrder) {
   return addressLines(order).join(', ');
 }
 
+function hasRestockedReturn(order: IronSprueEmailOrder) {
+  return order.returns?.some((returnRecord) => (
+    Boolean(returnRecord.restock)
+    || returnRecord.lines?.some((line) => line.restock && line.quantity > 0)
+  )) ?? false;
+}
+
+function wasDispatched(order: IronSprueEmailOrder) {
+  return Boolean(order.dispatchedAt || order.trackingCarrier || order.trackingNumber || order.trackingUrl)
+    || ['SHIPPED', 'DISPATCHED', 'DELIVERED', 'COMPLETED'].includes(order.fulfilmentStatus);
+}
+
+function cancellationFulfilmentStatus(order: IronSprueEmailOrder, options: CancellationOptions) {
+  if (options.refunded || order.paymentStatus === 'REFUNDED') {
+    if (hasRestockedReturn(order)) return 'RETURNED';
+    if (wasDispatched(order)) return 'REFUNDED';
+  }
+  return 'CANCELLED';
+}
+
 export function buildIronSprueOrderConfirmationEmail(
   order: IronSprueEmailOrder,
   config: IronSprueEmailTemplateConfig,
@@ -394,6 +423,7 @@ export function buildIronSprueCancellationEmail(
   config: IronSprueEmailTemplateConfig,
   options: CancellationOptions,
 ): IronSprueEmailTemplate {
+  const cancellationEmailOrder = { ...order, fulfilmentStatus: cancellationFulfilmentStatus(order, options) };
   const subject = options.refunded
     ? `Order cancelled and refunded - ${order.orderNumber}`
     : `Order cancelled - ${order.orderNumber}`;
@@ -403,11 +433,11 @@ export function buildIronSprueCancellationEmail(
   const html = wrap(`
     ${header(config, options.refunded ? 'Order cancelled and refunded' : 'Order cancelled', intro)}
     <div class="body">
-      ${orderMeta(order)}
-      ${itemsTable(order, config)}
+      ${orderMeta(cancellationEmailOrder)}
+      ${itemsTable(cancellationEmailOrder, config)}
       <h2>${options.refunded ? 'Refund summary' : 'Order summary'}</h2>
-      ${options.refunded ? totals(order, 'Refund amount') : totals(order, 'Order total')}
-      ${delivery(order)}
+      ${options.refunded ? totals(cancellationEmailOrder, 'Refund amount') : totals(cancellationEmailOrder, 'Order total')}
+      ${delivery(cancellationEmailOrder)}
       <p><a class="button" href="${escapeHtml(shopHref(config))}">Visit Iron Sprue</a></p>
     </div>
     ${footer(config)}

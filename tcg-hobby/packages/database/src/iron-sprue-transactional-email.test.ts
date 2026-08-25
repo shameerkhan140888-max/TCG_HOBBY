@@ -28,6 +28,7 @@ type TestOrder = IronSprueEmailOrder & {
   updatedAt: Date;
   stripeCheckoutSessionId: string | null;
   stripePaymentIntentId: string | null;
+  returns: NonNullable<IronSprueEmailOrder['returns']>;
   items: Array<IronSprueEmailOrderItem & {
     id: string;
     orderId: string;
@@ -65,6 +66,7 @@ function sampleOrder(overrides: Partial<TestOrder> = {}): TestOrder {
     trackingCarrier: null,
     trackingNumber: null,
     trackingUrl: null,
+    returns: [],
     createdAt: new Date('2026-08-14T12:00:00Z'),
     updatedAt: new Date('2026-08-14T12:00:00Z'),
     stripeCheckoutSessionId: 'cs_test_123',
@@ -235,6 +237,8 @@ describe('Iron Sprue transactional email sending', () => {
     let body = lastEmailPayload();
     expect(body.subject).toContain('cancelled and refunded');
     expect(body.html).toContain('Refund amount');
+    expect(body.html).toContain('Cancelled');
+    expect(body.html).not.toContain('Pending');
 
     vi.clearAllMocks();
     vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ id: 'resend-2' }), {
@@ -255,6 +259,78 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.html).toContain('https://ironsprue.example.test/brand/iron-sprue-horizontal-email.png');
     expect(body.html).not.toContain('Refund amount');
     expect(body.html).not.toContain('TCG Hobby');
+  });
+
+  it('renders cancelled fulfilment status for a refunded order that was not dispatched', async () => {
+    const staleFulfilmentDb = createDb(sampleOrder({
+      status: 'REFUNDED',
+      paymentStatus: 'REFUNDED',
+      fulfilmentStatus: 'PENDING',
+      cancelledAt: new Date('2026-08-14T13:00:00Z'),
+    }));
+
+    await expect(sendIronSprueCancellationEmail('order-1', staleFulfilmentDb as never))
+      .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
+
+    const body = lastEmailPayload();
+    expect(body.subject).toContain('cancelled and refunded');
+    expect(body.html).toContain('Fulfilment status');
+    expect(body.html).toContain('Cancelled');
+    expect(body.html).not.toContain('Pending');
+  });
+
+  it('renders returned fulfilment status when a dispatched refunded order has sellable stock replenished', async () => {
+    const returnedDb = createDb(sampleOrder({
+      status: 'REFUNDED',
+      paymentStatus: 'REFUNDED',
+      fulfilmentStatus: 'SHIPPED',
+      dispatchedAt: new Date('2026-08-15T10:00:00Z'),
+      trackingCarrier: 'Royal Mail',
+      trackingNumber: 'ISPREVIEW123GB',
+      cancelledAt: new Date('2026-08-17T13:00:00Z'),
+      returns: [
+        {
+          restock: true,
+          lines: [{ quantity: 1, restock: true }],
+        },
+      ],
+    }));
+
+    await expect(sendIronSprueCancellationEmail('order-1', returnedDb as never))
+      .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
+
+    const body = lastEmailPayload();
+    expect(body.subject).toContain('cancelled and refunded');
+    expect(body.html).toContain('Fulfilment status');
+    expect(body.html).toContain('Returned');
+    expect(body.html).not.toContain('Pending');
+  });
+
+  it('renders refunded fulfilment status when a dispatched refunded order is not restocked', async () => {
+    const refundedDb = createDb(sampleOrder({
+      status: 'REFUNDED',
+      paymentStatus: 'REFUNDED',
+      fulfilmentStatus: 'SHIPPED',
+      dispatchedAt: new Date('2026-08-15T10:00:00Z'),
+      trackingCarrier: 'Royal Mail',
+      trackingNumber: 'ISPREVIEW123GB',
+      cancelledAt: new Date('2026-08-17T13:00:00Z'),
+      returns: [
+        {
+          restock: false,
+          lines: [{ quantity: 1, restock: false }],
+        },
+      ],
+    }));
+
+    await expect(sendIronSprueCancellationEmail('order-1', refundedDb as never))
+      .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
+
+    const body = lastEmailPayload();
+    expect(body.subject).toContain('cancelled and refunded');
+    expect(body.html).toContain('Fulfilment status');
+    expect(body.html).toContain('Refunded');
+    expect(body.html).not.toContain('Pending');
   });
 
   it('sends dispatch email with carrier and tracking CTA', async () => {

@@ -100,6 +100,13 @@ function mapEmailOrder(order: Awaited<ReturnType<typeof loadOrder>>): IronSprueE
     trackingCarrier: order.trackingCarrier,
     trackingNumber: order.trackingNumber,
     trackingUrl: order.trackingUrl,
+    returns: order.returns.map((returnRecord) => ({
+      restock: returnRecord.restock,
+      lines: returnRecord.lines.map((line) => ({
+        quantity: line.quantity,
+        restock: line.restock,
+      })),
+    })),
     items: order.items.map((item) => ({
       productName: item.productName,
       productSlug: item.productSlug,
@@ -116,7 +123,13 @@ function mapEmailOrder(order: Awaited<ReturnType<typeof loadOrder>>): IronSprueE
 async function loadOrder(orderId: string, db: IronSprueEmailDb) {
   return db.ironSprueOrder.findFirst({
     where: { id: orderId, storeCode: IRON_SPRUE_STORE_CODE },
-    include: { items: { orderBy: { createdAt: 'asc' } } },
+    include: {
+      items: { orderBy: { createdAt: 'asc' } },
+      returns: {
+        include: { lines: true },
+        orderBy: { createdAt: 'asc' },
+      },
+    },
   });
 }
 

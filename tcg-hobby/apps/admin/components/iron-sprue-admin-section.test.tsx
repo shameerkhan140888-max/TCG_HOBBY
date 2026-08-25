@@ -474,8 +474,9 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(pendingMarkup).toContain('Reject selected');
     expect(pendingMarkup).not.toContain('Toyota 2000GT Red');
     expect(pendingMarkup).toContain('PDP descriptor coverage');
-    expect(pendingMarkup).toContain('St Basil&#x27;s Cathedral');
-    expect(pendingMarkup).toContain('Build a colourful architectural display model inspired by St Basil cathedral.');
+    expect(pendingMarkup).toContain('All loaded products have the core PDP descriptor fields populated');
+    expect(pendingMarkup).not.toContain('St Basil&#x27;s Cathedral');
+    expect(pendingMarkup).not.toContain('Build a colourful architectural display model inspired by St Basil cathedral.');
     expect(pendingMarkup).not.toContain('retailPriceMinor');
     expect(pendingMarkup).not.toContain('supplierUnitCostMinor');
 
