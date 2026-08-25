@@ -70,6 +70,8 @@ const brand = {
 
 const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
 const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
+const IRON_SPRUE_STAGING_HOST = 'staging.ironsprue.co.uk';
+const IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL = 'https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev';
 
 function money(minor: number, currency = 'GBP') {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(minor / 100);
@@ -109,32 +111,53 @@ function assetBaseUrl(config: IronSprueEmailTemplateConfig) {
   return isLocalUrl(resolved) ? 'https://www.ironsprue.co.uk' : resolved;
 }
 
+function publicEmailAssetBaseUrl(config: IronSprueEmailTemplateConfig) {
+  const resolved = assetBaseUrl(config);
+  return publicEmailUrlBase(resolved);
+}
+
+function publicEmailLinkBaseUrl(config: IronSprueEmailTemplateConfig) {
+  return publicEmailUrlBase(normaliseSiteUrl(config.siteUrl));
+}
+
+function publicEmailUrlBase(value: string) {
+  try {
+    const parsed = new URL(value);
+    return parsed.hostname.toLowerCase() === IRON_SPRUE_STAGING_HOST
+      ? IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL
+      : value;
+  } catch {
+    return value;
+  }
+}
+
 function orderHref(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig) {
-  return `${normaliseSiteUrl(config.siteUrl)}/account/orders/${encodeURIComponent(order.orderNumber)}`;
+  return `${publicEmailLinkBaseUrl(config)}/account/orders/${encodeURIComponent(order.orderNumber)}`;
 }
 
 function shopHref(config: IronSprueEmailTemplateConfig) {
-  return normaliseSiteUrl(config.siteUrl);
+  return `${publicEmailLinkBaseUrl(config)}/shop`;
 }
 
 function productHref(item: IronSprueEmailOrderItem, config: IronSprueEmailTemplateConfig) {
-  return `${normaliseSiteUrl(config.siteUrl)}/products/${encodeURIComponent(item.productSlug)}`;
+  return `${publicEmailLinkBaseUrl(config)}/products/${encodeURIComponent(item.productSlug)}`;
 }
 
 function imageSrc(item: IronSprueEmailOrderItem, config: IronSprueEmailTemplateConfig) {
   if (!item.imageUrl) return null;
-  if (item.imageUrl.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return `${assetBaseUrl(config)}${item.imageUrl}`;
+  if (item.imageUrl.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return `${publicEmailAssetBaseUrl(config)}${item.imageUrl}`;
   try {
     const parsed = new URL(item.imageUrl);
+    if (parsed.pathname.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return `${publicEmailAssetBaseUrl(config)}${parsed.pathname}${parsed.search}`;
     if (parsed.hostname.toLowerCase() === IRON_SPRUE_MEDIA_HOST) {
       const key = parsed.pathname.replace(/^\/+/, '');
-      return key ? `${assetBaseUrl(config)}${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : null;
+      return key ? `${publicEmailAssetBaseUrl(config)}${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : null;
     }
   } catch {
     // Non-URL values fall through to the relative-path handling below.
   }
   if (/^https?:\/\//i.test(item.imageUrl)) return item.imageUrl;
-  if (item.imageUrl.startsWith('/')) return `${assetBaseUrl(config)}${item.imageUrl}`;
+  if (item.imageUrl.startsWith('/')) return `${publicEmailAssetBaseUrl(config)}${item.imageUrl}`;
   return null;
 }
 
@@ -191,8 +214,11 @@ function baseStyles() {
 }
 
 function header(config: IronSprueEmailTemplateConfig, heading: string, copy: string) {
-  const logo = config.logoUrl && /^https?:\/\//i.test(config.logoUrl)
-    ? `<img class="logo" src="${escapeHtml(config.logoUrl)}" alt="Iron Sprue" />`
+  const logoUrl = config.logoUrl && /^https?:\/\//i.test(config.logoUrl)
+    ? config.logoUrl.replace(/^https:\/\/staging\.ironsprue\.co\.uk(?=\/)/i, publicEmailAssetBaseUrl(config))
+    : null;
+  const logo = logoUrl
+    ? `<img class="logo" src="${escapeHtml(logoUrl)}" alt="Iron Sprue" />`
     : '<div class="wordmark">IRON <span class="accent">SPRUE</span></div>';
   return `
     <div class="header">
@@ -325,7 +351,7 @@ export function buildIronSprueOrderConfirmationEmail(
       ${delivery(order)}
       <h2>What happens next</h2>
       <p>We will prepare your order for dispatch and send another email when it is on its way.</p>
-      <p><a class="button" href="${escapeHtml(orderHref(order, config))}">View order</a></p>
+      <p><a class="button" href="${escapeHtml(shopHref(config))}">Shop more kits</a></p>
     </div>
     ${footer(config)}
   `);
@@ -343,7 +369,7 @@ export function buildIronSprueOrderConfirmationEmail(
     `Delivery: ${textAddress(order)}`,
     order.shippingMethodName ? `Delivery method: ${order.shippingMethodName}` : '',
     '',
-    `View order: ${orderHref(order, config)}`,
+    `Shop more kits: ${shopHref(config)}`,
   ].filter(Boolean).join('\n');
   return { subject, html, text };
 }

@@ -188,6 +188,9 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.html).toContain('VAT No. 525 2040 33');
     expect(body.html).toContain('VAT included');
     expect(body.html).toContain('https://ironsprue.example.test/brand/iron-sprue-horizontal-email.png');
+    expect(body.html).toContain('Shop more kits');
+    expect(body.html).toContain('https://ironsprue.example.test/shop');
+    expect(body.html).not.toContain('View order');
     expect(body.html).not.toContain('TCG Hobby');
     expect(db.ironSprueTransactionalEmailDelivery.update).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: 'SENT' }),
@@ -343,6 +346,27 @@ describe('Iron Sprue email templates', () => {
       items: [item],
     }), config);
     expect(template.html).toContain('https://ironsprue.example.test/media/iron-sprue/toyota-red.webp');
+  });
+
+  it('uses the deployed Worker host for staging email logos, links and routed product images', () => {
+    const item: TestOrder['items'][number] = {
+      ...sampleOrder().items[0]!,
+      imageUrl: 'https://staging.ironsprue.co.uk/media/iron-sprue/products/is-aos-05628/image-2/toyota-red.webp',
+    };
+    const template = buildIronSprueOrderConfirmationEmail(sampleOrder({
+      items: [item],
+    }), {
+      siteUrl: 'https://staging.ironsprue.co.uk',
+      assetBaseUrl: 'https://staging.ironsprue.co.uk',
+      logoUrl: 'https://staging.ironsprue.co.uk/brand/iron-sprue-horizontal-email.png',
+      supportEmail: 'support@example.test',
+    });
+
+    expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/brand/iron-sprue-horizontal-email.png');
+    expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/products/aoshima-05628-toyota-2000gt-red');
+    expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/media/iron-sprue/products/is-aos-05628/image-2/toyota-red.webp');
+    expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/shop');
+    expect(template.html).not.toContain('https://staging.ironsprue.co.uk');
   });
 
   it('rewrites persisted public media-host product images through the storefront media route', () => {
