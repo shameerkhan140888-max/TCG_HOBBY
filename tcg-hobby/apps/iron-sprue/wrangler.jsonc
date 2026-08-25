@@ -14,12 +14,6 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  "r2_buckets": [
-    {
-      "binding": "IRON_SPRUE_PRODUCT_MEDIA",
-      "bucket_name": "iron-sprue-product-media"
-    }
-  ],
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
