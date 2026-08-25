@@ -1,4 +1,3 @@
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -78,23 +77,6 @@ function normalizeStorageKey(parts: string[]) {
   return key;
 }
 
-function mediaClient() {
-  const bucket = requiredEnv('IRON_SPRUE_R2_BUCKET_NAME');
-  if (bucket !== BUCKET) throw new Error('Iron Sprue media delivery must use iron-sprue-product-media.');
-
-  return {
-    bucket,
-    client: new S3Client({
-      region: ironSprueEnv('IRON_SPRUE_R2_REGION') || 'auto',
-      endpoint: requiredEnv('IRON_SPRUE_R2_ENDPOINT').replace(/\/$/, ''),
-      credentials: {
-        accessKeyId: requiredEnv('IRON_SPRUE_R2_ACCESS_KEY_ID'),
-        secretAccessKey: requiredEnv('IRON_SPRUE_R2_SECRET_ACCESS_KEY'),
-      },
-    }),
-  };
-}
-
 async function boundMediaBucket() {
   try {
     const context = await getCloudflareContext({ async: true });
@@ -116,19 +98,93 @@ async function streamFromBoundR2(key: string) {
   return new Response(object.body, { headers });
 }
 
-async function streamFromS3Fallback(key: string) {
-  const { bucket, client } = mediaClient();
-  const object = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
-  const body = object.Body?.transformToWebStream();
-  if (!body) return NextResponse.json({ error: 'Media object has no readable body.' }, { status: 404 });
+function toHex(bytes: ArrayBuffer) {
+  return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function sha256Hex(value: string) {
+  return toHex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
+}
+
+async function hmac(key: ArrayBuffer | Uint8Array, value: string) {
+  const cryptoKey = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(value));
+}
+
+async function signingKey(secret: string, date: string, region: string) {
+  const dateKey = await hmac(new TextEncoder().encode(`AWS4${secret}`), date);
+  const regionKey = await hmac(dateKey, region);
+  const serviceKey = await hmac(regionKey, 's3');
+  return hmac(serviceKey, 'aws4_request');
+}
+
+function amzDate(now = new Date()) {
+  return now.toISOString().replace(/[:-]|\.\d{3}/g, '');
+}
+
+function encodeStoragePath(bucket: string, key: string) {
+  return `/${encodeURIComponent(bucket)}/${key.split('/').map(encodeURIComponent).join('/')}`;
+}
+
+async function signedR2Headers(input: { method: string; url: URL; region: string; accessKeyId: string; secretAccessKey: string; now?: Date }) {
+  const dateTime = amzDate(input.now);
+  const date = dateTime.slice(0, 8);
+  const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+  const payloadHash = 'UNSIGNED-PAYLOAD';
+  const canonicalHeaders = `host:${input.url.host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${dateTime}\n`;
+  const canonicalRequest = [
+    input.method,
+    input.url.pathname,
+    input.url.searchParams.toString(),
+    canonicalHeaders,
+    signedHeaders,
+    payloadHash,
+  ].join('\n');
+  const credentialScope = `${date}/${input.region}/s3/aws4_request`;
+  const stringToSign = [
+    'AWS4-HMAC-SHA256',
+    dateTime,
+    credentialScope,
+    await sha256Hex(canonicalRequest),
+  ].join('\n');
+  const signature = toHex(await hmac(await signingKey(input.secretAccessKey, date, input.region), stringToSign));
+
+  return {
+    Authorization: `AWS4-HMAC-SHA256 Credential=${input.accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
+    'x-amz-content-sha256': payloadHash,
+    'x-amz-date': dateTime,
+  };
+}
+
+async function streamFromR2FetchFallback(key: string) {
+  const bucket = requiredEnv('IRON_SPRUE_R2_BUCKET_NAME');
+  if (bucket !== BUCKET) throw new Error('Iron Sprue media delivery must use iron-sprue-product-media.');
+
+  const region = ironSprueEnv('IRON_SPRUE_R2_REGION') || 'auto';
+  const endpoint = requiredEnv('IRON_SPRUE_R2_ENDPOINT').replace(/\/$/, '');
+  const url = new URL(`${encodeStoragePath(bucket, key)}`, endpoint);
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: await signedR2Headers({
+      method: 'GET',
+      url,
+      region,
+      accessKeyId: requiredEnv('IRON_SPRUE_R2_ACCESS_KEY_ID'),
+      secretAccessKey: requiredEnv('IRON_SPRUE_R2_SECRET_ACCESS_KEY'),
+    }),
+  });
+
+  if (response.status === 404) return NextResponse.json({ error: 'Media object was not found.' }, { status: 404 });
+  if (!response.ok || !response.body) throw new Error(`R2 media fetch failed with status ${response.status}.`);
 
   const headers = new Headers({
     'Cache-Control': 'public, max-age=300',
-    'Content-Type': object.ContentType ?? 'application/octet-stream',
+    'Content-Type': response.headers.get('Content-Type') ?? 'application/octet-stream',
   });
-  if (object.ContentLength != null) headers.set('Content-Length', object.ContentLength.toString());
+  const contentLength = response.headers.get('Content-Length');
+  if (contentLength) headers.set('Content-Length', contentLength);
 
-  return new Response(body, { headers });
+  return new Response(response.body, { headers });
 }
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ key: string[] }> }) {
@@ -137,7 +193,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ ke
   if (!key) return NextResponse.json({ error: 'Invalid media key.' }, { status: 400 });
 
   try {
-    return await streamFromBoundR2(key) ?? await streamFromS3Fallback(key);
+    return await streamFromBoundR2(key) ?? await streamFromR2FetchFallback(key);
   } catch (error) {
     console.error('iron_sprue_media_delivery_failed', {
       key,
