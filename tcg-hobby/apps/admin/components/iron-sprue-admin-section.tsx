@@ -416,6 +416,8 @@ function ProductMediaReadinessPanel({
   r2Candidates: Map<string, IronSprueR2Object[]>;
 }) {
   const displayableAssets = product.mediaAssets.filter(isIronSprueDisplayableImageAsset);
+  const activeDisplayableAssets = displayableAssets.filter((asset) => asset.approvalState !== 'REJECTED');
+  const rejectedDisplayableAssets = displayableAssets.filter((asset) => asset.approvalState === 'REJECTED');
   const placeholderAssets = product.mediaAssets.filter((asset) => !isIronSprueDisplayableImageAsset(asset));
   const linkedStorageKeys = new Set(product.mediaAssets.map((asset) => asset.storageKey).filter((key): key is string => Boolean(key)));
   const roles = ['catalogue-primary', 'workshop-photography', 'completed-result', 'manufacturer-original'] as const;
@@ -425,13 +427,17 @@ function ProductMediaReadinessPanel({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-bold text-neutral-100">Product media</p>
         <div className="flex flex-wrap gap-2">
-          {displayableAssets.length ? <StatePill>{`${displayableAssets.length} IMAGE${displayableAssets.length === 1 ? '' : 'S'}`}</StatePill> : <StatePill>NO IMAGE ROWS</StatePill>}
+          {activeDisplayableAssets.length ? <StatePill>{`${activeDisplayableAssets.length} ACTIVE IMAGE${activeDisplayableAssets.length === 1 ? '' : 'S'}`}</StatePill> : <StatePill>NO ACTIVE IMAGE ROWS</StatePill>}
+          {rejectedDisplayableAssets.length ? <StatePill>{`${rejectedDisplayableAssets.length} REJECTED`}</StatePill> : null}
           {placeholderAssets.length ? <StatePill>{`${placeholderAssets.length} PLACEHOLDER${placeholderAssets.length === 1 ? '' : 'S'}`}</StatePill> : null}
         </div>
       </div>
-      {displayableAssets.length ? (
+      <p className="rounded-md border border-surface-line bg-black/30 p-2 text-xs text-neutral-400">
+        Publish requires one approved primary catalogue image. Manufacturer/source images and extra candidates stay visible for admin review, but they are not public storefront media unless promoted into the approved primary catalogue image.
+      </p>
+      {activeDisplayableAssets.length ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          {displayableAssets.map((asset) => {
+          {activeDisplayableAssets.map((asset) => {
             const previewUrl = ironSprueMediaPreviewUrl(asset);
             return (
               <div key={asset.id} className="grid gap-2 rounded-md border border-surface-line bg-black/30 p-2">
@@ -446,6 +452,7 @@ function ProductMediaReadinessPanel({
                   <StatePill>{asset.approvalState}</StatePill>
                   <StatePill>{asset.role}</StatePill>
                   {asset.isPrimary ? <StatePill>PRIMARY</StatePill> : null}
+                  <StatusBadge tone={asset.role === 'catalogue-primary' ? 'accent' : 'neutral'}>{productMediaRequirementLabel(asset)}</StatusBadge>
                 </div>
                 <p className="break-all text-xs text-neutral-500">{asset.storageKey ?? asset.url ?? 'No storage key'}</p>
                 <MediaActionForms mediaId={asset.id} returnTo={productReturnPath(product)} />
@@ -458,6 +465,16 @@ function ProductMediaReadinessPanel({
           No real displayable image row is currently linked to this product in Railway.
         </p>
       )}
+      {rejectedDisplayableAssets.length ? (
+        <details className="rounded-md border border-red-500/30 bg-red-950/10 p-2 text-xs text-neutral-400">
+          <summary className="cursor-pointer font-semibold text-red-100">Rejected media removed from publish workflow</summary>
+          <div className="mt-2 grid gap-1">
+            {rejectedDisplayableAssets.map((asset) => (
+              <p key={asset.id} className="break-all">{asset.role} - {asset.storageKey ?? asset.url ?? 'No key'}</p>
+            ))}
+          </div>
+        </details>
+      ) : null}
       {placeholderAssets.length ? (
         <details className="rounded-md border border-surface-line bg-black/20 p-2 text-xs text-neutral-400">
           <summary className="cursor-pointer font-semibold text-neutral-200">Source/placeholder records</summary>
@@ -869,6 +886,13 @@ function MediaActionForms({ mediaId, returnTo }: { mediaId: string; returnTo?: s
   );
 }
 
+function productMediaRequirementLabel(asset: { role: string; isPrimary: boolean; approvalState: string }) {
+  if (asset.role === 'catalogue-primary' && asset.isPrimary) return 'Required public image';
+  if (asset.role === 'catalogue-primary') return 'Public image candidate';
+  if (asset.role === 'manufacturer-original') return 'Admin source reference';
+  return 'Optional review media';
+}
+
 const CUSTOMER_FACING_SPECIFICATION_KEYS = new Set([
   'ageRange',
   'assembledDimensions',
@@ -949,7 +973,10 @@ function ProductDescriptorContentPreview({
   };
 }) {
   const shortDescription = sanitizePublicProductCopy(product.shortDescription);
-  const fullDescription = sanitizePublicProductCopy(product.fullDescription);
+  const sanitizedFullDescription = sanitizePublicProductCopy(product.fullDescription);
+  const fullDescription = shortDescription && sanitizedFullDescription && !sanitizedFullDescription.toLowerCase().includes(shortDescription.toLowerCase())
+    ? `${shortDescription}\n\n${sanitizedFullDescription}`
+    : sanitizedFullDescription || shortDescription;
   const featureBullets = sanitizePublicProductList(Array.isArray(product.featureBullets) ? product.featureBullets.filter(Boolean).map(String) : []);
   const specifications = product.specifications && typeof product.specifications === 'object'
     ? Object.entries(product.specifications as Record<string, unknown>).filter(([key, value]) => isCustomerFacingSpecification(key, value))
@@ -1896,6 +1923,12 @@ function FeaturedProductsManager({
                 );
               })}
             </div>
+            <form action={saveIronSprueFeaturedProductPlacementAction} className="mt-3">
+              {fallbackProducts.map((product) => <input key={product.id} type="hidden" name="productSlug" value={product.slug} />)}
+              <input type="hidden" name="active" value="on" />
+              <input type="hidden" name="sortOrder" value="0" />
+              <Button type="submit" size="sm" variant="primary">Use these as editable opening picks</Button>
+            </form>
           </div>
         ) : null}
 

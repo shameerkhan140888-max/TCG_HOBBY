@@ -413,23 +413,29 @@ export async function saveIronSprueHomepagePlacementAction(formData: FormData) {
 
 export async function saveIronSprueFeaturedProductPlacementAction(formData: FormData) {
   const actor = await requireIronSprueActor();
-  const productSlug = stringFromForm(formData.get('productSlug')).trim();
+  const productSlugs = formData.getAll('productSlug')
+    .map((value) => stringFromForm(value).trim())
+    .filter(Boolean);
   const productTitle = stringFromForm(formData.get('productTitle')).trim();
+  const existingId = stringFromForm(formData.get('id'));
+  const baseSortOrder = optionalNumberFromForm(formData.get('sortOrder')) ?? 0;
   try {
-    if (!productSlug) throw new Error('Select a product for this featured slot.');
-    await upsertIronSprueAdminHomepagePlacement(
-      {
-        id: stringFromForm(formData.get('id')),
-        placementKey: `featured-product:${productSlug}`,
-        title: productTitle || productSlug,
-        ctaLabel: 'View product',
-        ctaHref: `/products/${productSlug}`,
-        imageUrl: stringFromForm(formData.get('imageUrl')),
-        active: boolFromForm(formData.get('active')),
-        sortOrder: optionalNumberFromForm(formData.get('sortOrder')),
-      },
-      actor,
-    );
+    if (!productSlugs.length) throw new Error('Select a product for this featured slot.');
+    for (const [index, productSlug] of productSlugs.entries()) {
+      await upsertIronSprueAdminHomepagePlacement(
+        {
+          id: existingId && index === 0 ? existingId : '',
+          placementKey: `featured-product:${productSlug}`,
+          title: productTitle || productSlug,
+          ctaLabel: 'View product',
+          ctaHref: `/products/${productSlug}`,
+          imageUrl: index === 0 ? stringFromForm(formData.get('imageUrl')) : '',
+          active: boolFromForm(formData.get('active')),
+          sortOrder: baseSortOrder + index,
+        },
+        actor,
+      );
+    }
   } catch (error) {
     redirect(adminStatusPath('homepage', 'error', actionError(error)));
   }

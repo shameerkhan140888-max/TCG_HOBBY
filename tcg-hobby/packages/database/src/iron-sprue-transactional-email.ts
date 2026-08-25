@@ -55,7 +55,12 @@ function emailConfig(): IronSprueEmailTemplateConfig & { apiKey: string | null; 
   const supportEmail = clean(process.env.IRON_SPRUE_SUPPORT_EMAIL) ?? 'info@ironsprue.co.uk';
   const resolvedSiteUrl = siteUrl().replace(/\/$/, '');
   const explicitAssetBaseUrl = clean(process.env.IRON_SPRUE_EMAIL_ASSET_BASE_URL)?.replace(/\/$/, '');
+  const explicitMediaBaseUrl = (
+    clean(process.env.IRON_SPRUE_EMAIL_MEDIA_BASE_URL)
+    ?? clean(process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL)
+  )?.replace(/\/$/, '');
   const assetBaseUrl = explicitAssetBaseUrl
+    ?? (/^https:\/\/ironsprue\.co\.uk\/?$/i.test(resolvedSiteUrl) ? 'https://www.ironsprue.co.uk' : null)
     ?? (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(resolvedSiteUrl) ? 'https://www.ironsprue.co.uk' : resolvedSiteUrl);
   return {
     apiKey: clean(process.env.IRON_SPRUE_RESEND_API_KEY),
@@ -63,6 +68,7 @@ function emailConfig(): IronSprueEmailTemplateConfig & { apiKey: string | null; 
     replyTo: clean(process.env.IRON_SPRUE_EMAIL_REPLY_TO) ?? supportEmail,
     siteUrl: resolvedSiteUrl,
     assetBaseUrl,
+    mediaBaseUrl: explicitMediaBaseUrl ?? 'https://media.ironsprue.co.uk',
     supportEmail,
     logoUrl: clean(process.env.IRON_SPRUE_EMAIL_LOGO_URL) ?? defaultIronSprueEmailLogoUrl(assetBaseUrl),
   };

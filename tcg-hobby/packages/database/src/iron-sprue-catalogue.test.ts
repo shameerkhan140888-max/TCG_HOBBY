@@ -229,10 +229,35 @@ describe('Iron Sprue production catalogue adapter', () => {
     const result = await getIronSprueCatalogueProductBySlug(product.slug, client as never);
     const publicPayload = JSON.stringify(result);
 
-    expect(result?.longDescription).toBe('This Aoshima release focuses on the Toyota 2000GT in Red, making it a clean choice for an automotive modelling bench or a finished shelf display.');
+    expect(result?.longDescription).toBe([
+      'Toyota 2000GT Red is a display-focused Aoshima model kit.',
+      'This Aoshima release focuses on the Toyota 2000GT in Red, making it a clean choice for an automotive modelling bench or a finished shelf display.',
+    ].join('\n\n'));
     expect(result?.contents).toEqual(['Toyota 2000GT subject']);
     expect(result?.metaDescription).toBeNull();
     expect(publicPayload).not.toMatch(/intentionally omitted until|verified catalogue fields|built from the launch catalogue|source material|launch stock record|internal review|needs verification/i);
+  });
+
+  it('uses the short description as the full PDP opening copy and removes internal catalogue-status notes', async () => {
+    const product = ironSprueProduct({
+      shortDescription: '3D Jigsaw Vase - Koi Carp and Lotus is a Pintoo vase puzzle selected for customers who want a decorative 3D build with a finished-object feel.',
+      fullDescription: [
+        'This Pintoo piece is built around the 3D Jigsaw Vase - Koi Carp and Lotus design, offering a more giftable and display-led alternative to a conventional flat puzzle.',
+        'The catalogue currently confirms the brand, product title and supplier reference.',
+        'Unsupported claims such as piece count, dimensions, materials and age grading have been left out until they are verified from manufacturer packaging or source data.',
+      ].join(' '),
+    });
+    const client = {
+      ironSprueAdminProduct: { findFirst: vi.fn().mockResolvedValue(product) },
+    };
+
+    const result = await getIronSprueCatalogueProductBySlug(product.slug, client as never);
+
+    expect(result?.longDescription).toBe([
+      '3D Jigsaw Vase - Koi Carp and Lotus is a Pintoo vase puzzle selected for customers who want a decorative 3D build with a finished-object feel.',
+      'This Pintoo piece is built around the 3D Jigsaw Vase - Koi Carp and Lotus design, offering a more giftable and display-led alternative to a conventional flat puzzle.',
+    ].join('\n\n'));
+    expect(result?.longDescription).not.toMatch(/catalogue currently confirms|unsupported claims|supplier reference|source data/i);
   });
 
   it('uses the same canonical primary image for home, catalogue and product detail', async () => {

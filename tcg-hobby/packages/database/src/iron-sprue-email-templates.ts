@@ -40,6 +40,7 @@ export type IronSprueEmailTemplateConfig = {
   siteUrl: string;
   supportEmail: string;
   assetBaseUrl?: string | null;
+  mediaBaseUrl?: string | null;
   logoUrl?: string | null;
 };
 
@@ -123,12 +124,20 @@ function publicEmailLinkBaseUrl(config: IronSprueEmailTemplateConfig) {
 function publicEmailUrlBase(value: string) {
   try {
     const parsed = new URL(value);
-    return parsed.hostname.toLowerCase() === IRON_SPRUE_STAGING_HOST
-      ? IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL
-      : value;
+    const hostname = parsed.hostname.toLowerCase();
+    if (hostname === IRON_SPRUE_STAGING_HOST) {
+      const suffix = parsed.pathname === '/' && !parsed.search ? '' : `${parsed.pathname}${parsed.search}`;
+      return `${IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL}${suffix}`;
+    }
+    if (hostname === 'ironsprue.co.uk') return value.replace(/^https:\/\/ironsprue\.co\.uk(?=\/|$)/i, 'https://www.ironsprue.co.uk');
+    return value;
   } catch {
     return value;
   }
+}
+
+function publicEmailMediaBaseUrl(config: IronSprueEmailTemplateConfig) {
+  return normaliseSiteUrl(config.mediaBaseUrl || `https://${IRON_SPRUE_MEDIA_HOST}`);
 }
 
 function orderHref(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig) {
@@ -145,13 +154,19 @@ function productHref(item: IronSprueEmailOrderItem, config: IronSprueEmailTempla
 
 function imageSrc(item: IronSprueEmailOrderItem, config: IronSprueEmailTemplateConfig) {
   if (!item.imageUrl) return null;
-  if (item.imageUrl.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return `${publicEmailAssetBaseUrl(config)}${item.imageUrl}`;
+  if (item.imageUrl.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) {
+    const key = item.imageUrl.slice(IRON_SPRUE_MEDIA_ROUTE_PREFIX.length);
+    return key ? `${publicEmailMediaBaseUrl(config)}/${key}` : null;
+  }
   try {
     const parsed = new URL(item.imageUrl);
-    if (parsed.pathname.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return `${publicEmailAssetBaseUrl(config)}${parsed.pathname}${parsed.search}`;
+    if (parsed.pathname.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) {
+      const key = parsed.pathname.slice(IRON_SPRUE_MEDIA_ROUTE_PREFIX.length);
+      return key ? `${publicEmailMediaBaseUrl(config)}/${key}${parsed.search}` : null;
+    }
     if (parsed.hostname.toLowerCase() === IRON_SPRUE_MEDIA_HOST) {
       const key = parsed.pathname.replace(/^\/+/, '');
-      return key ? `${publicEmailAssetBaseUrl(config)}${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : null;
+      return key ? `${publicEmailMediaBaseUrl(config)}/${key}` : null;
     }
   } catch {
     // Non-URL values fall through to the relative-path handling below.
@@ -215,7 +230,7 @@ function baseStyles() {
 
 function header(config: IronSprueEmailTemplateConfig, heading: string, copy: string) {
   const logoUrl = config.logoUrl && /^https?:\/\//i.test(config.logoUrl)
-    ? config.logoUrl.replace(/^https:\/\/staging\.ironsprue\.co\.uk(?=\/)/i, publicEmailAssetBaseUrl(config))
+    ? publicEmailUrlBase(config.logoUrl)
     : null;
   const logo = logoUrl
     ? `<img class="logo" src="${escapeHtml(logoUrl)}" alt="Iron Sprue" />`

@@ -92,6 +92,9 @@ function mediaUrl(asset: IronSprueMediaAssetRow | null | undefined): string | nu
 
 const INTERNAL_COPY_PHRASES = [
   'catalogue-confirmed details',
+  'catalogue currently confirms',
+  'current verified catalogue',
+  'verified catalogue fields',
   'verified iron sprue source data',
   'intentionally omitted until',
   'launch range',
@@ -153,7 +156,12 @@ function publicShortDescription(product: IronSprueCatalogueProductRow) {
 }
 
 function publicLongDescription(product: IronSprueCatalogueProductRow) {
-  return sanitizePublicProductCopy(product.fullDescription) || sanitizePublicProductCopy(product.shortDescription);
+  const shortDescription = sanitizePublicProductCopy(product.shortDescription);
+  const fullDescription = sanitizePublicProductCopy(product.fullDescription);
+  if (!shortDescription) return fullDescription;
+  if (!fullDescription) return shortDescription;
+  if (fullDescription.toLowerCase().includes(shortDescription.toLowerCase())) return fullDescription;
+  return `${shortDescription}\n\n${fullDescription}`;
 }
 
 function preferredMedia(product: IronSprueCatalogueProductRow): { asset: IronSprueMediaAssetRow; url: string } | null {

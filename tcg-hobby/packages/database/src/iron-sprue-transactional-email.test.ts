@@ -188,6 +188,7 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.html).toContain('VAT No. 525 2040 33');
     expect(body.html).toContain('VAT included');
     expect(body.html).toContain('https://ironsprue.example.test/brand/iron-sprue-horizontal-email.png');
+    expect(body.html).toContain('https://media.example.test/toyota.png');
     expect(body.html).toContain('Shop more kits');
     expect(body.html).toContain('https://ironsprue.example.test/shop');
     expect(body.html).not.toContain('View order');
@@ -345,7 +346,7 @@ describe('Iron Sprue email templates', () => {
     const template = buildIronSprueOrderConfirmationEmail(sampleOrder({
       items: [item],
     }), config);
-    expect(template.html).toContain('https://ironsprue.example.test/media/iron-sprue/toyota-red.webp');
+    expect(template.html).toContain('https://media.ironsprue.co.uk/toyota-red.webp');
   });
 
   it('uses the deployed Worker host for staging email logos, links and routed product images', () => {
@@ -364,12 +365,12 @@ describe('Iron Sprue email templates', () => {
 
     expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/brand/iron-sprue-horizontal-email.png');
     expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/products/aoshima-05628-toyota-2000gt-red');
-    expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/media/iron-sprue/products/is-aos-05628/image-2/toyota-red.webp');
+    expect(template.html).toContain('https://media.ironsprue.co.uk/products/is-aos-05628/image-2/toyota-red.webp');
     expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/shop');
     expect(template.html).not.toContain('https://staging.ironsprue.co.uk');
   });
 
-  it('rewrites persisted public media-host product images through the storefront media route', () => {
+  it('keeps persisted public media-host product images on the public media domain', () => {
     const item: TestOrder['items'][number] = {
       ...sampleOrder().items[0]!,
       imageUrl: 'https://media.ironsprue.co.uk/products/is-aos-05628/image-2/toyota-red.webp',
@@ -377,11 +378,11 @@ describe('Iron Sprue email templates', () => {
     const template = buildIronSprueOrderConfirmationEmail(sampleOrder({
       items: [item],
     }), config);
-    expect(template.html).toContain('https://ironsprue.example.test/media/iron-sprue/products/is-aos-05628/image-2/toyota-red.webp');
-    expect(template.html).not.toContain('https://media.ironsprue.co.uk/products/is-aos-05628/image-2/toyota-red.webp');
+    expect(template.html).toContain('https://media.ironsprue.co.uk/products/is-aos-05628/image-2/toyota-red.webp');
+    expect(template.html).not.toContain('https://ironsprue.example.test/media/iron-sprue/products/is-aos-05628/image-2/toyota-red.webp');
   });
 
-  it('resolves persisted relative product images against the email asset base when provided', () => {
+  it('resolves persisted relative product images against the email media base when provided', () => {
     const item: TestOrder['items'][number] = {
       ...sampleOrder().items[0]!,
       imageUrl: '/media/iron-sprue/toyota-red.webp',
@@ -392,10 +393,23 @@ describe('Iron Sprue email templates', () => {
       ...config,
       siteUrl: 'http://localhost:3004',
       assetBaseUrl: 'https://www.ironsprue.co.uk',
+      mediaBaseUrl: 'https://media.ironsprue.example.test',
       logoUrl: null,
     });
-    expect(template.html).toContain('https://www.ironsprue.co.uk/media/iron-sprue/toyota-red.webp');
+    expect(template.html).toContain('https://media.ironsprue.example.test/toyota-red.webp');
     expect(template.html).not.toContain('http://localhost:3004/media/iron-sprue/toyota-red.webp');
+  });
+
+  it('uses the www host for apex-domain default email logo assets', () => {
+    const template = buildIronSprueOrderConfirmationEmail(sampleOrder(), {
+      siteUrl: 'https://ironsprue.co.uk',
+      assetBaseUrl: 'https://ironsprue.co.uk',
+      logoUrl: defaultIronSprueEmailLogoUrl('https://ironsprue.co.uk'),
+      supportEmail: 'support@example.test',
+    });
+
+    expect(template.html).toContain('https://www.ironsprue.co.uk/brand/iron-sprue-horizontal-email.png');
+    expect(template.html).not.toContain('https://ironsprue.co.uk/brand/iron-sprue-horizontal-email.png');
   });
 
   it('uses the approved Iron Sprue horizontal logo as the default email brand asset', () => {

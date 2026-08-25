@@ -609,6 +609,7 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('iron-sprue-image-2-acf115ef37eb.png');
     expect(markup).toContain('manufacturer-source.jpg');
     expect(markup).toContain('manufacturer-original');
+    expect(markup).toContain('Publish requires one approved primary catalogue image.');
   });
 
   it('renders storefront placement and brand carousel controls', async () => {
@@ -772,6 +773,9 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Current products in this row are storefront fallback');
     expect(markup).toContain('Toyota 2000GT White');
     expect(markup).toContain('Toyota 2000GT Red');
+    expect(markup).toContain('Use these as editable opening picks');
+    expect(markup).toContain('name="productSlug" value="aoshima-05627-toyota-2000gt-white"');
+    expect(markup).toContain('name="productSlug" value="aoshima-05628-toyota-2000gt-red"');
     expect(markup).toContain('Add product to row');
   });
 });
