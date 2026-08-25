@@ -11,7 +11,7 @@ import type {
   ShippingMethod,
   ShippingMethodCode,
 } from '@tcg-hobby/types';
-import type { Prisma } from '@prisma/client';
+import type { IronSprueVatInvoice, IronSprueVatInvoiceLine, Prisma } from '@prisma/client';
 import { getIronSprueAdminPrisma } from './client.js';
 import {
   buildCartReservationExpiry,
@@ -47,11 +47,9 @@ type IronSprueProductForCart = Prisma.IronSprueAdminProductGetPayload<{
   };
 }>;
 
-type IronSprueInvoiceRecord = Prisma.IronSprueVatInvoiceGetPayload<{
-  include: {
-    lines: true;
-  };
-}>;
+type IronSprueInvoiceRecord = IronSprueVatInvoice & {
+  lines: IronSprueVatInvoiceLine[];
+};
 
 type IronSprueOrderRecord = Prisma.IronSprueOrderGetPayload<{
   include: {
@@ -687,8 +685,8 @@ function mapOrderRecord(order: IronSprueOrderRecord): IronSprueOrderWithItems {
       grossTotalMinor: invoice.grossTotalMinor,
       currency: invoice.currency as CurrencyCode,
       lines: invoice.lines
-        .sort((left, right) => left.sortOrder - right.sortOrder)
-        .map((line) => ({
+        .sort((left: IronSprueVatInvoiceLine, right: IronSprueVatInvoiceLine) => left.sortOrder - right.sortOrder)
+        .map((line: IronSprueVatInvoiceLine) => ({
           description: line.description,
           sku: line.sku,
           quantity: line.quantity,
