@@ -86,6 +86,55 @@ function mediaUrl(asset: IronSprueMediaAssetRow | null | undefined): string | nu
   return resolveIronSpruePublicMediaUrl(asset);
 }
 
+const INTERNAL_COPY_PHRASES = [
+  'catalogue-confirmed details',
+  'verified iron sprue source data',
+  'intentionally omitted until',
+  'not listed unless they are present',
+  'not stated in the current verified',
+  'product packaging or manufacturer data is reviewed',
+  'built from the launch catalogue',
+  'associated supplier or manufacturer source material',
+  'source material already captured',
+  'launch stock record',
+  'needs verification',
+  'requires verification',
+  'unsupported claim',
+  'source provenance',
+  'reconciliation',
+  'internal review',
+  'admin-only',
+] as const;
+
+function isInternalProductCopyBlock(value: string) {
+  const normalized = value.trim().toLowerCase();
+  return INTERNAL_COPY_PHRASES.some((phrase) => normalized.includes(phrase));
+}
+
+function sanitizePublicProductCopy(value: string | null | undefined) {
+  const paragraphs = String(value ?? '')
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .filter((paragraph) => !isInternalProductCopyBlock(paragraph));
+
+  return paragraphs.join('\n\n').trim();
+}
+
+function sanitizePublicProductList(values: string[] | null | undefined) {
+  return (values ?? [])
+    .map((value) => sanitizePublicProductCopy(value))
+    .filter((value) => value.length > 0);
+}
+
+function publicShortDescription(product: IronSprueCatalogueProductRow) {
+  return sanitizePublicProductCopy(product.shortDescription) || sanitizePublicProductCopy(product.fullDescription);
+}
+
+function publicLongDescription(product: IronSprueCatalogueProductRow) {
+  return sanitizePublicProductCopy(product.fullDescription) || sanitizePublicProductCopy(product.shortDescription);
+}
+
 function preferredMedia(product: IronSprueCatalogueProductRow): { asset: IronSprueMediaAssetRow; url: string } | null {
   const canonicalPrimary = selectIronSpruePrimaryCatalogueMedia(product);
   if (canonicalPrimary) return canonicalPrimary;
@@ -146,7 +195,7 @@ function mapProduct(product: IronSprueCatalogueProductRow): CatalogueProduct {
     brand: brandName,
     game: 'Iron Sprue',
     productType,
-    description: product.shortDescription ?? product.fullDescription ?? '',
+    description: publicShortDescription(product),
     categoryName,
     categorySlug,
     price: {
@@ -180,8 +229,8 @@ function mapProduct(product: IronSprueCatalogueProductRow): CatalogueProduct {
     availabilityMessage: null,
     preorderBadgeLabel: null,
     comingSoonBadgeLabel: product.comingSoon ? 'Coming soon' : null,
-    seoTitle: product.seoTitle,
-    metaDescription: product.metaDescription,
+    seoTitle: sanitizePublicProductCopy(product.seoTitle) || null,
+    metaDescription: sanitizePublicProductCopy(product.metaDescription) || null,
     canonicalUrl: null,
     ogImageUrl: null,
     noindex: false,
@@ -193,9 +242,10 @@ function mapProductDetail(product: IronSprueCatalogueProductRow): CatalogueProdu
   const images = product.mediaAssets
     .map((asset) => mapImage(asset, product))
     .filter((image): image is CatalogueProductImage => image !== null);
-  const contents = typeof product.contents === 'string' && product.contents.trim()
-    ? [product.contents.trim()]
-    : product.featureBullets;
+  const contentsFromField = typeof product.contents === 'string' && product.contents.trim()
+    ? sanitizePublicProductList([product.contents])
+    : [];
+  const contents = contentsFromField.length ? contentsFromField : sanitizePublicProductList(product.featureBullets);
 
   return {
     ...summary,
@@ -204,7 +254,7 @@ function mapProductDetail(product: IronSprueCatalogueProductRow): CatalogueProdu
     setName: null,
     language: null,
     condition: 'SEALED',
-    longDescription: product.fullDescription ?? product.shortDescription ?? '',
+    longDescription: publicLongDescription(product),
     contents,
     searchText: [
       product.customerTitle,

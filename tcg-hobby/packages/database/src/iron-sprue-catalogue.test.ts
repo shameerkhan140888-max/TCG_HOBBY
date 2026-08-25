@@ -206,6 +206,35 @@ describe('Iron Sprue production catalogue adapter', () => {
     expect(result?.images[0]?.url).toBe('/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp');
   });
 
+  it('keeps admin verification and provenance notes out of public Iron Sprue product copy', async () => {
+    const product = ironSprueProduct({
+      shortDescription: 'Toyota 2000GT Red is a display-focused Aoshima model kit.',
+      fullDescription: [
+        'This Aoshima release focuses on the Toyota 2000GT in Red, making it a clean choice for an automotive modelling bench or a finished shelf display.',
+        'Scale, contents and assembly requirements are not stated in the current verified catalogue fields, so those details are intentionally omitted until the product packaging or manufacturer data is reviewed.',
+        'The listing is built from the launch catalogue and associated supplier or manufacturer source material already captured for Iron Sprue.',
+      ].join('\n\n'),
+      featureBullets: [
+        'Aoshima vehicle model kit',
+        'Supplier code preserved for launch stock record matching',
+      ],
+      contents: 'Toyota 2000GT subject\n\nOnly catalogue-confirmed details have been used here.',
+      seoTitle: 'Toyota 2000GT Red model kit',
+      metaDescription: 'Internal review: needs verification before launch.',
+    });
+    const client = {
+      ironSprueAdminProduct: { findFirst: vi.fn().mockResolvedValue(product) },
+    };
+
+    const result = await getIronSprueCatalogueProductBySlug(product.slug, client as never);
+    const publicPayload = JSON.stringify(result);
+
+    expect(result?.longDescription).toBe('This Aoshima release focuses on the Toyota 2000GT in Red, making it a clean choice for an automotive modelling bench or a finished shelf display.');
+    expect(result?.contents).toEqual(['Toyota 2000GT subject']);
+    expect(result?.metaDescription).toBeNull();
+    expect(publicPayload).not.toMatch(/intentionally omitted until|verified catalogue fields|built from the launch catalogue|source material|launch stock record|internal review|needs verification/i);
+  });
+
   it('uses the same canonical primary image for home, catalogue and product detail', async () => {
     const product = ironSprueProduct({ featured: true });
     const client = {

@@ -550,10 +550,10 @@ describe('IronSprueAdminSection operational controls', () => {
       },
     ]).mockResolvedValueOnce([
       {
-        key: 'archive/products/is-aos-05628/original/manufacturer-source.jpg',
+        key: 'archive/products/is-aos-05628-aoshima-05628-toyota-2000gt-red/original/manufacturer-source.jpg',
         size: 256,
         updatedAt: new Date('2026-08-10T00:00:00.000Z'),
-        previewUrl: '/iron-sprue-admin/media/preview?key=archive%2Fproducts%2Fis-aos-05628%2Foriginal%2Fmanufacturer-source.jpg',
+        previewUrl: '/iron-sprue-admin/media/preview?key=archive%2Fproducts%2Fis-aos-05628-aoshima-05628-toyota-2000gt-red%2Foriginal%2Fmanufacturer-source.jpg',
       },
     ]);
 

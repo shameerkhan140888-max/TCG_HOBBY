@@ -464,7 +464,7 @@ function ProductMediaReadinessPanel({
       {roles.map((role) => (
         <ExistingR2MediaCandidates
           key={role}
-          candidates={r2Candidates.get(`${normalizedProductSku(product.sku)}:${role}`) ?? []}
+          candidates={r2CandidatesForProductRole(r2Candidates, product.sku, role)}
           linkedStorageKeys={linkedStorageKeys}
           product={product}
           role={role}
@@ -1082,6 +1082,19 @@ function normalizedProductSku(value: string | null | undefined) {
   return (value ?? '').trim().toLowerCase();
 }
 
+function r2CandidatesForProductRole(r2Candidates: Map<string, IronSprueR2Object[]>, sku: string, role: IronSprueMediaRole) {
+  const normalizedSku = normalizedProductSku(sku);
+  const exact = r2Candidates.get(`${normalizedSku}:${role}`) ?? [];
+  const prefixMatches = [...r2Candidates.entries()]
+    .filter(([key]) => {
+      const [candidateSku, candidateRole] = key.split(':');
+      return candidateRole === role && candidateSku?.startsWith(`${normalizedSku}-`);
+    })
+    .flatMap(([, values]) => values);
+  return [...exact, ...prefixMatches]
+    .sort((left, right) => (right.updatedAt?.getTime() ?? 0) - (left.updatedAt?.getTime() ?? 0) || left.key.localeCompare(right.key));
+}
+
 function r2RoleFromProductKey(key: string): IronSprueMediaRole | null {
   const parts = key.split('/');
   if (!/\.(avif|gif|jpe?g|png|webp)$/i.test(key)) return null;
@@ -1226,7 +1239,7 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
                 const asset = group.assets.find((item) => item.role === role);
                 if (!asset) {
                   const existingR2Candidates = group.product
-                    ? r2Candidates.get(`${normalizedProductSku(group.product.sku)}:${role}`) ?? []
+                    ? r2CandidatesForProductRole(r2Candidates, group.product.sku, role)
                     : [];
                   const linkedStorageKeys = new Set(group.assets.map((item) => item.storageKey).filter((key): key is string => Boolean(key)));
                   return (
@@ -1241,7 +1254,7 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
                 const previewUrl = ironSprueMediaPreviewUrl(asset);
                 const displayableImage = isIronSprueDisplayableImageAsset(asset);
                 const existingR2Candidates = group.product
-                  ? r2Candidates.get(`${normalizedProductSku(group.product.sku)}:${role}`) ?? []
+                  ? r2CandidatesForProductRole(r2Candidates, group.product.sku, role)
                   : [];
                 const linkedStorageKeys = new Set(group.assets.map((item) => item.storageKey).filter((key): key is string => Boolean(key)));
                 return (

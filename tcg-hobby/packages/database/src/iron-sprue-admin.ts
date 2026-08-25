@@ -713,7 +713,7 @@ export async function synchronizeIronSprueProductPublicationReadiness(
 
   const readiness = getIronSprueProductReadiness(product);
   const derivedState = readiness.publicationState;
-  const nextState = product.publicationState === 'PUBLISHED' && derivedState === 'READY_TO_PUBLISH' ? 'PUBLISHED' : derivedState;
+  const nextState = product.publicationState === 'PUBLISHED' ? 'PUBLISHED' : derivedState;
   if (product.publicationState === nextState) return product;
 
   const updated = await client.ironSprueAdminProduct.update({
@@ -1068,7 +1068,8 @@ export async function receiveIronSprueStock(
   const received = input.receivedQuantity;
   const damaged = input.damagedQuantity ?? 0;
   const missing = input.missingQuantity ?? 0;
-  const nextAvailable = inventory.availableStock + received;
+  const usableReceived = Math.max(received - damaged - missing, 0);
+  const nextAvailable = inventory.availableStock + usableReceived;
 
   return client.$transaction(async (tx) => {
     const updated = await tx.ironSprueAdminInventory.update({
@@ -1086,7 +1087,7 @@ export async function receiveIronSprueStock(
         storeCode: IRON_SPRUE_STORE_CODE,
         productId,
         movementType: 'GOODS_RECEIVED',
-        quantity: received,
+        quantity: usableReceived,
         beforeQuantity: inventory.availableStock,
         afterQuantity: nextAvailable,
         reason: input.reason ?? 'Goods received',
@@ -1104,7 +1105,7 @@ export async function receiveIronSprueStock(
         productId,
         summary: `Received ${received} Iron Sprue units.`,
         before: { availableStock: inventory.availableStock },
-        after: { availableStock: nextAvailable, damagedQuantity: damaged, missingQuantity: missing },
+        after: { availableStock: nextAvailable, usableReceived, damagedQuantity: damaged, missingQuantity: missing },
       },
     });
     return updated;
@@ -1271,6 +1272,7 @@ export async function getIronSprueAdminReferenceData(client = getIronSprueAdminP
 }
 
 export async function listIronSprueAdminInventory(client = getIronSprueAdminPrisma()) {
+  await reconcileIronSprueInventoryAvailableStock(client);
   return client.ironSprueAdminInventory.findMany({
     where: { storeCode: IRON_SPRUE_STORE_CODE },
     orderBy: [{ availableStock: 'asc' }, { updatedAt: 'desc' }],
@@ -2016,6 +2018,16 @@ export async function reconcileIronSprueR2ProductMedia(
     orderBy: { sku: 'asc' },
   });
   const productsBySku = new Map(products.map((product) => [normalizedIronSprueSku(product.sku), product]));
+  const findProductForR2Sku = (sku: string) => {
+    const normalized = normalizedIronSprueSku(sku);
+    const exact = productsBySku.get(normalized);
+    if (exact) return exact;
+    const matches = products.filter((product) => {
+      const productSku = normalizedIronSprueSku(product.sku);
+      return normalized.startsWith(`${productSku}-`);
+    });
+    return matches.length === 1 ? matches[0] : null;
+  };
   const candidateGroups = new Map<string, Array<IronSprueR2ProductMediaObject & { role: string; sku: string; sortOrder: number }>>();
   const unmatched: IronSprueR2MediaReconciliationResult['unmatched'] = [];
   const ambiguous: IronSprueR2MediaReconciliationResult['ambiguous'] = [];
@@ -2027,7 +2039,7 @@ export async function reconcileIronSprueR2ProductMedia(
       unmatched.push({ key, reason: 'Not a supported displayable product image path.' });
       continue;
     }
-    const product = productsBySku.get(candidate.sku);
+    const product = findProductForR2Sku(candidate.sku);
     if (!product) {
       unmatched.push({ key, reason: 'No canonical Railway product exists for the SKU in this R2 path.' });
       continue;

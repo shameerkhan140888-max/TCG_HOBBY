@@ -173,7 +173,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     const result = await reconcileIronSprueR2ProductMedia([
       { key: 'products/is-aos-05603/image-2/iron-sprue-image-2-ddc9b0dbc551.png', size: 1000 },
       { key: 'products/is-aos-05603/workshop/iron-sprue-workshop-99517f01b1dc.png', size: 2000 },
-      { key: 'archive/products/is-aos-05603/original/manufacturer-source.jpg', size: 1800 },
+      { key: 'archive/products/is-aos-05603-aoshima-05603-pagani-zonda-f/original/manufacturer-source.jpg', size: 1800 },
       { key: 'products/is-aos-99999/image-2/missing.png', size: 500 },
       { key: 'products/is-aos-05603/source-required.json', size: 100 },
     ], actor, client as never);
@@ -200,8 +200,8 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         role: 'manufacturer-original',
         approvalState: 'APPROVED',
         isPrimary: false,
-        storageKey: 'archive/products/is-aos-05603/original/manufacturer-source.jpg',
-        url: 'r2://archive/products/is-aos-05603/original/manufacturer-source.jpg',
+        storageKey: 'archive/products/is-aos-05603-aoshima-05603-pagani-zonda-f/original/manufacturer-source.jpg',
+        url: 'r2://archive/products/is-aos-05603-aoshima-05603-pagani-zonda-f/original/manufacturer-source.jpg',
       }),
     }));
     expect(client.ironSprueAdminMediaAsset.updateMany).toHaveBeenCalledWith(expect.objectContaining({
@@ -289,22 +289,20 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     }));
   });
 
-  it('reconciles stale published products back to the canonical blocked state', async () => {
+  it('preserves published intent when a published product temporarily becomes blocked', async () => {
     const stale = readyProduct({ publicationState: 'PUBLISHED', mediaAssets: [] });
-    const txProduct = readyProduct({ ...stale, publicationState: 'MEDIA_PENDING' });
     const client = {
       ironSprueAdminProduct: {
         findFirst: vi.fn().mockResolvedValue(stale),
-        update: vi.fn().mockResolvedValue(txProduct),
+        update: vi.fn(),
       },
       ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
     };
 
-    await synchronizeIronSprueProductPublicationReadiness('product-1', actor, client as never);
+    const result = await synchronizeIronSprueProductPublicationReadiness('product-1', actor, client as never);
 
-    expect(client.ironSprueAdminProduct.update).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ publicationState: 'MEDIA_PENDING' }),
-    }));
+    expect(result).toBe(stale);
+    expect(client.ironSprueAdminProduct.update).not.toHaveBeenCalled();
   });
 
   it('uses the explicit Railway-production admin database target when configured', () => {
@@ -451,7 +449,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
 
     expect(client.ironSprueAdminInventory.findFirst).toHaveBeenCalledWith({ where: { productId: 'product-1', storeCode: 'IRON_SPRUE' } });
     expect(tx.ironSprueAdminStockMovement.create).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ storeCode: 'IRON_SPRUE', beforeQuantity: 2, afterQuantity: 5 }),
+      data: expect.objectContaining({ storeCode: 'IRON_SPRUE', quantity: 2, beforeQuantity: 2, afterQuantity: 4 }),
     }));
   });
 
