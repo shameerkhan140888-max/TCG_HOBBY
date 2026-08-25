@@ -17,7 +17,7 @@ export default function DeliveryPage() {
           </section>
           <section>
             <h2>Delivery costs and totals</h2>
-            <p>Delivery charges are calculated during checkout and included in the final amount submitted for payment.</p>
+            <p>UK standard delivery is £3.99 unless a promotion or basket threshold applies. Delivery charges are confirmed during checkout and included in the final amount submitted for payment.</p>
             <p>The basket and checkout show product totals, delivery and the final payable total before you continue to secure payment.</p>
           </section>
           <section>

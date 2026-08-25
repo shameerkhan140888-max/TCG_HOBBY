@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { PublicOrderDetail } from '@tcg-hobby/types';
 import {
   hasTrackedIronSpruePurchase,
@@ -163,6 +163,7 @@ export function CheckoutSuccessClient({
           ) : null}
           <h2>Order summary</h2>
           <dl className="receipt-summary">
+            {order.invoice ? <div><dt>VAT invoice</dt><dd>{order.invoice.invoiceNumber}</dd></div> : null}
             <div><dt>Payment</dt><dd>Paid</dd></div>
             <div><dt>Order status</dt><dd>Confirmed</dd></div>
             <div><dt>Subtotal</dt><dd>{formatPrice(order.subtotalMinor)}</dd></div>
@@ -172,6 +173,19 @@ export function CheckoutSuccessClient({
             <div className="receipt-total"><dt>Total</dt><dd>{formatPrice(order.totalMinor)}</dd></div>
             <div><dt>Delivery method</dt><dd>{order.shippingMethodName}</dd></div>
           </dl>
+          {order.invoice ? (
+            <>
+              <h2>VAT invoice details</h2>
+              <dl className="receipt-summary">
+                <div><dt>Seller</dt><dd>{order.invoice.sellerLegalName}</dd></div>
+                <div><dt>Company number</dt><dd>{order.invoice.sellerCompanyNumber}</dd></div>
+                <div><dt>VAT No.</dt><dd>{order.invoice.sellerVatNumber}</dd></div>
+                <div><dt>Net total</dt><dd>{formatPrice(order.invoice.orderNetTotalMinor)}</dd></div>
+                <div><dt>VAT total</dt><dd>{formatPrice(order.invoice.vatTotalMinor)}</dd></div>
+                <div className="receipt-total"><dt>Gross total</dt><dd>{formatPrice(order.invoice.grossTotalMinor)}</dd></div>
+              </dl>
+            </>
+          ) : null}
         </div>
         </>
       )}

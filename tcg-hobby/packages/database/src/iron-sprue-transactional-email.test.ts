@@ -46,6 +46,7 @@ function sampleOrder(overrides: Partial<TestOrder> = {}): TestOrder {
     fulfilmentStatus: 'PENDING',
     subtotalMinor: 1999,
     shippingMinor: 299,
+    taxMinor: 383,
     totalMinor: 2298,
     currency: 'GBP',
     shippingMethodName: 'Standard delivery',
@@ -184,6 +185,8 @@ describe('Iron Sprue transactional email sending', () => {
     const body = lastEmailPayload();
     expect(body.from).toBe('Iron Sprue <orders@example.test>');
     expect(body.html).toContain('Iron Sprue');
+    expect(body.html).toContain('VAT No. 525 2040 33');
+    expect(body.html).toContain('VAT included');
     expect(body.html).toContain('https://ironsprue.example.test/brand/iron-sprue-horizontal-email.png');
     expect(body.html).not.toContain('TCG Hobby');
     expect(db.ironSprueTransactionalEmailDelivery.update).toHaveBeenCalledWith(expect.objectContaining({

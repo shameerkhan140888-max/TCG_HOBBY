@@ -21,6 +21,7 @@ export type IronSprueCustomerOrderSummary = IronSprueOrderStatusFields & {
 export type IronSprueCustomerOrderDetail = IronSprueCustomerOrderSummary & {
   subtotalMinor: number;
   shippingMinor: number;
+  taxMinor: number;
   discountMinor: number;
   trackingCarrier: string | null;
   trackingNumber: string | null;
@@ -41,6 +42,17 @@ export type IronSprueCustomerOrderDetail = IronSprueCustomerOrderSummary & {
     createdAt: Date | string;
     reason: string;
   }>;
+  invoice: {
+    invoiceNumber: string;
+    invoiceDate: Date | string;
+    sellerLegalName: string;
+    sellerCompanyNumber: string;
+    sellerVatNumber: string;
+    sellerRegisteredOffice: string;
+    orderNetTotalMinor: number;
+    vatTotalMinor: number;
+    grossTotalMinor: number;
+  } | null;
 };
 
 export function customerOrderStatus(order: IronSprueOrderStatusFields) {

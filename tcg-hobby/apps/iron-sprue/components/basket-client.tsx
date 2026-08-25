@@ -565,8 +565,8 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   const hasUnavailableItems = basketLineItems.some((item) => Boolean(basketLineWarning(item)));
   const deliveryMinor = useMemo(() => {
     if (shippingMethodCode === 'UK_STANDARD' && subtotalMinor >= 5000) return 0;
-    if (shippingMethodCode === 'UK_EXPRESS' && subtotalMinor >= 5000) return 299;
-    return shippingMethodCode === 'UK_EXPRESS' ? 499 : 299;
+    if (shippingMethodCode === 'UK_EXPRESS' && subtotalMinor >= 5000) return 399;
+    return shippingMethodCode === 'UK_EXPRESS' ? 599 : 399;
   }, [shippingMethodCode, subtotalMinor]);
   const totalMinor = checkoutPaymentIntent?.totalMinor ?? subtotalMinor + deliveryMinor;
   const vatIncludedEstimateMinor = Math.round(totalMinor / 6);
@@ -927,7 +927,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
       <div className="checkout-details-main">
         {basketLines}
         <section className="checkout-panel checkout-reassurance checkout-reassurance-icons" aria-label="Delivery returns and payment information">
-          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK delivery options and costs are confirmed before payment. Free UK delivery applies on eligible orders over £75.</span></p>
+          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK standard delivery is £3.99 unless a promotion or basket threshold applies. Costs are confirmed before payment.</span></p>
           <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Unused items can be returned in line with the published returns policy.</span></p>
           <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Payments</strong> Secure card payments are handled by the embedded payment form. Digital wallets may appear where supported.</span></p>
         </section>

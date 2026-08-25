@@ -60,6 +60,41 @@ function isCustomerCheckoutError(message: string) {
   );
 }
 
+function toPublicOrderDetail(order: Awaited<ReturnType<typeof getIronSprueOrderByStripeCheckoutSessionId>>): PublicOrderDetail {
+  if (!order) throw new NotFoundException('Order not found.');
+  return {
+    orderNumber: order.orderNumber,
+    paymentStatus: order.paymentStatus,
+    fulfilmentStatus: order.fulfilmentStatus,
+    currency: order.currency,
+    subtotalMinor: order.subtotalMinor,
+    shippingMinor: order.shippingMinor,
+    taxMinor: order.taxMinor,
+    discountMinor: order.discountMinor,
+    discountCode: order.discountCode,
+    totalMinor: order.totalMinor,
+    createdAt: order.createdAt.toISOString(),
+    itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
+    shippingMethodName: order.shippingMethodName,
+    shippingFullName: order.shippingFullName,
+    shippingEmail: order.shippingEmail,
+    shippingLine1: order.shippingLine1,
+    shippingLine2: order.shippingLine2,
+    shippingCity: order.shippingCity,
+    shippingRegion: order.shippingRegion,
+    shippingPostalCode: order.shippingPostalCode,
+    shippingCountry: order.shippingCountry,
+    trackingCarrier: order.trackingCarrier,
+    trackingNumber: order.trackingNumber,
+    trackingUrl: order.trackingUrl,
+    invoice: order.invoice ? {
+      ...order.invoice,
+      invoiceDate: order.invoice.invoiceDate.toISOString(),
+    } : null,
+    items: order.items,
+  };
+}
+
 const INTERNAL_SIGNATURE_WINDOW_MS = 5 * 60 * 1000;
 const HEX_SHA256_PATTERN = /^[a-f0-9]{64}$/;
 
@@ -260,34 +295,7 @@ export class IronSprueCommerceService {
   async checkoutStatus(headers: Record<string, string | string[] | undefined>, sessionId: string): Promise<PublicOrderDetail> {
     requireIronSprueProxy(headers);
     const order = await getIronSprueOrderByStripeCheckoutSessionId(sessionId);
-    if (!order) throw new NotFoundException('Order not found.');
-    return {
-      orderNumber: order.orderNumber,
-      paymentStatus: order.paymentStatus,
-      fulfilmentStatus: order.fulfilmentStatus,
-      currency: order.currency,
-      subtotalMinor: order.subtotalMinor,
-      shippingMinor: order.shippingMinor,
-      taxMinor: order.taxMinor,
-      discountMinor: order.discountMinor,
-      discountCode: order.discountCode,
-      totalMinor: order.totalMinor,
-      createdAt: order.createdAt.toISOString(),
-      itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
-      shippingMethodName: order.shippingMethodName,
-      shippingFullName: order.shippingFullName,
-      shippingEmail: order.shippingEmail,
-      shippingLine1: order.shippingLine1,
-      shippingLine2: order.shippingLine2,
-      shippingCity: order.shippingCity,
-      shippingRegion: order.shippingRegion,
-      shippingPostalCode: order.shippingPostalCode,
-      shippingCountry: order.shippingCountry,
-      trackingCarrier: order.trackingCarrier,
-      trackingNumber: order.trackingNumber,
-      trackingUrl: order.trackingUrl,
-      items: order.items,
-    };
+    return toPublicOrderDetail(order);
   }
 
   async checkoutPaymentStatus(headers: Record<string, string | string[] | undefined>, paymentIntentId: string): Promise<PublicOrderDetail> {
@@ -314,33 +322,7 @@ export class IronSprueCommerceService {
         });
       }
     }
-    return {
-      orderNumber: order.orderNumber,
-      paymentStatus: order.paymentStatus,
-      fulfilmentStatus: order.fulfilmentStatus,
-      currency: order.currency,
-      subtotalMinor: order.subtotalMinor,
-      shippingMinor: order.shippingMinor,
-      taxMinor: order.taxMinor,
-      discountMinor: order.discountMinor,
-      discountCode: order.discountCode,
-      totalMinor: order.totalMinor,
-      createdAt: order.createdAt.toISOString(),
-      itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
-      shippingMethodName: order.shippingMethodName,
-      shippingFullName: order.shippingFullName,
-      shippingEmail: order.shippingEmail,
-      shippingLine1: order.shippingLine1,
-      shippingLine2: order.shippingLine2,
-      shippingCity: order.shippingCity,
-      shippingRegion: order.shippingRegion,
-      shippingPostalCode: order.shippingPostalCode,
-      shippingCountry: order.shippingCountry,
-      trackingCarrier: order.trackingCarrier,
-      trackingNumber: order.trackingNumber,
-      trackingUrl: order.trackingUrl,
-      items: order.items,
-    };
+    return toPublicOrderDetail(order);
   }
 
   async cancelCheckout(headers: Record<string, string | string[] | undefined>, sessionId: string) {
@@ -378,31 +360,6 @@ export class IronSprueCommerceService {
     requireIronSprueProxy(headers);
     const user = await this.auth.requireUser(authorization);
     const order = await getIronSprueCustomerOrderByNumber(user.id, orderNumber);
-    if (!order) throw new NotFoundException('Order not found.');
-    return {
-      orderNumber: order.orderNumber,
-      paymentStatus: order.paymentStatus,
-      fulfilmentStatus: order.fulfilmentStatus,
-      currency: order.currency,
-      subtotalMinor: order.subtotalMinor,
-      shippingMinor: order.shippingMinor,
-      taxMinor: order.taxMinor,
-      totalMinor: order.totalMinor,
-      createdAt: order.createdAt.toISOString(),
-      itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
-      shippingMethodName: order.shippingMethodName,
-      shippingFullName: order.shippingFullName,
-      shippingEmail: order.shippingEmail,
-      shippingLine1: order.shippingLine1,
-      shippingLine2: order.shippingLine2,
-      shippingCity: order.shippingCity,
-      shippingRegion: order.shippingRegion,
-      shippingPostalCode: order.shippingPostalCode,
-      shippingCountry: order.shippingCountry,
-      trackingCarrier: order.trackingCarrier,
-      trackingNumber: order.trackingNumber,
-      trackingUrl: order.trackingUrl,
-      items: order.items,
-    };
+    return toPublicOrderDetail(order);
   }
 }

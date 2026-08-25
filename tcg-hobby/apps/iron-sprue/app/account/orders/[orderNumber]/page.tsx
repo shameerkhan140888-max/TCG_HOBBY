@@ -70,7 +70,17 @@ export default async function AccountOrderDetailPage({
           <div className="account-line"><span>Subtotal</span><strong>{money(order.subtotalMinor, order.currency)}</strong></div>
           <div className="account-line"><span>Delivery</span><strong>{money(order.shippingMinor, order.currency)}</strong></div>
           {order.discountMinor > 0 ? <div className="account-line"><span>Discount</span><strong>-{money(order.discountMinor, order.currency)}</strong></div> : null}
+          <div className="account-line"><span>VAT included</span><strong>{money(order.taxMinor, order.currency)}</strong></div>
           <div className="account-line"><span>Total paid</span><strong>{money(order.totalMinor, order.currency)}</strong></div>
+          {order.invoice ? (
+            <div className="tracking-panel">
+              <h3>VAT invoice</h3>
+              <p>{order.invoice.invoiceNumber}</p>
+              <p>{order.invoice.sellerLegalName}. Company number {order.invoice.sellerCompanyNumber}. VAT No. {order.invoice.sellerVatNumber}.</p>
+              <div className="account-line"><span>Net total</span><strong>{money(order.invoice.orderNetTotalMinor, order.currency)}</strong></div>
+              <div className="account-line"><span>VAT total</span><strong>{money(order.invoice.vatTotalMinor, order.currency)}</strong></div>
+            </div>
+          ) : null}
           {trackingReady ? (
             <div className="tracking-panel">
               <h3>Tracking</h3>

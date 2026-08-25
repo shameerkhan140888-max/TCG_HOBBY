@@ -79,6 +79,7 @@ function mapEmailOrder(order: Awaited<ReturnType<typeof loadOrder>>): IronSprueE
     fulfilmentStatus: order.fulfilmentStatus,
     subtotalMinor: order.subtotalMinor,
     shippingMinor: order.shippingMinor,
+    taxMinor: order.taxMinor,
     totalMinor: order.totalMinor,
     currency: order.currency,
     shippingMethodName: order.shippingMethodName,

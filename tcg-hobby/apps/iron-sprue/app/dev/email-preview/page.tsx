@@ -12,6 +12,7 @@ type IronSprueEmailOrder = {
   fulfilmentStatus: string;
   subtotalMinor: number;
   shippingMinor: number;
+  taxMinor: number;
   totalMinor: number;
   currency: string;
   shippingMethodName: string | null;
@@ -53,8 +54,9 @@ const sampleOrder: IronSprueEmailOrder = {
   paymentStatus: 'SUCCEEDED',
   fulfilmentStatus: 'SHIPPED',
   subtotalMinor: 3998,
-  shippingMinor: 299,
-  totalMinor: 4297,
+  shippingMinor: 399,
+  taxMinor: 733,
+  totalMinor: 4397,
   currency: 'GBP',
   shippingMethodName: 'Standard delivery',
   shippingFullName: 'Preview Customer',

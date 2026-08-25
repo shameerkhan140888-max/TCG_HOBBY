@@ -18,6 +18,7 @@ export type IronSprueEmailOrder = {
   fulfilmentStatus: string;
   subtotalMinor: number;
   shippingMinor: number;
+  taxMinor: number;
   totalMinor: number;
   currency: string;
   shippingMethodName?: string | null;
@@ -255,6 +256,7 @@ function totals(order: IronSprueEmailOrder, label = 'Total paid') {
     <table class="totals" role="presentation">
       <tr><td>Subtotal</td><td class="right">${escapeHtml(money(order.subtotalMinor, order.currency))}</td></tr>
       <tr><td>Delivery</td><td class="right">${escapeHtml(money(order.shippingMinor, order.currency))}</td></tr>
+      <tr><td>VAT included</td><td class="right">${escapeHtml(money(order.taxMinor, order.currency))}</td></tr>
       <tr class="total"><td>${escapeHtml(label)}</td><td class="right">${escapeHtml(money(order.totalMinor, order.currency))}</td></tr>
     </table>
   `;
@@ -275,7 +277,7 @@ function footer(config: IronSprueEmailTemplateConfig) {
   return `
     <div class="footer">
       <p><strong>Capital Hobby Group Ltd</strong>, trading as Iron Sprue.</p>
-      <p>Company number 17336948. Registered office: 4-6 Greatorex Street, London, United Kingdom, E1 5NF.</p>
+      <p>Company number 17336948. VAT No. 525 2040 33. Registered office: 4-6 Greatorex Street, London, United Kingdom, E1 5NF.</p>
       <p>Need help? Contact ${escapeHtml(config.supportEmail)}.</p>
     </div>
   `;
