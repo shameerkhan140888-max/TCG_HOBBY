@@ -12,7 +12,7 @@ Pages Function for launch-list signup and one unsubscribe Function.
 - Output directory: `apps/iron-sprue/dist/public-coming-soon`
 - Hosting target: Cloudflare Pages Free, static assets only
 - Runtime: Cloudflare Pages static assets plus Pages Functions for signup
-- Secrets required: Iron Sprue-only Neon and Resend values listed below
+- Secrets required: Iron Sprue launch-list database compatibility value and Resend values listed below
 
 The generated output contains only:
 
@@ -44,7 +44,7 @@ Do not deploy the full Next.js Iron Sprue storefront for this task.
 - Build output directory: `apps/iron-sprue/dist/public-coming-soon`
 - Node.js version: 22
 - Environment variables:
-  - `IRON_SPRUE_DATABASE_URL` secret, dedicated Iron Sprue Neon preview or production branch
+  - `IRON_SPRUE_DATABASE_URL` secret only for legacy launch-list compatibility; live commerce uses Railway API/Postgres rather than a Cloudflare direct database path
   - `IRON_SPRUE_RESEND_API_KEY` secret
   - `IRON_SPRUE_EMAIL_FROM` secret or plain value from an approved Iron Sprue sender
   - `IRON_SPRUE_SUPPORT_EMAIL` plain value, defaults to `info@ironsprue.co.uk`
@@ -94,18 +94,20 @@ Cloudflare Pages keeps immutable deployments. To roll back:
 ## Launch List
 
 The current page posts to `/api/launch-list`, a Cloudflare Pages Function backed
-by the dedicated Iron Sprue Neon database and Resend. The Function stores a
+by the legacy launch-list database compatibility target and Resend. The Function stores a
 normalised email address, consent wording/version, delivery state and a hashed
 unsubscribe token. It never accepts TCG Hobby database URLs and returns duplicate
 success without sending another confirmation email.
 
 Before preview or production use, apply
 `apps/iron-sprue/migrations/20260803090000_launch_list_subscribers.sql` only to
-the selected Iron Sprue Neon branch. Do not run it against TCG Hobby.
+the selected Iron Sprue launch-list database target. Do not run it against TCG Hobby.
 
-Preview deployments should use the Iron Sprue development or preview Neon
-branch. Production deployments should use the Iron Sprue production Neon branch
-only after explicit approval.
+Preview deployments should use the Iron Sprue development or preview launch-list
+target. Production deployments should use the approved Iron Sprue launch-list
+target only after explicit approval. This coming-soon path is not the live
+commerce architecture; live catalogue, basket, checkout and orders use the
+Railway API/Postgres path.
 
 ## Replacement By Full Storefront
 

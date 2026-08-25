@@ -1,6 +1,6 @@
 # Iron Sprue Catalogue Sprint Handoff
 
-This note protects the approved storefront baseline and records the clean handoff rules for the catalogue-population sprint. It is documentation only; it does not authorise product import, Neon seeding, R2 upload or deployment.
+This note protects the approved storefront baseline and records the clean handoff rules for the earlier catalogue-population sprint. It is documentation only; it does not authorise product import, database seeding, R2 upload or deployment. Current production commerce uses Cloudflare storefront -> Railway API -> Railway Postgres.
 
 ## Approved Storefront Baseline
 
@@ -66,7 +66,7 @@ Canonical Iron Sprue variables are listed in `apps/iron-sprue/.env.example`. `.e
 
 `IRON_SPRUE_R2_PUBLIC_BASE_URL` may remain empty during local private R2 processing. Production storefront media delivery must use `https://media.ironsprue.co.uk`.
 
-Current local operator action required before the catalogue sprint: add `IRON_SPRUE_WORKER_READ_DATABASE_URL` for Worker/read-path validation; do not print or commit its value.
+Historical local operator action before the catalogue sprint: add `IRON_SPRUE_WORKER_READ_DATABASE_URL` for Worker/read-path validation; do not print or commit its value. This is not required for the current production storefront, which must use Railway API reads.
 
 ## Media Policy
 
@@ -76,7 +76,7 @@ Use the policy in `docs/IRON_SPRUE_PRODUCT_MEDIA_PIPELINE.md`. Image 2 is the de
 
 Before catalogue population begins:
 
-1. Confirm canonical Iron Sprue Neon variables resolve to the dedicated development Neon project.
+1. Confirm the explicitly selected Iron Sprue database variables resolve to the intended non-production target before running any import.
 2. Run migrations/status checks only against the explicitly selected Iron Sprue database.
 3. Confirm R2 access targets `iron-sprue-product-media`.
 4. Upload no media until object-key strategy, rights checks and image review workflow are ready.

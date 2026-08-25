@@ -8,7 +8,7 @@ Cloudflare Worker storefront:
 
 - Iron Sprue homepage and presentation.
 - Catalogue, search and product detail rendering.
-- Read-only product data.
+- Product data fetched from the Railway API.
 - Public R2/media display once supplier-approved media is attached.
 - Same-origin proxy surface for customer mutation calls.
 - Site-wide protected staging gate while `STOREFRONT_ACCESS_MODE=protected`.
@@ -24,22 +24,24 @@ Shared Node/Nest API:
 - Transactional email state and retry.
 - Admin mutations and reporting.
 
-The Worker database path must remain read-oriented. Do not run Prisma transactions through `PrismaNeonHTTP`.
+The production Worker must not connect directly to Postgres. All catalogue, basket, checkout, order and media state must flow through the Railway API. Historical Worker/read-path experiments are compatibility references only and must not be used as the production architecture.
 
 ## Operational Isolation
 
 Iron Sprue must use dedicated operational resources. Store-aware schema fields remain useful as a safety layer, but they are not the primary production boundary.
 
-- Neon: Iron Sprue uses its own Neon project, production branch, development branch, roles, pooled runtime URL, direct migration URL and Worker read URL. Do not point Iron Sprue at the TCG Hobby production database.
+- Railway Postgres: Iron Sprue production uses the Railway Postgres database behind the Railway API/Admin path. Legacy `IRON_SPRUE_DATABASE_URL`, `IRON_SPRUE_DIRECT_DATABASE_URL` and `IRON_SPRUE_WORKER_READ_DATABASE_URL` names remain compatibility aliases for local/import tooling until platform variables are fully consolidated. Do not point Iron Sprue at the TCG Hobby production database.
 - R2: Iron Sprue media uses a dedicated `iron-sprue-product-media` bucket and `IRON_SPRUE_MEDIA` Worker binding. Product images, order images, email images, logos and import assets must not be stored in the TCG Hobby bucket.
 - Stripe: Iron Sprue uses a separate Stripe account and store-specific test/live keys, webhook secrets, account ID, descriptor, public business name, success URL and cancel URL. Do not use the unqualified `STRIPE_SECRET_KEY` for Iron Sprue.
 - Railway/Node API: Worker-to-Railway mutation calls are signed with HMAC using Iron Sprue-scoped key IDs and secrets. Stripe webhooks call the Node API directly and are authenticated only by store-specific Stripe raw-body signature validation.
 
 Required environment names are intentionally explicit:
 
-- `IRON_SPRUE_DATABASE_URL`
-- `IRON_SPRUE_DIRECT_DATABASE_URL`
-- `IRON_SPRUE_WORKER_READ_DATABASE_URL`
+- `DATABASE_URL` on Railway API/migration services
+- `IRON_SPRUE_ADMIN_DATABASE_URL` for the local/admin Railway tunnel target
+- `IRON_SPRUE_DATABASE_URL` as a compatibility alias where older Iron Sprue tooling still reads it
+- `IRON_SPRUE_DIRECT_DATABASE_URL` as a compatibility alias for legacy direct migration tooling
+- `IRON_SPRUE_WORKER_READ_DATABASE_URL` as a deprecated compatibility alias; production Cloudflare storefront must not use it
 - `IRON_SPRUE_R2_BUCKET_NAME`
 - `IRON_SPRUE_R2_PUBLIC_BASE_URL`
 - `IRON_SPRUE_INTERNAL_API_KEY_ID`
@@ -54,7 +56,7 @@ Migration and import commands must require explicit store and environment select
 
 ## Store Context
 
-Iron Sprue product data uses `storeCode: "IRON_SPRUE"` in the launch import seed. The production database migration still needs to add durable store ownership to products, inventory, orders, Stripe metadata, email branding and Admin filters. Because Iron Sprue now requires a dedicated Neon project, this store context is a defence-in-depth guard rather than permission to share TCG Hobby operational data.
+Iron Sprue product data uses `storeCode: "IRON_SPRUE"` in the launch import seed and canonical Railway product/order tables. This store context is a defence-in-depth guard and not permission to share TCG Hobby operational data.
 
 ## Application Path
 
@@ -69,7 +71,7 @@ The launch storefront app lives at `apps/iron-sprue`. It is deliberately separat
 - Structured import validation contract and tests.
 - Password-protected staging access gate with signed cookie tests.
 - Same-origin mutation proxy allowlist and HMAC signing foundation with key ID, method, path, query, body hash, timestamp, nonce, store and environment.
-- Dedicated Iron Sprue Neon/R2 runtime config guards.
+- Dedicated Iron Sprue Railway/R2 runtime config guards.
 - Store-aware Stripe configuration resolver and cross-store webhook finalisation guard.
 - Catalogue-derived text-fallback "Brands we stock" section.
 
@@ -87,4 +89,4 @@ Ambiguous matches enter review and must not be published automatically. Imported
 
 ## Remaining Backend Work
 
-The Node/Nest API already has early auth and public commerce endpoints. It still needs the full multi-store mutation boundary: request signing, replay protection, CSRF/origin policy, store-scoped sessions, store-scoped basket and checkout, Stripe webhook store isolation, Admin filters and email branding isolation.
+The Node/Nest API owns the production mutation boundary: request signing, replay protection, CSRF/origin policy, store-scoped sessions, store-scoped basket and checkout, Stripe webhook store isolation, Admin filters and email branding isolation.

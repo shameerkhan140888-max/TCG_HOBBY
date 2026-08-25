@@ -1,10 +1,15 @@
 # Iron Sprue Admin Operations
 
+> Historical note: this document records the earlier Neon-era Admin completion plan.
+> Current Iron Sprue production commerce uses Cloudflare storefront -> Railway API
+> -> Railway Postgres. Do not use the Neon branch recovery sections below as live
+> launch architecture without a coordinated post-launch migration decision.
+
 Iron Sprue now has a dedicated Admin workspace inside the existing Admin application shell. It reuses authentication, UI primitives and database infrastructure code, but Iron Sprue product, inventory, media, homepage and review records are held in Iron Sprue-specific tables and are always server-scoped to `IRON_SPRUE`.
 
 ## Required Runtime Boundary
 
-- Admin database: Iron Sprue Neon project and selected Iron Sprue branch.
+- Admin database: approved Iron Sprue Railway Postgres path for production; older Neon branch notes below are historical recovery notes.
 - Media bucket: Iron Sprue R2 bucket and public media domain.
 - Storefront URL: Iron Sprue storefront origin.
 - Commerce credentials: Iron Sprue Stripe account and webhook secrets.

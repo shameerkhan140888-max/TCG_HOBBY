@@ -97,11 +97,11 @@ Do not paste secret values into logs, issues or reports.
 
 | Variable | Service | Required | Secret | Staging value source |
 | --- | --- | --- | --- | --- |
-| `DATABASE_URL` | API/Admin/Cloudflare if direct DB reads are enabled | Yes | Yes | Railway Postgres connection string or Neon staging URL |
+| `DATABASE_URL` | Railway API/Admin/migration services | Yes | Yes | Railway Postgres connection string |
 | `DIRECT_DATABASE_URL` | Migration runner | Recommended | Yes | Staging Postgres direct connection |
-| `IRON_SPRUE_DATABASE_URL` | Iron Sprue app/API where used | Yes | Yes | Staging Postgres connection string |
-| `IRON_SPRUE_DIRECT_DATABASE_URL` | Migration runner | Recommended | Yes | Staging Postgres direct connection |
-| `IRON_SPRUE_WORKER_READ_DATABASE_URL` | Cloudflare storefront | If worker reads DB | Yes | Staging DB pooled/serverless URL |
+| `IRON_SPRUE_DATABASE_URL` | Compatibility alias for older Iron Sprue tooling | Transitional | Yes | Same Railway Postgres target only while alias is retained |
+| `IRON_SPRUE_DIRECT_DATABASE_URL` | Compatibility alias for older migration tooling | Transitional | Yes | Railway direct target only while alias is retained |
+| `IRON_SPRUE_WORKER_READ_DATABASE_URL` | Deprecated compatibility alias | No for production storefront | Yes | Do not use for production Cloudflare storefront direct DB reads |
 | `IRON_SPRUE_SITE_URL` | Storefront/API/email | Yes | No | `https://staging.ironsprue.co.uk` |
 | `NEXT_PUBLIC_IRON_SPRUE_SITE_URL` | Storefront browser | Yes | No | `https://staging.ironsprue.co.uk` |
 | `IRON_SPRUE_ADMIN_URL` | API/Admin/email links | Yes | No | `https://staging-admin.ironsprue.co.uk` |

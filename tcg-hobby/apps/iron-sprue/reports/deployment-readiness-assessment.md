@@ -11,13 +11,13 @@ Intended shape: Cloudflare for the public frontend/domain layer, Railway for bac
 - The Iron Sprue storefront and admin use Next.js application routes and server actions.
 - Stripe Checkout remains hosted by Stripe; the app must expose the Iron Sprue webhook route.
 - Resend transactional email is invoked from server-side order lifecycle code.
-- Neon/Postgres remains the Prisma datasource.
+- Railway Postgres is the canonical production Prisma datasource for Iron Sprue.
 - R2-backed media is consumed through configured public/preview URL helpers.
 - GA4 and Meta Pixel IDs are runtime environment configuration, not hard-coded.
 
 ### Required Runtime Configuration
 
-- Database connection variables used by the existing Prisma/Neon setup.
+- Railway database connection variables used by the API/Admin runtime and migration tooling.
 - Iron Sprue Stripe variables: account id, secret key, publishable key, webhook secret.
 - Iron Sprue Resend variables: API key, from address, reply-to/site URL where configured.
 - Iron Sprue analytics variables: GA4 measurement id and Meta pixel id.
@@ -36,9 +36,9 @@ Intended shape: Cloudflare for the public frontend/domain layer, Railway for bac
 
 Proceed with the planned Cloudflare plus Railway split only after staging environment variables are populated and the full paid/refund/dispatch/email E2E is repeated against staging. Do not move Stripe webhooks until the deployed URL is known and the Stripe CLI/Dashboard endpoint secret has been updated.
 
-## Capital Hobby / TCG Hobby
+## Capital Hobby Group / TCG Hobby
 
-TCG Hobby remains the reference implementation for existing commerce and admin behaviour. Nothing in this sprint requires moving it away from its current hosting plan.
+Capital Hobby Group is the parent identity. TCG Hobby remains the trading-card child brand and the reference implementation for existing commerce and admin behaviour. Nothing in this sprint requires moving TCG Hobby away from its current hosting plan.
 
 ### Recommendation
 

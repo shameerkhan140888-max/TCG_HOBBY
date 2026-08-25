@@ -4,6 +4,8 @@ This branch is a non-deploying feasibility branch for running the current TCG Ho
 
 It does not replace the existing Vercel path. Production DNS, Vercel settings and deployment targets remain unchanged.
 
+This document is scoped to the TCG Hobby child-brand proof. It is not the Iron Sprue production architecture. Iron Sprue production uses Cloudflare storefront -> Railway API -> Railway Postgres, with no direct Cloudflare-to-Postgres dependency.
+
 ## Preview Commands
 
 Run from the repository package root:
@@ -26,7 +28,7 @@ No real secrets are stored in this repository. Configure secrets in Cloudflare f
 
 | Current variable | Cloudflare binding type | Notes |
 | --- | --- | --- |
-| `DATABASE_URL` | Secret | Neon PostgreSQL URL. Worker read routes use `PrismaNeonHTTP`; transaction-dependent writes must go through Node/Nest. |
+| `DATABASE_URL` | Secret | TCG Hobby proof Neon PostgreSQL URL. Worker read routes use `PrismaNeonHTTP`; transaction-dependent writes must go through Node/Nest. Not used by Iron Sprue production. |
 | `STRIPE_SECRET_KEY` | Secret | Stripe sandbox or live key, depending on environment. |
 | `STRIPE_WEBHOOK_SECRET` | Secret | Must match the Cloudflare preview/public webhook endpoint. |
 | `RESEND_API_KEY` | Secret | Transactional email provider. |
