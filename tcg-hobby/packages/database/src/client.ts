@@ -119,6 +119,7 @@ export type IronSprueAdminDatabaseTargetInfo = {
   environment: string;
   label: 'LOCAL' | 'STAGING' | 'RAILWAY PRODUCTION' | 'PRODUCTION' | 'UNKNOWN';
   host: string;
+  port: string | null;
   database: string;
 };
 
@@ -127,10 +128,11 @@ function parseDatabaseTarget(connectionString: string) {
     const url = new URL(connectionString);
     return {
       host: url.hostname || 'unknown',
+      port: url.port || null,
       database: url.pathname.replace(/^\/+/, '') || 'unknown',
     };
   } catch {
-    return { host: 'invalid', database: 'invalid' };
+    return { host: 'invalid', port: null, database: 'invalid' };
   }
 }
 
@@ -203,4 +205,11 @@ export function getIronSprueAdminPrisma() {
   }
 
   return globalForPrisma.ironSprueAdminPrisma;
+}
+
+export async function resetIronSprueAdminPrisma() {
+  const client = globalForPrisma.ironSprueAdminPrisma;
+  delete globalForPrisma.ironSprueAdminPrisma;
+  delete globalForPrisma.ironSprueAdminPrismaUrl;
+  await client?.$disconnect().catch(() => undefined);
 }

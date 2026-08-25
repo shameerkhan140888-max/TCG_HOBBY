@@ -94,6 +94,7 @@ const INTERNAL_COPY_PHRASES = [
   'catalogue-confirmed details',
   'verified iron sprue source data',
   'intentionally omitted until',
+  'launch range',
   'not listed unless they are present',
   'not stated in the current verified',
   'product packaging or manufacturer data is reviewed',
@@ -103,6 +104,7 @@ const INTERNAL_COPY_PHRASES = [
   'launch stock record',
   'needs verification',
   'requires verification',
+  'supplier code',
   'unsupported claim',
   'source provenance',
   'reconciliation',
@@ -115,17 +117,32 @@ function isInternalProductCopyBlock(value: string) {
   return INTERNAL_COPY_PHRASES.some((phrase) => normalized.includes(phrase));
 }
 
-function sanitizePublicProductCopy(value: string | null | undefined) {
+function sanitizePublicProductParagraph(value: string) {
+  if (isInternalProductCopyBlock(value)) {
+    return value
+      .split(/(?<=[.!?])\s+/)
+      .map((sentence) => sentence.trim())
+      .filter(Boolean)
+      .filter((sentence) => !isInternalProductCopyBlock(sentence))
+      .join(' ')
+      .trim();
+  }
+
+  return value.trim();
+}
+
+export function sanitizePublicProductCopy(value: string | null | undefined) {
   const paragraphs = String(value ?? '')
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean)
-    .filter((paragraph) => !isInternalProductCopyBlock(paragraph));
+    .map(sanitizePublicProductParagraph)
+    .filter(Boolean);
 
   return paragraphs.join('\n\n').trim();
 }
 
-function sanitizePublicProductList(values: string[] | null | undefined) {
+export function sanitizePublicProductList(values: string[] | null | undefined) {
   return (values ?? [])
     .map((value) => sanitizePublicProductCopy(value))
     .filter((value) => value.length > 0);

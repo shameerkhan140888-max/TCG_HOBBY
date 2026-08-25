@@ -47,6 +47,18 @@ vi.mock('@tcg-hobby/database', () => ({
     if (asset.mimeType) return asset.mimeType.startsWith('image/');
     return /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(asset.url ?? asset.storageKey ?? '');
   },
+  sanitizePublicProductCopy: (value: string | null | undefined) => String(value ?? '')
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => paragraph
+      .split(/(?<=[.!?])\s+/)
+      .filter((sentence) => !/catalogue currently confirms|unsupported claims|launch catalogue|supplier reference|source data|source material|launch range/i.test(sentence))
+      .join(' '))
+    .filter(Boolean)
+    .join('\n\n'),
+  sanitizePublicProductList: (values: string[] | null | undefined) => (values ?? [])
+    .filter((value) => !/supplier code|launch stock record|source data/i.test(value)),
   listIronSprueAdminContentReviews: mocks.listIronSprueAdminContentReviews,
   listIronSprueAdminInventory: vi.fn(),
   listIronSprueAdminMediaAssets: mocks.listIronSprueAdminMediaAssets,
@@ -499,9 +511,20 @@ describe('IronSprueAdminSection operational controls', () => {
           customerTitle: 'Toyota 2000GT Red',
           sourceTitle: 'Toyota 2000GT Red',
           shortDescription: 'Ready retail copy.',
-          fullDescription: 'Full PDP descriptor copy for the product.',
-          featureBullets: ['Display-ready model kit'],
-          specifications: { scale: '1:24' },
+          fullDescription: [
+            'Full PDP descriptor copy for the product.',
+            'The subject and format are kept specific so customers can compare it properly against the rest of the Pintoo launch range. The catalogue currently confirms the brand, product title and supplier reference.',
+            'Unsupported claims such as piece count, dimensions, materials and age grading have been left out until they are verified from manufacturer packaging or source data.',
+            'The listing is built from the launch catalogue and associated supplier or manufacturer source material already captured for Iron Sprue.',
+          ].join('\n\n'),
+          featureBullets: ['Display-ready model kit', 'Supplier code 05628'],
+          specifications: {
+            scale: '1:24',
+            supplierCode: '05628',
+            manufacturerReference: '05628',
+            sourceRow: '73',
+            retailPriceMinor: '1999',
+          },
           seoTitle: 'Toyota 2000GT Red model kit',
           metaDescription: 'Aoshima Toyota 2000GT Red model kit.',
           buildType: 'Model kit',
@@ -567,8 +590,19 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Existing R2 product images detected:');
     expect(markup).toContain('Reconcile R2 media');
     expect(markup).toContain('Full PDP descriptor copy for the product.');
+    expect(markup).not.toContain('catalogue currently confirms');
+    expect(markup).not.toContain('Unsupported claims');
+    expect(markup).not.toContain('launch catalogue');
+    expect(markup).not.toContain('Supplier code 05628');
+    expect(markup).toContain('Scale');
+    expect(markup).toContain('1:24');
+    expect(markup).not.toContain('supplierCode');
+    expect(markup).not.toContain('manufacturerReference');
+    expect(markup).not.toContain('sourceRow');
+    expect(markup).not.toContain('retailPriceMinor');
     expect(markup).toContain('Sell price:');
     expect(markup).toContain('Stock on hand:');
+    expect(markup).toContain('name="returnTo" value="/iron-sprue-admin/products?q=IS-AOS-05628"');
     expect(markup).toContain('Source/placeholder records');
     expect(markup).toContain('catalogue-primary-placeholder.json');
     expect(markup).toContain('Existing R2 image candidates');

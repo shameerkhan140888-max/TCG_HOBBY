@@ -22,6 +22,10 @@ export function isIronSprueAdminDatabaseUnavailable(error: unknown) {
 export function IronSprueAdminDatabaseUnavailable({ error }: { error: unknown }) {
   const target = getIronSprueAdminDatabaseTargetInfo();
   const message = errorMessage(error).split('\n').find(Boolean) ?? 'The Iron Sprue admin database is unavailable.';
+  const hostWithPort = target.port ? `${target.host}:${target.port}` : target.host;
+  const tunnelCommand = target.host === '127.0.0.1' && target.port
+    ? `railway connect Postgres --tunnel-only -P ${target.port}`
+    : null;
 
   return (
     <Section className="py-8">
@@ -48,12 +52,18 @@ export function IronSprueAdminDatabaseUnavailable({ error }: { error: unknown })
               </div>
               <div className="rounded-md border border-surface-line bg-surface-ink p-3 md:col-span-2">
                 <dt className="text-neutral-500">Local target</dt>
-                <dd className="mt-1 break-all font-semibold">{target.host}/{target.database}</dd>
+                <dd className="mt-1 break-all font-semibold">{hostWithPort}/{target.database}</dd>
               </div>
             </dl>
             <p className="text-sm leading-6 text-neutral-400">
               Start the existing Railway PostgreSQL tunnel for this local target, then refresh the admin. No data has been changed.
             </p>
+            {tunnelCommand ? (
+              <div className="rounded-md border border-amber-900/60 bg-amber-950/20 p-4 text-sm">
+                <p className="font-semibold text-amber-100">Expected tunnel command</p>
+                <code className="mt-2 block break-all text-amber-50">{tunnelCommand}</code>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </Container>

@@ -1,3 +1,4 @@
+import { resetIronSprueAdminPrisma } from '@tcg-hobby/database';
 import { IronSprueAdminSection } from '../../../components/iron-sprue-admin-section';
 import { IronSprueAdminDatabaseUnavailable, isIronSprueAdminDatabaseUnavailable } from '../../../components/iron-sprue-admin-database-unavailable';
 import { IronSprueAdminShell } from '../../../components/iron-sprue-admin-shell';
@@ -20,6 +21,7 @@ export default async function IronSprueAdminSectionPage({
     content = await IronSprueAdminSection({ section, searchParams: query });
   } catch (error) {
     if (isIronSprueAdminDatabaseUnavailable(error)) {
+      await resetIronSprueAdminPrisma();
       content = <IronSprueAdminDatabaseUnavailable error={error} />;
     } else {
       throw error;

@@ -20,6 +20,7 @@
     "dev:tcg-hobby": "npm run dev -w @capital-hobby/tcg-hobby",
     "dev:iron-sprue": "npm run dev -w @capital-hobby/iron-sprue",
     "dev:admin": "npm run dev -w @tcg-hobby/admin",
+    "dev:iron-sprue-admin:tunnel": "railway connect Postgres --tunnel-only -P 64843",
     "dev:api": "npm run dev -w @tcg-hobby/api",
     "dev:mobile": "npm run dev -w @tcg-hobby/mobile",
     "build:tcg-hobby": "npm run build -w @capital-hobby/tcg-hobby",

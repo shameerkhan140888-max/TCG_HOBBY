@@ -74,6 +74,15 @@ function adminStatusPath(section: string, key: 'saved' | 'error', message: strin
   return `/iron-sprue-admin/${section}?${key}=${encodeURIComponent(message)}`;
 }
 
+function adminReturnPath(formData: FormData, fallbackSection: string, key: 'saved' | 'error', message: string) {
+  const raw = String(formData.get('returnTo') ?? '').trim();
+  const separator = raw.includes('?') ? '&' : '?';
+  if (raw.startsWith('/iron-sprue-admin') && !raw.startsWith('//')) {
+    return `${raw}${separator}${key}=${encodeURIComponent(message)}`;
+  }
+  return adminStatusPath(fallbackSection, key, message);
+}
+
 function actionError(error: unknown) {
   return error instanceof Error ? error.message : 'Action failed.';
 }
@@ -92,12 +101,13 @@ export async function updateIronSprueMediaApprovalAction(formData: FormData) {
     if (!['APPROVED', 'REJECTED', 'REVIEW_REQUIRED'].includes(nextState)) throw new Error('Invalid media approval state.');
     await updateIronSprueAdminMediaApproval(mediaId, nextState as 'APPROVED' | 'REJECTED' | 'REVIEW_REQUIRED', actor);
   } catch (error) {
-    redirect(adminStatusPath('media', 'error', actionError(error)));
+    redirect(adminReturnPath(formData, 'media', 'error', actionError(error)));
   }
   revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/products');
   revalidatePath('/iron-sprue-admin/media');
   revalidateIronSprueStorefront();
-  redirect(adminStatusPath('media', 'saved', 'Media approval saved.'));
+  redirect(adminReturnPath(formData, 'media', 'saved', 'Media approval saved.'));
 }
 
 export async function bulkApproveIronSprueMediaAction(formData: FormData) {
@@ -130,12 +140,13 @@ export async function updateIronSprueContentReviewAction(formData: FormData) {
     if (!['APPROVED', 'REJECTED', 'CONFLICT', 'PENDING'].includes(nextStatus)) throw new Error('Invalid content review status.');
     await updateIronSprueAdminContentReviewStatus(reviewId, nextStatus as 'APPROVED' | 'REJECTED' | 'CONFLICT' | 'PENDING', actor);
   } catch (error) {
-    redirect(adminStatusPath('content-review', 'error', actionError(error)));
+    redirect(adminReturnPath(formData, 'content-review', 'error', actionError(error)));
   }
   revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/products');
   revalidatePath('/iron-sprue-admin/content-review');
   revalidateIronSprueStorefront();
-  redirect(adminStatusPath('content-review', 'saved', 'Content review saved.'));
+  redirect(adminReturnPath(formData, 'content-review', 'saved', 'Content review saved.'));
 }
 
 export async function approveIronSprueProductReviewAction(formData: FormData) {
@@ -221,12 +232,12 @@ export async function updateIronSpruePublicationStateAction(formData: FormData) 
       actor,
     );
   } catch (error) {
-    redirect(adminStatusPath('products', 'error', actionError(error)));
+    redirect(adminReturnPath(formData, 'products', 'error', actionError(error)));
   }
   revalidatePath('/iron-sprue-admin');
   revalidatePath('/iron-sprue-admin/products');
   revalidateIronSprueStorefront();
-  redirect(adminStatusPath('products', 'saved', 'Publication state saved.'));
+  redirect(adminReturnPath(formData, 'products', 'saved', 'Publication state saved.'));
 }
 
 export async function publishIronSprueProductAction(formData: FormData) {
@@ -236,12 +247,12 @@ export async function publishIronSprueProductAction(formData: FormData) {
     if (!productId) throw new Error('productId is required.');
     await publishIronSprueAdminProduct(productId, actor);
   } catch (error) {
-    redirect(adminStatusPath('products', 'error', actionError(error)));
+    redirect(adminReturnPath(formData, 'products', 'error', actionError(error)));
   }
   revalidatePath('/iron-sprue-admin');
   revalidatePath('/iron-sprue-admin/products');
   revalidateIronSprueStorefront();
-  redirect(adminStatusPath('products', 'saved', 'Product published.'));
+  redirect(adminReturnPath(formData, 'products', 'saved', 'Product published.'));
 }
 
 export async function bulkPublishIronSprueProductsAction(formData: FormData) {

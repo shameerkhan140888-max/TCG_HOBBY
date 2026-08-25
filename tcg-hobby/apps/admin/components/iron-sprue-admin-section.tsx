@@ -13,6 +13,8 @@ import {
   listIronSprueAdminMediaAssets,
   listIronSprueAdminOrders,
   listIronSprueAdminProducts,
+  sanitizePublicProductCopy,
+  sanitizePublicProductList,
 } from '@tcg-hobby/database';
 import { Button, Card, CardContent, Container, PageHeader, Section, StatusBadge } from '@tcg-hobby/ui';
 import { notFound } from 'next/navigation';
@@ -68,6 +70,10 @@ function date(value: Date | string | null | undefined) {
 function ironSprueMediaPreviewUrl(asset: { url: string | null; storageKey: string | null; mimeType?: string | null }) {
   if (!isIronSprueDisplayableImageAsset(asset)) return null;
   return ironSprueAdminPreviewUrl(asset.url, asset.storageKey);
+}
+
+function productReturnPath(product: { sku: string }) {
+  return `/iron-sprue-admin/products?q=${encodeURIComponent(product.sku)}`;
 }
 
 function StatePill({ children }: { children: string }) {
@@ -315,6 +321,7 @@ function ReviewProductPublishControls({
       ) : null}
       <form action={publishIronSprueProductAction}>
         <input type="hidden" name="productId" value={product.id} />
+        <input type="hidden" name="returnTo" value={productReturnPath(product)} />
         <Button type="submit" disabled={!canAttemptPublish} size="sm" variant={canAttemptPublish ? 'primary' : 'outline'}>Publish product</Button>
       </form>
       {canAttemptPublish ? <p className="text-xs text-neutral-500">Publishing will stop if media, content or conflict blockers remain.</p> : null}
@@ -441,7 +448,7 @@ function ProductMediaReadinessPanel({
                   {asset.isPrimary ? <StatePill>PRIMARY</StatePill> : null}
                 </div>
                 <p className="break-all text-xs text-neutral-500">{asset.storageKey ?? asset.url ?? 'No storage key'}</p>
-                <MediaActionForms mediaId={asset.id} />
+                <MediaActionForms mediaId={asset.id} returnTo={productReturnPath(product)} />
               </div>
             );
           })}
@@ -600,11 +607,13 @@ function ProductAdminCard({
           <ProductMediaReadinessPanel product={product} r2Candidates={r2Candidates} />
           <form action={publishIronSprueProductAction} className="grid gap-2">
             <input type="hidden" name="productId" value={product.id} />
+            <input type="hidden" name="returnTo" value={productReturnPath(product)} />
             <Button type="submit" disabled={!canPublish} variant={canPublish ? 'primary' : 'outline'}>Publish product</Button>
             {!canPublish && product.publicationState !== 'PUBLISHED' ? <p className="text-xs text-neutral-500">Publishing unlocks when all mandatory review checks pass.</p> : null}
           </form>
           <form action={updateIronSpruePublicationStateAction} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-3">
             <input type="hidden" name="productId" value={product.id} />
+            <input type="hidden" name="returnTo" value={productReturnPath(product)} />
             <Field label="Manual override">
               <select name="publicationState" defaultValue={product.publicationState === 'READY' ? 'READY_TO_PUBLISH' : product.publicationState} className={fieldClass}>
                 {['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY_TO_PUBLISH', 'ARCHIVED'].map((state) => <option key={state} value={state}>{state}</option>)}
@@ -845,18 +854,81 @@ async function ReferenceSection({ section }: { section: string }) {
   );
 }
 
-function MediaActionForms({ mediaId }: { mediaId: string }) {
+function MediaActionForms({ mediaId, returnTo }: { mediaId: string; returnTo?: string }) {
   return (
     <div className="flex flex-wrap gap-2">
       {(['APPROVED', 'REVIEW_REQUIRED', 'REJECTED'] as const).map((state) => (
         <form key={state} action={updateIronSprueMediaApprovalAction}>
           <input type="hidden" name="mediaId" value={mediaId} />
           <input type="hidden" name="approvalState" value={state} />
+          {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
           <Button type="submit" size="sm" variant={state === 'APPROVED' ? 'primary' : 'outline'}>{state === 'APPROVED' ? 'Approve' : state === 'REJECTED' ? 'Reject' : 'Needs review'}</Button>
         </form>
       ))}
     </div>
   );
+}
+
+const CUSTOMER_FACING_SPECIFICATION_KEYS = new Set([
+  'ageRange',
+  'assembledDimensions',
+  'brand',
+  'buildTime',
+  'buildType',
+  'category',
+  'colour',
+  'completedDimensions',
+  'difficulty',
+  'dimensions',
+  'finish',
+  'manufacturer',
+  'material',
+  'materials',
+  'modelScale',
+  'partCount',
+  'pieces',
+  'pieceCount',
+  'productLine',
+  'productType',
+  'scale',
+  'series',
+  'subject',
+  'theme',
+  'vehicleMake',
+  'vehicleManufacturer',
+  'vehicleModel',
+]);
+
+const INTERNAL_SPECIFICATION_KEY_PARTS = [
+  'barcode',
+  'checksum',
+  'cost',
+  'import',
+  'margin',
+  'mpn',
+  'price',
+  'reference',
+  'row',
+  'sku',
+  'source',
+  'supplier',
+  'vat',
+];
+
+function formatSpecificationLabel(key: string) {
+  return key
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function isCustomerFacingSpecification(key: string, value: unknown) {
+  const text = value == null ? '' : String(value).trim();
+  if (!text) return false;
+  const normalized = key.trim();
+  if (CUSTOMER_FACING_SPECIFICATION_KEYS.has(normalized)) return true;
+  const lower = normalized.toLowerCase();
+  return !INTERNAL_SPECIFICATION_KEY_PARTS.some((part) => lower.includes(part));
 }
 
 function ProductDescriptorContentPreview({
@@ -876,18 +948,20 @@ function ProductDescriptorContentPreview({
     category: { name: string } | null;
   };
 }) {
-  const featureBullets = Array.isArray(product.featureBullets) ? product.featureBullets.filter(Boolean) : [];
+  const shortDescription = sanitizePublicProductCopy(product.shortDescription);
+  const fullDescription = sanitizePublicProductCopy(product.fullDescription);
+  const featureBullets = sanitizePublicProductList(Array.isArray(product.featureBullets) ? product.featureBullets.filter(Boolean).map(String) : []);
   const specifications = product.specifications && typeof product.specifications === 'object'
-    ? Object.entries(product.specifications as Record<string, unknown>).filter(([, value]) => value != null && String(value).trim())
+    ? Object.entries(product.specifications as Record<string, unknown>).filter(([key, value]) => isCustomerFacingSpecification(key, value))
     : [];
 
   return (
     <div className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-3 text-sm text-neutral-200">
       <p><span className="font-semibold text-neutral-100">PDP title:</span> {product.customerTitle}</p>
-      <p><span className="font-semibold text-neutral-100">Short description:</span> {product.shortDescription ?? 'Not populated'}</p>
+      <p><span className="font-semibold text-neutral-100">Short description:</span> {shortDescription || 'Not populated'}</p>
       <div>
         <p className="font-semibold text-neutral-100">Full description</p>
-        <p className="mt-1 leading-6 text-neutral-300">{product.fullDescription ?? 'Not populated'}</p>
+        <p className="mt-1 whitespace-pre-line leading-6 text-neutral-300">{fullDescription || 'Not populated'}</p>
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         <div>
@@ -904,7 +978,7 @@ function ProductDescriptorContentPreview({
             <dl className="mt-1 grid gap-1 text-neutral-300">
               {specifications.map(([key, value]) => (
                 <div key={key} className="grid grid-cols-[120px_1fr] gap-2">
-                  <dt className="text-neutral-500">{key}</dt>
+                  <dt className="text-neutral-500">{formatSpecificationLabel(key)}</dt>
                   <dd>{String(value)}</dd>
                 </div>
               ))}
@@ -961,6 +1035,7 @@ function ContentReviewCard({
             <form key={status} action={updateIronSprueContentReviewAction}>
               <input type="hidden" name="reviewId" value={review.id} />
               <input type="hidden" name="status" value={status} />
+              <input type="hidden" name="returnTo" value={`/iron-sprue-admin/content-review`} />
               <Button type="submit" size="sm" variant={status === 'APPROVED' ? 'primary' : 'outline'}>{status}</Button>
             </form>
           ))}

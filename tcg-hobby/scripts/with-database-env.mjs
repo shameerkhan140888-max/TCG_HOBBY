@@ -14,13 +14,23 @@ const env = { ...process.env };
 const isAdminWorkspace = resolve(process.cwd()) === resolve(defaultWorkspaceRoot, 'apps/admin');
 
 try {
-  applyEnvFile(resolve(defaultWorkspaceRoot, 'apps/iron-sprue/.env.local'), env);
-  loadRootDatabaseEnv({
-    rootDir: defaultWorkspaceRoot,
-    env,
-    logger: isAdminWorkspace ? undefined : console.log,
-    requireDatabaseUrl: !isAdminWorkspace,
-  });
+  if (isAdminWorkspace) {
+    loadRootDatabaseEnv({
+      rootDir: defaultWorkspaceRoot,
+      env,
+      logger: undefined,
+      requireDatabaseUrl: false,
+    });
+    applyEnvFile(resolve(defaultWorkspaceRoot, 'apps/iron-sprue/.env.local'), env);
+  } else {
+    applyEnvFile(resolve(defaultWorkspaceRoot, 'apps/iron-sprue/.env.local'), env);
+    loadRootDatabaseEnv({
+      rootDir: defaultWorkspaceRoot,
+      env,
+      logger: console.log,
+      requireDatabaseUrl: true,
+    });
+  }
   if (isAdminWorkspace && !env.DATABASE_URL && !env.IRON_SPRUE_ADMIN_DATABASE_URL) {
     throw new Error('IRON_SPRUE_ADMIN_DATABASE_URL is required for local Iron Sprue admin development when DATABASE_URL is not configured.');
   }

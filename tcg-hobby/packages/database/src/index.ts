@@ -46,6 +46,7 @@ export {
   getIronSprueAdminDatabaseTargetInfo,
   getIronSprueAdminPrisma,
   prisma,
+  resetIronSprueAdminPrisma,
 } from './client.js';
 export type { IronSprueAdminDatabaseTargetInfo } from './client.js';
 export {
@@ -286,6 +287,8 @@ export {
   getIronSprueCatalogueHomeData,
   getIronSprueCatalogueProductBySlug,
   getIronSprueCatalogueProducts,
+  sanitizePublicProductCopy,
+  sanitizePublicProductList,
 } from './iron-sprue-catalogue.js';
 export type {
   IronSprueCatalogueFilters,
