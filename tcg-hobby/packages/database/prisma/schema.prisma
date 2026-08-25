@@ -1511,6 +1511,7 @@ model IronSprueOrder {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   items                   IronSprueOrderItem[]
+  invoices                IronSprueVatInvoice[]
   webhookEvents           IronSprueStripeWebhookEvent[]
   transactionalEmailDeliveries IronSprueTransactionalEmailDelivery[]
   returns                 IronSprueOrderReturn[]
@@ -1520,6 +1521,69 @@ model IronSprueOrder {
   @@index([storeCode, paymentStatus, createdAt])
   @@index([storeCode, userId, createdAt])
   @@index([storeCode, sourceChannel, placedAt])
+}
+
+model IronSprueVatInvoice {
+  id                         String   @id @default(cuid())
+  storeCode                  String   @default("IRON_SPRUE")
+  orderId                    String   @unique
+  sequence                   Int      @unique @default(autoincrement())
+  invoiceNumber              String?  @unique
+  invoiceDate                DateTime @default(now())
+  orderNumber                String
+  sellerLegalName            String
+  sellerCompanyNumber        String
+  sellerVatNumber            String
+  sellerRegisteredOffice     String
+  customerName               String
+  customerEmail              String
+  billingLine1               String
+  billingLine2               String?
+  billingCity                String
+  billingRegion              String?
+  billingPostalCode          String
+  billingCountry             String
+  subtotalNetMinor           Int
+  subtotalVatMinor           Int
+  subtotalGrossMinor         Int
+  shippingNetMinor           Int
+  shippingVatMinor           Int
+  shippingGrossMinor         Int
+  discountNetMinor           Int      @default(0)
+  discountVatMinor           Int      @default(0)
+  discountGrossMinor         Int      @default(0)
+  orderNetTotalMinor         Int
+  vatTotalMinor              Int
+  grossTotalMinor            Int
+  currency                   String   @default("GBP")
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+  order                      IronSprueOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  lines                      IronSprueVatInvoiceLine[]
+
+  @@index([storeCode, invoiceDate])
+  @@index([orderNumber])
+}
+
+model IronSprueVatInvoiceLine {
+  id                String   @id @default(cuid())
+  invoiceId         String
+  orderItemId       String?
+  lineType          String   @default("PRODUCT")
+  description       String
+  sku               String?
+  quantity          Int
+  unitGrossMinor    Int
+  netMinor          Int
+  vatRate           Int      @default(20)
+  vatMinor          Int
+  grossMinor        Int
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  invoice           IronSprueVatInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId, sortOrder])
+  @@index([orderItemId])
 }
 
 model IronSprueDiscountCode {

@@ -262,6 +262,49 @@ export type PublicOrderDetail = PublicOrderSummary & {
   shippingPostalCode?: string;
   shippingCountry?: string;
   items: OrderLineItem[];
+  invoice?: PublicVatInvoice | null;
+};
+
+export type PublicVatInvoiceLine = {
+  description: string;
+  sku?: string | null;
+  quantity: number;
+  unitGrossMinor: number;
+  netMinor: number;
+  vatRate: number;
+  vatMinor: number;
+  grossMinor: number;
+};
+
+export type PublicVatInvoice = {
+  invoiceNumber: string;
+  invoiceDate: string;
+  sellerLegalName: string;
+  sellerCompanyNumber: string;
+  sellerVatNumber: string;
+  sellerRegisteredOffice: string;
+  customerName: string;
+  customerEmail: string;
+  billingLine1: string;
+  billingLine2?: string | null;
+  billingCity: string;
+  billingRegion?: string | null;
+  billingPostalCode: string;
+  billingCountry: string;
+  subtotalNetMinor: number;
+  subtotalVatMinor: number;
+  subtotalGrossMinor: number;
+  shippingNetMinor: number;
+  shippingVatMinor: number;
+  shippingGrossMinor: number;
+  discountNetMinor: number;
+  discountVatMinor: number;
+  discountGrossMinor: number;
+  orderNetTotalMinor: number;
+  vatTotalMinor: number;
+  grossTotalMinor: number;
+  currency: CurrencyCode;
+  lines: PublicVatInvoiceLine[];
 };
 
 export type PublicCheckoutRequest = {

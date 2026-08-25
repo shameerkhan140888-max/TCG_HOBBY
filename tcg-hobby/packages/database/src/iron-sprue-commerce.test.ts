@@ -7,6 +7,7 @@ import {
   createIronSprueHostedCheckoutSession,
   createIronSpruePaymentIntentCheckout,
   generateIronSprueOrderNumber,
+  getIronSprueAvailableShippingMethods,
   processIronSprueStripeWebhookEvent,
   reconcileIronSpruePaymentIntentCheckout,
   reconcileIronSprueReservedStock,
@@ -69,6 +70,43 @@ function databaseMock() {
     },
     ironSprueOrder: {
       findUnique: vi.fn().mockResolvedValue(order),
+      findUniqueOrThrow: vi.fn().mockResolvedValue({
+        ...order,
+        orderNumber: 'IS-20260812-ABC123',
+        userId: null,
+        status: 'PAID',
+        paymentStatus: 'SUCCEEDED',
+        fulfilmentStatus: 'PENDING',
+        paymentProvider: 'STRIPE',
+        paymentIntentId: 'pi_iron_1',
+        stripeCheckoutSessionId: 'cs_iron_1',
+        stripeCheckoutUrl: 'https://checkout.stripe.com/c/pay/cs_iron_1',
+        subtotalMinor: 4999,
+        shippingMinor: 299,
+        taxMinor: 833,
+        discountCode: null,
+        discountMinor: 0,
+        totalMinor: 5298,
+        currency: 'GBP',
+        shippingMethodCode: 'UK_STANDARD',
+        shippingMethodName: 'Standard delivery',
+        shippingMethodAmountMinor: 299,
+        shippingFullName: 'Test Customer',
+        shippingEmail: 'test@example.com',
+        shippingLine1: '1 Test Street',
+        shippingLine2: null,
+        shippingCity: 'London',
+        shippingRegion: null,
+        shippingPostalCode: 'E1 5NF',
+        shippingCountry: 'GB',
+        reservationExpiresAt: null,
+        paidAt: new Date(),
+        fulfilledAt: null,
+        cancelledAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        invoices: [],
+      }),
       update: vi.fn().mockResolvedValue({
         ...order,
         orderNumber: 'IS-20260812-ABC123',
@@ -102,6 +140,25 @@ function databaseMock() {
         cancelledAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
+      }),
+    },
+    ironSprueVatInvoice: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      create: vi.fn().mockResolvedValue({
+        id: 'invoice-1',
+        orderId: 'order-1',
+        sequence: 1,
+        invoiceNumber: null,
+        invoiceDate: new Date('2026-08-12T12:00:00Z'),
+        lines: [],
+      }),
+      update: vi.fn().mockResolvedValue({
+        id: 'invoice-1',
+        orderId: 'order-1',
+        sequence: 1,
+        invoiceNumber: 'IS-VAT-2026-000001',
+        invoiceDate: new Date('2026-08-12T12:00:00Z'),
+        lines: [],
       }),
     },
     ironSprueAdminInventory: {
@@ -139,6 +196,16 @@ describe('Iron Sprue Stripe commerce', () => {
       orderNumber: 'IS-20260812-ABC123',
       checkoutAttemptId: 'attempt-1',
     });
+  });
+
+  it('uses the Iron Sprue-specific UK delivery charge without changing shared shipping fixtures', () => {
+    const underThreshold = getIronSprueAvailableShippingMethods('GB', 0);
+    const overThreshold = getIronSprueAvailableShippingMethods('GB', 5000);
+
+    expect(underThreshold.find((method) => method.code === 'UK_STANDARD')?.amountMinor).toBe(399);
+    expect(underThreshold.find((method) => method.code === 'UK_EXPRESS')?.amountMinor).toBe(599);
+    expect(overThreshold.find((method) => method.code === 'UK_STANDARD')?.amountMinor).toBe(0);
+    expect(overThreshold.find((method) => method.code === 'UK_EXPRESS')?.amountMinor).toBe(399);
   });
 
   it('ignores a successful session for the wrong store before finalising inventory', async () => {
@@ -201,6 +268,17 @@ describe('Iron Sprue Stripe commerce', () => {
       }),
       include: { items: true },
     });
+    expect(db.ironSprueVatInvoice.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        sellerVatNumber: '525 2040 33',
+        orderNumber: 'IS-20260812-ABC123',
+        grossTotalMinor: 5298,
+        vatTotalMinor: 883,
+      }),
+    }));
+    expect(db.ironSprueVatInvoice.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: { invoiceNumber: 'IS-VAT-2026-000001' },
+    }));
   });
 
   it('finalises a succeeded PaymentIntent by checkout attempt metadata when the order has no payment intent yet', async () => {
@@ -406,7 +484,7 @@ describe('Iron Sprue Stripe commerce', () => {
       json: async () => ({
         id: 'pi_iron_integrated_1',
         client_secret: 'pi_iron_integrated_1_secret_test',
-        amount: 2298,
+        amount: 2398,
         currency: 'gbp',
         status: 'requires_payment_method',
         metadata: { store: 'IRON_SPRUE', orderId: 'order-1' },
@@ -491,7 +569,7 @@ describe('Iron Sprue Stripe commerce', () => {
       paymentIntentId: 'pi_iron_integrated_1',
       clientSecret: 'pi_iron_integrated_1_secret_test',
       publishableKey: 'pk_test_iron',
-      totalMinor: 2298,
+      totalMinor: 2398,
       currency: 'GBP',
     });
     expect(result.orderNumber).toMatch(/^IS-\d{8}-[A-F0-9]{6}$/);
@@ -500,7 +578,7 @@ describe('Iron Sprue Stripe commerce', () => {
       headers: expect.objectContaining({ Authorization: 'Bearer sk_test_iron' }),
     }));
     const body = fetchSpy.mock.calls[0]?.[1]?.body as URLSearchParams;
-    expect(body.get('amount')).toBe('2298');
+    expect(body.get('amount')).toBe('2398');
     expect(body.get('metadata[store]')).toBe('IRON_SPRUE');
     expect(body.get('metadata[commerceStore]')).toBe('IRON_SPRUE');
     expect(body.get('metadata[orderNumber]')).toBe(result.orderNumber);
