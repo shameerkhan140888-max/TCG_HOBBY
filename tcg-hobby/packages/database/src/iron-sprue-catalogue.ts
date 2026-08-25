@@ -140,6 +140,7 @@ function mapProduct(product: IronSprueCatalogueProductRow): CatalogueProduct {
 
   return {
     id: product.id,
+    sku: product.sku,
     slug: product.slug,
     name: product.customerTitle,
     brand: brandName,

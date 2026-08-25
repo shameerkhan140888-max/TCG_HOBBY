@@ -48,6 +48,7 @@ export type CatalogueCategory = {
 
 export type CatalogueProduct = {
   id: string;
+  sku?: string;
   slug: string;
   name: string;
   brand?: string | null;
@@ -143,6 +144,7 @@ export type PublicProductImage = {
 
 export type PublicProductSummary = {
   id: string;
+  sku?: string;
   slug: string;
   name: string;
   brand: string | null;
@@ -151,6 +153,7 @@ export type PublicProductSummary = {
   productType: string | null;
   price: Money;
   stockState: PublicStockState;
+  availableQuantity?: number;
   purchasable: boolean;
   featured: boolean;
   releaseStatus: ProductReleaseStatus;

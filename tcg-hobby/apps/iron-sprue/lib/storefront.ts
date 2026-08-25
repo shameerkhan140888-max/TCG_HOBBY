@@ -146,6 +146,10 @@ export function productSellableQuantity(product: IronSprueProduct) {
   return Math.max(0, product.availableQuantity ?? product.stockQuantity ?? 0);
 }
 
+export function productCommerceId(product: IronSprueProduct) {
+  return product.id ?? product.sku;
+}
+
 export function productAvailability(product: IronSprueProduct) {
   const availableQuantity = productSellableQuantity(product);
   if (availableQuantity <= 0) return 'Out of stock';

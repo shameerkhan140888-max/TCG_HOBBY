@@ -14,6 +14,7 @@ const originalBaseUrl = process.env[IRON_SPRUE_PRODUCTION_API_BASE_URL];
 function product(overrides: Record<string, unknown> = {}) {
   return {
     id: 'cmt5xtr0u000u0lp7i9mdxk49',
+    sku: 'IS-AOS-05627',
     slug: 'aoshima-05627-toyota-2000gt-white',
     name: 'Toyota 2000GT White',
     brand: 'Aoshima',
@@ -22,6 +23,7 @@ function product(overrides: Record<string, unknown> = {}) {
     productType: 'Plastic model kit',
     price: { amountMinor: 1999, currency: 'GBP' },
     stockState: 'LOW_STOCK',
+    availableQuantity: 2,
     purchasable: true,
     featured: false,
     releaseStatus: 'RELEASED',
@@ -73,12 +75,14 @@ describe('Iron Sprue production API client', () => {
       expect.objectContaining({ cache: 'no-store' }),
     );
     expect(result[0]).toMatchObject({
-      sku: 'cmt5xtr0u000u0lp7i9mdxk49',
+      id: 'cmt5xtr0u000u0lp7i9mdxk49',
+      sku: 'IS-AOS-05627',
       slug: 'aoshima-05627-toyota-2000gt-white',
       name: 'Toyota 2000GT White',
       brand: 'Aoshima',
       retailPriceMinor: 1999,
-      stockQuantity: 1,
+      stockQuantity: 2,
+      availableQuantity: 2,
       published: true,
     });
   });

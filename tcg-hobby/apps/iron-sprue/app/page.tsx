@@ -11,7 +11,7 @@ import {
 } from '../lib/admin-storefront-controls';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
 import { getIronSprueProductionApiHomeProducts, shouldUseIronSprueProductionApi } from '../lib/production-api';
-import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
+import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCommerceId, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { AddToBasketButton } from '../components/basket-client';
 
@@ -45,7 +45,7 @@ function ProductCard({ product }: { product: IronSprueProduct }) {
           <a href={`/products/${product.slug}`}>Details</a>
           <AddToBasketButton
             item={{
-              productId: product.sku,
+              productId: productCommerceId(product),
               productName: product.name,
               productSlug: product.slug,
               unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,

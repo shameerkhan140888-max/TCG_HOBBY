@@ -8,6 +8,7 @@ import {
   formatPrice,
   productAvailability,
   productAvailabilityClass,
+  productCommerceId,
   productImage,
   productSellableQuantity,
   slugForCategory,
@@ -170,7 +171,7 @@ export async function CatalogueListing({
                         <a href={`/products/${product.slug}`}>View details</a>
                         <AddToBasketButton
                           item={{
-                            productId: product.sku,
+                            productId: productCommerceId(product),
                             productName: product.name,
                             productSlug: product.slug,
                             unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,

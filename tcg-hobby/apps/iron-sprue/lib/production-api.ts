@@ -54,6 +54,7 @@ function imageUrl(image: PublicProductImage | null | undefined) {
 }
 
 function stockQuantity(product: PublicProductSummary) {
+  if (typeof product.availableQuantity === 'number') return Math.max(0, product.availableQuantity);
   if (product.stockState === 'OUT_OF_STOCK') return 0;
   if (product.stockState === 'LOW_STOCK') return 1;
   return 10;
@@ -62,8 +63,9 @@ function stockQuantity(product: PublicProductSummary) {
 export function ironSprueProductFromPublicSummary(product: PublicProductSummary): IronSprueProduct {
   const quantity = stockQuantity(product);
   const mapped: IronSprueProduct = {
+    id: product.id,
     storeCode: 'IRON_SPRUE',
-    sku: product.id,
+    sku: product.sku ?? product.id,
     slug: product.slug,
     name: product.name,
     customerTitle: product.name,
@@ -88,7 +90,7 @@ export function ironSprueProductFromPublicSummary(product: PublicProductSummary)
 export function ironSprueProductFromPublicDetail(product: PublicProductDetail): IronSprueProduct {
   const mapped: IronSprueProduct = {
     ...ironSprueProductFromPublicSummary(product),
-    sku: product.id,
+    sku: product.sku ?? product.id,
     shortDescription: product.shortDescription ?? product.availabilityMessage ?? product.category.name,
     features: product.contents,
     imageReferences: product.images.map((image) => image.url),

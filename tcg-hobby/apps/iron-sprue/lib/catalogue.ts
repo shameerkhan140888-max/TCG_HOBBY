@@ -1,4 +1,5 @@
 export type IronSprueProduct = {
+  id?: string;
   line?: number;
   sourceRow?: number;
   storeCode?: 'IRON_SPRUE' | 'TCG_HOBBY';

@@ -105,6 +105,7 @@ export function toPublicProductSummary(product: CatalogueProduct): PublicProduct
   const stockState = publicStockState(available);
   return {
     id: product.id,
+    ...(product.sku ? { sku: product.sku } : {}),
     slug: product.slug,
     name: product.name,
     brand: product.brand ?? null,
@@ -113,6 +114,7 @@ export function toPublicProductSummary(product: CatalogueProduct): PublicProduct
     productType: product.productType ?? null,
     price: product.price,
     stockState,
+    availableQuantity: available,
     purchasable: stockState !== 'OUT_OF_STOCK' && (product.releaseStatus ?? 'RELEASED') === 'RELEASED',
     featured: product.featured,
     releaseStatus: product.releaseStatus ?? 'RELEASED',
@@ -132,6 +134,7 @@ export function toPublicProductDetail(product: CatalogueProductDetail): PublicPr
   const images = product.images.map(toPublicImage);
   return {
     ...toPublicProductSummary(product),
+    sku: product.sku,
     image: images.find((image) => image.isPrimary) ?? images[0] ?? summaryImage(product),
     setName: product.setName,
     language: product.language ?? null,

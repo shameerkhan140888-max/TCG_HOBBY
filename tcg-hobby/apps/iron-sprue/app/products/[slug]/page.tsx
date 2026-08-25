@@ -7,7 +7,7 @@ import { AddToBasketButton } from '../../../components/basket-client';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
 import { type IronSprueProduct } from '../../../lib/catalogue';
 import { getIronSprueProductionApiProduct, shouldUseIronSprueProductionApi } from '../../../lib/production-api';
-import { formatPrice, productAvailability, productAvailabilityClass, productDetailAddons, productGalleryImages, productImage, productSellableQuantity } from '../../../lib/storefront';
+import { formatPrice, productAvailability, productAvailabilityClass, productCommerceId, productDetailAddons, productGalleryImages, productImage, productSellableQuantity } from '../../../lib/storefront';
 import { addIronSprueWishlistItemAction } from '../../../lib/wishlist-actions';
 
 const products = launchProducts as IronSprueProduct[];
@@ -120,7 +120,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <AddToBasketButton
               quantityInputId="quantity"
               item={{
-                productId: product.sku,
+                productId: productCommerceId(product),
                 productName: product.name,
                 productSlug: product.slug,
                 unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,
@@ -193,7 +193,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </a>
                 <AddToBasketButton
                   item={{
-                    productId: item.sku,
+                    productId: productCommerceId(item),
                     productName: item.name,
                     productSlug: item.slug,
                     unitPriceMinor: item.priceMinor ?? item.retailPriceMinor ?? 0,

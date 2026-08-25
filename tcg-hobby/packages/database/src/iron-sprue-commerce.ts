@@ -260,6 +260,7 @@ function safeProductIdentifierWhere(identifiers: string[]) {
     OR: [
       { id: { in: identifiers } },
       { sku: { in: identifiers } },
+      { slug: { in: identifiers } },
     ],
   } satisfies Prisma.IronSprueAdminProductWhereInput;
 }
@@ -336,8 +337,16 @@ export async function resolveIronSprueGuestCart(inputItems: Array<{ productId: s
     where: safeProductIdentifierWhere(productIdentifiers),
     include: { inventory: true, mediaAssets: true },
   });
-  const lines = products.map((product) => toCartLine(product, quantities.get(product.id) ?? quantities.get(product.sku) ?? 1));
+  const lines = products.map((product) => toCartLine(product, quantities.get(product.id) ?? quantities.get(product.sku) ?? quantities.get(product.slug) ?? 1));
   return { cartId: null, ...summarizeCart(lines) };
+}
+
+async function resolveIronSprueCartProductId(identifier: string, db: DatabaseClient) {
+  const product = await db.ironSprueAdminProduct.findFirst({
+    where: safeProductIdentifierWhere([identifier]),
+    select: { id: true },
+  });
+  return product?.id ?? identifier;
 }
 
 export async function getIronSprueCustomerCartDetails(userId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
@@ -390,16 +399,17 @@ export async function addIronSprueProductToCart(userId: string, productId: strin
 
 export async function updateIronSprueCartItemQuantity(userId: string, productId: string, quantity: number, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const cart = await getOrCreateIronSprueCart(userId, db);
+  const canonicalProductId = await resolveIronSprueCartProductId(productId, db);
   const nextQuantity = normalizeQuantity(quantity);
   const existing = await db.ironSprueCartItem.findUnique({
-    where: { cartId_productId: { cartId: cart.id, productId } },
+    where: { cartId_productId: { cartId: cart.id, productId: canonicalProductId } },
     include: { product: { include: { inventory: true, mediaAssets: true } } },
   });
   if (!existing || existing.product.storeCode !== IRON_SPRUE_STORE_CODE) throw new Error('Product is not available.');
   const check = validateQuantityAgainstAvailability(nextQuantity, availableStock(existing.product));
   if (!check.ok) throw new Error(check.message);
   await db.ironSprueCartItem.update({
-    where: { cartId_productId: { cartId: cart.id, productId } },
+    where: { cartId_productId: { cartId: cart.id, productId: canonicalProductId } },
     data: { quantity: nextQuantity },
   });
 }
@@ -407,7 +417,8 @@ export async function updateIronSprueCartItemQuantity(userId: string, productId:
 export async function removeIronSprueCartItem(userId: string, productId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const cart = await db.ironSprueCart.findUnique({ where: { userId } });
   if (!cart) return;
-  await db.ironSprueCartItem.deleteMany({ where: { cartId: cart.id, productId } });
+  const canonicalProductId = await resolveIronSprueCartProductId(productId, db);
+  await db.ironSprueCartItem.deleteMany({ where: { cartId: cart.id, productId: canonicalProductId } });
 }
 
 export async function clearIronSprueCart(userId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {

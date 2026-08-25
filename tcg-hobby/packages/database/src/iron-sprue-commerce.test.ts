@@ -417,9 +417,48 @@ describe('Iron Sprue Stripe commerce', () => {
     const cart = await resolveIronSprueGuestCart([{ productId: 'IS-AOS-05628', quantity: 1 }], db);
 
     expect(cart.items[0]).toMatchObject({
+      productId: 'product-1',
       imageUrl: '/media/iron-sprue/products/is-aos-05628/image-2/approved-image-2.png',
       imageStorageKey: 'products/is-aos-05628/image-2/approved-image-2.png',
       imageAlt: 'Toyota 2000GT Red catalogue primary',
+      inStock: true,
+    });
+  });
+
+  it('resolves legacy slug basket identifiers to the canonical Iron Sprue product and stock row', async () => {
+    const db = {
+      ironSprueOrder: { findMany: vi.fn().mockResolvedValue([]) },
+      ironSprueAdminInventory: {
+        findMany: vi.fn().mockResolvedValue([]),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([{
+          id: 'product-1',
+          sku: 'IS-AOS-05628',
+          customerTitle: 'Toyota 2000GT Red',
+          slug: 'aoshima-05628-toyota-2000gt-red',
+          grossPriceMinor: 1999,
+          inventory: { availableStock: 2, reservedStock: 0 },
+          mediaAssets: [],
+        }]),
+      },
+    } as any;
+
+    const cart = await resolveIronSprueGuestCart([{ productId: 'aoshima-05628-toyota-2000gt-red', quantity: 2 }], db);
+
+    expect(db.ironSprueAdminProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        OR: expect.arrayContaining([
+          { slug: { in: ['aoshima-05628-toyota-2000gt-red'] } },
+        ]),
+      }),
+    }));
+    expect(cart.items[0]).toMatchObject({
+      productId: 'product-1',
+      productSlug: 'aoshima-05628-toyota-2000gt-red',
+      quantity: 2,
+      availableQuantity: 2,
       inStock: true,
     });
   });

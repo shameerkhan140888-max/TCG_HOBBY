@@ -17,7 +17,7 @@ afterEach(() => {
 
 function product(overrides: Partial<CatalogueProduct> = {}): CatalogueProduct {
   return {
-    id: 'product-1', slug: 'test-product', name: 'Test Product', brand: 'TCG Hobby', game: 'Pokemon TCG',
+    id: 'product-1', sku: 'PRODUCT-1', slug: 'test-product', name: 'Test Product', brand: 'TCG Hobby', game: 'Pokemon TCG',
     productType: 'Booster Pack', description: 'Description', categoryName: 'Pokemon TCG', categorySlug: 'pokemon-tcg',
     price: { amountMinor: 499, currency: 'GBP' }, featured: false, inStock: true, stockOnHand: 3, reservedStock: 0,
     supplierName: 'Private Supplier', badge: 'Badge', imageLabel: 'Test', imageUrl: '/products/test.webp', imageAlt: 'Test product box',
@@ -51,6 +51,8 @@ describe('public commerce projection', () => {
   it('returns storefront-safe data without exact stock or supplier details', () => {
     const result = toPublicProductSummary(product());
     expect(result.stockState).toBe('LOW_STOCK');
+    expect(result.sku).toBe('PRODUCT-1');
+    expect(result.availableQuantity).toBe(3);
     expect(result.image?.url).toBe('https://tcg-hobby.co.uk/products/test.webp');
     expect(result).not.toHaveProperty('stockOnHand');
     expect(result).not.toHaveProperty('reservedStock');
@@ -78,6 +80,7 @@ describe('public commerce projection', () => {
 
   it('includes customer-facing contents in the public product detail projection', () => {
     const result = toPublicProductDetail(detailProduct());
+    expect(result.sku).toBe('PRODUCT-1');
     expect(result.contents).toEqual(['1 promotional card', '8 booster packs']);
     expect(result).not.toHaveProperty('verifiedContents');
   });

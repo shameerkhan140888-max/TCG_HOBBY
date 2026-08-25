@@ -2,7 +2,7 @@ import { BasketClient, type BasketUpsellProduct } from '../../components/basket-
 import launchProducts from '../../data/launch-products.json';
 import { productPriceMinor, type IronSprueProduct } from '../../lib/catalogue';
 import { getIronSprueStorefrontProducts } from '../../lib/admin-storefront-controls';
-import { productImage, productSellableQuantity } from '../../lib/storefront';
+import { productCommerceId, productImage, productSellableQuantity } from '../../lib/storefront';
 
 const products = launchProducts as IronSprueProduct[];
 
@@ -19,7 +19,7 @@ function isUpsellCandidate(product: IronSprueProduct) {
 
 function toUpsellProduct(product: IronSprueProduct): BasketUpsellProduct {
   return {
-    productId: product.sku,
+    productId: productCommerceId(product),
     productName: product.name,
     productSlug: product.slug,
     unitPriceMinor: productPriceMinor(product),
