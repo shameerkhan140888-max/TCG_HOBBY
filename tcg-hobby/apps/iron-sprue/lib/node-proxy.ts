@@ -142,6 +142,8 @@ export function copyProxyRequestHeaders(source: Headers) {
     if (hopByHopHeaders.has(lower)) return;
     if (lower.startsWith(INTERNAL_HEADER_PREFIX)) return;
     if (lower === 'host' || lower === 'content-length') return;
+    if (lower === 'origin' || lower === 'referer') return;
+    if (lower.startsWith('sec-fetch-') || lower.startsWith('sec-ch-ua')) return;
     headers.set(key, value);
   });
   return headers;

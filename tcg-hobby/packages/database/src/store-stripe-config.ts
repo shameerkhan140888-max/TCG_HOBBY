@@ -28,6 +28,7 @@ function normalizeStore(store: string): CommerceStoreCode {
 
 function normalizeEnvironment(environment: string | undefined): CommerceEnvironment {
   const value = environment?.trim() || process.env.COMMERCE_ENVIRONMENT?.trim() || 'test';
+  if (value === 'staging' || value === 'development') return 'test';
   if (value === 'test' || value === 'live') return value;
   throw new Error('Commerce environment must be test or live.');
 }
@@ -48,6 +49,18 @@ function requiredWithFallback(primaryName: string, fallbackName: string) {
   const fallback = configured(fallbackName);
   if (fallback) return fallback;
   throw new Error(`${primaryName} or ${fallbackName} is required for Stripe configuration.`);
+}
+
+function configuredCheckoutUrl(store: CommerceStoreCode, kind: 'success' | 'cancel') {
+  const configuredValue = required(`${STORE_PREFIXES[store]}_CHECKOUT_${kind.toUpperCase()}_URL`);
+  const businessEnvironment = process.env.IRON_SPRUE_ENVIRONMENT?.trim() || process.env.COMMERCE_ENVIRONMENT?.trim();
+  const storefrontUrl = process.env.PUBLIC_STOREFRONT_URL?.trim();
+  if (store !== 'IRON_SPRUE' || businessEnvironment !== 'staging' || !storefrontUrl) return configuredValue;
+
+  const base = storefrontUrl.replace(/\/+$/, '');
+  return kind === 'success'
+    ? `${base}/checkout/success?session_id={CHECKOUT_SESSION_ID}`
+    : `${base}/checkout/cancel`;
 }
 
 export function getStoreStripeConfig(input: { store: string; environment?: string }): StoreStripeConfig {
@@ -72,8 +85,8 @@ export function getStoreStripeConfig(input: { store: string; environment?: strin
     webhookSecret,
     statementDescriptor: required(`${prefix}_STRIPE_STATEMENT_DESCRIPTOR`),
     publicBusinessName: required(`${prefix}_STRIPE_PUBLIC_BUSINESS_NAME`),
-    successUrl: required(`${prefix}_CHECKOUT_SUCCESS_URL`),
-    cancelUrl: required(`${prefix}_CHECKOUT_CANCEL_URL`),
+    successUrl: configuredCheckoutUrl(store, 'success'),
+    cancelUrl: configuredCheckoutUrl(store, 'cancel'),
     webhookPath: store === 'IRON_SPRUE' ? '/api/stripe/iron-sprue/webhook' : '/api/stripe/webhook',
   };
   const publishableKey = requiresDedicatedAccount

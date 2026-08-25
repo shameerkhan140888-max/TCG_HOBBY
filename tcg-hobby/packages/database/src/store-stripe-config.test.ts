@@ -36,6 +36,22 @@ describe('store-aware Stripe configuration', () => {
     });
   });
 
+  it('treats Iron Sprue staging as Stripe test mode and keeps staging redirects on the staging storefront', () => {
+    setIronSprueStripeEnv();
+    process.env.COMMERCE_ENVIRONMENT = 'staging';
+    process.env.IRON_SPRUE_ENVIRONMENT = 'staging';
+    process.env.PUBLIC_STOREFRONT_URL = 'https://staging.ironsprue.co.uk';
+    process.env.IRON_SPRUE_CHECKOUT_SUCCESS_URL = 'https://ironsprue.co.uk/checkout/success';
+    process.env.IRON_SPRUE_CHECKOUT_CANCEL_URL = 'https://ironsprue.co.uk/cart';
+
+    expect(getStoreStripeConfig({ store: 'IRON_SPRUE' })).toMatchObject({
+      store: 'IRON_SPRUE',
+      environment: 'test',
+      successUrl: 'https://staging.ironsprue.co.uk/checkout/success?session_id={CHECKOUT_SESSION_ID}',
+      cancelUrl: 'https://staging.ironsprue.co.uk/checkout/cancel',
+    });
+  });
+
   it('fails closed instead of falling back to generic TCG Stripe credentials for Iron Sprue', () => {
     process.env.STRIPE_SECRET_KEY = 'sk_test_tcg';
     process.env.STRIPE_WEBHOOK_SECRET = 'whsec_tcg';

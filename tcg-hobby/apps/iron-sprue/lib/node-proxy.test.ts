@@ -33,6 +33,10 @@ describe('Iron Sprue Node proxy contract', () => {
     const headers = copyProxyRequestHeaders(new Headers({
       connection: 'keep-alive',
       cookie: 'customer=1',
+      origin: 'https://staging.ironsprue.co.uk',
+      referer: 'https://staging.ironsprue.co.uk/products',
+      'sec-fetch-site': 'same-origin',
+      'sec-ch-ua-platform': '"Windows"',
       'x-iron-sprue-internal-signature': 'spoofed',
       'x-iron-sprue-internal-key-id': 'spoofed-key',
       'content-type': 'application/json',
@@ -40,6 +44,10 @@ describe('Iron Sprue Node proxy contract', () => {
     expect(headers.get('cookie')).toBe('customer=1');
     expect(headers.get('content-type')).toBe('application/json');
     expect(headers.has('connection')).toBe(false);
+    expect(headers.has('origin')).toBe(false);
+    expect(headers.has('referer')).toBe(false);
+    expect(headers.has('sec-fetch-site')).toBe(false);
+    expect(headers.has('sec-ch-ua-platform')).toBe(false);
     expect(headers.has('x-iron-sprue-internal-signature')).toBe(false);
     expect(headers.has('x-iron-sprue-internal-key-id')).toBe(false);
   });
