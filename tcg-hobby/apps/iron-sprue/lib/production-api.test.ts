@@ -134,4 +134,28 @@ describe('Iron Sprue production API client', () => {
       imageReferences: ['/media/iron-sprue/products/is-aos-05627/image-2/toyota.webp'],
     });
   });
+
+  it('keeps already-routed production API media URLs on the current storefront origin', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        products: [product({
+          image: {
+            id: 'img-1',
+            url: 'https://staging.ironsprue.co.uk/media/iron-sprue/products/is-aos-05627/image-2/toyota.webp',
+            altText: 'Toyota image',
+            sortOrder: 1,
+            isPrimary: true,
+          },
+        })],
+        pagination: { page: 1, pageSize: 1, totalItems: 1, totalPages: 1, hasNextPage: false, hasPreviousPage: false },
+        filters: { search: '', category: '', sort: 'featured', page: 1, pageSize: 1 },
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getIronSprueProductionApiCatalogueProducts(new URLSearchParams({ pageSize: '1' }));
+
+    expect(result[0]?.imageUrl).toBe('/media/iron-sprue/products/is-aos-05627/image-2/toyota.webp');
+  });
 });

@@ -46,6 +46,7 @@ function publicIronSprueMediaUrl(value: string | null | undefined) {
   if (raw.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return raw;
   try {
     const parsed = new URL(raw);
+    if (parsed.pathname.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return `${parsed.pathname}${parsed.search}`;
     if (parsed.hostname.toLowerCase() !== IRON_SPRUE_MEDIA_HOST) return raw;
     const key = parsed.pathname.replace(/^\/+/, '');
     return key ? `${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : null;

@@ -149,6 +149,33 @@ describe('IronSprueCommerceService payment status reconciliation', () => {
     expect(result.items[0]?.image?.url).toBe('/media/iron-sprue/products/is-aos-05603/image-2/pagani.png');
   });
 
+  it('keeps already-routed Iron Sprue media URLs same-origin in basket payloads', () => {
+    const service = new IronSprueCommerceService({} as never);
+
+    const result = service.toPublicBasket({
+      items: [{
+        id: 'line-1',
+        productId: 'product-1',
+        productName: 'Pagani Zonda F',
+        productSlug: 'aoshima-05603-pagani-zonda-f',
+        quantity: 1,
+        unitPriceMinor: 4999,
+        totalMinor: 4999,
+        inStock: true,
+        availableQuantity: 1,
+        freeUkStandardShipping: false,
+        imageUrl: 'https://staging.ironsprue.co.uk/media/iron-sprue/products/is-aos-05603/image-2/pagani.png',
+        imageAlt: 'Pagani Zonda F catalogue primary',
+      }],
+      subtotalMinor: 4999,
+      currency: 'GBP',
+      totalItems: 1,
+    });
+
+    expect(result.items[0]?.imageUrl).toBe('/media/iron-sprue/products/is-aos-05603/image-2/pagani.png');
+    expect(result.items[0]?.image?.url).toBe('/media/iron-sprue/products/is-aos-05603/image-2/pagani.png');
+  });
+
   it('does not send a confirmation email for non-succeeded payment states', async () => {
     databaseMocks.reconcileIronSpruePaymentIntentCheckout.mockResolvedValue({
       ...order,
