@@ -61,12 +61,24 @@ function readLocalIronSprueEnv() {
   return localIronSprueEnv;
 }
 
-function ironSprueEnv(name: string) {
+async function cloudflareEnv() {
+  try {
+    const context = await getCloudflareContext({ async: true });
+    return context.env as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+async function ironSprueEnv(name: string) {
+  const runtimeEnv = await cloudflareEnv();
+  const runtimeValue = runtimeEnv?.[name];
+  if (typeof runtimeValue === 'string' && runtimeValue.trim()) return runtimeValue.trim();
   return process.env[name]?.trim() || readLocalIronSprueEnv()[name]?.trim() || '';
 }
 
-function requiredEnv(name: string) {
-  const value = ironSprueEnv(name);
+async function requiredEnv(name: string) {
+  const value = await ironSprueEnv(name);
   if (!value) throw new Error(`${name} is required for Iron Sprue media delivery.`);
   return value;
 }
@@ -78,12 +90,8 @@ function normalizeStorageKey(parts: string[]) {
 }
 
 async function boundMediaBucket() {
-  try {
-    const context = await getCloudflareContext({ async: true });
-    return (context.env as Record<string, unknown>)[R2_BINDING] as BoundR2Bucket | undefined;
-  } catch {
-    return undefined;
-  }
+  const runtimeEnv = await cloudflareEnv();
+  return runtimeEnv?.[R2_BINDING] as BoundR2Bucket | undefined;
 }
 
 async function streamFromBoundR2(key: string) {
@@ -157,11 +165,11 @@ async function signedR2Headers(input: { method: string; url: URL; region: string
 }
 
 async function streamFromR2FetchFallback(key: string) {
-  const bucket = requiredEnv('IRON_SPRUE_R2_BUCKET_NAME');
+  const bucket = await requiredEnv('IRON_SPRUE_R2_BUCKET_NAME');
   if (bucket !== BUCKET) throw new Error('Iron Sprue media delivery must use iron-sprue-product-media.');
 
-  const region = ironSprueEnv('IRON_SPRUE_R2_REGION') || 'auto';
-  const endpoint = requiredEnv('IRON_SPRUE_R2_ENDPOINT').replace(/\/$/, '');
+  const region = await ironSprueEnv('IRON_SPRUE_R2_REGION') || 'auto';
+  const endpoint = (await requiredEnv('IRON_SPRUE_R2_ENDPOINT')).replace(/\/$/, '');
   const url = new URL(`${encodeStoragePath(bucket, key)}`, endpoint);
   const response = await fetch(url, {
     method: 'GET',
@@ -169,8 +177,8 @@ async function streamFromR2FetchFallback(key: string) {
       method: 'GET',
       url,
       region,
-      accessKeyId: requiredEnv('IRON_SPRUE_R2_ACCESS_KEY_ID'),
-      secretAccessKey: requiredEnv('IRON_SPRUE_R2_SECRET_ACCESS_KEY'),
+      accessKeyId: await requiredEnv('IRON_SPRUE_R2_ACCESS_KEY_ID'),
+      secretAccessKey: await requiredEnv('IRON_SPRUE_R2_SECRET_ACCESS_KEY'),
     }),
   });
 
