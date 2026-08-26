@@ -1298,6 +1298,7 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
   const productGroups = groupMediaByProduct(reviewableMedia, media, mode);
   const r2Candidates = r2CandidatesByProductRole([...r2ProductObjects, ...r2ArchiveProductObjects]);
   const r2CandidateCount = [...r2Candidates.values()].reduce((total, items) => total + items.length, 0);
+  const linkedStorageKeys = new Set(media.map((item) => item.storageKey).filter((key): key is string => Boolean(key)));
   const hiddenCount = media.length - reviewableMedia.length;
   const bulkApprovableMediaCount = reviewableMedia.filter((asset) => asset.approvalState !== 'APPROVED').length;
   const bulkPublishableProductCount = new Set(productGroups
@@ -1367,7 +1368,6 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
                   const existingR2Candidates = group.product
                     ? r2CandidatesForProductRole(r2Candidates, group.product.sku, role)
                     : [];
-                  const linkedStorageKeys = new Set(group.assets.map((item) => item.storageKey).filter((key): key is string => Boolean(key)));
                   return (
                     <div key={role} className="rounded-md border border-dashed border-surface-line bg-surface-ink p-4">
                       <StatePill>{role}</StatePill>
@@ -1382,7 +1382,6 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
                 const existingR2Candidates = group.product
                   ? r2CandidatesForProductRole(r2Candidates, group.product.sku, role)
                   : [];
-                const linkedStorageKeys = new Set(group.assets.map((item) => item.storageKey).filter((key): key is string => Boolean(key)));
                 return (
                   <div key={asset.id} className="grid gap-4 rounded-md border border-surface-line bg-surface-ink p-3 sm:grid-cols-[220px_1fr]">
                     <div className="rounded-md border border-surface-line bg-white p-2">
