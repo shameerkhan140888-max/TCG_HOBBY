@@ -44,8 +44,10 @@ vi.mock('@tcg-hobby/database', () => ({
     'productType',
   ].includes(fieldName),
   isIronSprueDisplayableImageAsset: (asset: { mimeType?: string | null; url?: string | null; storageKey?: string | null }) => {
-    if (asset.mimeType) return asset.mimeType.startsWith('image/');
-    return /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(asset.url ?? asset.storageKey ?? '');
+    const path = (asset.url ?? asset.storageKey ?? '').split('?')[0] ?? '';
+    if (/\.json$/i.test(path) || /(?:^|[/_-])(?:source-required|placeholder|manifest)(?:[/_.-]|$)/i.test(path)) return false;
+    if (/\.(avif|gif|jpe?g|png|svg|webp)$/i.test(path)) return true;
+    return Boolean(asset.mimeType?.startsWith('image/'));
   },
   sanitizePublicProductCopy: (value: string | null | undefined) => String(value ?? '')
     .split(/\n{2,}/)
@@ -77,6 +79,7 @@ vi.mock('../lib/iron-sprue-admin-actions.server', () => ({
   bulkApproveIronSprueMediaAction: vi.fn(),
   bulkPublishIronSprueProductsAction: vi.fn(),
   publishIronSprueProductAction: vi.fn(),
+  promoteIronSprueMediaToCataloguePrimaryAction: vi.fn(),
   reconcileIronSprueExistingR2MediaAction: vi.fn(),
   saveIronSprueFeaturedProductPlacementAction: vi.fn(),
   saveIronSprueHeroAction: vi.fn(),

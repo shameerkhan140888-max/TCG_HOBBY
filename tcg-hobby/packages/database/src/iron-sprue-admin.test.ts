@@ -17,6 +17,7 @@ import {
   receiveIronSprueStock,
   reconcileIronSprueR2ProductMedia,
   reconcileIronSprueInventoryAvailableStock,
+  promoteIronSprueAdminMediaToCataloguePrimary,
   resolveIronSpruePublicMediaUrl,
   resolveIronSprueCustomerOrderRequest,
   resolveIronSprueAdminPermissions,
@@ -221,6 +222,40 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       expect.objectContaining({ code: 'media.primary_missing', category: 'media', source: 'mediaAssets.catalogue-primary' }),
     ]));
     expect(getIronSprueProductReadiness(readyProduct({
+      mediaAssets: [{
+        id: 'media-json',
+        role: 'catalogue-primary',
+        approvalState: 'PENDING',
+        isPrimary: false,
+        storageKey: 'published/products/is-aos-05603/catalogue-primary-placeholder.json',
+        url: null,
+        mimeType: 'application/json',
+        sortOrder: 0,
+      }],
+    })).blockingReasons).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        code: 'media.primary_missing',
+        message: 'A customer-facing catalogue-primary Image 2 is required before publication; manufacturer/source images are admin references and do not publish to the storefront.',
+      }),
+    ]));
+    expect(getIronSprueProductReadiness(readyProduct({
+      mediaAssets: [{
+        id: 'media-candidate',
+        role: 'catalogue-primary',
+        approvalState: 'REVIEW_REQUIRED',
+        isPrimary: false,
+        storageKey: 'products/is-aos-05603/image-2/candidate.png',
+        url: null,
+        mimeType: 'image/png',
+        sortOrder: 0,
+      }],
+    })).blockingReasons).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        code: 'media.primary_missing',
+        message: '1 customer-facing catalogue image candidate requires approval.',
+      }),
+    ]));
+    expect(getIronSprueProductReadiness(readyProduct({
       mediaAssets: [{ id: 'media-1', role: 'catalogue-primary', approvalState: 'APPROVED', isPrimary: true, storageKey: null, url: null, sortOrder: 0 }],
     })).blockingReasons).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: 'media.primary_unresolvable', category: 'media' }),
@@ -264,7 +299,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       mediaAssets: [],
       contentReviews: [{ fieldName: 'fullDescription', status: 'CONFLICT' }, { fieldName: 'shortDescription', status: 'PENDING' }, { fieldName: 'image-2-candidate', status: 'CONFLICT' }],
     }))).toEqual(expect.arrayContaining([
-      '1 required primary catalogue media asset pending.',
+      'A customer-facing catalogue-primary Image 2 is required before publication; manufacturer/source images are admin references and do not publish to the storefront.',
       'fullDescription content review is conflict.',
       'shortDescription content review is pending.',
     ]));
@@ -274,6 +309,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     expect(isIronSprueDisplayableImageAsset({ storageKey: 'products/is-aos-1/catalogue-primary.webp', mimeType: 'image/webp' })).toBe(true);
     expect(isIronSprueDisplayableImageAsset({ storageKey: 'products/is-aos-1/catalogue-primary.png', mimeType: null })).toBe(true);
     expect(isIronSprueDisplayableImageAsset({ storageKey: 'archive/products/is-aos-1/original/source-required.json', mimeType: 'application/json' })).toBe(false);
+    expect(isIronSprueDisplayableImageAsset({ storageKey: 'published/products/is-aos-1/catalogue-primary-placeholder.json', mimeType: 'image/jpeg' })).toBe(false);
   });
 
   it('blocks READY_TO_PUBLISH or PUBLISHED when readiness checks fail', async () => {
@@ -283,7 +319,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       },
     };
 
-    await expect(setIronSprueProductPublicationState('product-1', 'READY_TO_PUBLISH', actor, client as never)).rejects.toThrow(/media/);
+    await expect(setIronSprueProductPublicationState('product-1', 'READY_TO_PUBLISH', actor, client as never)).rejects.toThrow(/catalogue-primary/);
     expect(client.ironSprueAdminProduct.findFirst).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: 'product-1', storeCode: 'IRON_SPRUE' },
     }));
@@ -683,6 +719,86 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         approvalState: 'APPROVED',
         approvedById: actor.id,
         isPrimary: true,
+      }),
+    }));
+  });
+
+  it('promotes an approved source image to the public catalogue-primary slot without replacing the source row', async () => {
+    const sourceMedia = {
+      id: 'media-source',
+      storeCode: 'IRON_SPRUE',
+      productId: 'product-1',
+      role: 'manufacturer-original',
+      approvalState: 'APPROVED',
+      isPrimary: false,
+      storageKey: 'archive/products/is-aos-06258-nissan-fairlady-z-silver/original/source.jpg',
+      url: null,
+      altText: 'Nissan Fairlady Z Silver source image',
+      mimeType: 'image/jpeg',
+      byteSize: 1200,
+      width: 800,
+      height: 600,
+      sortOrder: 0,
+      product: { id: 'product-1', sku: 'IS-AOS-06258', customerTitle: 'Nissan Fairlady Z Silver' },
+    };
+    const promoted = {
+      ...sourceMedia,
+      id: 'media-promoted',
+      role: 'catalogue-primary',
+      url: `r2://${sourceMedia.storageKey}`,
+      storageKey: null,
+      isPrimary: true,
+    };
+    const tx = {
+      ironSprueAdminMediaAsset: {
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+        findFirst: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue(promoted),
+        update: vi.fn(),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+    const client = {
+      ironSprueAdminMediaAsset: {
+        findFirst: vi.fn().mockResolvedValue(sourceMedia),
+      },
+      ironSprueAdminProduct: {
+        findFirst: vi.fn().mockResolvedValue(readyProduct({
+          id: 'product-1',
+          publicationState: 'MEDIA_PENDING',
+          mediaAssets: [{ ...promoted, approvalState: 'APPROVED', isPrimary: true }],
+        })),
+        update: vi.fn().mockResolvedValue(readyProduct({ publicationState: 'READY_TO_PUBLISH' })),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn() },
+      $transaction: vi.fn(async (callback: (transaction: typeof tx) => Promise<unknown>) => callback(tx)),
+    };
+
+    await promoteIronSprueAdminMediaToCataloguePrimary('media-source', actor, client as never);
+
+    expect(tx.ironSprueAdminMediaAsset.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        storeCode: 'IRON_SPRUE',
+        productId: 'product-1',
+        role: 'catalogue-primary',
+      }),
+      data: { isPrimary: false },
+    }));
+    expect(tx.ironSprueAdminMediaAsset.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        productId: 'product-1',
+        role: 'catalogue-primary',
+        url: `r2://${sourceMedia.storageKey}`,
+        storageKey: null,
+        approvalState: 'APPROVED',
+        isPrimary: true,
+      }),
+    }));
+    expect(tx.ironSprueAdminMediaAsset.update).not.toHaveBeenCalled();
+    expect(tx.ironSprueAdminAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        action: 'media.catalogue_primary.promote',
+        productId: 'product-1',
       }),
     }));
   });

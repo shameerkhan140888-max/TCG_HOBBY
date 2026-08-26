@@ -11,6 +11,7 @@ import {
   sendIronSprueCancellationEmail,
   sendIronSprueDispatchEmail,
   sendIronSprueOrderConfirmationEmail,
+  promoteIronSprueAdminMediaToCataloguePrimary,
   publishIronSprueAdminProduct,
   publishIronSprueAdminProducts,
   reconcileIronSprueR2ProductMedia,
@@ -108,6 +109,22 @@ export async function updateIronSprueMediaApprovalAction(formData: FormData) {
   revalidatePath('/iron-sprue-admin/media');
   revalidateIronSprueStorefront();
   redirect(adminReturnPath(formData, 'media', 'saved', 'Media approval saved.'));
+}
+
+export async function promoteIronSprueMediaToCataloguePrimaryAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const mediaId = String(formData.get('mediaId') ?? '');
+  try {
+    if (!mediaId) throw new Error('mediaId is required.');
+    await promoteIronSprueAdminMediaToCataloguePrimary(mediaId, actor);
+  } catch (error) {
+    redirect(adminReturnPath(formData, 'products', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/products');
+  revalidatePath('/iron-sprue-admin/media');
+  revalidateIronSprueStorefront();
+  redirect(adminReturnPath(formData, 'products', 'saved', 'Public product image selected.'));
 }
 
 export async function bulkApproveIronSprueMediaAction(formData: FormData) {
@@ -353,12 +370,12 @@ export async function attachIronSprueExistingR2MediaAction(formData: FormData) {
       actor,
     );
   } catch (error) {
-    redirect(adminStatusPath('media', 'error', actionError(error)));
+    redirect(adminReturnPath(formData, 'media', 'error', actionError(error)));
   }
   revalidatePath('/iron-sprue-admin');
   revalidatePath('/iron-sprue-admin/media');
   revalidateIronSprueStorefront();
-  redirect(adminStatusPath('media', 'saved', 'Existing R2 media attached for review.'));
+  redirect(adminReturnPath(formData, 'media', 'saved', 'Existing R2 media attached for review.'));
 }
 
 export async function reconcileIronSprueExistingR2MediaAction() {

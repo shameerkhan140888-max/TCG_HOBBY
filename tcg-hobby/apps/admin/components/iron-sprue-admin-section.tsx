@@ -44,6 +44,7 @@ import {
   updateIronSpruePublicationStateAction,
   approveIronSprueProductReviewAction,
   attachIronSprueExistingR2MediaAction,
+  promoteIronSprueMediaToCataloguePrimaryAction,
   reconcileIronSprueExistingR2MediaAction,
   uploadIronSprueProductMediaAction,
   bulkApproveIronSprueContentReviewsAction,
@@ -211,6 +212,7 @@ function reviewableIronSprueMediaAssets(media: Awaited<ReturnType<typeof listIro
 
   for (const asset of media) {
     if (asset.approvalState === 'FAILED') continue;
+    if (mode === 'pending' && !isIronSprueDisplayableImageAsset(asset)) continue;
     if (mode === 'pending' && !['REVIEW_REQUIRED', 'PENDING'].includes(asset.approvalState)) continue;
     if (mode === 'approved' && asset.approvalState !== 'APPROVED') continue;
     if (mode === 'rejected' && asset.approvalState !== 'REJECTED') continue;
@@ -433,7 +435,7 @@ function ProductMediaReadinessPanel({
         </div>
       </div>
       <p className="rounded-md border border-surface-line bg-black/30 p-2 text-xs text-neutral-400">
-        Publish requires one approved primary catalogue image. Manufacturer/source images and extra candidates stay visible for admin review, but they are not public storefront media unless promoted into the approved primary catalogue image.
+        Publish requires one approved primary catalogue image. Manufacturer/source images stay visible as admin references; approving them does not satisfy the public storefront image requirement.
       </p>
       {activeDisplayableAssets.length ? (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -456,6 +458,9 @@ function ProductMediaReadinessPanel({
                 </div>
                 <p className="break-all text-xs text-neutral-500">{asset.storageKey ?? asset.url ?? 'No storage key'}</p>
                 <MediaActionForms mediaId={asset.id} returnTo={productReturnPath(product)} />
+                {asset.approvalState === 'APPROVED' && asset.role !== 'catalogue-primary' ? (
+                  <PromoteToCataloguePrimaryForm mediaId={asset.id} returnTo={productReturnPath(product)} />
+                ) : null}
               </div>
             );
           })}
@@ -491,6 +496,7 @@ function ProductMediaReadinessPanel({
           candidates={r2CandidatesForProductRole(r2Candidates, product.sku, role)}
           linkedStorageKeys={linkedStorageKeys}
           product={product}
+          returnTo={productReturnPath(product)}
           role={role}
         />
       ))}
@@ -886,6 +892,16 @@ function MediaActionForms({ mediaId, returnTo }: { mediaId: string; returnTo?: s
   );
 }
 
+function PromoteToCataloguePrimaryForm({ mediaId, returnTo }: { mediaId: string; returnTo?: string }) {
+  return (
+    <form action={promoteIronSprueMediaToCataloguePrimaryAction}>
+      <input type="hidden" name="mediaId" value={mediaId} />
+      {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
+      <Button type="submit" size="sm" variant="outline">Use as public image</Button>
+    </form>
+  );
+}
+
 function productMediaRequirementLabel(asset: { role: string; isPrimary: boolean; approvalState: string }) {
   if (asset.role === 'catalogue-primary' && asset.isPrimary) return 'Required public image';
   if (asset.role === 'catalogue-primary') return 'Public image candidate';
@@ -1247,11 +1263,13 @@ function ExistingR2MediaCandidates({
   candidates,
   linkedStorageKeys,
   product,
+  returnTo,
   role,
 }: {
   candidates: IronSprueR2Object[];
   linkedStorageKeys?: Set<string>;
   product: { id: string; sku: string; customerTitle: string } | null | undefined;
+  returnTo?: string;
   role: IronSprueMediaRole;
 }) {
   const unlinkedCandidates = candidates.filter((candidate) => !linkedStorageKeys?.has(candidate.key));
@@ -1263,8 +1281,8 @@ function ExistingR2MediaCandidates({
       <p className="mt-1 text-xs text-neutral-400">These files already exist in the Iron Sprue R2 bucket but are not linked as canonical Railway media rows for this role.</p>
       <div className="mt-3 grid gap-3">
         {unlinkedCandidates.slice(0, 4).map((candidate) => (
-          <div key={candidate.key} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-2 sm:grid-cols-[96px_1fr]">
-            <div className="flex h-24 w-24 items-center justify-center rounded-md border border-surface-line bg-white p-1">
+          <div key={candidate.key} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-2 sm:grid-cols-[84px_1fr]">
+            <div className="flex h-20 w-20 items-center justify-center rounded-md border border-surface-line bg-white p-1">
               <img src={candidate.previewUrl} alt={`${product.customerTitle} ${role}`} className="max-h-full max-w-full object-contain" />
             </div>
             <div className="space-y-2">
@@ -1274,6 +1292,7 @@ function ExistingR2MediaCandidates({
                 <input type="hidden" name="role" value={role} />
                 <input type="hidden" name="storageKey" value={candidate.key} />
                 <input type="hidden" name="altText" value={`${product.customerTitle} ${role.replace('-', ' ')}`} />
+                {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
                 <Button type="submit" size="sm" variant="outline">Attach R2 image for review</Button>
               </form>
             </div>
@@ -1291,6 +1310,7 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
     listIronSprueR2Objects('archive/products/', 500).catch(() => []),
   ]);
   const mode = fullReviewModeFromSearch(searchParams);
+  const currentReturnPath = `/iron-sprue-admin/media${mode === 'pending' ? '' : `?status=${mode}`}`;
   const pendingCount = reviewableIronSprueMediaAssets(media, 'pending').length;
   const approvedCount = media.filter((asset) => asset.approvalState === 'APPROVED').length;
   const rejectedCount = media.filter((asset) => asset.approvalState === 'REJECTED').length;
@@ -1372,7 +1392,7 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
                     <div key={role} className="rounded-md border border-dashed border-surface-line bg-surface-ink p-4">
                       <StatePill>{role}</StatePill>
                       <p className="mt-4 text-sm text-neutral-400">No current {role === 'catalogue-primary' ? 'Image 2' : 'workshop'} media record is available for this product.</p>
-                      <ExistingR2MediaCandidates candidates={existingR2Candidates} linkedStorageKeys={linkedStorageKeys} product={group.product} role={role} />
+                      <ExistingR2MediaCandidates candidates={existingR2Candidates} linkedStorageKeys={linkedStorageKeys} product={group.product} returnTo={currentReturnPath} role={role} />
                       <ProductMediaUploadForm product={group.product} role={role} />
                     </div>
                   );
@@ -1417,9 +1437,9 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
                           This record is metadata or a placeholder, not a displayable product image. It cannot satisfy storefront media readiness.
                         </p>
                       ) : (
-                        <MediaActionForms mediaId={asset.id} />
+                        <MediaActionForms mediaId={asset.id} returnTo={currentReturnPath} />
                       )}
-                      <ExistingR2MediaCandidates candidates={existingR2Candidates} linkedStorageKeys={linkedStorageKeys} product={asset.product} role={role} />
+                      <ExistingR2MediaCandidates candidates={existingR2Candidates} linkedStorageKeys={linkedStorageKeys} product={asset.product} returnTo={currentReturnPath} role={role} />
                       <ProductMediaUploadForm product={asset.product} role={role} />
                     </div>
                   </div>

@@ -53,11 +53,14 @@ export function isIronSprueDisplayableImageAsset(
   asset: { url?: string | null; storageKey?: string | null; mimeType?: string | null } | null | undefined,
 ): boolean {
   if (!asset) return false;
-  const mimeType = asset.mimeType?.trim().toLowerCase();
-  if (mimeType) return mimeType.startsWith('image/');
-
   const mediaPath = ((asset.url ?? asset.storageKey ?? '').split('?')[0] ?? '').trim().toLowerCase();
-  return /\.(avif|gif|jpe?g|png|svg|webp)$/.test(mediaPath);
+  if (/\.json$/.test(mediaPath) || /(?:^|[/_-])(?:source-required|placeholder|manifest)(?:[/_.-]|$)/.test(mediaPath)) {
+    return false;
+  }
+  if (/\.(avif|gif|jpe?g|png|svg|webp)$/.test(mediaPath)) return true;
+
+  const mimeType = asset.mimeType?.trim().toLowerCase();
+  return Boolean(mimeType?.startsWith('image/'));
 }
 
 export function inferIronSprueImageMimeType(storageKey: string) {
