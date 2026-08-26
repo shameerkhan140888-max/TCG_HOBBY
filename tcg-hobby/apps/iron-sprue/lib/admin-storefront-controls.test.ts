@@ -359,7 +359,7 @@ describe('Iron Sprue Admin storefront controls', () => {
     ] as any[];
 
     const featured = productsFromFeaturedPlacements(products, [
-      { id: 'p2', placementKey: 'featured-product:second-product', title: 'Second', ctaLabel: null, ctaHref: '/products/second-product', imageUrl: null, active: true, sortOrder: 0 },
+      { id: 'p2', placementKey: 'featured-product:second-product', title: 'Second', ctaLabel: null, ctaHref: null, imageUrl: null, active: true, sortOrder: 0 },
       { id: 'p1', placementKey: 'featured-product:first-product', title: 'First', ctaLabel: null, ctaHref: '/products/first-product', imageUrl: null, active: true, sortOrder: 1 },
       { id: 'inactive', placementKey: 'featured-product:inactive-product', title: 'Inactive', ctaLabel: null, ctaHref: '/products/inactive-product', imageUrl: null, active: false, sortOrder: -1 },
     ]);

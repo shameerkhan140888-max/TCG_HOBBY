@@ -1,11 +1,13 @@
 import type {
   PublicCatalogueResponse,
   PublicHomeResponse,
+  PublicHomepagePlacement,
   PublicProductDetail,
   PublicProductImage,
   PublicProductSummary,
 } from '@tcg-hobby/types';
 import type { IronSprueProduct } from './catalogue';
+import type { IronSprueHomepagePlacement } from './admin-storefront-controls';
 
 export const IRON_SPRUE_PRODUCTION_API_BASE_URL = 'IRON_SPRUE_PRODUCTION_API_BASE_URL';
 const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
@@ -100,6 +102,9 @@ export function ironSprueProductFromPublicSummary(product: PublicProductSummary)
   };
   const primaryImage = imageUrl(product.image);
   if (product.availabilityMessage) mapped.description = product.availabilityMessage;
+  if (product.scale) mapped.scale = product.scale;
+  if (product.buildLevel) mapped.skillLevel = product.buildLevel;
+  if (product.specifications) mapped.specifications = product.specifications;
   if (primaryImage) mapped.imageUrl = primaryImage;
   return mapped;
 }
@@ -137,6 +142,40 @@ export async function getIronSprueProductionApiProduct(slug: string) {
 
 export async function getIronSprueProductionApiHomeProducts() {
   const response = await fetchProductionApiJson<PublicHomeResponse>('/v1/home');
-  const products = [...response.featuredProducts, ...response.latestProducts];
+  const placementSlugs = (response.homepagePlacements ?? [])
+    .filter((placement) => placement.active)
+    .map((placement) => {
+      if (placement.placementKey.startsWith('featured-product:')) {
+        return placement.placementKey.replace(/^featured-product:/, '').trim();
+      }
+      const sectionProduct = placement.placementKey.match(/^product-section:[^:]+:(.+)$/)?.[1]?.trim();
+      return sectionProduct ?? '';
+    })
+    .filter(Boolean);
+  let placementProducts: PublicProductSummary[] = [];
+  if (placementSlugs.length) {
+    const catalogue = await fetchProductionApiJson<PublicCatalogueResponse>('/v1/catalogue?pageSize=100');
+    const placementSlugSet = new Set(placementSlugs);
+    placementProducts = catalogue.products.filter((product) => placementSlugSet.has(product.slug));
+  }
+  const products = [...response.featuredProducts, ...response.latestProducts, ...placementProducts];
   return Array.from(new Map(products.map((product) => [product.slug, ironSprueProductFromPublicSummary(product)])).values());
+}
+
+export function ironSprueHomepagePlacementFromPublic(placement: PublicHomepagePlacement): IronSprueHomepagePlacement {
+  return {
+    id: placement.id,
+    placementKey: placement.placementKey,
+    title: placement.title,
+    ctaLabel: placement.ctaLabel,
+    ctaHref: placement.ctaHref,
+    imageUrl: storefrontMediaUrl(placement.imageUrl) ?? placement.imageUrl,
+    active: placement.active,
+    sortOrder: placement.sortOrder,
+  };
+}
+
+export async function getIronSprueProductionApiHomepagePlacements() {
+  const response = await fetchProductionApiJson<PublicHomeResponse>('/v1/home');
+  return (response.homepagePlacements ?? []).map(ironSprueHomepagePlacementFromPublic);
 }

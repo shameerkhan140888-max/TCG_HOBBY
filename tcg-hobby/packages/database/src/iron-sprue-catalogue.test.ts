@@ -24,6 +24,8 @@ function ironSprueProduct(overrides: Record<string, unknown> = {}) {
     fullDescription: 'Toyota 2000GT Red model kit.',
     featureBullets: ['1:24 scale'],
     specifications: { scale: '1:24' },
+    scale: '1:24',
+    difficulty: 'Beginner',
     buildType: 'Model Kits',
     tags: [],
     searchKeywords: ['toyota', 'aoshima'],
@@ -131,6 +133,9 @@ describe('Iron Sprue production catalogue adapter', () => {
       stockOnHand: 2,
       reservedStock: 1,
       imageUrl: '/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp',
+      scale: '1:24',
+      buildLevel: 'Beginner',
+      specifications: expect.objectContaining({ scale: '1:24', buildLevel: 'Beginner' }),
     });
   });
 
@@ -155,6 +160,36 @@ describe('Iron Sprue production catalogue adapter', () => {
           expect.objectContaining({ storeCode: 'IRON_SPRUE', publicationState: 'PUBLISHED' }),
           expect.objectContaining({ OR: expect.arrayContaining([{ category: { is: { slug: 'model-kits' } } }]) }),
           expect.objectContaining({ OR: expect.arrayContaining([{ brand: { is: { slug: 'aoshima' } } }]) }),
+        ]),
+      }),
+    }));
+  });
+
+  it('applies scale filters to canonical Iron Sprue products', async () => {
+    const client = {
+      ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue([]) },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    await getIronSprueCatalogueProducts({
+      search: '',
+      brand: 'aoshima',
+      category: 'model-kits',
+      scale: '1-24',
+      sort: 'featured',
+      page: 1,
+      pageSize: 20,
+    }, client as never);
+
+    expect(client.ironSprueAdminProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        AND: expect.arrayContaining([
+          expect.objectContaining({
+            OR: expect.arrayContaining([
+              { scale: { contains: '1:24', mode: 'insensitive' } },
+              { scale: { contains: '1/24', mode: 'insensitive' } },
+            ]),
+          }),
         ]),
       }),
     }));
@@ -268,6 +303,7 @@ describe('Iron Sprue production catalogue adapter', () => {
         findFirst: vi.fn().mockResolvedValue(product),
       },
       ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+      ironSprueAdminHomepagePlacement: { findMany: vi.fn().mockResolvedValue([]) },
     };
 
     const home = await getIronSprueCatalogueHomeData(client as never);
@@ -277,6 +313,60 @@ describe('Iron Sprue production catalogue adapter', () => {
     expect(home.featuredProducts[0]?.imageUrl).toBe('/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp');
     expect(catalogue.products[0]?.imageUrl).toBe('/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp');
     expect(detail?.images[0]?.url).toBe('/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp');
+  });
+
+  it('projects saved homepage product placements for the public homepage', async () => {
+    const first = ironSprueProduct({ slug: 'first-kit', sku: 'FIRST', customerTitle: 'First Kit' });
+    const second = ironSprueProduct({ slug: 'second-kit', sku: 'SECOND', customerTitle: 'Second Kit' });
+    const client = {
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([first, second]),
+      },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+      ironSprueAdminHomepagePlacement: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: 'heading',
+            placementKey: 'featured-products',
+            title: '1:24 Scale Aoshima',
+            ctaLabel: 'See all 1:24 kits',
+            ctaHref: '/shop/model-kits?scale=1-24',
+            imageUrl: null,
+            active: true,
+            sortOrder: 0,
+          },
+          {
+            id: 'slot-2',
+            placementKey: 'featured-product:second-kit',
+            title: 'Second Kit',
+            ctaLabel: null,
+            ctaHref: null,
+            imageUrl: null,
+            active: true,
+            sortOrder: 1,
+          },
+          {
+            id: 'slot-1',
+            placementKey: 'featured-product:first-kit',
+            title: 'First Kit',
+            ctaLabel: null,
+            ctaHref: null,
+            imageUrl: null,
+            active: true,
+            sortOrder: 2,
+          },
+        ]),
+      },
+    };
+
+    const home = await getIronSprueCatalogueHomeData(client as never);
+
+    expect(home.homepagePlacements).toEqual([
+      expect.objectContaining({ placementKey: 'featured-products', title: '1:24 Scale Aoshima' }),
+      expect.objectContaining({ placementKey: 'featured-product:second-kit' }),
+      expect.objectContaining({ placementKey: 'featured-product:first-kit' }),
+    ]);
+    expect(home.featuredProducts.map((product) => product.slug)).toEqual(['second-kit', 'first-kit']);
   });
 
   it('builds filters from Iron Sprue brands and categories', async () => {

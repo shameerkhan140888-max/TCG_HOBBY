@@ -1,5 +1,5 @@
 import launchProducts from '../data/launch-products.json';
-import { filterIronSprueProducts, isModelKitProduct, launchCatalogueStatus, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
+import { filterIronSprueProducts, isModelKitProduct, launchCatalogueStatus, scaleOptions, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
 import { getIronSprueStorefrontProducts } from '../lib/admin-storefront-controls';
 import { AddToBasketButton } from './basket-client';
 import {
@@ -46,6 +46,7 @@ export async function CatalogueListing({
 }) {
   const selectedBrand = fixedBrand ?? single(searchParams, 'brand');
   const selectedCategory = fixedCategory ?? single(searchParams, 'category');
+  const selectedScale = single(searchParams, 'scale');
   const selectedVehicleManufacturer = single(searchParams, 'vehicleManufacturer');
   const search = single(searchParams, 'search');
   const storefrontProducts = await getIronSprueStorefrontProducts(importedProducts);
@@ -60,6 +61,7 @@ export async function CatalogueListing({
   const products = filterIronSprueProducts(scopedProducts, {
     brand: fixedBrand ? undefined : selectedBrand || undefined,
     category: fixedCategory ? undefined : selectedCategory || undefined,
+    scale: selectedScale || undefined,
     vehicleManufacturer: selectedVehicleManufacturer || undefined,
     search: search || undefined,
   });
@@ -68,6 +70,9 @@ export async function CatalogueListing({
     : fixedCategory
       ? `/shop/${fixedCategory}`
       : '/shop';
+  const scales = selectedBrand === 'Aoshima' || selectedCategory === 'model-kits'
+    ? scaleOptions(scopedProducts)
+    : [];
 
   return (
     <section className="section-block catalogue-page">
@@ -123,6 +128,15 @@ export async function CatalogueListing({
                 <select id="vehicle-manufacturer-filter" name="vehicleManufacturer" defaultValue={selectedVehicleManufacturer}>
                   <option value="">All vehicle manufacturers</option>
                   {vehicleManufacturers.map((manufacturer) => <option value={manufacturer} key={manufacturer}>{manufacturer}</option>)}
+                </select>
+              </>
+            ) : null}
+            {scales.length ? (
+              <>
+                <label htmlFor="scale-filter">Scale</label>
+                <select id="scale-filter" name="scale" defaultValue={selectedScale}>
+                  <option value="">All scales</option>
+                  {scales.map((scale) => <option value={scale.replace(/[/:]/g, '-')} key={scale}>{scale}</option>)}
                 </select>
               </>
             ) : null}

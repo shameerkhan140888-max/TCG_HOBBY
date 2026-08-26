@@ -199,9 +199,18 @@ export function isModelKitProduct(product: IronSprueProduct) {
   return productType.includes('model kit') || category === 'model kits';
 }
 
-export function filterIronSprueProducts(products: IronSprueProduct[], query: { brand?: string | undefined; category?: string | undefined; search?: string | undefined; vehicleManufacturer?: string | undefined }) {
+function normalizedScale(value: string | null | undefined) {
+  return value?.trim().toLowerCase().replace(/\s+/g, '').replace(/[/:]/g, '-') ?? '';
+}
+
+export function scaleOptions(products: IronSprueProduct[]) {
+  return Array.from(new Set(products.map((product) => product.scale).filter((value): value is string => Boolean(value?.trim())))).sort();
+}
+
+export function filterIronSprueProducts(products: IronSprueProduct[], query: { brand?: string | undefined; category?: string | undefined; scale?: string | undefined; search?: string | undefined; vehicleManufacturer?: string | undefined }) {
   const brand = query.brand?.trim().toLowerCase();
   const category = query.category?.trim().toLowerCase();
+  const scale = normalizedScale(query.scale);
   const search = query.search?.trim().toLowerCase();
   const vehicleManufacturer = query.vehicleManufacturer?.trim().toLowerCase();
 
@@ -215,9 +224,23 @@ export function filterIronSprueProducts(products: IronSprueProduct[], query: { b
         return false;
       }
     }
+    if (scale && normalizedScale(product.scale) !== scale) return false;
     if (vehicleManufacturer && vehicleManufacturerForProduct(product)?.toLowerCase() !== vehicleManufacturer) return false;
     if (search) {
-      const haystack = `${product.name} ${product.brand} ${product.category} ${product.productType}`.toLowerCase();
+      const specifications = product.specifications && typeof product.specifications === 'object'
+        ? Object.values(product.specifications).join(' ')
+        : '';
+      const haystack = [
+        product.name,
+        product.brand,
+        product.category,
+        product.productType,
+        product.scale,
+        product.skillLevel,
+        specifications,
+        ...(product.features ?? []),
+        ...(product.searchKeywords ?? []),
+      ].filter(Boolean).join(' ').toLowerCase();
       if (!haystack.includes(search)) return false;
     }
     return true;

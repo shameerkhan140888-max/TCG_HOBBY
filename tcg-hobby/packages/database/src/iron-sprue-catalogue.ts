@@ -5,6 +5,7 @@ import type {
   CatalogueProductDetail,
   CatalogueProductImage,
   PaginationMeta,
+  PublicHomepagePlacement,
 } from '@tcg-hobby/types';
 import type { Prisma } from '@prisma/client';
 import { getIronSprueAdminPrisma } from './client.js';
@@ -35,6 +36,7 @@ export type IronSprueCatalogueProductsResult = {
 export type IronSprueCatalogueHomeData = {
   categories: CatalogueCategory[];
   featuredProducts: CatalogueProduct[];
+  homepagePlacements: PublicHomepagePlacement[];
 };
 
 const productInclude = {
@@ -166,6 +168,33 @@ export function sanitizePublicProductList(values: string[] | null | undefined) {
     .filter((value) => value.length > 0);
 }
 
+function publicSpecifications(product: IronSprueCatalogueProductRow): Record<string, string> {
+  const entries: Array<[string, unknown]> = [
+    ['manufacturer', product.brand?.name],
+    ['category', product.category?.name],
+    ['productType', product.buildType ?? product.category?.name],
+    ['manufacturerReference', product.mpn ?? product.supplierProductCode],
+    ['scale', product.scale],
+    ['buildLevel', product.difficulty],
+    ['material', product.material],
+    ['dimensions', product.dimensions],
+    ['assemblyMethod', product.assemblyMethod],
+    ['glueRequirement', product.glueRequirement],
+    ['contents', product.contents],
+  ];
+  const structured = product.specifications && typeof product.specifications === 'object' && !Array.isArray(product.specifications)
+    ? Object.entries(product.specifications)
+    : [];
+
+  return [...structured, ...entries].reduce<Record<string, string>>((result, [key, value]) => {
+    const text = typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+      ? String(value).trim()
+      : '';
+    if (text && !isInternalProductCopyBlock(text)) result[key] = text;
+    return result;
+  }, {});
+}
+
 function publicShortDescription(product: IronSprueCatalogueProductRow) {
   return sanitizePublicProductCopy(product.shortDescription) || sanitizePublicProductCopy(product.fullDescription);
 }
@@ -265,6 +294,9 @@ function mapProduct(product: IronSprueCatalogueProductRow): CatalogueProduct {
     imageAlt: image?.asset.altText ?? product.customerTitle,
     heroImageUrl: null,
     vatRate: product.vatRate,
+    scale: product.scale,
+    buildLevel: product.difficulty,
+    specifications: publicSpecifications(product),
     freeUkStandardShipping: false,
     shippingPromotionProductOnly: false,
     releaseStatus: product.comingSoon ? 'COMING_SOON' : 'RELEASED',
@@ -313,6 +345,13 @@ function mapProductDetail(product: IronSprueCatalogueProductRow): CatalogueProdu
       product.brand?.name,
       product.category?.name,
       product.buildType,
+      product.scale,
+      product.difficulty,
+      product.material,
+      product.dimensions,
+      product.assemblyMethod,
+      product.contents,
+      ...Object.values(publicSpecifications(product)),
       ...product.searchKeywords,
     ].filter(Boolean).join(' '),
     supplierSku: product.supplierProductCode ?? product.mpn ?? product.sku,
@@ -327,6 +366,7 @@ function buildProductWhere(filters: IronSprueCatalogueFilters): Prisma.IronSprue
   const category = normalizeSearch(filters.category);
   const productType = normalizeSearch(filters.productType);
   const brand = normalizeSearch(filters.brand ?? filters.game);
+  const scale = filters.scale?.trim().toLowerCase().replace(/\s+/g, '').replace(/[/:]/g, '-') ?? '';
   const clauses: Prisma.IronSprueAdminProductWhereInput[] = [];
 
   if (query) {
@@ -336,6 +376,10 @@ function buildProductWhere(filters: IronSprueCatalogueFilters): Prisma.IronSprue
         { sourceTitle: { contains: query, mode: insensitive } },
         { sku: { contains: query, mode: insensitive } },
         { mpn: { contains: query, mode: insensitive } },
+        { scale: { contains: query, mode: insensitive } },
+        { difficulty: { contains: query, mode: insensitive } },
+        { dimensions: { contains: query, mode: insensitive } },
+        { contents: { contains: query, mode: insensitive } },
         { searchKeywords: { has: query } },
         { brand: { is: { name: { contains: query, mode: insensitive } } } },
         { category: { is: { name: { contains: query, mode: insensitive } } } },
@@ -360,6 +404,17 @@ function buildProductWhere(filters: IronSprueCatalogueFilters): Prisma.IronSprue
         { buildType: { contains: productType.replace(/-/g, ' '), mode: insensitive } },
         { category: { is: { slug: productType } } },
       ],
+    });
+  }
+
+  if (scale) {
+    const scaleLabels = Array.from(new Set([
+      scale,
+      scale.replace(/-/g, ':'),
+      scale.replace(/-/g, '/'),
+    ])).filter(Boolean);
+    clauses.push({
+      OR: scaleLabels.map((label) => ({ scale: { contains: label, mode: insensitive } })),
     });
   }
 
@@ -446,19 +501,49 @@ export async function getIronSprueCatalogueProductBySlug(
 }
 
 export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIronSprueAdminPrisma()): Promise<IronSprueCatalogueHomeData> {
-  const [categories, featured] = await Promise.all([
+  const now = new Date();
+  const [categories, homepagePlacements] = await Promise.all([
     getIronSprueCatalogueCategories(db),
-    db.ironSprueAdminProduct.findMany({
-      where: { ...publicProductWhere, featured: true },
-      include: productInclude,
-      orderBy: [{ updatedAt: 'desc' }, { customerTitle: 'asc' }],
+    db.ironSprueAdminHomepagePlacement.findMany({
+      where: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+        AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
+      },
+      orderBy: [{ active: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }],
     }),
   ]);
-  const visibleFeatured = featured.filter((product) => getIronSprueProductReadiness(product).isPubliclyVisible).slice(0, 4);
+  const activeFeaturedSlugs = homepagePlacements
+    .filter((placement) => placement.active && placement.placementKey.startsWith('featured-product:'))
+    .map((placement) => placement.placementKey.replace(/^featured-product:/, '').trim())
+    .filter(Boolean);
+  const featured = await db.ironSprueAdminProduct.findMany({
+    where: {
+      ...publicProductWhere,
+      ...(activeFeaturedSlugs.length ? { slug: { in: activeFeaturedSlugs } } : { featured: true }),
+    },
+    include: productInclude,
+    orderBy: [{ updatedAt: 'desc' }, { customerTitle: 'asc' }],
+  });
+  const featuredOrder = new Map(activeFeaturedSlugs.map((slug, index) => [slug, index]));
+  const visibleFeatured = featured
+    .filter((product) => getIronSprueProductReadiness(product).isPubliclyVisible)
+    .sort((left, right) => (featuredOrder.get(left.slug) ?? 999) - (featuredOrder.get(right.slug) ?? 999))
+    .slice(0, 4);
 
   return {
     categories,
     featuredProducts: visibleFeatured.map(mapProduct),
+    homepagePlacements: homepagePlacements.map((placement) => ({
+      id: placement.id,
+      placementKey: placement.placementKey,
+      title: placement.title,
+      ctaLabel: placement.ctaLabel,
+      ctaHref: placement.ctaHref,
+      imageUrl: placement.imageUrl,
+      active: placement.active,
+      sortOrder: placement.sortOrder,
+    })),
   };
 }
 

@@ -1,6 +1,10 @@
 import launchProducts from '../data/launch-products.json';
 import { brandSlug, deriveBrandsWeStock, type IronSprueBrandRecord, type IronSprueProduct } from './catalogue';
-import { getIronSprueProductionApiCatalogueProducts, shouldUseIronSprueProductionApi } from './production-api';
+import {
+  getIronSprueProductionApiCatalogueProducts,
+  getIronSprueProductionApiHomepagePlacements,
+  shouldUseIronSprueProductionApi,
+} from './production-api';
 import { brandLogoRegistry, categoryNavigation, featuredProducts, heroSlides, promoPanels } from './storefront';
 
 const STORE_CODE = 'IRON_SPRUE';
@@ -432,6 +436,10 @@ export async function getIronSprueTypographySettings(): Promise<IronSprueTypogra
 }
 
 export async function getIronSprueHomepagePlacements(): Promise<IronSprueHomepagePlacement[]> {
+  if (shouldUseIronSprueProductionApi()) {
+    return getIronSprueProductionApiHomepagePlacements();
+  }
+
   const rows = await queryStorefrontRows<HomepagePlacementRow>((sql) => sql`
     select id, "placementKey", title, "ctaLabel", "ctaHref", "imageUrl", active, "sortOrder"
     from "IronSprueAdminHomepagePlacement"
@@ -590,10 +598,10 @@ export async function getIronSprueStorefrontProducts(products: IronSprueProduct[
 
 export function featuredProductSlugsFromPlacements(placements: IronSprueHomepagePlacement[]) {
   return placements
-    .filter((placement) => placement.active && placement.placementKey.startsWith('featured-product:') && placement.ctaHref?.startsWith('/products/'))
+    .filter((placement) => placement.active && placement.placementKey.startsWith('featured-product:'))
     .sort((left, right) => left.sortOrder - right.sortOrder)
-    .map((placement) => placement.ctaHref?.replace('/products/', '').split(/[?#]/)[0])
-    .filter((slug): slug is string => Boolean(slug));
+    .map((placement) => placement.placementKey.replace(/^featured-product:/, '').trim())
+    .filter(Boolean);
 }
 
 export function productsFromFeaturedPlacements(products: IronSprueProduct[], placements: IronSprueHomepagePlacement[], count = 4) {

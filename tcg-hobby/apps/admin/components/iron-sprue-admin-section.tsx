@@ -1514,18 +1514,29 @@ function HomepagePlacementForm({
   const placementKey = record?.placementKey ?? defaultPlacementKey;
   const label = homepagePlacementLabel(placementKey);
   const isStripPlacement = isPromoStripPlacementKey(placementKey);
+  const isOpeningBenchHeading = placementKey === 'featured-products';
   return (
     <form action={saveIronSprueHomepagePlacementAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-2">
       <input type="hidden" name="id" value={record?.id ?? ''} />
+      {isOpeningBenchHeading ? (
+        <>
+          <input type="hidden" name="placementKey" value="featured-products" />
+          <input type="hidden" name="imageUrl" value="" />
+          <input type="hidden" name="sortOrder" value="0" />
+          <input type="hidden" name="active" value="on" />
+        </>
+      ) : null}
       <div className="md:col-span-2">
         <h3 className="font-bold">{record ? `Edit ${label}` : `Create ${label.toLowerCase()}`}</h3>
         <p className="mt-1 text-sm text-neutral-500">
-          {record ? 'Updates this saved homepage control.' : 'Add a homepage strip or banner that the storefront can render.'}
+          {isOpeningBenchHeading
+            ? 'Controls the visible heading and link for the editable product row below.'
+            : record ? 'Updates this saved homepage control.' : 'Add a homepage strip or banner that the storefront can render.'}
         </p>
       </div>
-      {previewUrl ? <img src={previewUrl} alt={record?.title ?? 'Homepage placement'} className="h-40 w-full rounded-md border border-surface-line object-cover md:col-span-2" /> : null}
-      <Field label="Internal placement key"><input name="placementKey" defaultValue={record?.placementKey ?? defaultPlacementKey} className={fieldClass} /></Field>
-      <Field label="Title"><input name="title" defaultValue={record?.title ?? ''} required className={fieldClass} /></Field>
+      {!isOpeningBenchHeading && previewUrl ? <img src={previewUrl} alt={record?.title ?? 'Homepage placement'} className="h-40 w-full rounded-md border border-surface-line object-cover md:col-span-2" /> : null}
+      {!isOpeningBenchHeading ? <Field label="Internal placement key"><input name="placementKey" defaultValue={record?.placementKey ?? defaultPlacementKey} className={fieldClass} /></Field> : null}
+      <Field label={isOpeningBenchHeading ? 'Opening row heading' : 'Title'}><input name="title" defaultValue={record?.title ?? ''} required className={fieldClass} /></Field>
       {isStripPlacement ? (
         <Field label="Strip icon">
           <select name="ctaLabel" defaultValue={record?.ctaLabel ?? 'DELIVERY'} className={fieldClass}>
@@ -1536,9 +1547,13 @@ function HomepagePlacementForm({
         <Field label="CTA label"><input name="ctaLabel" defaultValue={record?.ctaLabel ?? ''} className={fieldClass} /></Field>
       )}
       <Field label="CTA href"><input name="ctaHref" defaultValue={record?.ctaHref ?? ''} className={fieldClass} /></Field>
-      <Field label="Image URL"><input name="imageUrl" defaultValue={record?.imageUrl ?? ''} className={fieldClass} /></Field>
-      <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={record?.sortOrder ?? 0} className={fieldClass} /></Field>
-      <label className="flex items-center gap-2 text-sm"><input name="active" type="checkbox" defaultChecked={record?.active ?? false} /> Active</label>
+      {!isOpeningBenchHeading ? (
+        <>
+          <Field label="Image URL"><input name="imageUrl" defaultValue={record?.imageUrl ?? ''} className={fieldClass} /></Field>
+          <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={record?.sortOrder ?? 0} className={fieldClass} /></Field>
+          <label className="flex items-center gap-2 text-sm"><input name="active" type="checkbox" defaultChecked={record?.active ?? false} /> Active</label>
+        </>
+      ) : null}
       <Button type="submit">{submitLabel ?? (record ? 'Save placement' : 'Create placement')}</Button>
     </form>
   );
@@ -1936,7 +1951,7 @@ function FeaturedProductsManager({
           <div className="rounded-md border border-surface-line bg-black/30 p-3">
             <h3 className="text-sm font-bold">Current products in this row</h3>
             <p className="mt-1 text-xs text-neutral-500">
-              Row link: {sectionHeading?.ctaLabel || 'See new arrivals'} {sectionHeading?.ctaHref ? `-> ${sectionHeading.ctaHref}` : '-> storefront fallback'}
+              Row link: {sectionHeading?.ctaLabel || 'See new arrivals'} {`-> ${sectionHeading?.ctaHref || '/shop?sort=new'}`}
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {activeFeaturedPlacements.map((placement) => {

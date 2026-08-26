@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getIronSprueProductionApiCatalogueProducts,
+  getIronSprueProductionApiHomepagePlacements,
   getIronSprueProductionApiHomeProducts,
   getIronSprueProductionApiProduct,
   IRON_SPRUE_PRODUCTION_API_BASE_URL,
@@ -32,6 +33,9 @@ function product(overrides: Record<string, unknown> = {}) {
     purchaseLimit: null,
     freeUkStandardShipping: false,
     availabilityMessage: null,
+    scale: '1:24',
+    buildLevel: 'Beginner',
+    specifications: { scale: '1:24', buildLevel: 'Beginner' },
     ...overrides,
   };
 }
@@ -84,6 +88,9 @@ describe('Iron Sprue production API client', () => {
       stockQuantity: 2,
       availableQuantity: 2,
       published: true,
+      scale: '1:24',
+      skillLevel: 'Beginner',
+      specifications: { scale: '1:24', buildLevel: 'Beginner' },
       imageUrl: '/media/iron-sprue/products/is-aos-05627/image-2/toyota.webp',
     });
   });
@@ -95,6 +102,18 @@ describe('Iron Sprue production API client', () => {
         featuredProducts: [product({ slug: 'featured-kit' })],
         latestProducts: [product({ slug: 'latest-kit', id: 'latest-1' })],
         categories: [],
+        homepagePlacements: [
+          {
+            id: 'heading',
+            placementKey: 'featured-products',
+            title: '1:24 Scale Aoshima',
+            ctaLabel: 'See all 1:24 kits',
+            ctaHref: '/shop/model-kits?scale=1-24',
+            imageUrl: null,
+            active: true,
+            sortOrder: 0,
+          },
+        ],
       }),
     });
     vi.stubGlobal('fetch', fetchMock);
@@ -106,6 +125,95 @@ describe('Iron Sprue production API client', () => {
       expect.objectContaining({ cache: 'no-store' }),
     );
     expect(result.map((item) => item.slug)).toEqual(['featured-kit', 'latest-kit']);
+  });
+
+  it('includes products referenced by homepage placement rows even when they are not latest or featured', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          featuredProducts: [],
+          latestProducts: [],
+          categories: [],
+          homepagePlacements: [
+            {
+              id: 'section-slot',
+              placementKey: 'product-section:one-24-kits:pagani-zonda-f',
+              title: '1:24 kits',
+              ctaLabel: 'See all 1:24 kits',
+              ctaHref: '/shop/model-kits?scale=1-24',
+              imageUrl: null,
+              active: true,
+              sortOrder: 0,
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          products: [
+            product({ slug: 'pagani-zonda-f', id: 'pagani-1', sku: 'IS-AOS-05603' }),
+            product({ slug: 'unplaced-kit', id: 'other-1', sku: 'OTHER' }),
+          ],
+          pagination: { page: 1, pageSize: 100, totalItems: 2, totalPages: 1, hasNextPage: false, hasPreviousPage: false },
+          filters: { search: '', category: '', sort: 'featured', page: 1, pageSize: 100 },
+        }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getIronSprueProductionApiHomeProducts();
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      new URL('https://considerate-unity-production-b734.up.railway.app/v1/catalogue?pageSize=100'),
+      expect.objectContaining({ cache: 'no-store' }),
+    );
+    expect(result.map((item) => item.slug)).toEqual(['pagani-zonda-f']);
+  });
+
+
+  it('loads homepage placement controls from Railway /v1/home', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        featuredProducts: [],
+        latestProducts: [],
+        categories: [],
+        homepagePlacements: [
+          {
+            id: 'slot-1',
+            placementKey: 'featured-product:pagani-zonda-f',
+            title: 'Pagani Zonda F',
+            ctaLabel: null,
+            ctaHref: null,
+            imageUrl: 'https://media.ironsprue.co.uk/products/is-aos-05603/image-2/pagani.webp',
+            active: true,
+            sortOrder: 1,
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getIronSprueProductionApiHomepagePlacements();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      new URL('https://considerate-unity-production-b734.up.railway.app/v1/home'),
+      expect.objectContaining({ cache: 'no-store' }),
+    );
+    expect(result).toEqual([
+      {
+        id: 'slot-1',
+        placementKey: 'featured-product:pagani-zonda-f',
+        title: 'Pagani Zonda F',
+        ctaLabel: null,
+        ctaHref: null,
+        imageUrl: '/media/iron-sprue/products/is-aos-05603/image-2/pagani.webp',
+        active: true,
+        sortOrder: 1,
+      },
+    ]);
   });
 
   it('loads product detail from Railway /v1/catalogue/:slug', async () => {

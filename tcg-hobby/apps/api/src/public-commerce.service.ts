@@ -133,6 +133,9 @@ export function toPublicProductSummary(product: CatalogueProduct): PublicProduct
     purchaseLimit: product.customerPurchaseLimit ?? null,
     freeUkStandardShipping: product.freeUkStandardShipping ?? false,
     availabilityMessage: product.availabilityMessage ?? null,
+    scale: product.scale ?? null,
+    buildLevel: product.buildLevel ?? null,
+    specifications: product.specifications ?? null,
   };
 }
 
@@ -194,6 +197,7 @@ export class PublicCommerceService {
         featuredProducts: home.featuredProducts.map(toPublicProductSummary),
         latestProducts: latest.products.filter((product) => !featuredIds.has(product.id)).slice(0, 4).map(toPublicProductSummary),
         categories: home.categories.map((category) => ({ id: category.id, name: category.name, value: category.slug, gameId: null })),
+        homepagePlacements: home.homepagePlacements,
       };
     }
 
@@ -206,6 +210,7 @@ export class PublicCommerceService {
       featuredProducts: home.featuredProducts.map(toPublicProductSummary),
       latestProducts: latest.products.filter((product) => !featuredIds.has(product.id)).slice(0, 4).map(toPublicProductSummary),
       categories: home.categories.map((category) => ({ id: category.id, name: category.name, value: category.slug, gameId: null })),
+      homepagePlacements: [],
     };
   }
 
@@ -218,9 +223,10 @@ export class PublicCommerceService {
       productType: query.productType?.trim() ?? '',
       set: query.set?.trim() ?? '',
       language: query.language?.trim() ?? '',
+      scale: query.scale?.trim() ?? '',
       sort: requestedSort && SORT_VALUES.has(requestedSort) ? requestedSort : 'featured',
       page: Math.max(Number(query.page) || 1, 1),
-      pageSize: Math.min(Math.max(Number(query.pageSize) || 20, 1), 50),
+      pageSize: Math.min(Math.max(Number(query.pageSize) || 20, 1), 100),
     };
     if (isIronSpruePublicApiEnabled()) {
       const result = await getIronSprueCatalogueProducts({

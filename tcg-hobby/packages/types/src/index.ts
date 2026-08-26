@@ -23,6 +23,7 @@ export type CatalogueFilters = {
   productType?: string;
   set?: string;
   language?: string;
+  scale?: string;
   sort: CatalogueSort;
   page: number;
   pageSize: number;
@@ -72,6 +73,9 @@ export type CatalogueProduct = {
   imageAlt?: string | null;
   heroImageUrl?: string | null;
   vatRate?: number;
+  scale?: string | null;
+  buildLevel?: string | null;
+  specifications?: Record<string, string> | null;
   freeUkStandardShipping?: boolean;
   shippingPromotionProductOnly?: boolean;
   releaseStatus?: ProductReleaseStatus;
@@ -162,6 +166,9 @@ export type PublicProductSummary = {
   purchaseLimit: number | null;
   freeUkStandardShipping: boolean;
   availabilityMessage: string | null;
+  scale?: string | null;
+  buildLevel?: string | null;
+  specifications?: Record<string, string> | null;
 };
 
 export type PublicProductDetail = PublicProductSummary & {
@@ -197,10 +204,22 @@ export type PublicCatalogueResponse = {
   filters: CatalogueFilters;
 };
 
+export type PublicHomepagePlacement = {
+  id: string;
+  placementKey: string;
+  title: string;
+  ctaLabel: string | null;
+  ctaHref: string | null;
+  imageUrl: string | null;
+  active: boolean;
+  sortOrder: number;
+};
+
 export type PublicHomeResponse = {
   featuredProducts: PublicProductSummary[];
   latestProducts: PublicProductSummary[];
   categories: PublicCatalogueOption[];
+  homepagePlacements?: PublicHomepagePlacement[];
 };
 
 export type PublicBasketInputItem = {

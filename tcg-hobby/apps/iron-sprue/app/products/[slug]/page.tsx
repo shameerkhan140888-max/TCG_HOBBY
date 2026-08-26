@@ -20,16 +20,29 @@ const specificationLabels: Record<string, string> = {
   productType: 'Product type',
   manufacturerReference: 'Manufacturer reference',
   scale: 'Scale',
+  pieces: 'Pieces',
+  pieceCount: 'Pieces',
+  buildLevel: 'Build level',
+  skillLevel: 'Build level',
+  difficulty: 'Build level',
+  dimensions: 'Dimensions',
+  material: 'Material',
+  assemblyMethod: 'Assembly method',
+  contents: 'Contents',
   glueRequired: 'Glue required',
+  glueRequirement: 'Glue required',
   paintRequired: 'Paint required',
 };
 
 function publicSpecifications(product: IronSprueProduct) {
-  const source = product.specifications ?? {
+  const source = {
+    ...(product.specifications ?? {}),
     manufacturer: product.brand,
     category: product.category,
     productType: product.productType,
-    manufacturerReference: product.manufacturerReference,
+    ...(product.manufacturerReference ? { manufacturerReference: product.manufacturerReference } : {}),
+    ...(product.scale ? { scale: product.scale } : {}),
+    ...(product.skillLevel ? { skillLevel: product.skillLevel } : {}),
   };
 
   return Object.entries(source)

@@ -50,6 +50,9 @@ function catalogueProduct(overrides: Record<string, unknown> = {}) {
     imageUrl: '/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp',
     imageAlt: 'Toyota 2000GT Red clean catalogue image',
     releaseStatus: 'RELEASED',
+    scale: '1:24',
+    buildLevel: 'Beginner',
+    specifications: { scale: '1:24', buildLevel: 'Beginner' },
     ...overrides,
   };
 }
@@ -122,7 +125,32 @@ describe('PublicCommerceService Iron Sprue source selection', () => {
 
     expect(databaseMocks.getIronSprueCatalogueProducts).toHaveBeenCalledWith(expect.objectContaining({ brand: 'aoshima' }));
     expect(databaseMocks.getCatalogueProducts).not.toHaveBeenCalled();
-    expect(result.products[0]).toMatchObject({ slug: 'aoshima-05628-toyota-2000gt-red', brand: 'Aoshima' });
+    expect(result.products[0]).toMatchObject({
+      slug: 'aoshima-05628-toyota-2000gt-red',
+      brand: 'Aoshima',
+      scale: '1:24',
+      buildLevel: 'Beginner',
+      specifications: { scale: '1:24', buildLevel: 'Beginner' },
+    });
+  });
+
+  it('passes scale filters and allows the full Iron Sprue launch catalogue page size', async () => {
+    const { PublicCommerceService } = await import('./public-commerce.service.js');
+    databaseMocks.getIronSprueCatalogueProducts.mockResolvedValue({
+      products: [],
+      pagination: { ...pagination(81), pageSize: 100 },
+      categories: [],
+      filters: { search: '', category: 'model-kits', scale: '1-24', sort: 'featured', page: 1, pageSize: 100 },
+    });
+    const service = new PublicCommerceService({} as never);
+
+    await service.catalogue({ category: 'model-kits', scale: '1-24', pageSize: '100' });
+
+    expect(databaseMocks.getIronSprueCatalogueProducts).toHaveBeenCalledWith(expect.objectContaining({
+      category: 'model-kits',
+      scale: '1-24',
+      pageSize: 100,
+    }));
   });
 
   it('serves home data from the same Iron Sprue catalogue source', async () => {
@@ -130,6 +158,18 @@ describe('PublicCommerceService Iron Sprue source selection', () => {
     databaseMocks.getIronSprueCatalogueHomeData.mockResolvedValue({
       featuredProducts: [catalogueProduct({ id: 'featured-1' })],
       categories: [{ id: 'cat-model', name: 'Model Kits', slug: 'model-kits', description: '', sortOrder: 1, productCount: 1 }],
+      homepagePlacements: [
+        {
+          id: 'heading',
+          placementKey: 'featured-products',
+          title: '1:24 Scale Aoshima',
+          ctaLabel: 'See all 1:24 kits',
+          ctaHref: '/shop/model-kits?scale=1-24',
+          imageUrl: null,
+          active: true,
+          sortOrder: 0,
+        },
+      ],
     });
     databaseMocks.getIronSprueCatalogueProducts.mockResolvedValue({
       products: [catalogueProduct({ id: 'latest-1', slug: 'latest-kit' })],
@@ -145,6 +185,9 @@ describe('PublicCommerceService Iron Sprue source selection', () => {
     expect(databaseMocks.getCatalogueHomeData).not.toHaveBeenCalled();
     expect(result.featuredProducts).toHaveLength(1);
     expect(result.latestProducts[0]?.slug).toBe('latest-kit');
+    expect(result.homepagePlacements).toEqual([
+      expect.objectContaining({ placementKey: 'featured-products', title: '1:24 Scale Aoshima' }),
+    ]);
   });
 
   it('uses Iron Sprue product detail lookup in Iron Sprue mode', async () => {
