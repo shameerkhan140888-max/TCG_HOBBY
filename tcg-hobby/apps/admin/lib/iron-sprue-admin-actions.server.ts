@@ -134,11 +134,13 @@ export async function bulkApproveIronSprueMediaAction(formData: FormData) {
   try {
     if (!mediaIds.length) throw new Error('Select at least one media record.');
     if (!['APPROVED', 'REVIEW_REQUIRED', 'REJECTED'].includes(bulkAction)) throw new Error('Invalid media bulk action.');
-    await Promise.all(mediaIds.map((mediaId) => updateIronSprueAdminMediaApproval(
-      mediaId,
-      bulkAction as 'APPROVED' | 'REVIEW_REQUIRED' | 'REJECTED',
-      actor,
-    )));
+    for (const mediaId of mediaIds) {
+      await updateIronSprueAdminMediaApproval(
+        mediaId,
+        bulkAction as 'APPROVED' | 'REVIEW_REQUIRED' | 'REJECTED',
+        actor,
+      );
+    }
   } catch (error) {
     redirect(adminStatusPath('media', 'error', actionError(error)));
   }
@@ -198,11 +200,13 @@ export async function bulkApproveIronSprueContentReviewsAction(formData: FormDat
   try {
     if (!reviewIds.length) throw new Error('Select at least one content review.');
     if (!['APPROVED', 'PENDING', 'CONFLICT', 'REJECTED'].includes(bulkAction)) throw new Error('Invalid content review bulk action.');
-    await Promise.all(reviewIds.map((reviewId) => updateIronSprueAdminContentReviewStatus(
-      reviewId,
-      bulkAction as 'APPROVED' | 'REJECTED' | 'CONFLICT' | 'PENDING',
-      actor,
-    )));
+    for (const reviewId of reviewIds) {
+      await updateIronSprueAdminContentReviewStatus(
+        reviewId,
+        bulkAction as 'APPROVED' | 'REJECTED' | 'CONFLICT' | 'PENDING',
+        actor,
+      );
+    }
   } catch (error) {
     redirect(adminStatusPath('content-review', 'error', actionError(error)));
   }

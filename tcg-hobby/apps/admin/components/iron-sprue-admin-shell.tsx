@@ -68,7 +68,7 @@ export function IronSprueAdminShell({ children, user }: { children: ReactNode; u
     <div className="min-h-screen bg-[#070907] text-neutral-50 lg:grid lg:grid-cols-[264px_minmax(0,1fr)]">
       <aside className="border-b border-[#24312b] bg-[#090d0a] px-4 py-4 lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-4 lg:block">
-          <Link href="/iron-sprue-admin" aria-label="Iron Sprue Admin dashboard" className="inline-flex">
+          <Link href="/iron-sprue-admin" prefetch={false} aria-label="Iron Sprue Admin dashboard" className="inline-flex">
             <img
               src="/iron-sprue/brand/iron-sprue-horizontal.svg"
               alt="Iron Sprue"
@@ -85,6 +85,7 @@ export function IronSprueAdminShell({ children, user }: { children: ReactNode; u
         <nav aria-label="Iron Sprue Admin navigation" className="mt-5 space-y-2">
           <Link
             href="/iron-sprue-admin"
+            prefetch={false}
             aria-current={pathname === '/iron-sprue-admin' ? 'page' : undefined}
             className={`block rounded-md border px-3 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#d59b3d] ${
               pathname === '/iron-sprue-admin'
@@ -108,6 +109,7 @@ export function IronSprueAdminShell({ children, user }: { children: ReactNode; u
                       <Link
                         key={item.href}
                         href={item.href}
+                        prefetch={false}
                         aria-current={active ? 'page' : undefined}
                         className={`rounded-md border px-3 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#d59b3d] ${
                           active

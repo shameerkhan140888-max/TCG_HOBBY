@@ -2,12 +2,7 @@ import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  requireIronSprueAdminSession: vi.fn(),
   send: vi.fn(),
-}));
-
-vi.mock('../../../../lib/auth.server', () => ({
-  requireIronSprueAdminSession: mocks.requireIronSprueAdminSession,
 }));
 
 vi.mock('@aws-sdk/client-s3', () => ({
@@ -22,16 +17,15 @@ vi.mock('@aws-sdk/client-s3', () => ({
   },
 }));
 
+vi.mock('server-only', () => ({}));
+
 import { GET } from './route';
+import { ironSprueAdminSignedPreviewUrl } from '../../../../lib/iron-sprue-media-preview-signing.server';
 
 describe('Iron Sprue Admin media preview route', () => {
   beforeEach(() => {
-    mocks.requireIronSprueAdminSession.mockResolvedValue({
-      user: { id: 'admin-1', email: 'admin@example.test', role: 'ADMIN' },
-      sessionToken: 'session',
-      expires: new Date('2099-01-01T00:00:00.000Z'),
-    });
     mocks.send.mockReset();
+    process.env.AUTH_SECRET = 'test-auth-secret';
     process.env.IRON_SPRUE_R2_BUCKET_NAME = 'iron-sprue-product-media';
     process.env.IRON_SPRUE_R2_ENDPOINT = 'https://example.r2.cloudflarestorage.com';
     process.env.IRON_SPRUE_R2_ACCESS_KEY_ID = 'access';
@@ -52,12 +46,19 @@ describe('Iron Sprue Admin media preview route', () => {
       ContentType: 'image/png',
     });
 
-    const response = await GET(new NextRequest('http://localhost:3001/iron-sprue-admin/media/preview?key=products%2Fis-aos-05628%2Fimage-2%2Fmaster.png'));
+    const previewUrl = ironSprueAdminSignedPreviewUrl('products/is-aos-05628/image-2/master.png');
+    const response = await GET(new NextRequest(`http://localhost:3001${previewUrl}`));
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('image/png');
-    expect(mocks.requireIronSprueAdminSession).toHaveBeenCalledWith('/iron-sprue-admin/media', '/iron-sprue-admin/login');
     expect(mocks.send).toHaveBeenCalledOnce();
+  });
+
+  it('rejects unsigned media preview URLs before touching R2', async () => {
+    const response = await GET(new NextRequest('http://localhost:3001/iron-sprue-admin/media/preview?key=products%2Fis-aos-05628%2Fimage-2%2Fmaster.png'));
+
+    expect(response.status).toBe(401);
+    expect(mocks.send).not.toHaveBeenCalled();
   });
 
   it('rejects unsafe media keys before touching R2', async () => {
@@ -72,7 +73,8 @@ describe('Iron Sprue Admin media preview route', () => {
     error.name = 'NoSuchKey';
     mocks.send.mockRejectedValue(error);
 
-    const response = await GET(new NextRequest('http://localhost:3001/iron-sprue-admin/media/preview?key=products%2Fis-aos-05628%2Fmissing.png'));
+    const previewUrl = ironSprueAdminSignedPreviewUrl('products/is-aos-05628/missing.png');
+    const response = await GET(new NextRequest(`http://localhost:3001${previewUrl}`));
 
     expect(response.status).toBe(404);
   });

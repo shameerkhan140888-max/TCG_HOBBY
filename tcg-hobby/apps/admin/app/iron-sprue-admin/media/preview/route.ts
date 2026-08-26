@@ -2,7 +2,7 @@ import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireIronSprueAdminSession } from '../../../../lib/auth.server';
+import { verifyIronSprueAdminMediaPreviewSignature } from '../../../../lib/iron-sprue-media-preview-signing.server';
 
 export const dynamic = 'force-dynamic';
 let localIronSprueEnv: Record<string, string> | null = null;
@@ -77,10 +77,11 @@ function isMissingR2Object(error: unknown) {
 }
 
 export async function GET(request: NextRequest) {
-  await requireIronSprueAdminSession('/iron-sprue-admin/media', '/iron-sprue-admin/login');
-
   const key = normalizeStorageKey(request.nextUrl.searchParams.get('key'));
   if (!key) return NextResponse.json({ error: 'Invalid media key.' }, { status: 400 });
+  if (!verifyIronSprueAdminMediaPreviewSignature(key, request.nextUrl.searchParams.get('exp'), request.nextUrl.searchParams.get('sig'))) {
+    return NextResponse.json({ error: 'Invalid or expired media preview URL.' }, { status: 401 });
+  }
 
   const { bucket, client } = getIronSprueMediaClient();
   const object = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key })).catch((error: unknown) => {

@@ -4,6 +4,7 @@ import { HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } f
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
+import { ironSprueAdminSignedPreviewUrl } from './iron-sprue-media-preview-signing.server';
 
 const IRON_SPRUE_BUCKET = 'iron-sprue-product-media';
 const ALLOWED_PREFIXES = ['archive/', 'products/', 'processed/', 'published/', 'marketing/', 'brands/'];
@@ -95,7 +96,7 @@ export function ironSprueStorageKeyFromImageUrl(value: string | null | undefined
 
 export function ironSprueAdminPreviewUrl(value: string | null | undefined, fallbackKey?: string | null) {
   const key = ironSprueStorageKeyFromImageUrl(value) ?? fallbackKey ?? null;
-  if (key) return `/iron-sprue-admin/media/preview?key=${encodeURIComponent(key)}`;
+  if (key) return ironSprueAdminSignedPreviewUrl(key);
   const raw = value?.trim();
   if (!raw) return null;
   if (raw.startsWith('/assets/') || raw === '/icon.svg') {
@@ -173,7 +174,7 @@ export async function listIronSprueR2Objects(prefix: string, maxKeys = 80) {
       key: object.Key!,
       size: object.Size ?? 0,
       updatedAt: object.LastModified ?? null,
-      previewUrl: `/iron-sprue-admin/media/preview?key=${encodeURIComponent(object.Key!)}`,
+      previewUrl: ironSprueAdminSignedPreviewUrl(object.Key!),
     }));
 }
 
