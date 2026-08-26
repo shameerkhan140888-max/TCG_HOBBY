@@ -8,10 +8,11 @@ function previewSecret() {
   const secret =
     process.env.IRON_SPRUE_ADMIN_MEDIA_PREVIEW_SECRET?.trim() ||
     process.env.AUTH_SECRET?.trim() ||
-    process.env.NEXTAUTH_SECRET?.trim();
+    process.env.NEXTAUTH_SECRET?.trim() ||
+    process.env.IRON_SPRUE_R2_SECRET_ACCESS_KEY?.trim();
   if (secret) return secret;
   if (process.env.NODE_ENV === 'production') {
-    throw new Error('IRON_SPRUE_ADMIN_MEDIA_PREVIEW_SECRET or AUTH_SECRET is required for Iron Sprue admin media previews.');
+    throw new Error('IRON_SPRUE_ADMIN_MEDIA_PREVIEW_SECRET, AUTH_SECRET or IRON_SPRUE_R2_SECRET_ACCESS_KEY is required for Iron Sprue admin media previews.');
   }
   return 'iron-sprue-local-media-preview-secret';
 }
