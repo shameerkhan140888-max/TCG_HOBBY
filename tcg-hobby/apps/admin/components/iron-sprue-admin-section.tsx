@@ -212,6 +212,7 @@ function reviewableIronSprueMediaAssets(media: Awaited<ReturnType<typeof listIro
 
   for (const asset of media) {
     if (asset.approvalState === 'FAILED') continue;
+    if (!isIronSprueDisplayableImageAsset(asset)) continue;
     if (mode === 'pending' && !isIronSprueDisplayableImageAsset(asset)) continue;
     if (mode === 'pending' && !['REVIEW_REQUIRED', 'PENDING'].includes(asset.approvalState)) continue;
     if (mode === 'approved' && asset.approvalState !== 'APPROVED') continue;
@@ -249,6 +250,7 @@ function bestMediaForRole(media: Awaited<ReturnType<typeof listIronSprueAdminMed
   return media
     .filter((asset) => {
       if (asset.product?.id !== productId || asset.role !== role || asset.approvalState === 'FAILED') return false;
+      if (!isIronSprueDisplayableImageAsset(asset)) return false;
       if (mode === 'pending') return ['REVIEW_REQUIRED', 'PENDING'].includes(asset.approvalState);
       if (mode === 'approved') return asset.approvalState === 'APPROVED';
       if (mode === 'rejected') return asset.approvalState === 'REJECTED';
@@ -419,8 +421,6 @@ function ProductMediaReadinessPanel({
 }) {
   const displayableAssets = product.mediaAssets.filter(isIronSprueDisplayableImageAsset);
   const activeDisplayableAssets = displayableAssets.filter((asset) => asset.approvalState !== 'REJECTED');
-  const rejectedDisplayableAssets = displayableAssets.filter((asset) => asset.approvalState === 'REJECTED');
-  const placeholderAssets = product.mediaAssets.filter((asset) => !isIronSprueDisplayableImageAsset(asset));
   const linkedStorageKeys = new Set(product.mediaAssets.map((asset) => asset.storageKey).filter((key): key is string => Boolean(key)));
   const roles = ['catalogue-primary', 'workshop-photography', 'completed-result', 'manufacturer-original'] as const;
 
@@ -430,8 +430,6 @@ function ProductMediaReadinessPanel({
         <p className="text-sm font-bold text-neutral-100">Product media</p>
         <div className="flex flex-wrap gap-2">
           {activeDisplayableAssets.length ? <StatePill>{`${activeDisplayableAssets.length} ACTIVE IMAGE${activeDisplayableAssets.length === 1 ? '' : 'S'}`}</StatePill> : <StatePill>NO ACTIVE IMAGE ROWS</StatePill>}
-          {rejectedDisplayableAssets.length ? <StatePill>{`${rejectedDisplayableAssets.length} REJECTED`}</StatePill> : null}
-          {placeholderAssets.length ? <StatePill>{`${placeholderAssets.length} PLACEHOLDER${placeholderAssets.length === 1 ? '' : 'S'}`}</StatePill> : null}
         </div>
       </div>
       <p className="rounded-md border border-surface-line bg-black/30 p-2 text-xs text-neutral-400">
@@ -470,26 +468,6 @@ function ProductMediaReadinessPanel({
           No real displayable image row is currently linked to this product in Railway.
         </p>
       )}
-      {rejectedDisplayableAssets.length ? (
-        <details className="rounded-md border border-red-500/30 bg-red-950/10 p-2 text-xs text-neutral-400">
-          <summary className="cursor-pointer font-semibold text-red-100">Rejected media removed from publish workflow</summary>
-          <div className="mt-2 grid gap-1">
-            {rejectedDisplayableAssets.map((asset) => (
-              <p key={asset.id} className="break-all">{asset.role} - {asset.storageKey ?? asset.url ?? 'No key'}</p>
-            ))}
-          </div>
-        </details>
-      ) : null}
-      {placeholderAssets.length ? (
-        <details className="rounded-md border border-surface-line bg-black/20 p-2 text-xs text-neutral-400">
-          <summary className="cursor-pointer font-semibold text-neutral-200">Source/placeholder records</summary>
-          <div className="mt-2 grid gap-1">
-            {placeholderAssets.map((asset) => (
-              <p key={asset.id} className="break-all">{asset.role} - {asset.approvalState} - {asset.mimeType ?? 'unknown'} - {asset.storageKey ?? asset.url ?? 'No key'}</p>
-            ))}
-          </div>
-        </details>
-      ) : null}
       {roles.map((role) => (
         <ExistingR2MediaCandidates
           key={role}
@@ -588,7 +566,7 @@ function ProductAdminCard({
         </div>
         <div className="grid grid-cols-3 gap-3 text-right text-sm text-neutral-400">
           <p>Stock <strong className="block text-neutral-100">{product.inventory?.availableStock ?? 0}</strong></p>
-          <p>Media <strong className="block text-neutral-100">{product.mediaAssets.length}</strong></p>
+          <p>Media <strong className="block text-neutral-100">{product.mediaAssets.filter((asset) => asset.approvalState !== 'REJECTED' && isIronSprueDisplayableImageAsset(asset)).length}</strong></p>
           <p>Reviews <strong className="block text-neutral-100">{product.contentReviews.length}</strong></p>
         </div>
       </summary>
@@ -1319,7 +1297,7 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
   const r2Candidates = r2CandidatesByProductRole([...r2ProductObjects, ...r2ArchiveProductObjects]);
   const r2CandidateCount = [...r2Candidates.values()].reduce((total, items) => total + items.length, 0);
   const linkedStorageKeys = new Set(media.map((item) => item.storageKey).filter((key): key is string => Boolean(key)));
-  const hiddenCount = media.length - reviewableMedia.length;
+  const hiddenCount = media.filter((asset) => asset.approvalState !== 'FAILED' && isIronSprueDisplayableImageAsset(asset)).length - reviewableMedia.length;
   const bulkApprovableMediaCount = reviewableMedia.filter((asset) => asset.approvalState !== 'APPROVED').length;
   const bulkPublishableProductCount = new Set(productGroups
     .map((group) => group.product)
@@ -1641,7 +1619,7 @@ function productSlugFromPlacement(placement: HomepagePlacementRecord, prefix: st
 
 function productPrimaryPreview(product: { mediaAssets?: Array<{ approvalState: string; role: string; url: string | null; storageKey: string | null; mimeType?: string | null }> }) {
   return product.mediaAssets?.find((asset) => asset.approvalState === 'APPROVED' && asset.role === 'catalogue-primary' && isIronSprueDisplayableImageAsset(asset))
-    ?? product.mediaAssets?.find((asset) => asset.role === 'catalogue-primary' && isIronSprueDisplayableImageAsset(asset))
+    ?? product.mediaAssets?.find((asset) => asset.role === 'catalogue-primary' && asset.approvalState !== 'REJECTED' && isIronSprueDisplayableImageAsset(asset))
     ?? null;
 }
 

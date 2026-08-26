@@ -514,7 +514,7 @@ export function getIronSprueProductReadiness(product: ProductWithReadiness): Iro
     (asset) => asset.role === 'catalogue-primary' && asset.approvalState === 'APPROVED' && asset.isPrimary && (!resolveIronSpruePublicMediaUrl(asset) || !isIronSprueDisplayableImageAsset(asset)),
   );
   const pendingPrimaryMedia = product.mediaAssets.filter(
-    (asset) => asset.role === 'catalogue-primary' && asset.approvalState !== 'APPROVED' && isIronSprueDisplayableImageAsset(asset),
+    (asset) => asset.role === 'catalogue-primary' && ['REVIEW_REQUIRED', 'PENDING'].includes(asset.approvalState) && isIronSprueDisplayableImageAsset(asset),
   ).length;
   const availableStock = product.inventory?.availableStock ?? 0;
   const reservedStock = product.inventory?.reservedStock ?? 0;
@@ -1989,6 +1989,18 @@ function normalizedIronSprueSku(value: string | null | undefined) {
   return String(value ?? '').trim().toLowerCase();
 }
 
+function normalizedIronSprueProductCode(value: string | null | undefined) {
+  return String(value ?? '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function inferIronSprueProductCodeFromPathSku(value: string | null | undefined) {
+  const normalized = normalizedIronSprueSku(value);
+  const matches = [...normalized.matchAll(/(?:^|-)([a-z]{0,3}\d{2,6}[a-z]?)(?=-|$)/gi)]
+    .map((match) => normalizedIronSprueProductCode(match[1]))
+    .filter(Boolean);
+  return matches.at(-1) ?? '';
+}
+
 function inferIronSprueR2ProductMedia(key: string): { sku: string; role: string; sortOrder: number } | null {
   const cleanKey = key.trim().replace(/^\/+/, '');
   if (!/\.(avif|gif|jpe?g|png|svg|webp)$/i.test(cleanKey)) return null;
@@ -2020,6 +2032,17 @@ export async function reconcileIronSprueR2ProductMedia(
     orderBy: { sku: 'asc' },
   });
   const productsBySku = new Map(products.map((product) => [normalizedIronSprueSku(product.sku), product]));
+  const productsByCode = new Map<string, typeof products>();
+  for (const product of products) {
+    const codes = [
+      inferIronSprueProductCodeFromPathSku(product.sku),
+      normalizedIronSprueProductCode(product.supplierProductCode),
+      normalizedIronSprueProductCode(product.mpn),
+    ].filter(Boolean);
+    for (const code of new Set(codes)) {
+      productsByCode.set(code, [...(productsByCode.get(code) ?? []), product]);
+    }
+  }
   const findProductForR2Sku = (sku: string) => {
     const normalized = normalizedIronSprueSku(sku);
     const exact = productsBySku.get(normalized);
@@ -2028,7 +2051,10 @@ export async function reconcileIronSprueR2ProductMedia(
       const productSku = normalizedIronSprueSku(product.sku);
       return normalized.startsWith(`${productSku}-`);
     });
-    return matches.length === 1 ? matches[0] : null;
+    if (matches.length === 1) return matches[0];
+    const pathCode = inferIronSprueProductCodeFromPathSku(normalized);
+    const codeMatches = pathCode ? (productsByCode.get(pathCode) ?? []) : [];
+    return codeMatches.length === 1 ? codeMatches[0] : null;
   };
   const candidateGroups = new Map<string, Array<IronSprueR2ProductMediaObject & { role: string; sku: string; sortOrder: number }>>();
   const unmatched: IronSprueR2MediaReconciliationResult['unmatched'] = [];

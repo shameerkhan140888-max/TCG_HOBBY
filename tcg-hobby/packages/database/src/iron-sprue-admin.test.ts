@@ -138,6 +138,8 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     const product = readyProduct({
       id: 'product-1',
       sku: 'IS-AOS-05603',
+      supplierProductCode: '05603',
+      mpn: '05603',
       customerTitle: 'Pagani Zonda F',
       mediaAssets: [
         {
@@ -175,11 +177,12 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       { key: 'products/is-aos-05603/image-2/iron-sprue-image-2-ddc9b0dbc551.png', size: 1000 },
       { key: 'products/is-aos-05603/workshop/iron-sprue-workshop-99517f01b1dc.png', size: 2000 },
       { key: 'archive/products/is-aos-05603-aoshima-05603-pagani-zonda-f/original/manufacturer-source.jpg', size: 1800 },
+      { key: 'archive/products/aoshima-05603-pagani-zonda-f/original/better-source.jpg', size: 2800 },
       { key: 'products/is-aos-99999/image-2/missing.png', size: 500 },
       { key: 'products/is-aos-05603/source-required.json', size: 100 },
     ], actor, client as never);
 
-    expect(result.upsertedMedia).toBe(3);
+    expect(result.upsertedMedia).toBe(4);
     expect(result.affectedProducts).toBe(1);
     expect(result.unmatched).toEqual(expect.arrayContaining([
       expect.objectContaining({ key: 'products/is-aos-99999/image-2/missing.png' }),
@@ -203,6 +206,16 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         isPrimary: false,
         storageKey: 'archive/products/is-aos-05603-aoshima-05603-pagani-zonda-f/original/manufacturer-source.jpg',
         url: 'r2://archive/products/is-aos-05603-aoshima-05603-pagani-zonda-f/original/manufacturer-source.jpg',
+      }),
+    }));
+    expect(client.ironSprueAdminMediaAsset.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({
+        productId: 'product-1',
+        role: 'manufacturer-original',
+        approvalState: 'APPROVED',
+        isPrimary: false,
+        storageKey: 'archive/products/aoshima-05603-pagani-zonda-f/original/better-source.jpg',
+        url: 'r2://archive/products/aoshima-05603-pagani-zonda-f/original/better-source.jpg',
       }),
     }));
     expect(client.ironSprueAdminMediaAsset.updateMany).toHaveBeenCalledWith(expect.objectContaining({
@@ -253,6 +266,23 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       expect.objectContaining({
         code: 'media.primary_missing',
         message: '1 customer-facing catalogue image candidate requires approval.',
+      }),
+    ]));
+    expect(getIronSprueProductReadiness(readyProduct({
+      mediaAssets: [{
+        id: 'media-rejected',
+        role: 'catalogue-primary',
+        approvalState: 'REJECTED',
+        isPrimary: false,
+        storageKey: 'products/is-aos-05603/image-2/rejected.png',
+        url: null,
+        mimeType: 'image/png',
+        sortOrder: 0,
+      }],
+    })).blockingReasons).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        code: 'media.primary_missing',
+        message: 'A customer-facing catalogue-primary Image 2 is required before publication; manufacturer/source images are admin references and do not publish to the storefront.',
       }),
     ]));
     expect(getIronSprueProductReadiness(readyProduct({

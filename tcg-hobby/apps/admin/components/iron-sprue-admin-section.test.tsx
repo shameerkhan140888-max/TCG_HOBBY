@@ -607,8 +607,8 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Sell price:');
     expect(markup).toContain('Stock on hand:');
     expect(markup).toContain('name="returnTo" value="/iron-sprue-admin/products?q=IS-AOS-05628"');
-    expect(markup).toContain('Source/placeholder records');
-    expect(markup).toContain('catalogue-primary-placeholder.json');
+    expect(markup).not.toContain('Source/placeholder records');
+    expect(markup).not.toContain('catalogue-primary-placeholder.json');
     expect(markup).toContain('Existing R2 image candidates');
     expect(markup).toContain('iron-sprue-image-2-acf115ef37eb.png');
     expect(markup).toContain('manufacturer-source.jpg');
