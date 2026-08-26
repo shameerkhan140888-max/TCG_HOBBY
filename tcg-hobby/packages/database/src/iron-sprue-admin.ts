@@ -10,6 +10,7 @@ import { calculateVatEstimateMinor } from './commerce.js';
 import {
   inferIronSprueImageMimeType,
   isIronSprueDisplayableImageAsset,
+  isIronSprueOperationalMediaRole,
   resolveIronSpruePublicMediaUrl,
 } from './iron-sprue-media.js';
 
@@ -246,7 +247,9 @@ const productReadinessInclude = {
   category: true,
   supplier: true,
   inventory: true,
-  mediaAssets: true,
+  mediaAssets: {
+    where: { approvalState: { notIn: ['REJECTED', 'FAILED'] } },
+  },
   contentReviews: true,
 } as const satisfies Prisma.IronSprueAdminProductInclude;
 
@@ -257,6 +260,23 @@ const adminProductListInclude = {
   supplier: true,
   inventory: true,
   mediaAssets: {
+    where: {
+      approvalState: { notIn: ['REJECTED', 'FAILED'] },
+      OR: [
+        { mimeType: { startsWith: 'image/' } },
+        { mimeType: null },
+      ],
+      NOT: [
+        { storageKey: { endsWith: '.json' } },
+        { url: { endsWith: '.json' } },
+        { storageKey: { contains: 'placeholder', mode: 'insensitive' } },
+        { url: { contains: 'placeholder', mode: 'insensitive' } },
+        { storageKey: { contains: 'manifest', mode: 'insensitive' } },
+        { url: { contains: 'manifest', mode: 'insensitive' } },
+        { storageKey: { contains: 'source-required', mode: 'insensitive' } },
+        { url: { contains: 'source-required', mode: 'insensitive' } },
+      ],
+    },
     orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'desc' }],
   },
   contentReviews: {
@@ -481,7 +501,7 @@ export function requireIronSpruePermission(
   }
 }
 
-export { isIronSprueDisplayableImageAsset, resolveIronSpruePublicMediaUrl } from './iron-sprue-media.js';
+export { isIronSprueDisplayableImageAsset, isIronSprueOperationalMediaRole, resolveIronSpruePublicMediaUrl } from './iron-sprue-media.js';
 
 export function selectIronSpruePrimaryCatalogueMedia(product: Pick<ProductWithReadiness, 'mediaAssets'>) {
   return [...product.mediaAssets]
@@ -1890,7 +1910,7 @@ export async function listIronSprueAdminMediaAssets(
   client = getIronSprueAdminPrisma(),
 ): Promise<IronSprueAdminMediaReviewItem[]> {
   const pageSize = Math.min(500, Math.max(1, filters.pageSize ?? 160));
-  return client.ironSprueAdminMediaAsset.findMany({
+  const records = await client.ironSprueAdminMediaAsset.findMany({
     where: {
       storeCode: IRON_SPRUE_STORE_CODE,
       ...(filters.approvalState ? { approvalState: filters.approvalState } : {}),
@@ -1918,6 +1938,11 @@ export async function listIronSprueAdminMediaAssets(
       },
     },
   });
+  return records
+    .filter((asset) => filters.approvalState === 'REJECTED' || !['REJECTED', 'FAILED'].includes(asset.approvalState))
+    .filter((asset) => isIronSprueOperationalMediaRole(asset.role))
+    .filter(isIronSprueDisplayableImageAsset)
+    .slice(0, pageSize);
 }
 
 export async function createIronSprueAdminMediaAsset(
@@ -2017,7 +2042,6 @@ function inferIronSprueR2ProductMedia(key: string): { sku: string; role: string;
   if (roleFolder === 'image-2') return { sku: normalizedIronSprueSku(parts[1]), role: 'catalogue-primary', sortOrder: 0 };
   if (roleFolder === 'workshop') return { sku: normalizedIronSprueSku(parts[1]), role: 'workshop-photography', sortOrder: 20 };
   if (roleFolder === 'original' || roleFolder === 'manufacturer-original') return { sku: normalizedIronSprueSku(parts[1]), role: 'manufacturer-original', sortOrder: 40 };
-  if (roleFolder === 'completed-result') return { sku: normalizedIronSprueSku(parts[1]), role: 'completed-result', sortOrder: 30 };
   return null;
 }
 
@@ -2026,11 +2050,19 @@ export async function reconcileIronSprueR2ProductMedia(
   actor: IronSprueAdminUser,
   client = getIronSprueAdminPrisma(),
 ): Promise<IronSprueR2MediaReconciliationResult> {
+  const objectKeys = [...new Set(objects.map((object) => object.key.trim().replace(/^\/+/, '')).filter(Boolean))];
   const products = await client.ironSprueAdminProduct.findMany({
     where: { storeCode: IRON_SPRUE_STORE_CODE },
     include: productReadinessInclude,
     orderBy: { sku: 'asc' },
   });
+  const existingMediaRows = objectKeys.length
+    ? await client.ironSprueAdminMediaAsset.findMany({
+        where: { storeCode: IRON_SPRUE_STORE_CODE, storageKey: { in: objectKeys } },
+        select: { id: true, productId: true, role: true, storageKey: true, approvalState: true, isPrimary: true },
+      })
+    : [];
+  const existingMediaByStorageKey = new Map(existingMediaRows.map((asset) => [asset.storageKey, asset]));
   const productsBySku = new Map(products.map((product) => [normalizedIronSprueSku(product.sku), product]));
   const productsByCode = new Map<string, typeof products>();
   for (const product of products) {
@@ -2062,6 +2094,11 @@ export async function reconcileIronSprueR2ProductMedia(
 
   for (const object of objects) {
     const key = object.key.trim().replace(/^\/+/, '');
+    const existing = existingMediaByStorageKey.get(key);
+    if (existing?.approvalState === 'REJECTED' || existing?.approvalState === 'FAILED') {
+      unmatched.push({ key, reason: `Existing canonical media row is ${existing.approvalState}; reconciliation will not resurface it.` });
+      continue;
+    }
     const candidate = inferIronSprueR2ProductMedia(key);
     if (!candidate) {
       unmatched.push({ key, reason: 'Not a supported displayable product image path.' });
@@ -2081,7 +2118,7 @@ export async function reconcileIronSprueR2ProductMedia(
   let matchedObjects = 0;
 
   for (const product of products) {
-    for (const role of ['catalogue-primary', 'workshop-photography', 'completed-result', 'manufacturer-original']) {
+    for (const role of ['catalogue-primary', 'workshop-photography', 'manufacturer-original']) {
       const candidates = [...(candidateGroups.get(`${product.id}:${role}`) ?? [])]
         .sort((left, right) => {
           const leftTime = left.updatedAt ? new Date(left.updatedAt).getTime() : 0;
@@ -2089,6 +2126,16 @@ export async function reconcileIronSprueR2ProductMedia(
           return rightTime - leftTime || left.key.localeCompare(right.key);
         });
       if (!candidates.length) continue;
+      const approvedRoleAlreadyExists = product.mediaAssets.some(
+        (asset) => asset.role === role && asset.approvalState === 'APPROVED' && isIronSprueDisplayableImageAsset(asset),
+      );
+      if (approvedRoleAlreadyExists) {
+        unmatched.push(...candidates.map((candidate) => ({
+          key: candidate.key,
+          reason: `Product already has approved ${role} media; reconciliation will not add duplicate operational media.`,
+        })));
+        continue;
+      }
 
       if (role === 'catalogue-primary' && candidates.length > 1) {
         ambiguous.push({

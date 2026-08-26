@@ -22,7 +22,7 @@ import {
   validateQuantityAgainstAvailability,
 } from './commerce.js';
 import { assertStripeEventMatchesStore, getStoreStripeConfig, type CommerceEnvironment } from './store-stripe-config.js';
-import { isIronSprueDisplayableImageAsset, resolveIronSpruePublicMediaUrl, resolveIronSprueStorefrontMediaUrl } from './iron-sprue-media.js';
+import { isIronSprueDisplayableImageAsset, isIronSprueOperationalMediaRole, resolveIronSpruePublicMediaUrl, resolveIronSprueStorefrontMediaUrl } from './iron-sprue-media.js';
 
 export const IRON_SPRUE_STORE_CODE = 'IRON_SPRUE';
 export const IRON_SPRUE_VAT_NUMBER = '525 2040 33';
@@ -268,7 +268,7 @@ function safeProductIdentifierWhere(identifiers: string[]) {
 function resolveProductImage(product: IronSprueProductForCart) {
   const preferred = [...product.mediaAssets]
     .map((asset) => ({ asset, url: isIronSprueDisplayableImageAsset(asset) ? resolveIronSpruePublicMediaUrl(asset) : null }))
-    .filter(({ asset, url }) => asset.approvalState === 'APPROVED' && url)
+    .filter(({ asset, url }) => asset.approvalState === 'APPROVED' && isIronSprueOperationalMediaRole(asset.role) && url)
     .sort((a, b) => {
       const roleScore = (role: string) => {
         const normalized = role.toLowerCase().replace(/_/g, '-');

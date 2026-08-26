@@ -49,6 +49,11 @@ vi.mock('@tcg-hobby/database', () => ({
     if (/\.(avif|gif|jpe?g|png|svg|webp)$/i.test(path)) return true;
     return Boolean(asset.mimeType?.startsWith('image/'));
   },
+  isIronSprueOperationalMediaRole: (role: string | null | undefined) => [
+    'catalogue-primary',
+    'workshop-photography',
+    'manufacturer-original',
+  ].includes(String(role ?? '').trim().toLowerCase().replace(/_/g, '-')),
   sanitizePublicProductCopy: (value: string | null | undefined) => String(value ?? '')
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
@@ -178,7 +183,7 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('railway');
   });
 
-  it('shows only approval-required media in the pending queue with upload controls', async () => {
+  it('shows only approval-required canonical media in the pending queue', async () => {
     mocks.getIronSprueAdminWorkspaceCards.mockReturnValue(cards);
     mocks.listIronSprueAdminMediaAssets.mockResolvedValue([
       {
@@ -219,9 +224,8 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Pagani Zonda F');
     expect(markup).toContain('products%2Fis-aos-05603%2Fimage-2%2Fmaster.webp');
     expect(markup).toContain('R2 product image inventory found');
-    expect(markup).toContain('Existing R2 image candidates');
-    expect(markup).toContain('iron-sprue-image-2-ddc9b0dbc551.png');
-    expect(markup).toContain('Attach R2 image for review');
+    expect(markup).not.toContain('Existing R2 image candidates');
+    expect(markup).not.toContain('Attach R2 image for review');
     expect(markup).toContain('Select all displayed');
     expect(markup).toContain('Approve selected');
     expect(markup).toContain('Publish selected products');
@@ -230,7 +234,8 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('data-bulk-group="iron-sprue-media-bulk-approval"');
     expect(markup).not.toContain('No current');
     expect(markup).not.toContain('media record is available for this product.');
-    expect(markup).toContain('Upload review candidate');
+    expect(markup).not.toContain('Upload review candidate');
+    expect(markup).not.toContain('completed-result');
   });
 
   it('renders hero upload, existing R2 hero selection and preview library', async () => {
@@ -715,12 +720,17 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Create promo banner');
     expect(markup).toContain('Opening bench picks row');
     expect(markup).toContain('Current products in this row');
+    expect(markup).toContain('Row link:');
+    expect(markup).toContain('See new arrivals');
+    expect(markup).toContain('-&gt; /shop?sort=new');
     expect(markup).toContain('Lamborghini Aventador Blue');
     expect(markup).toContain('Additional homepage product rows');
     expect(markup).toContain('Our favourite Aoshima kits');
     expect(markup).toContain('Row key:');
     expect(markup).toContain('our-aoshima-picks');
     expect(markup).toContain('Add product to opening row');
+    expect(markup).toContain('Product in this slot');
+    expect(markup).toContain('Save or replace row product');
     expect(markup).not.toContain('Featured products');
     expect(markup).not.toContain('Edit product-section:our-aoshima-picks');
     expect(markup).toContain('Brands we stock carousel');
@@ -777,7 +787,7 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Current products in this row are storefront fallback');
     expect(markup).toContain('Toyota 2000GT White');
     expect(markup).toContain('Toyota 2000GT Red');
-    expect(markup).toContain('Use these as editable opening picks');
+    expect(markup).toContain('Convert fallback row into editable picks');
     expect(markup).toContain('name="productSlug" value="aoshima-05627-toyota-2000gt-white"');
     expect(markup).toContain('name="productSlug" value="aoshima-05628-toyota-2000gt-red"');
     expect(markup).toContain('Add product to row');

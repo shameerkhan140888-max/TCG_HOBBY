@@ -18,6 +18,11 @@ export function resolveIronSpruePublicMediaUrl(asset: { url?: string | null; sto
 
 const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
 const IRON_SPRUE_MEDIA_PUBLIC_HOSTS = new Set(['media.ironsprue.co.uk']);
+const IRON_SPRUE_OPERATIONAL_MEDIA_ROLES = new Set([
+  'catalogue-primary',
+  'workshop-photography',
+  'manufacturer-original',
+]);
 
 function encodedStorageKeyPath(storageKey: string) {
   return storageKey.split('/').map(encodeURIComponent).join('/');
@@ -61,6 +66,10 @@ export function isIronSprueDisplayableImageAsset(
 
   const mimeType = asset.mimeType?.trim().toLowerCase();
   return Boolean(mimeType?.startsWith('image/'));
+}
+
+export function isIronSprueOperationalMediaRole(role: string | null | undefined) {
+  return IRON_SPRUE_OPERATIONAL_MEDIA_ROLES.has(String(role ?? '').trim().toLowerCase().replace(/_/g, '-'));
 }
 
 export function inferIronSprueImageMimeType(storageKey: string) {

@@ -13,6 +13,7 @@ import {
   getIronSprueProductReadiness,
   ironSpruePublicProductWhere,
   isIronSprueDisplayableImageAsset,
+  isIronSprueOperationalMediaRole,
   resolveIronSpruePublicMediaUrl,
   selectIronSpruePrimaryCatalogueMedia,
 } from './iron-sprue-admin.js';
@@ -191,7 +192,11 @@ function preferredMedia(product: IronSprueCatalogueProductRow): { asset: IronSpr
 
   return [...product.mediaAssets]
     .map((asset) => ({ asset, url: mediaUrl(asset) }))
-    .filter((item): item is { asset: IronSprueMediaAssetRow; url: string } => Boolean(item.url))
+    .filter((item): item is { asset: IronSprueMediaAssetRow; url: string } => (
+      Boolean(item.url)
+      && item.asset.approvalState === 'APPROVED'
+      && isIronSprueOperationalMediaRole(item.asset.role)
+    ))
     .sort((left, right) =>
       roleScore(left.asset.role) - roleScore(right.asset.role)
       || Number(right.asset.isPrimary) - Number(left.asset.isPrimary)
@@ -201,6 +206,7 @@ function preferredMedia(product: IronSprueCatalogueProductRow): { asset: IronSpr
 }
 
 function mapImage(asset: IronSprueMediaAssetRow, product: IronSprueCatalogueProductRow): CatalogueProductImage | null {
+  if (asset.approvalState !== 'APPROVED' || !isIronSprueOperationalMediaRole(asset.role)) return null;
   const url = mediaUrl(asset);
   if (!url) return null;
   return {

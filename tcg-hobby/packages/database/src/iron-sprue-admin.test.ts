@@ -163,6 +163,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         update: vi.fn().mockResolvedValue(product),
       },
       ironSprueAdminMediaAsset: {
+        findMany: vi.fn().mockResolvedValue([]),
         upsert: vi.fn(async ({ create }) => {
           const record = { id: `media-${upsertedRecords.length + 1}`, ...create };
           upsertedRecords.push(record);
@@ -222,6 +223,50 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       where: expect.objectContaining({ productId: 'product-1', role: 'catalogue-primary' }),
       data: { isPrimary: false },
     }));
+  });
+
+  it('does not resurface rejected R2 media during reconciliation', async () => {
+    const product = readyProduct({
+      id: 'product-1',
+      sku: 'IS-AOS-05603',
+      supplierProductCode: '05603',
+      mpn: '05603',
+      customerTitle: 'Pagani Zonda F',
+      mediaAssets: [],
+      contentReviews: [],
+    });
+    const rejectedKey = 'products/is-aos-05603/image-2/rejected-candidate.png';
+    const client = {
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([product]),
+      },
+      ironSprueAdminMediaAsset: {
+        findMany: vi.fn().mockResolvedValue([{
+          id: 'media-rejected',
+          productId: 'product-1',
+          role: 'catalogue-primary',
+          storageKey: rejectedKey,
+          approvalState: 'REJECTED',
+          isPrimary: false,
+        }]),
+        upsert: vi.fn(),
+        updateMany: vi.fn(),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn() },
+    };
+
+    const result = await reconcileIronSprueR2ProductMedia([
+      { key: rejectedKey, size: 1000 },
+    ], actor, client as never);
+
+    expect(result.upsertedMedia).toBe(0);
+    expect(result.affectedProducts).toBe(0);
+    expect(result.unmatched).toEqual([expect.objectContaining({
+      key: rejectedKey,
+      reason: expect.stringContaining('REJECTED'),
+    })]);
+    expect(client.ironSprueAdminMediaAsset.upsert).not.toHaveBeenCalled();
+    expect(client.ironSprueAdminMediaAsset.updateMany).not.toHaveBeenCalled();
   });
 
   it('returns one structured readiness answer for media, content, commercial, review and inventory blockers', () => {

@@ -88,6 +88,12 @@ function actionError(error: unknown) {
   return error instanceof Error ? error.message : 'Action failed.';
 }
 
+const IRON_SPRUE_OPERATIONAL_MEDIA_ROLES = ['catalogue-primary', 'workshop-photography', 'manufacturer-original'] as const;
+
+function isIronSprueOperationalMediaRole(value: string): value is typeof IRON_SPRUE_OPERATIONAL_MEDIA_ROLES[number] {
+  return IRON_SPRUE_OPERATIONAL_MEDIA_ROLES.includes(value as typeof IRON_SPRUE_OPERATIONAL_MEDIA_ROLES[number]);
+}
+
 function revalidateIronSprueStorefront() {
   revalidatePath('/', 'layout');
   revalidatePath('/shop');
@@ -300,7 +306,7 @@ export async function uploadIronSprueProductMediaAction(formData: FormData) {
   try {
     if (!productId) throw new Error('productId is required.');
     if (!sku) throw new Error('sku is required.');
-    if (!['catalogue-primary', 'workshop-photography', 'manufacturer-original', 'completed-result'].includes(role)) {
+    if (!isIronSprueOperationalMediaRole(role)) {
       throw new Error('Unsupported Iron Sprue media role.');
     }
     if (!file) throw new Error('Select a media image to upload.');
@@ -345,7 +351,7 @@ export async function attachIronSprueExistingR2MediaAction(formData: FormData) {
   try {
     if (!productId) throw new Error('productId is required.');
     if (!storageKey) throw new Error('Select an existing R2 image.');
-    if (!['catalogue-primary', 'workshop-photography', 'manufacturer-original', 'completed-result'].includes(role)) {
+    if (!isIronSprueOperationalMediaRole(role)) {
       throw new Error('Unsupported Iron Sprue media role.');
     }
     if (!/\.(avif|gif|jpe?g|png|webp)$/i.test(storageKey)) {
@@ -440,6 +446,8 @@ export async function saveIronSprueFeaturedProductPlacementAction(formData: Form
   const productTitle = stringFromForm(formData.get('productTitle')).trim();
   const existingId = stringFromForm(formData.get('id'));
   const baseSortOrder = optionalNumberFromForm(formData.get('sortOrder')) ?? 0;
+  const ctaLabel = stringFromForm(formData.get('ctaLabel')).trim() || 'View product';
+  const ctaHref = stringFromForm(formData.get('ctaHref')).trim();
   try {
     if (!productSlugs.length) throw new Error('Select a product for this featured slot.');
     for (const [index, productSlug] of productSlugs.entries()) {
@@ -448,8 +456,8 @@ export async function saveIronSprueFeaturedProductPlacementAction(formData: Form
           id: existingId && index === 0 ? existingId : '',
           placementKey: `featured-product:${productSlug}`,
           title: productTitle || productSlug,
-          ctaLabel: 'View product',
-          ctaHref: `/products/${productSlug}`,
+          ctaLabel,
+          ctaHref: ctaHref || `/products/${productSlug}`,
           imageUrl: index === 0 ? stringFromForm(formData.get('imageUrl')) : '',
           active: boolFromForm(formData.get('active')),
           sortOrder: baseSortOrder + index,

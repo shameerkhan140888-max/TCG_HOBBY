@@ -7,6 +7,7 @@ import {
   IRON_SPRUE_TYPOGRAPHY_OPTIONS,
   IRON_SPRUE_COURIERS,
   isIronSprueDisplayableImageAsset,
+  isIronSprueOperationalMediaRole,
   isIronSprueStorefrontContentReviewField,
   listIronSprueAdminContentReviews,
   listIronSprueAdminInventory,
@@ -75,6 +76,46 @@ function ironSprueMediaPreviewUrl(asset: { url: string | null; storageKey: strin
 
 function productReturnPath(product: { sku: string }) {
   return `/iron-sprue-admin/products?q=${encodeURIComponent(product.sku)}`;
+}
+
+type IronSprueAdminProductListItem = Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number];
+type IronSprueAdminProductMediaAsset = IronSprueAdminProductListItem['mediaAssets'][number];
+
+const IRON_SPRUE_OPERATIONAL_MEDIA_ROLE_ORDER = new Map([
+  ['catalogue-primary', 0],
+  ['workshop-photography', 1],
+  ['manufacturer-original', 2],
+]);
+
+function operationalMediaRank(asset: IronSprueAdminProductMediaAsset) {
+  if (asset.role === 'catalogue-primary' && asset.isPrimary && asset.approvalState === 'APPROVED') return 0;
+  if (asset.approvalState === 'APPROVED') return 1;
+  if (asset.approvalState === 'REVIEW_REQUIRED') return 2;
+  if (asset.approvalState === 'PENDING') return 3;
+  return 4;
+}
+
+function canonicalOperationalProductMediaAssets(mediaAssets: IronSprueAdminProductMediaAsset[]) {
+  const bestByRole = new Map<string, IronSprueAdminProductMediaAsset>();
+  for (const asset of mediaAssets) {
+    if (asset.approvalState === 'REJECTED' || asset.approvalState === 'FAILED') continue;
+    if (!isIronSprueOperationalMediaRole(asset.role)) continue;
+    if (!isIronSprueDisplayableImageAsset(asset)) continue;
+    const current = bestByRole.get(asset.role);
+    if (!current) {
+      bestByRole.set(asset.role, asset);
+      continue;
+    }
+    const rankDelta = operationalMediaRank(asset) - operationalMediaRank(current);
+    const sortDelta = (asset.sortOrder ?? 0) - (current.sortOrder ?? 0);
+    if (rankDelta < 0 || (rankDelta === 0 && sortDelta < 0)) {
+      bestByRole.set(asset.role, asset);
+    }
+  }
+  return [...bestByRole.values()].sort((left, right) => (
+    (IRON_SPRUE_OPERATIONAL_MEDIA_ROLE_ORDER.get(left.role) ?? 99)
+    - (IRON_SPRUE_OPERATIONAL_MEDIA_ROLE_ORDER.get(right.role) ?? 99)
+  ));
 }
 
 function StatePill({ children }: { children: string }) {
@@ -213,7 +254,7 @@ function reviewableIronSprueMediaAssets(media: Awaited<ReturnType<typeof listIro
   for (const asset of media) {
     if (asset.approvalState === 'FAILED') continue;
     if (!isIronSprueDisplayableImageAsset(asset)) continue;
-    if (mode === 'pending' && !isIronSprueDisplayableImageAsset(asset)) continue;
+    if (!isIronSprueOperationalMediaRole(asset.role)) continue;
     if (mode === 'pending' && !['REVIEW_REQUIRED', 'PENDING'].includes(asset.approvalState)) continue;
     if (mode === 'approved' && asset.approvalState !== 'APPROVED') continue;
     if (mode === 'rejected' && asset.approvalState !== 'REJECTED') continue;
@@ -228,7 +269,6 @@ function reviewableIronSprueMediaAssets(media: Awaited<ReturnType<typeof listIro
     ['catalogue-primary', 0],
     ['workshop-photography', 1],
     ['manufacturer-original', 2],
-    ['completed-result', 3],
   ]);
 
   return [...currentByProductStage.values()].sort((left, right) => {
@@ -270,7 +310,7 @@ function groupMediaByProduct(
     const key = asset.product?.id ?? `unassigned:${asset.id}`;
     const group = groups.get(key) ?? { product: asset.product, assets: [] };
     if (mode === 'all') {
-      for (const role of ['catalogue-primary', 'workshop-photography', 'manufacturer-original', 'completed-result'] as const) {
+      for (const role of ['catalogue-primary', 'workshop-photography', 'manufacturer-original'] as const) {
         const roleAsset = bestMediaForRole(allMedia, asset.product?.id, role, mode);
         if (roleAsset && !group.assets.some((item) => item.id === roleAsset.id)) {
           group.assets.push(roleAsset);
@@ -419,17 +459,16 @@ function ProductMediaReadinessPanel({
   product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number];
   r2Candidates: Map<string, IronSprueR2Object[]>;
 }) {
-  const displayableAssets = product.mediaAssets.filter(isIronSprueDisplayableImageAsset);
-  const activeDisplayableAssets = displayableAssets.filter((asset) => asset.approvalState !== 'REJECTED');
+  const activeDisplayableAssets = canonicalOperationalProductMediaAssets(product.mediaAssets);
   const linkedStorageKeys = new Set(product.mediaAssets.map((asset) => asset.storageKey).filter((key): key is string => Boolean(key)));
-  const roles = ['catalogue-primary', 'workshop-photography', 'completed-result', 'manufacturer-original'] as const;
+  const roles = ['catalogue-primary', 'workshop-photography', 'manufacturer-original'] as const;
 
   return (
     <div className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-bold text-neutral-100">Product media</p>
         <div className="flex flex-wrap gap-2">
-          {activeDisplayableAssets.length ? <StatePill>{`${activeDisplayableAssets.length} ACTIVE IMAGE${activeDisplayableAssets.length === 1 ? '' : 'S'}`}</StatePill> : <StatePill>NO ACTIVE IMAGE ROWS</StatePill>}
+          {activeDisplayableAssets.length ? <StatePill>{`${activeDisplayableAssets.length} OPERATIONAL IMAGE${activeDisplayableAssets.length === 1 ? '' : 'S'}`}</StatePill> : <StatePill>NO OPERATIONAL IMAGE ROWS</StatePill>}
         </div>
       </div>
       <p className="rounded-md border border-surface-line bg-black/30 p-2 text-xs text-neutral-400">
@@ -468,7 +507,7 @@ function ProductMediaReadinessPanel({
           No real displayable image row is currently linked to this product in Railway.
         </p>
       )}
-      {roles.map((role) => (
+      {roles.filter((role) => !activeDisplayableAssets.some((asset) => asset.role === role)).map((role) => (
         <ExistingR2MediaCandidates
           key={role}
           candidates={r2CandidatesForProductRole(r2Candidates, product.sku, role)}
@@ -566,7 +605,7 @@ function ProductAdminCard({
         </div>
         <div className="grid grid-cols-3 gap-3 text-right text-sm text-neutral-400">
           <p>Stock <strong className="block text-neutral-100">{product.inventory?.availableStock ?? 0}</strong></p>
-          <p>Media <strong className="block text-neutral-100">{product.mediaAssets.filter((asset) => asset.approvalState !== 'REJECTED' && isIronSprueDisplayableImageAsset(asset)).length}</strong></p>
+          <p>Media <strong className="block text-neutral-100">{canonicalOperationalProductMediaAssets(product.mediaAssets).length}</strong></p>
           <p>Reviews <strong className="block text-neutral-100">{product.contentReviews.length}</strong></p>
         </div>
       </summary>
@@ -661,7 +700,7 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
           <div className="mb-4 grid gap-3 rounded-md border border-emerald-500/30 bg-emerald-950/10 p-3 lg:grid-cols-[1fr_auto]">
             <div>
               <p className="font-bold text-emerald-100">Existing R2 product images detected: {r2CandidateCount}</p>
-              <p className="mt-1 text-sm text-neutral-400">Confident SKU-matched images can be reconciled into canonical Railway media rows from here. JSON/source manifests stay visible as placeholders but do not satisfy media readiness.</p>
+              <p className="mt-1 text-sm text-neutral-400">Confident SKU-matched product images can be reconciled into canonical Railway media rows from here. JSON/source manifests are ignored by the operational media workflow.</p>
             </div>
             <form action={reconcileIronSprueExistingR2MediaAction} className="self-end">
               <Button type="submit" variant="primary">Reconcile R2 media</Button>
@@ -1166,7 +1205,7 @@ function ProductMediaUploadForm({
   role,
 }: {
   product: { id: string; sku: string; customerTitle: string } | null;
-  role: 'catalogue-primary' | 'workshop-photography' | 'manufacturer-original' | 'completed-result';
+  role: 'catalogue-primary' | 'workshop-photography' | 'manufacturer-original';
 }) {
   if (!product) return null;
   return (
@@ -1185,7 +1224,7 @@ function ProductMediaUploadForm({
   );
 }
 
-type IronSprueMediaRole = 'catalogue-primary' | 'workshop-photography' | 'manufacturer-original' | 'completed-result';
+type IronSprueMediaRole = 'catalogue-primary' | 'workshop-photography' | 'manufacturer-original';
 type IronSprueR2Object = Awaited<ReturnType<typeof listIronSprueR2Objects>>[number];
 
 function normalizedProductSku(value: string | null | undefined) {
@@ -1216,7 +1255,6 @@ function r2RoleFromProductKey(key: string): IronSprueMediaRole | null {
   if (parts[2] === 'image-2') return 'catalogue-primary';
   if (parts[2] === 'workshop') return 'workshop-photography';
   if (parts[2] === 'original' || parts[2] === 'manufacturer-original') return 'manufacturer-original';
-  if (parts[2] === 'completed-result') return 'completed-result';
   return null;
 }
 
@@ -1256,7 +1294,7 @@ function ExistingR2MediaCandidates({
   return (
     <div className="mt-3 rounded-md border border-emerald-500/30 bg-emerald-950/10 p-3">
       <p className="text-xs font-bold uppercase tracking-wide text-emerald-200">Existing R2 image candidates</p>
-      <p className="mt-1 text-xs text-neutral-400">These files already exist in the Iron Sprue R2 bucket but are not linked as canonical Railway media rows for this role.</p>
+      <p className="mt-1 text-xs text-neutral-400">These files exist in the Iron Sprue R2 bucket but are not linked as canonical Railway media for this role.</p>
       <div className="mt-3 grid gap-3">
         {unlinkedCandidates.slice(0, 4).map((candidate) => (
           <div key={candidate.key} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-2 sm:grid-cols-[84px_1fr]">
@@ -1282,21 +1320,22 @@ function ExistingR2MediaCandidates({
 }
 
 async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
-  const [media, r2ProductObjects, r2ArchiveProductObjects] = await Promise.all([
+  const [media, rejectedMedia, r2ProductObjects, r2ArchiveProductObjects] = await Promise.all([
     listIronSprueAdminMediaAssets({ pageSize: 500 }),
+    listIronSprueAdminMediaAssets({ pageSize: 500, approvalState: 'REJECTED' }),
     listIronSprueR2Objects('products/', 500).catch(() => []),
     listIronSprueR2Objects('archive/products/', 500).catch(() => []),
   ]);
   const mode = fullReviewModeFromSearch(searchParams);
+  const modeMedia = mode === 'rejected' ? rejectedMedia : media;
   const currentReturnPath = `/iron-sprue-admin/media${mode === 'pending' ? '' : `?status=${mode}`}`;
   const pendingCount = reviewableIronSprueMediaAssets(media, 'pending').length;
   const approvedCount = media.filter((asset) => asset.approvalState === 'APPROVED').length;
-  const rejectedCount = media.filter((asset) => asset.approvalState === 'REJECTED').length;
-  const reviewableMedia = reviewableIronSprueMediaAssets(media, mode);
-  const productGroups = groupMediaByProduct(reviewableMedia, media, mode);
+  const rejectedCount = rejectedMedia.length;
+  const reviewableMedia = reviewableIronSprueMediaAssets(modeMedia, mode);
+  const productGroups = groupMediaByProduct(reviewableMedia, modeMedia, mode);
   const r2Candidates = r2CandidatesByProductRole([...r2ProductObjects, ...r2ArchiveProductObjects]);
   const r2CandidateCount = [...r2Candidates.values()].reduce((total, items) => total + items.length, 0);
-  const linkedStorageKeys = new Set(media.map((item) => item.storageKey).filter((key): key is string => Boolean(key)));
   const hiddenCount = media.filter((asset) => asset.approvalState !== 'FAILED' && isIronSprueDisplayableImageAsset(asset)).length - reviewableMedia.length;
   const bulkApprovableMediaCount = reviewableMedia.filter((asset) => asset.approvalState !== 'APPROVED').length;
   const bulkPublishableProductCount = new Set(productGroups
@@ -1357,29 +1396,9 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
             </div>
             <ReviewProductPublishControls bulkFormId="iron-sprue-media-product-bulk-publish" product={group.product} />
             <div className="grid gap-4 xl:grid-cols-2">
-              {(mode === 'all'
-                ? (['catalogue-primary', 'workshop-photography', 'manufacturer-original', 'completed-result'] as const)
-                : Array.from(new Set(group.assets.map((asset) => asset.role))) as Array<'catalogue-primary' | 'workshop-photography' | 'manufacturer-original' | 'completed-result'>
-              ).map((role) => {
-                const asset = group.assets.find((item) => item.role === role);
-                if (!asset) {
-                  const existingR2Candidates = group.product
-                    ? r2CandidatesForProductRole(r2Candidates, group.product.sku, role)
-                    : [];
-                  return (
-                    <div key={role} className="rounded-md border border-dashed border-surface-line bg-surface-ink p-4">
-                      <StatePill>{role}</StatePill>
-                      <p className="mt-4 text-sm text-neutral-400">No current {role === 'catalogue-primary' ? 'Image 2' : 'workshop'} media record is available for this product.</p>
-                      <ExistingR2MediaCandidates candidates={existingR2Candidates} linkedStorageKeys={linkedStorageKeys} product={group.product} returnTo={currentReturnPath} role={role} />
-                      <ProductMediaUploadForm product={group.product} role={role} />
-                    </div>
-                  );
-                }
+              {group.assets.map((asset) => {
+                const role = asset.role as IronSprueMediaRole;
                 const previewUrl = ironSprueMediaPreviewUrl(asset);
-                const displayableImage = isIronSprueDisplayableImageAsset(asset);
-                const existingR2Candidates = group.product
-                  ? r2CandidatesForProductRole(r2Candidates, group.product.sku, role)
-                  : [];
                 return (
                   <div key={asset.id} className="grid gap-4 rounded-md border border-surface-line bg-surface-ink p-3 sm:grid-cols-[220px_1fr]">
                     <div className="rounded-md border border-surface-line bg-white p-2">
@@ -1410,15 +1429,7 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
                       </div>
                       <p className="text-sm text-neutral-400">{asset.width ?? '?'}x{asset.height ?? '?'} - {asset.mimeType ?? 'unknown'}</p>
                       <p className="break-all text-xs text-neutral-500">{asset.storageKey ?? asset.url ?? 'No storage key'}</p>
-                      {!displayableImage ? (
-                        <p className="rounded-md border border-amber-500/30 bg-amber-950/20 p-2 text-xs font-semibold text-amber-100">
-                          This record is metadata or a placeholder, not a displayable product image. It cannot satisfy storefront media readiness.
-                        </p>
-                      ) : (
-                        <MediaActionForms mediaId={asset.id} returnTo={currentReturnPath} />
-                      )}
-                      <ExistingR2MediaCandidates candidates={existingR2Candidates} linkedStorageKeys={linkedStorageKeys} product={asset.product} returnTo={currentReturnPath} role={role} />
-                      <ProductMediaUploadForm product={asset.product} role={role} />
+                      <MediaActionForms mediaId={asset.id} returnTo={currentReturnPath} />
                     </div>
                   </div>
                 );
@@ -1618,8 +1629,8 @@ function productSlugFromPlacement(placement: HomepagePlacementRecord, prefix: st
 }
 
 function productPrimaryPreview(product: { mediaAssets?: Array<{ approvalState: string; role: string; url: string | null; storageKey: string | null; mimeType?: string | null }> }) {
-  return product.mediaAssets?.find((asset) => asset.approvalState === 'APPROVED' && asset.role === 'catalogue-primary' && isIronSprueDisplayableImageAsset(asset))
-    ?? product.mediaAssets?.find((asset) => asset.role === 'catalogue-primary' && asset.approvalState !== 'REJECTED' && isIronSprueDisplayableImageAsset(asset))
+  return product.mediaAssets?.find((asset) => asset.approvalState === 'APPROVED' && asset.role === 'catalogue-primary' && isIronSprueOperationalMediaRole(asset.role) && isIronSprueDisplayableImageAsset(asset))
+    ?? product.mediaAssets?.find((asset) => asset.role === 'catalogue-primary' && asset.approvalState !== 'REJECTED' && asset.approvalState !== 'FAILED' && isIronSprueOperationalMediaRole(asset.role) && isIronSprueDisplayableImageAsset(asset))
     ?? null;
 }
 
@@ -1912,18 +1923,21 @@ function FeaturedProductsManager({
           <HomepagePlacementForm
             defaultPlacementKey="featured-products"
             record={sectionHeading}
-            submitLabel="Save opening row heading"
+            submitLabel="Save opening row heading and link"
           />
         ) : (
           <HomepagePlacementForm
             defaultPlacementKey="featured-products"
-            submitLabel="Create opening row heading"
+            submitLabel="Create opening row heading and link"
           />
         )}
 
         {activeFeaturedPlacements.length ? (
           <div className="rounded-md border border-surface-line bg-black/30 p-3">
             <h3 className="text-sm font-bold">Current products in this row</h3>
+            <p className="mt-1 text-xs text-neutral-500">
+              Row link: {sectionHeading?.ctaLabel || 'See new arrivals'} {sectionHeading?.ctaHref ? `-> ${sectionHeading.ctaHref}` : '-> storefront fallback'}
+            </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {activeFeaturedPlacements.map((placement) => {
                 const slug = productSlugFromPlacement(placement, 'featured-product:');
@@ -1935,7 +1949,7 @@ function FeaturedProductsManager({
         ) : usingFallbackProducts ? (
           <div className="rounded-md border border-amber-500/30 bg-amber-950/15 p-3">
             <h3 className="text-sm font-bold text-amber-100">Current products in this row are storefront fallback</h3>
-            <p className="mt-1 text-sm text-amber-100/80">Add saved products below to replace this fallback row.</p>
+            <p className="mt-1 text-sm text-amber-100/80">Convert this fallback once, then replace individual slots below and set the row link in the heading form above.</p>
             <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               {fallbackProducts.map((product) => {
                 const image = productPrimaryPreview(product);
@@ -1955,7 +1969,7 @@ function FeaturedProductsManager({
               {fallbackProducts.map((product) => <input key={product.id} type="hidden" name="productSlug" value={product.slug} />)}
               <input type="hidden" name="active" value="on" />
               <input type="hidden" name="sortOrder" value="0" />
-              <Button type="submit" size="sm" variant="primary">Use these as editable opening picks</Button>
+              <Button type="submit" size="sm" variant="primary">Convert fallback row into editable picks</Button>
             </form>
           </div>
         ) : null}
@@ -1971,8 +1985,7 @@ function FeaturedProductsManager({
               return (
                 <form key={placement.id} action={saveIronSprueFeaturedProductPlacementAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-3">
                   <input type="hidden" name="id" value={placement.id} />
-                  <input type="hidden" name="productSlug" value={slug} />
-                  <input type="hidden" name="productTitle" value={product?.customerTitle ?? placement.title} />
+                  <input type="hidden" name="productTitle" value="" />
                   <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
                     <div className="rounded-md border border-surface-line bg-white p-2">
                       {previewUrl ? <img src={previewUrl} alt={product?.customerTitle ?? placement.title} className="h-28 w-full object-contain" /> : <div className="grid h-28 place-items-center text-xs text-neutral-500">No preview</div>}
@@ -1984,10 +1997,16 @@ function FeaturedProductsManager({
                     </div>
                   </div>
                   <div className="grid gap-2 md:grid-cols-2">
+                    <Field label="Product in this slot">
+                      <select name="productSlug" defaultValue={slug} required className={fieldClass}>
+                        <option value="">Select a product</option>
+                        {products.map((candidate) => <option key={candidate.id} value={candidate.slug}>{candidate.sku} - {candidate.customerTitle}</option>)}
+                      </select>
+                    </Field>
                     <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={placement.sortOrder ?? 0} className={fieldClass} /></Field>
                     <label className="flex items-end gap-2 pb-2 text-sm"><input name="active" type="checkbox" defaultChecked={placement.active} /> Active on homepage</label>
                   </div>
-                  <Button type="submit" size="sm" variant="outline">Save row product</Button>
+                  <Button type="submit" size="sm" variant="outline">Save or replace row product</Button>
                 </form>
               );
             })}
