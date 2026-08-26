@@ -80,7 +80,7 @@ function createPrismaClient(connectionString = process.env.DATABASE_URL?.trim())
           connectionString: normalizedConnectionString,
           connectionTimeoutMillis: 10_000,
           idleTimeoutMillis: 5_000,
-          max: 5,
+          max: getNodePostgresPoolMax(),
         });
 
     const Client = isWorkerRuntime ? WorkerPrismaClient : PrismaClient;
@@ -111,6 +111,12 @@ function normalizeNodePostgresConnectionString(connectionString: string) {
     url.searchParams.set('uselibpqcompat', 'true');
   }
   return url.toString();
+}
+
+export function getNodePostgresPoolMax() {
+  const configured = Number.parseInt(process.env.PRISMA_PG_POOL_MAX ?? '', 10);
+  if (Number.isFinite(configured) && configured >= 1) return configured;
+  return isHostedIronSprueAdminRuntime() ? 1 : 5;
 }
 
 export type IronSprueAdminDatabaseTargetInfo = {

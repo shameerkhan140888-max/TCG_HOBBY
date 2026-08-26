@@ -66,4 +66,14 @@ describe('Iron Sprue Admin media preview route', () => {
     expect(response.status).toBe(400);
     expect(mocks.send).not.toHaveBeenCalled();
   });
+
+  it('returns 404 instead of throwing for missing R2 objects', async () => {
+    const error = new Error('The specified key does not exist.');
+    error.name = 'NoSuchKey';
+    mocks.send.mockRejectedValue(error);
+
+    const response = await GET(new NextRequest('http://localhost:3001/iron-sprue-admin/media/preview?key=products%2Fis-aos-05628%2Fmissing.png'));
+
+    expect(response.status).toBe(404);
+  });
 });

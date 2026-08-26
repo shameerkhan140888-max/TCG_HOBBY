@@ -31,7 +31,7 @@ import {
   upsertIronSprueAdminHero,
   upsertIronSprueAdminTypographySettings,
 } from './iron-sprue-admin.js';
-import { getIronSprueAdminDatabaseTargetInfo } from './client.js';
+import { getIronSprueAdminDatabaseTargetInfo, getNodePostgresPoolMax } from './client.js';
 
 const originalEnv = { ...process.env };
 
@@ -337,6 +337,16 @@ describe('Iron Sprue dedicated Admin foundation', () => {
 
     process.env.IRON_SPRUE_ADMIN_DATABASE_URL = 'postgresql://iron@example.eu-west-2.aws.neon.tech/neondb';
     expect(() => getIronSprueAdminDatabaseTargetInfo()).toThrow(/cannot use Neon/);
+  });
+
+  it('caps hosted Node Postgres pools to one connection by default', () => {
+    process.env.VERCEL = '1';
+    delete process.env.PRISMA_PG_POOL_MAX;
+
+    expect(getNodePostgresPoolMax()).toBe(1);
+
+    process.env.PRISMA_PG_POOL_MAX = '3';
+    expect(getNodePostgresPoolMax()).toBe(3);
   });
 
   it('publishes a ready product through the canonical product publication state', async () => {

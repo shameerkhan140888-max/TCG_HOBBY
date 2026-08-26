@@ -72,6 +72,10 @@ function normalizeStorageKey(value: string | null) {
   return key;
 }
 
+function isMissingR2Object(error: unknown) {
+  return error instanceof Error && error.name === 'NoSuchKey';
+}
+
 export async function GET(request: NextRequest) {
   await requireIronSprueAdminSession('/iron-sprue-admin/media', '/iron-sprue-admin/login');
 
@@ -79,7 +83,11 @@ export async function GET(request: NextRequest) {
   if (!key) return NextResponse.json({ error: 'Invalid media key.' }, { status: 400 });
 
   const { bucket, client } = getIronSprueMediaClient();
-  const object = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+  const object = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key })).catch((error: unknown) => {
+    if (isMissingR2Object(error)) return null;
+    throw error;
+  });
+  if (!object) return NextResponse.json({ error: 'Media object was not found.' }, { status: 404 });
   const body = object.Body?.transformToWebStream();
   if (!body) return NextResponse.json({ error: 'Media object has no readable body.' }, { status: 404 });
 
