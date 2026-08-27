@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
-import { Button, Card, CardContent, Container, Section } from '@tcg-hobby/ui';
-import { PageHeader, StatusBadge } from '@tcg-hobby/ui';
-import { EmptyPricingState, PricingCard } from '@tcg-hobby/ui';
-import { getAdminProductById, getAdminProductMerchandisingPanel, getAdminProducts, getCatalogueMasterDataOptions, getProductContentWorkspace, type GeneratedContentField, type GeneratedProductContent, type ProductFactInput } from '@tcg-hobby/database';
+import { Button, Card, CardContent, Container, Section } from '@capital-hobby/ui';
+import { PageHeader, StatusBadge } from '@capital-hobby/ui';
+import { EmptyPricingState, PricingCard } from '@capital-hobby/ui';
+import { getAdminProductById, getAdminProductMerchandisingPanel, getAdminProducts, getCatalogueMasterDataOptions, getProductContentWorkspace, type GeneratedContentField, type GeneratedProductContent, type ProductFactInput } from '@capital-hobby/database';
 import { emptyProductFormValues } from '../../../../lib/admin-form-state';
 import { archiveProductAction, toggleProductPublicationAction } from '../../../../lib/admin-actions.server';
 import { buildStorefrontProductPreviewUrl } from '../../../../lib/site';

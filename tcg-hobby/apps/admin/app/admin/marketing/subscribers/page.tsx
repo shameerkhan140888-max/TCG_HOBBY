@@ -7,12 +7,12 @@ import {
   PageHeader,
   SearchToolbar,
   StatusBadge,
-} from '@tcg-hobby/ui';
+} from '@capital-hobby/ui';
 import {
   MarketingSubscriberStatus,
   getMarketingSubscriberDashboard,
   getMarketingSubscribers,
-} from '@tcg-hobby/database';
+} from '@capital-hobby/database';
 
 export const dynamic = 'force-dynamic';
 

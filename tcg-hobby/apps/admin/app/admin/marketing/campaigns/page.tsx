@@ -1,5 +1,5 @@
-import { Button, Container, FormSection, PageHeader, Section, StatusBadge, AdminTable, EmptyTableState } from '@tcg-hobby/ui';
-import { getMarketingCampaigns, getMarketingSubscriberDashboard } from '@tcg-hobby/database';
+import { Button, Container, FormSection, PageHeader, Section, StatusBadge, AdminTable, EmptyTableState } from '@capital-hobby/ui';
+import { getMarketingCampaigns, getMarketingSubscriberDashboard } from '@capital-hobby/database';
 import { createCampaignDraftAction } from '../../../../lib/marketing-actions.server';
 
 export const dynamic = 'force-dynamic';

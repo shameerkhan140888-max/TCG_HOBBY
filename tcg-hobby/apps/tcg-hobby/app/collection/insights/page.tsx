@@ -12,8 +12,8 @@ import {
   StatTile,
   TrendBadge,
   ValueSparkline,
-} from '@tcg-hobby/ui';
-import { getCollectionInsights } from '@tcg-hobby/database/storefront';
+} from '@capital-hobby/ui';
+import { getCollectionInsights } from '@capital-hobby/database/storefront';
 import { requireCustomerSession } from '../../../lib/auth';
 import { SiteHeader } from '../../../components/site-header';
 

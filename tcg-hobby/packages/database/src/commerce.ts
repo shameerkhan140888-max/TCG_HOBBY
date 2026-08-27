@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import type { CartLineItem, CartSummary, CurrencyCode, OrderSummary, ShippingMethod, ShippingMethodCode } from '@tcg-hobby/types';
+import type { CartLineItem, CartSummary, CurrencyCode, OrderSummary, ShippingMethod, ShippingMethodCode } from '@capital-hobby/types';
 
 export const MEGA_GRENINJA_PRODUCT_SLUG = 'pokemon-tcg-mega-greninja-ex-premium-collection';
 export const FREE_UK_STANDARD_SHIPPING_PRODUCT_SLUGS = new Set([MEGA_GRENINJA_PRODUCT_SLUG]);

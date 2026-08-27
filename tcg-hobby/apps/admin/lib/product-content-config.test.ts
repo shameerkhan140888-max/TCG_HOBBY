@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ProductFactInput } from '@tcg-hobby/database';
+import type { ProductFactInput } from '@capital-hobby/database';
 import {
   assistedContentControlClass,
   hasSavedVerifiedFact,

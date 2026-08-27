@@ -1,6 +1,6 @@
-import { Container, Section } from '@tcg-hobby/ui';
-import { PageHeader } from '@tcg-hobby/ui';
-import { getCatalogueMasterDataRecords } from '@tcg-hobby/database';
+import { Container, Section } from '@capital-hobby/ui';
+import { PageHeader } from '@capital-hobby/ui';
+import { getCatalogueMasterDataRecords } from '@capital-hobby/database';
 import { CatalogueMasterDataPage } from '../../../../components/catalogue-master-data-page';
 
 export const dynamic = 'force-dynamic';

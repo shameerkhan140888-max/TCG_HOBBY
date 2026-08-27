@@ -6,7 +6,7 @@ import type {
   CatalogueProductImage,
   PaginationMeta,
   PublicHomepagePlacement,
-} from '@tcg-hobby/types';
+} from '@capital-hobby/types';
 import type { Prisma } from '@prisma/client';
 import { getIronSprueAdminPrisma } from './client.js';
 import {

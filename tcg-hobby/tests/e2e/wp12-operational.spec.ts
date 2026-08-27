@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { prisma } from '@tcg-hobby/database';
+import { prisma } from '@capital-hobby/database';
 import { E2E_STAFF_EMAIL, E2E_STAFF_PASSWORD } from './global-setup';
 
 const pitchBlackSlug = 'pokemon-mega-evolution-pitch-black-booster-pack';

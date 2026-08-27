@@ -6,9 +6,9 @@ import {
   Button,
   Container,
   Section,
-} from '@tcg-hobby/ui';
-import type { MerchandisingRecommendation } from '@tcg-hobby/database/storefront';
-import { getWishlistProductIds } from '@tcg-hobby/database/storefront';
+} from '@capital-hobby/ui';
+import type { MerchandisingRecommendation } from '@capital-hobby/database/storefront';
+import { getWishlistProductIds } from '@capital-hobby/database/storefront';
 import { SiteHeader } from '../components/site-header';
 import { HomepageHeroCarousel } from '../components/homepage-hero-carousel';
 import { ProductMerchandisingRail } from '../components/product-merchandising-rail';

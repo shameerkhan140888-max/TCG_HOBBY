@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Headers, Inject, Param, Patch, Post, Query } from '@nestjs/common';
-import type { PublicBasketInputItem, PublicCheckoutRequest } from '@tcg-hobby/types';
+import type { PublicBasketInputItem, PublicCheckoutRequest } from '@capital-hobby/types';
 import { IronSprueCommerceService } from './iron-sprue-commerce.service.js';
 
 @Controller('api')

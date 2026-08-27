@@ -9,11 +9,11 @@ const source = readFileSync(scriptPath, 'utf8');
 describe('Iron Sprue Cloudflare build wrapper', () => {
   it('prebuilds all internal workspace dependencies before OpenNext', () => {
     const expectedOrder = [
-      '@tcg-hobby/types',
-      '@tcg-hobby/utils',
-      '@tcg-hobby/ui',
-      '@tcg-hobby/auth',
-      '@tcg-hobby/database',
+      '@capital-hobby/types',
+      '@capital-hobby/utils',
+      '@capital-hobby/ui',
+      '@capital-hobby/auth',
+      '@capital-hobby/database',
     ];
     const positions = expectedOrder.map((workspace) => source.indexOf(`workspace: '${workspace}'`));
 
@@ -37,6 +37,13 @@ describe('Iron Sprue Cloudflare build wrapper', () => {
   it('exposes an OpenNext deploy mode so Git deployments publish the Worker, not static assets only', () => {
     expect(source).toContain("deploy: ['opennextjs-cloudflare', ['deploy']]");
     expect(source).toContain("build: ['opennextjs-cloudflare', ['build']]");
+  });
+
+  it('uses the CHG unoptimised-image flag while preserving the legacy alias for compatibility', () => {
+    expect(source).toContain('process.env.CHG_CLOUDFLARE_UNOPTIMIZED_IMAGES');
+    expect(source).toContain(
+      'process.env.TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES = process.env.CHG_CLOUDFLARE_UNOPTIMIZED_IMAGES',
+    );
   });
 
   it('passes additional CLI arguments through to OpenNext or Wrangler', () => {

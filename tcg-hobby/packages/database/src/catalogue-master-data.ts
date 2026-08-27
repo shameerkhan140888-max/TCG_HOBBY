@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { slugify } from '@tcg-hobby/utils';
+import { slugify } from '@capital-hobby/utils';
 import { prisma } from './client.js';
 
 export type CatalogueMasterDataKind = 'games' | 'brands' | 'product-types' | 'languages' | 'sets' | 'categories';

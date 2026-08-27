@@ -1,4 +1,4 @@
-import type { Money } from '@tcg-hobby/types';
+import type { Money } from '@capital-hobby/types';
 
 export function formatMoney(value: Money, locale = 'en-GB'): string {
   return new Intl.NumberFormat(locale, {

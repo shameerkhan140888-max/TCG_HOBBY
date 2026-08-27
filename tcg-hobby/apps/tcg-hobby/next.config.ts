@@ -12,7 +12,7 @@ const managedMediaPattern = (() => {
 })();
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@tcg-hobby/auth', '@tcg-hobby/database', '@tcg-hobby/ui', '@tcg-hobby/utils', '@tcg-hobby/types'],
+  transpilePackages: ['@capital-hobby/auth', '@capital-hobby/database', '@capital-hobby/ui', '@capital-hobby/utils', '@capital-hobby/types'],
   serverExternalPackages: ['@prisma/client', '.prisma/client', '@prisma/adapter-neon', '@neondatabase/serverless'],
   images: {
     unoptimized: process.env.TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES === '1',

@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react';
-import type { MarketTrend, NotificationType, WatchlistSubjectType } from '@tcg-hobby/types';
+import type { MarketTrend, NotificationType, WatchlistSubjectType } from '@capital-hobby/types';
 import { Badge } from './badge';
 import { Button } from './button';
 import { Card, CardContent, CardHeader, CardTitle } from './card';

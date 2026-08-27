@@ -1,5 +1,5 @@
-import { Button, Card, CardContent, Container, EmptyState, PageShell, Section } from '@tcg-hobby/ui';
-import { BuylistStatusBadge, PriceBadge } from '@tcg-hobby/ui';
+import { Button, Card, CardContent, Container, EmptyState, PageShell, Section } from '@capital-hobby/ui';
+import { BuylistStatusBadge, PriceBadge } from '@capital-hobby/ui';
 import { submitBuylistAction } from '../../../lib/buylist';
 import { getCurrentCustomerBuylistDraft } from '../../../lib/buylist';
 import { BuylistQuantityForm, RemoveBuylistItemButton } from '../../../components/buylist-actions';

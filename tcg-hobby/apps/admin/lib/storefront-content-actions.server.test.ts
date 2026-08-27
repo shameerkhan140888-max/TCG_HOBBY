@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('./auth.server', () => ({ requireAdminRole: mocks.requireAdminRole }));
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }));
-vi.mock('@tcg-hobby/database', () => ({
+vi.mock('@capital-hobby/database', () => ({
   HERO_DISPLAY_MODES: ['FULL_BLEED', 'CONTAINED'],
   HERO_FOCAL_POINTS: ['LEFT', 'CENTER', 'RIGHT'],
   HERO_IMAGE_SOURCES: ['PRODUCT', 'CUSTOM'],

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Button, Container, EmptyState, Input, Pagination, ProductCard, WishlistButton, NotifyButton } from '@tcg-hobby/ui';
-import { getCatalogueMasterDataOptions, getCatalogueProducts, getCustomerNotificationSubscriptions, getWishlistProductIds } from '@tcg-hobby/database/storefront';
-import type { CatalogueSort } from '@tcg-hobby/types';
-import { buildStorefrontProductPath } from '@tcg-hobby/utils';
+import { Button, Container, EmptyState, Input, Pagination, ProductCard, WishlistButton, NotifyButton } from '@capital-hobby/ui';
+import { getCatalogueMasterDataOptions, getCatalogueProducts, getCustomerNotificationSubscriptions, getWishlistProductIds } from '@capital-hobby/database/storefront';
+import type { CatalogueSort } from '@capital-hobby/types';
+import { buildStorefrontProductPath } from '@capital-hobby/utils';
 import { SiteHeader } from '../../components/site-header';
 import { AddToCartButton } from '../../components/cart-actions';
 import { getCurrentCustomerSession } from '../../lib/auth';

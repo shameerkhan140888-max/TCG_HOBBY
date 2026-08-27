@@ -1,5 +1,5 @@
-import type { ProductCondition } from '@tcg-hobby/types';
-import type { ProductCsvImportPlan, ProductCsvImportResult } from '@tcg-hobby/database';
+import type { ProductCondition } from '@capital-hobby/types';
+import type { ProductCsvImportPlan, ProductCsvImportResult } from '@capital-hobby/database';
 
 export type FieldErrors = Record<string, string>;
 

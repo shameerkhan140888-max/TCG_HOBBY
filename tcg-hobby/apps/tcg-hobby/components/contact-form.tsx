@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useId, useState, type FormEvent, type InvalidEvent, type MouseEvent } from 'react';
-import { Button, ErrorMessage, FormField, Input } from '@tcg-hobby/ui';
+import { Button, ErrorMessage, FormField, Input } from '@capital-hobby/ui';
 import { sendContactEnquiryAction } from '../lib/contact-actions';
 import { CONTACT_FORM_ERROR, CONTACT_FORM_SUCCESS } from '../lib/contact-constants';
 

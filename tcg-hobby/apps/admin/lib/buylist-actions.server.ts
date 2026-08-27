@@ -1,8 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { updateAdminBuylist } from '@tcg-hobby/database';
-import type { BuylistStatus } from '@tcg-hobby/types';
+import { updateAdminBuylist } from '@capital-hobby/database';
+import type { BuylistStatus } from '@capital-hobby/types';
 import { requireAdminSession } from './auth.server';
 
 function asString(value: FormDataEntryValue | null) {

@@ -1,5 +1,5 @@
-import { Badge, Button, Card, CardContent, Container, PageShell, Section } from '@tcg-hobby/ui';
-import { BuylistStatusBadge, PriceBadge } from '@tcg-hobby/ui';
+import { Badge, Button, Card, CardContent, Container, PageShell, Section } from '@capital-hobby/ui';
+import { BuylistStatusBadge, PriceBadge } from '@capital-hobby/ui';
 import { requireCustomerSession } from '../../lib/auth';
 import { getCurrentCustomerBuylistDraft, getCurrentCustomerBuylists } from '../../lib/buylist';
 import { SiteHeader } from '../../components/site-header';

@@ -1,5 +1,5 @@
-import { Container, PageHeader } from '@tcg-hobby/ui';
-import { getAdminProducts, getCatalogueCategories } from '@tcg-hobby/database';
+import { Container, PageHeader } from '@capital-hobby/ui';
+import { getAdminProducts, getCatalogueCategories } from '@capital-hobby/database';
 import { ReleaseForm } from '../../../../components/release-form';
 import { createReleaseAction } from '../../../../lib/releases';
 

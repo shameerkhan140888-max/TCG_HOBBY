@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getPublicShopLandingPage } from '@tcg-hobby/database/storefront';
+import { getPublicShopLandingPage } from '@capital-hobby/database/storefront';
 import { CataloguePageView } from '../catalogue/page';
 
 export async function generateMetadata(): Promise<Metadata> {

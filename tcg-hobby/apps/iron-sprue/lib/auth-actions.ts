@@ -13,7 +13,7 @@ import {
   validateRegisterInput,
   verifyPassword,
   type FieldErrors,
-} from '@tcg-hobby/auth';
+} from '@capital-hobby/auth';
 import { requireIronSprueCustomerSession } from './auth';
 import { importLocalStorefrontDatabase } from './local-database';
 import { claimVerifiedIronSprueGuestOrders } from './orders';

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
-import { Button, Card, CardContent, Container, ProductImagePlaceholder, ProductImageStage, Section } from '@tcg-hobby/ui';
-import { AdminTable, PageHeader, StatusBadge } from '@tcg-hobby/ui';
-import { getAdminOrderByNumber } from '@tcg-hobby/database';
+import { Button, Card, CardContent, Container, ProductImagePlaceholder, ProductImageStage, Section } from '@capital-hobby/ui';
+import { AdminTable, PageHeader, StatusBadge } from '@capital-hobby/ui';
+import { getAdminOrderByNumber } from '@capital-hobby/database';
 
 export const dynamic = 'force-dynamic';
 

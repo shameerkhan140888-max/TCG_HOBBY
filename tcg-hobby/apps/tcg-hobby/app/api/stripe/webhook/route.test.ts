@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
   sendPaidOrderConfirmationEmail: vi.fn(),
 }));
 
-vi.mock('@tcg-hobby/database/storefront', () => mocks);
+vi.mock('@capital-hobby/database/storefront', () => mocks);
 vi.mock('../../../../lib/order-email', () => ({
   sendPaidOrderConfirmationEmail: mocks.sendPaidOrderConfirmationEmail,
 }));

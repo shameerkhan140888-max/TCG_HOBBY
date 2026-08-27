@@ -1,6 +1,6 @@
-import { getNotificationCenterPreferences } from '@tcg-hobby/database/storefront';
-import { Button, Card, CardContent, Container, EmptyState, Section, StatusBadge, NotificationPreference } from '@tcg-hobby/ui';
-import { AnnouncementBanner } from '@tcg-hobby/ui';
+import { getNotificationCenterPreferences } from '@capital-hobby/database/storefront';
+import { Button, Card, CardContent, Container, EmptyState, Section, StatusBadge, NotificationPreference } from '@capital-hobby/ui';
+import { AnnouncementBanner } from '@capital-hobby/ui';
 import { requireCustomerSession } from '../../../lib/auth';
 import { getCurrentCustomerNotifications, toggleNotificationAction, updateNotificationPreferenceAction } from '../../../lib/release-actions';
 import { updateNotificationCenterAction } from '../../../lib/market-actions';

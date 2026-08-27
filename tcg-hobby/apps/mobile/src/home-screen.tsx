@@ -2,7 +2,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import type { PublicHomeResponse } from '@tcg-hobby/types';
+import type { PublicHomeResponse } from '@capital-hobby/types';
 import { apiRequest } from './api';
 import { ProductCard, ScreenState, SectionHeader } from './components';
 import { useBasket } from './basket-context';

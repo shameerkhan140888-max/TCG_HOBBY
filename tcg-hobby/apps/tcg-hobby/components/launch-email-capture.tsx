@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useId, useRef, useState, type FormEvent } from 'react';
-import { ErrorMessage, FormField, Input } from '@tcg-hobby/ui';
+import { ErrorMessage, FormField, Input } from '@capital-hobby/ui';
 import { LAUNCH_MARKETING_CONSENT_ERROR, LAUNCH_MARKETING_CONSENT_VALUE } from '../lib/launch-consent';
 import { captureLaunchEmailAction } from '../lib/launch-actions';
 import { LaunchEmailSubmitButton } from './launch-email-submit-button';

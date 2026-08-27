@@ -1,5 +1,5 @@
 import type { HTMLAttributes, InputHTMLAttributes, ReactNode } from 'react';
-import type { BuylistStatus, PricingSnapshot } from '@tcg-hobby/types';
+import type { BuylistStatus, PricingSnapshot } from '@capital-hobby/types';
 import { Badge } from './badge';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Input } from './input';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PublicProductSummary } from '@tcg-hobby/types';
+import type { PublicProductSummary } from '@capital-hobby/types';
 import { buildCatalogueQuery, isTrustedCheckoutUrl, mergeUniqueProducts, normaliseHttpOrigin, stockLabel } from './mobile-utils';
 
 function product(id: string): PublicProductSummary {

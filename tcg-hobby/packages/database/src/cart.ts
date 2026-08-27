@@ -1,4 +1,4 @@
-import type { CartLineItem, CartSummary, PublicBasketInputItem } from '@tcg-hobby/types';
+import type { CartLineItem, CartSummary, PublicBasketInputItem } from '@capital-hobby/types';
 import type { Prisma } from '@prisma/client';
 import { prisma } from './client.js';
 import {

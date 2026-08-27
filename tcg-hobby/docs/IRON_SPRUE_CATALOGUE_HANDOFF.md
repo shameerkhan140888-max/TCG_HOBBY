@@ -8,7 +8,7 @@ This note protects the approved storefront baseline and records the clean handof
 - Earlier premium homepage baseline: `a422617`
 - Storefront command: `npm run dev -w @capital-hobby/iron-sprue -- --port 3002`
 - Storefront URL: `http://localhost:3002`
-- Admin command: `npm run dev -w @tcg-hobby/admin`
+- Admin command: `npm run dev -w @capital-hobby/admin`
 - Admin URL: `http://localhost:3001/admin/iron-sprue`
 
 The approved storefront direction is a dark Iron Sprue header/footer, sticky brass promotional strip, warm off-white body, cog/workshop background treatment, full-bleed product-led hero carousel, compact category strip, premium offer panels, rotating brand carousel, full-width newsletter banner, full-width payment trust banner and compact legal footer.

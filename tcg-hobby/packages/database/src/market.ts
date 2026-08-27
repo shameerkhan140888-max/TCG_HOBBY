@@ -8,7 +8,7 @@ import type {
   PriceHistoryPoint,
   WatchlistItem,
   WatchlistSubjectType,
-} from '@tcg-hobby/types';
+} from '@capital-hobby/types';
 import { prisma } from './client.js';
 import { calculateCollectionStats, getCustomerCollectionItems } from './collection.js';
 import { getCustomerDecks } from './deck.js';

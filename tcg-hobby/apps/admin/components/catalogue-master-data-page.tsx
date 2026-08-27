@@ -1,5 +1,5 @@
-import { Button, Card, CardContent, StatusBadge } from '@tcg-hobby/ui';
-import type { CatalogueMasterDataKind, CatalogueMasterDataRecord } from '@tcg-hobby/database';
+import { Button, Card, CardContent, StatusBadge } from '@capital-hobby/ui';
+import type { CatalogueMasterDataKind, CatalogueMasterDataRecord } from '@capital-hobby/database';
 import { saveCatalogueMasterDataAction, toggleCatalogueMasterDataAction } from '../lib/admin-actions.server';
 
 type CatalogueMasterDataPageProps = {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
-import type { GeneratedContentField, GeneratedProductContent, ProductFactInput } from '@tcg-hobby/database';
+import type { GeneratedContentField, GeneratedProductContent, ProductFactInput } from '@capital-hobby/database';
 import {
   applyProductContentAction,
   discardProductContentAction,

@@ -1,6 +1,6 @@
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { Catch, HttpException, HttpStatus } from '@nestjs/common';
-import type { PublicApiError, PublicApiErrorCode } from '@tcg-hobby/types';
+import type { PublicApiError, PublicApiErrorCode } from '@capital-hobby/types';
 
 function codeForStatus(status: number): PublicApiErrorCode {
   if (status === HttpStatus.UNAUTHORIZED || status === HttpStatus.FORBIDDEN) return 'UNAUTHORISED';

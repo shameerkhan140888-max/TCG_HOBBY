@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Button, Card, CardContent, Container, OrderStatusBadge, OrderSummary, PaymentStatusBadge, ProductImagePlaceholder, ProductImageStage, Section } from '@tcg-hobby/ui';
+import { Button, Card, CardContent, Container, OrderStatusBadge, OrderSummary, PaymentStatusBadge, ProductImagePlaceholder, ProductImageStage, Section } from '@capital-hobby/ui';
 import { getCurrentCustomerOrder } from '../../../../lib/orders';
 
 type ParamsValue = { orderNumber: string };

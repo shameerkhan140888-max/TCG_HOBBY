@@ -1,6 +1,6 @@
-import { Button, Container, Section } from '@tcg-hobby/ui';
-import { AdminTable, DataCard, PageHeader } from '@tcg-hobby/ui';
-import { getAdminDashboardData } from '@tcg-hobby/database';
+import { Button, Container, Section } from '@capital-hobby/ui';
+import { AdminTable, DataCard, PageHeader } from '@capital-hobby/ui';
+import { getAdminDashboardData } from '@capital-hobby/database';
 
 export const dynamic = 'force-dynamic';
 

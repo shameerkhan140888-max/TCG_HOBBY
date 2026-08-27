@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { getWishlistProductIds, toggleWishlistItem } from '@tcg-hobby/database/storefront';
+import { getWishlistProductIds, toggleWishlistItem } from '@capital-hobby/database/storefront';
 import { redirect } from 'next/navigation';
 import { getCurrentCustomerSession, requireCustomerSession } from './auth';
 

@@ -1,7 +1,7 @@
 'use server';
 
 import { randomBytes } from 'node:crypto';
-import { hashPassword, normalizeEmail, validateEmail, validatePassword } from '@tcg-hobby/auth';
+import { hashPassword, normalizeEmail, validateEmail, validatePassword } from '@capital-hobby/auth';
 import { Resend } from 'resend';
 import { importLocalStorefrontDatabase } from './local-database';
 import { hashIronSpruePasswordResetToken } from './password-recovery';

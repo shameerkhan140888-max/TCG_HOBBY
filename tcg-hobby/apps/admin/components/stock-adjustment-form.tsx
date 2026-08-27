@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, type TextareaHTMLAttributes } from 'react';
-import { Button, ErrorMessage, FormField, FormSection, Input } from '@tcg-hobby/ui';
+import { Button, ErrorMessage, FormField, FormSection, Input } from '@capital-hobby/ui';
 import { emptyStockAdjustmentFormValues, type StockAdjustmentFormState } from '../lib/admin-form-state';
 import { adjustStockAction } from '../lib/admin-actions.server';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { BrandMark, Container } from '@tcg-hobby/ui';
+import { BrandMark, Container } from '@capital-hobby/ui';
 
 export function LaunchFooter() {
   return (

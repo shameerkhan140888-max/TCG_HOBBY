@@ -1,11 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
-import { BrandMark, Container } from '@tcg-hobby/ui';
+import { BrandMark, Container } from '@capital-hobby/ui';
 import { getCurrentCustomerSession } from '../lib/auth';
 import { getCurrentCustomerCart } from '../lib/cart';
 import { ShopMenu } from './shop-menu';
 import { HeaderSearch } from './header-search';
-import { getActiveStorefrontBanner } from '@tcg-hobby/database/storefront';
+import { getActiveStorefrontBanner } from '@capital-hobby/database/storefront';
 
 function AccountIcon() {
   return (

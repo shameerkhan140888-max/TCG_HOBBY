@@ -1,5 +1,5 @@
-import type { CollectionItem, DeckDetail, DeckSummary, DeckVisibility } from '@tcg-hobby/types';
-import { slugify } from '@tcg-hobby/utils';
+import type { CollectionItem, DeckDetail, DeckSummary, DeckVisibility } from '@capital-hobby/types';
+import { slugify } from '@capital-hobby/utils';
 import { prisma } from './client.js';
 import { calculateLineTotal } from './commerce.js';
 import { getCustomerCollectionItems } from './collection.js';

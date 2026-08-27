@@ -1,4 +1,4 @@
-import { Button, Container, PageShell, Section } from '@tcg-hobby/ui';
+import { Button, Container, PageShell, Section } from '@capital-hobby/ui';
 
 export default function ComingSoonNotFound() {
   return (

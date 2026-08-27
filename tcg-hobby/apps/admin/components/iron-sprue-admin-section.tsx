@@ -16,8 +16,8 @@ import {
   listIronSprueAdminProducts,
   sanitizePublicProductCopy,
   sanitizePublicProductList,
-} from '@tcg-hobby/database';
-import { Button, Card, CardContent, Container, PageHeader, Section, StatusBadge } from '@tcg-hobby/ui';
+} from '@capital-hobby/database';
+import { Button, Card, CardContent, Container, PageHeader, Section, StatusBadge } from '@capital-hobby/ui';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { IronSprueAdminDatabaseUnavailable, isIronSprueAdminDatabaseUnavailable } from './iron-sprue-admin-database-unavailable';

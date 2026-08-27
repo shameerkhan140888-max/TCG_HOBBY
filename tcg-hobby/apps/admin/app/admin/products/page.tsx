@@ -1,7 +1,7 @@
-import { Button, Container, Section } from '@tcg-hobby/ui';
-import { AdminTable, EmptyTableState, PageHeader, SearchToolbar, StatusBadge } from '@tcg-hobby/ui';
-import { PriceBadge } from '@tcg-hobby/ui';
-import { getAdminProducts } from '@tcg-hobby/database';
+import { Button, Container, Section } from '@capital-hobby/ui';
+import { AdminTable, EmptyTableState, PageHeader, SearchToolbar, StatusBadge } from '@capital-hobby/ui';
+import { PriceBadge } from '@capital-hobby/ui';
+import { getAdminProducts } from '@capital-hobby/database';
 
 export const dynamic = 'force-dynamic';
 

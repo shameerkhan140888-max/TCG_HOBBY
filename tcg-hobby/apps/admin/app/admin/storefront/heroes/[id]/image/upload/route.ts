@@ -3,7 +3,7 @@ import {
   detachHomepageHeroImage,
   recordHomepageHeroImageCleanupFailure,
   setManagedHomepageHeroImage,
-} from '@tcg-hobby/database';
+} from '@capital-hobby/database';
 import { requireAdminRole } from '../../../../../../../lib/auth.server';
 import {
   deleteProductImageObjects,

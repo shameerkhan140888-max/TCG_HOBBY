@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
-import { Button, Container, Section } from '@tcg-hobby/ui';
-import { AdminTable, DataCard, FormSection, PageHeader } from '@tcg-hobby/ui';
-import { BuylistStatusBadge, MoneyInput, PriceBadge } from '@tcg-hobby/ui';
-import { getAdminBuylistById } from '@tcg-hobby/database';
+import { Button, Container, Section } from '@capital-hobby/ui';
+import { AdminTable, DataCard, FormSection, PageHeader } from '@capital-hobby/ui';
+import { BuylistStatusBadge, MoneyInput, PriceBadge } from '@capital-hobby/ui';
+import { getAdminBuylistById } from '@capital-hobby/database';
 import { updateAdminBuylistAction } from '../../../../lib/buylist-actions.server';
 
 export const dynamic = 'force-dynamic';

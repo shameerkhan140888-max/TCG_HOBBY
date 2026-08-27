@@ -1,5 +1,5 @@
 {
-  "name": "@tcg-hobby/utils",
+  "name": "@capital-hobby/utils",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,10 +12,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@tcg-hobby/types": "*"
+    "@capital-hobby/types": "*"
   },
   "devDependencies": {
-    "@tcg-hobby/config": "*",
+    "@capital-hobby/config": "*",
     "vitest": "^3.2.4"
   },
   "exports": {

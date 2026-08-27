@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { Button, Card, CardContent, FormSection, Input } from '@tcg-hobby/ui';
-import type { ReleaseSummary } from '@tcg-hobby/types';
+import { Button, Card, CardContent, FormSection, Input } from '@capital-hobby/ui';
+import type { ReleaseSummary } from '@capital-hobby/types';
 
 type CategoryOption = {
   id: string;

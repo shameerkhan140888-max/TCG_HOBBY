@@ -1,7 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
 import { FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import type { PublicProductDetail, PublicProductImage } from '@tcg-hobby/types';
+import type { PublicProductDetail, PublicProductImage } from '@capital-hobby/types';
 import { apiRequest } from './api'; import { useBasket } from './basket-context'; import { Button, money, ProductCard, ScreenState } from './components'; import { stockLabel } from './mobile-utils'; import type { RootStackParamList } from './navigation-types'; import { sharedStyles as s } from './styles'; import { colors, spacing } from './theme';
 
 export function ProductScreen({ route, navigation }: NativeStackScreenProps<RootStackParamList, 'Product'>) {

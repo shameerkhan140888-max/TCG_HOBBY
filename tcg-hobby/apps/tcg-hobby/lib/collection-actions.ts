@@ -1,6 +1,6 @@
 'use server';
 
-import { addCollectionItem, removeCollectionItem, updateCollectionItemQuantity, type UpsertCollectionItemInput } from '@tcg-hobby/database/storefront';
+import { addCollectionItem, removeCollectionItem, updateCollectionItemQuantity, type UpsertCollectionItemInput } from '@capital-hobby/database/storefront';
 import { requireCustomerSession } from './auth';
 import { redirect } from 'next/navigation';
 

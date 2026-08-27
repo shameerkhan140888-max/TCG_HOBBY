@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { Button, ErrorMessage, FormField, StatusBadge } from '@tcg-hobby/ui';
+import { Button, ErrorMessage, FormField, StatusBadge } from '@capital-hobby/ui';
 import { productCsvImportAction } from '../lib/admin-actions.server';
 import { emptyProductCsvImportFormState } from '../lib/admin-form-state';
 

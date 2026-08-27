@@ -1,5 +1,5 @@
-import { Button, Container, EmptyCollection, PageShell, ProgressBar, Section, CollectionCard, CollectionStats } from '@tcg-hobby/ui';
-import { getCustomerCollectionDashboard, getCustomerCollectionItems } from '@tcg-hobby/database/storefront';
+import { Button, Container, EmptyCollection, PageShell, ProgressBar, Section, CollectionCard, CollectionStats } from '@capital-hobby/ui';
+import { getCustomerCollectionDashboard, getCustomerCollectionItems } from '@capital-hobby/database/storefront';
 import { requireCustomerSession } from '../../lib/auth';
 import { removeCollectionItemAction, updateCollectionItemQuantityAction } from '../../lib/collection-actions';
 import { SiteHeader } from '../../components/site-header';

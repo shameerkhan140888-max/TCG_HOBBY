@@ -2,8 +2,8 @@
 
 import Image from 'next/image';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CatalogueProductImage } from '@tcg-hobby/types';
-import { ProductImagePlaceholder } from '@tcg-hobby/ui';
+import type { CatalogueProductImage } from '@capital-hobby/types';
+import { ProductImagePlaceholder } from '@capital-hobby/ui';
 
 type Point = {
   x: number;

@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from '@tcg-hobby/database/storefront';
+import { prisma } from '@capital-hobby/database/storefront';
 import {
   hashPassword,
   normalizeEmail,
@@ -9,10 +9,10 @@ import {
   validateRegisterInput,
   verifyPassword,
   type FieldErrors,
-} from '@tcg-hobby/auth';
+} from '@capital-hobby/auth';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createSessionExpiry, generateSessionToken, SESSION_COOKIE_NAME } from '@tcg-hobby/auth';
+import { createSessionExpiry, generateSessionToken, SESSION_COOKIE_NAME } from '@capital-hobby/auth';
 import { requireCustomerSession } from './auth';
 import { resolveInternalReturnTo } from './internal-return';
 

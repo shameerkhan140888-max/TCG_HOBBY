@@ -5,8 +5,8 @@ import type {
   CatalogueProduct,
   CatalogueProductDetail,
   PaginationMeta,
-} from '@tcg-hobby/types';
-import { slugify } from '@tcg-hobby/utils';
+} from '@capital-hobby/types';
+import { slugify } from '@capital-hobby/utils';
 import type { Prisma } from '@prisma/client';
 import { prisma } from './client.js';
 import { hasFreeUkStandardShipping } from './commerce.js';

@@ -1,6 +1,6 @@
-import { getCatalogueProducts, getCustomerDeckById } from '@tcg-hobby/database/storefront';
-import { Button, Card, CardContent, Container, EmptyState, Input, PageShell, Pagination, ProductCard, Section, DeckHeader, ProgressBar } from '@tcg-hobby/ui';
-import type { CatalogueSort } from '@tcg-hobby/types';
+import { getCatalogueProducts, getCustomerDeckById } from '@capital-hobby/database/storefront';
+import { Button, Card, CardContent, Container, EmptyState, Input, PageShell, Pagination, ProductCard, Section, DeckHeader, ProgressBar } from '@capital-hobby/ui';
+import type { CatalogueSort } from '@capital-hobby/types';
 import { requireCustomerSession } from '../../../lib/auth';
 import { SiteHeader } from '../../../components/site-header';
 import { addDeckCardAction, removeDeckCardAction, updateDeckCardQuantityAction, updateDeckDetailsAction } from '../../../lib/deck-actions';

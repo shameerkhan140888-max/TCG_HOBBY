@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import type { CatalogueSort, PublicCatalogueFilterOptions, PublicCatalogueOption, PublicCatalogueResponse, PublicProductSummary } from '@tcg-hobby/types';
+import type { CatalogueSort, PublicCatalogueFilterOptions, PublicCatalogueOption, PublicCatalogueResponse, PublicProductSummary } from '@capital-hobby/types';
 import { apiRequest } from './api';
 import { useBasket } from './basket-context';
 import { ProductCard, ScreenState } from './components';

@@ -1,12 +1,12 @@
 import 'server-only';
 
-import { getWishlistItems, prisma, type WishlistItem } from '@tcg-hobby/database/storefront';
+import { getWishlistItems, prisma, type WishlistItem } from '@capital-hobby/database/storefront';
 import {
   SESSION_COOKIE_NAME,
   createSessionExpiry,
   generateSessionToken,
   type SessionUser,
-} from '@tcg-hobby/auth';
+} from '@capital-hobby/auth';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';

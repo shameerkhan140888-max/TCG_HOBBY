@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import React from 'react';
-import { Badge, Container, PageShell, Section } from '@tcg-hobby/ui';
+import { Badge, Container, PageShell, Section } from '@capital-hobby/ui';
 import { LaunchHeader } from '../../components/launch-header';
 import {
   getSiteUrl,

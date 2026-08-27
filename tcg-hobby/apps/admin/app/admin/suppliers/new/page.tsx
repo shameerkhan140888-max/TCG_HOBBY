@@ -1,5 +1,5 @@
-import { Container, Section } from '@tcg-hobby/ui';
-import { PageHeader } from '@tcg-hobby/ui';
+import { Container, Section } from '@capital-hobby/ui';
+import { PageHeader } from '@capital-hobby/ui';
 import { SupplierForm } from '../../../../components/supplier-form';
 
 export const dynamic = 'force-dynamic';

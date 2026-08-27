@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { Container, PageHeader, DataCard } from '@tcg-hobby/ui';
-import { getAdminProducts, getCatalogueCategories } from '@tcg-hobby/database';
+import { Container, PageHeader, DataCard } from '@capital-hobby/ui';
+import { getAdminProducts, getCatalogueCategories } from '@capital-hobby/database';
 import { ReleaseForm } from '../../../../components/release-form';
 import { getCurrentAdminRelease, updateReleaseAction } from '../../../../lib/releases';
 

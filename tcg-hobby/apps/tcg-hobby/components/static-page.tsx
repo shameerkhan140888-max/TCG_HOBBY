@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Container, Section } from '@tcg-hobby/ui';
+import { Container, Section } from '@capital-hobby/ui';
 
 type StaticPageProps = {
   eyebrow: string;

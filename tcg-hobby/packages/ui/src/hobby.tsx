@@ -1,4 +1,4 @@
-import type { CollectionItem, CollectionSummary, DeckDetail, DeckSummary } from '@tcg-hobby/types';
+import type { CollectionItem, CollectionSummary, DeckDetail, DeckSummary } from '@capital-hobby/types';
 import type { HTMLAttributes, ReactNode } from 'react';
 import { Badge } from './badge';
 import { Card, CardContent, CardHeader, CardTitle } from './card';

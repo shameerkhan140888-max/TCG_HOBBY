@@ -2,7 +2,7 @@ import * as WebBrowser from 'expo-web-browser';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import type { PublicCheckoutResponse, ShippingMethod, ShippingMethodCode } from '@tcg-hobby/types';
+import type { PublicCheckoutResponse, ShippingMethod, ShippingMethodCode } from '@capital-hobby/types';
 import { apiRequest } from './api'; import { useAuth } from './auth-context'; import { useBasket } from './basket-context'; import { Button, money } from './components'; import type { RootStackParamList } from './navigation-types'; import { sharedStyles as s } from './styles'; import { colors, spacing } from './theme';
 import { mobileConfig } from './config';
 import { isTrustedCheckoutUrl } from './mobile-utils';

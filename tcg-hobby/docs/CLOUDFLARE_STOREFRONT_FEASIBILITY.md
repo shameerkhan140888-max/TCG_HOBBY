@@ -42,7 +42,7 @@ No real secrets are stored in this repository. Configure secrets in Cloudflare f
 
 ## Known Audit Items
 
-- The storefront imports many values from `@tcg-hobby/database`, whose root entrypoint also exports Admin and import utilities.
+- The storefront imports many values from `@capital-hobby/database`, whose root entrypoint also exports Admin and import utilities.
 - `packages/database/src/product-import.ts` uses filesystem APIs and should not be bundled into the Worker runtime.
 - `packages/database/src/orders.ts` contains local development fallback order persistence using `node:fs`, `node:os` and `node:path`.
 - Current password hashing uses synchronous Node `scrypt`; keep password mutations on Node/Nest.

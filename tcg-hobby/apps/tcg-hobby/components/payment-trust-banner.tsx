@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container } from '@tcg-hobby/ui';
+import { Container } from '@capital-hobby/ui';
 import { getEnabledPaymentMethods, storefrontPaymentMethods, type PaymentMethodConfig } from '../lib/payment-methods';
 
 type PaymentTrustBannerProps = {

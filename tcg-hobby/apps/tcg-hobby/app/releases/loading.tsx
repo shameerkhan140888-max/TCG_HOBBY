@@ -1,4 +1,4 @@
-import { Container, PageShell, Section } from '@tcg-hobby/ui';
+import { Container, PageShell, Section } from '@capital-hobby/ui';
 
 export default function ReleasesLoading() {
   return (

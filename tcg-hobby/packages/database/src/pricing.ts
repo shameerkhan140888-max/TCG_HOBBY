@@ -1,5 +1,5 @@
-import type { PriceStatus, PricingRuleScope, PricingRuleType, PricingSnapshot } from '@tcg-hobby/types';
-import { calculatePercentage, clampMinorAmount, roundToMinor } from '@tcg-hobby/utils';
+import type { PriceStatus, PricingRuleScope, PricingRuleType, PricingSnapshot } from '@capital-hobby/types';
+import { calculatePercentage, clampMinorAmount, roundToMinor } from '@capital-hobby/utils';
 import { prisma } from './client.js';
 
 type PricingRuleConfig = {

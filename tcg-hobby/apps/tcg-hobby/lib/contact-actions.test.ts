@@ -31,7 +31,7 @@ vi.mock('resend', () => ({
   })),
 }));
 
-vi.mock('@tcg-hobby/database/storefront', () => ({
+vi.mock('@capital-hobby/database/storefront', () => ({
   validateSubscriberEmail: mocks.validateSubscriberEmail,
 }));
 

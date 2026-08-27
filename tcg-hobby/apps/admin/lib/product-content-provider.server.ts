@@ -1,5 +1,5 @@
 import 'server-only';
-import type { GeneratedProductContent } from '@tcg-hobby/database';
+import type { GeneratedProductContent } from '@capital-hobby/database';
 
 export type ProductContentGenerationInput = { product: Record<string, unknown>; verifiedFacts: Array<{ key: string; value: string; sourceReference: string | null }>; requestedFields: string[] };
 export type ProductContentProvider = { generate(input: ProductContentGenerationInput): Promise<{ content: GeneratedProductContent; model: string }> };

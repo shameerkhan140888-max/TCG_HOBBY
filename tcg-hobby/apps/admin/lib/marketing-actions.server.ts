@@ -5,7 +5,7 @@ import {
   createMarketingCampaignDraft,
   updateMarketingSubscriberStatus,
   updateMarketingSubscriberTags,
-} from '@tcg-hobby/database';
+} from '@capital-hobby/database';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdminRole } from './auth.server';

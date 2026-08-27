@@ -1,4 +1,4 @@
-import { resetIronSprueAdminPrisma } from '@tcg-hobby/database';
+import { resetIronSprueAdminPrisma } from '@capital-hobby/database';
 import { IronSprueAdminSection } from '../../../components/iron-sprue-admin-section';
 import { IronSprueAdminDatabaseUnavailable, isIronSprueAdminDatabaseUnavailable } from '../../../components/iron-sprue-admin-database-unavailable';
 import { IronSprueAdminShell } from '../../../components/iron-sprue-admin-shell';

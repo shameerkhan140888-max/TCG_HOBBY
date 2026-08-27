@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import type { PublicOrderDetail } from '@tcg-hobby/types';
+import type { PublicOrderDetail } from '@capital-hobby/types';
 import {
   hasTrackedIronSpruePurchase,
   markIronSpruePurchaseTracked,

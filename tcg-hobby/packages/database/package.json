@@ -1,5 +1,5 @@
 {
-  "name": "@tcg-hobby/database",
+  "name": "@capital-hobby/database",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -21,13 +21,13 @@
     "@prisma/adapter-neon": "^6.19.3",
     "@prisma/adapter-pg": "^6.19.3",
     "@prisma/client": "^6.10.1",
-    "@tcg-hobby/auth": "*",
-    "@tcg-hobby/utils": "*",
+    "@capital-hobby/auth": "*",
+    "@capital-hobby/utils": "*",
     "pg": "^8.23.0",
     "stripe": "^22.3.2"
   },
   "devDependencies": {
-    "@tcg-hobby/config": "*",
+    "@capital-hobby/config": "*",
     "prisma": "^6.10.1",
     "tsx": "^4.19.2",
     "vitest": "^3.2.4"

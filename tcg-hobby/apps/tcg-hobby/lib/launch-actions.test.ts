@@ -26,7 +26,7 @@ vi.mock('next/navigation', () => ({
   redirect: mocks.redirect,
 }));
 
-vi.mock('@tcg-hobby/database/storefront', () => ({
+vi.mock('@capital-hobby/database/storefront', () => ({
   upsertMarketingSubscriberSignup: mocks.upsertMarketingSubscriberSignup,
   validateSubscriberEmail: mocks.validateSubscriberEmail,
 }));

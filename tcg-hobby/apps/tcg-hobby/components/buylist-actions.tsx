@@ -1,4 +1,4 @@
-import { Button, QuantitySelector } from '@tcg-hobby/ui';
+import { Button, QuantitySelector } from '@capital-hobby/ui';
 import { addToBuylistAction, removeBuylistItemAction, updateBuylistQuantityAction } from '../lib/buylist';
 
 type BaseProps = {

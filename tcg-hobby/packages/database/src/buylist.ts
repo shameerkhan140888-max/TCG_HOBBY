@@ -1,5 +1,5 @@
-import type { BuylistStatus, CurrencyCode, PaginationMeta } from '@tcg-hobby/types';
-import { sumMinorAmounts } from '@tcg-hobby/utils';
+import type { BuylistStatus, CurrencyCode, PaginationMeta } from '@capital-hobby/types';
+import { sumMinorAmounts } from '@capital-hobby/utils';
 import { prisma } from './client.js';
 import { getProductPricingSnapshot } from './pricing.js';
 

@@ -3,7 +3,7 @@ import 'server-only';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { SESSION_COOKIE_NAME, type SessionUser } from '@tcg-hobby/auth';
+import { SESSION_COOKIE_NAME, type SessionUser } from '@capital-hobby/auth';
 import { importLocalStorefrontDatabase } from './local-database';
 import { shouldUseIronSprueProductionApi } from './production-api';
 

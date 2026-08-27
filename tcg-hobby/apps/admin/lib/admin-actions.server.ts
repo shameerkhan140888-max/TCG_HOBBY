@@ -21,7 +21,7 @@ import {
   updateProductMerchandisingSettings,
   ProductRecommendationType,
   type CatalogueMasterDataKind,
-} from '@tcg-hobby/database';
+} from '@capital-hobby/database';
 import {
   buildProductValues,
   buildStockAdjustmentValues,

@@ -1,5 +1,5 @@
-import { Container, Section } from '@tcg-hobby/ui';
-import { PageHeader } from '@tcg-hobby/ui';
+import { Container, Section } from '@capital-hobby/ui';
+import { PageHeader } from '@capital-hobby/ui';
 import { ProductCsvImportForm } from '../../../../components/product-csv-import-form';
 
 export const dynamic = 'force-dynamic';

@@ -1,13 +1,13 @@
 'use client';
 
-import type { HeroPlacementProductOption } from '@tcg-hobby/database';
+import type { HeroPlacementProductOption } from '@capital-hobby/database';
 import {
   Button,
   FormField,
   Input,
   ProductImageMedia,
   ProductImagePlaceholder,
-} from '@tcg-hobby/ui';
+} from '@capital-hobby/ui';
 import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import {

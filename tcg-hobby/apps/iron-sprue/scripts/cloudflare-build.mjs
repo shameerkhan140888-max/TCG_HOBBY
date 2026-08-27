@@ -11,11 +11,11 @@ const productionApiBaseUrl = 'https://considerate-unity-production-b734.up.railw
 const localEnvFileNames = ['.env', '.env.local', '.env.production', '.env.development'];
 let activeHiddenLocalEnvFiles = [];
 const internalWorkspaceBuilds = [
-  { workspace: '@tcg-hobby/types' },
-  { workspace: '@tcg-hobby/utils' },
-  { workspace: '@tcg-hobby/ui' },
-  { workspace: '@tcg-hobby/auth' },
-  { workspace: '@tcg-hobby/database', env: { DATABASE_URL: prismaGenerateDatabaseUrl } },
+  { workspace: '@capital-hobby/types' },
+  { workspace: '@capital-hobby/utils' },
+  { workspace: '@capital-hobby/ui' },
+  { workspace: '@capital-hobby/auth' },
+  { workspace: '@capital-hobby/database', env: { DATABASE_URL: prismaGenerateDatabaseUrl } },
 ];
 
 const mode = process.argv[2] ?? 'build';
@@ -46,7 +46,9 @@ if (!Object.hasOwn(commands, mode)) {
   process.exit(1);
 }
 
-process.env.TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES = '1';
+process.env.CHG_CLOUDFLARE_UNOPTIMIZED_IMAGES =
+  process.env.CHG_CLOUDFLARE_UNOPTIMIZED_IMAGES ?? process.env.TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES ?? '1';
+process.env.TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES = process.env.CHG_CLOUDFLARE_UNOPTIMIZED_IMAGES;
 process.env.NEXTJS_ENV ??= 'production';
 process.env.IRON_SPRUE_PRODUCTION_API_BASE_URL ??= productionApiBaseUrl;
 

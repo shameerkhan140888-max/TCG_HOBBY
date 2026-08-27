@@ -8,7 +8,7 @@ import {
   ErrorMessage,
   FormField,
   Input,
-} from '@tcg-hobby/ui';
+} from '@capital-hobby/ui';
 import type {
   LoginFormState,
   ProfileFormState,

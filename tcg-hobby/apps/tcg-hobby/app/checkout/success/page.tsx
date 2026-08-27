@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Button, Container, EmptyState, OrderStatusBadge, OrderSummary, PaymentStatusBadge, ProductImagePlaceholder, ProductImageStage, Section } from '@tcg-hobby/ui';
+import { Button, Container, EmptyState, OrderStatusBadge, OrderSummary, PaymentStatusBadge, ProductImagePlaceholder, ProductImageStage, Section } from '@capital-hobby/ui';
 import { CommerceProgress } from '../../../components/commerce-progress';
 import { GuestCartClearer } from '../../../components/guest-cart-clearer';
 import { PaymentStatusRefresher } from '../../../components/payment-status-refresher';

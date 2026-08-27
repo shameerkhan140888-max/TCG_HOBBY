@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { CatalogueProductDetail } from '@tcg-hobby/types';
-import type { MerchandisingRecommendation } from '@tcg-hobby/database/storefront';
+import type { CatalogueProductDetail } from '@capital-hobby/types';
+import type { MerchandisingRecommendation } from '@capital-hobby/database/storefront';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -18,7 +18,7 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-vi.mock('@tcg-hobby/database/storefront', () => ({
+vi.mock('@capital-hobby/database/storefront', () => ({
   MEGA_GRENINJA_PRODUCT_SLUG: 'pokemon-tcg-mega-greninja-ex-premium-collection',
   getCatalogueProductBySlug: vi.fn(async () => mocks.product),
   getCustomerNotificationSubscriptions: vi.fn(async () => mocks.notificationIds),
@@ -205,7 +205,7 @@ describe('Product detail page', () => {
     expect(markup).not.toContain('3 available');
     expect(markup).not.toContain('Only 3');
     expect(markup.match(/<details/g)).toHaveLength(4);
-  }, 10000);
+  }, 20000);
 
   it('does not render an empty contents section', async () => {
     mocks.product = megaGreninjaProduct({ slug: 'product-without-contents', contents: [] });

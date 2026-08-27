@@ -4,7 +4,7 @@
 
 1. Install workspace dependencies from the repository root with `npm install`.
 2. Copy `apps/corporate/.env.example` to `apps/corporate/.env.local` only when local overrides are needed.
-3. Run `npm run dev -w @tcg-hobby/corporate`.
+3. Run `npm run dev -w @capital-hobby/corporate`.
 4. Open `http://localhost:3100`.
 
 The app is an independent static Next.js workspace at `apps/corporate`. It does not import the TCG Hobby storefront, Admin, API, authentication, database, Stripe, product or mobile runtimes.
@@ -54,11 +54,11 @@ Update factual copy directly in these routes. Do not add unverified awards, part
 ## Build and test
 
 ```text
-npm run typecheck -w @tcg-hobby/corporate
-npm run test -w @tcg-hobby/corporate
-npm run lint -w @tcg-hobby/corporate
-npm run build -w @tcg-hobby/corporate
-npm run test:e2e -w @tcg-hobby/corporate
+npm run typecheck -w @capital-hobby/corporate
+npm run test -w @capital-hobby/corporate
+npm run lint -w @capital-hobby/corporate
+npm run build -w @capital-hobby/corporate
+npm run test:e2e -w @capital-hobby/corporate
 ```
 
 The production app remains server-rendered/static, uses no database, analytics, marketing cookies or third-party browser scripts, and requires no secret environment variables.
@@ -68,8 +68,8 @@ The production app remains server-rendered/static, uses no database, analytics, 
 Create a separate deployment project with:
 
 - Root directory: repository root
-- Workspace: `@tcg-hobby/corporate`
-- Build command: `npm run build -w @tcg-hobby/corporate`
+- Workspace: `@capital-hobby/corporate`
+- Build command: `npm run build -w @capital-hobby/corporate`
 - Framework: Next.js
 - Primary domain: `www.capitalhobbygroup.co.uk`
 

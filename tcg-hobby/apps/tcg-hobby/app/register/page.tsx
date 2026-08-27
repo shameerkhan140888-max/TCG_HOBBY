@@ -1,4 +1,4 @@
-import { BrandMark, Container, PageShell, Section } from '@tcg-hobby/ui';
+import { BrandMark, Container, PageShell, Section } from '@capital-hobby/ui';
 import { SiteHeader } from '../../components/site-header';
 import { RegisterForm } from '../../components/auth-forms';
 import { resolveInternalReturnTo } from '../../lib/internal-return';

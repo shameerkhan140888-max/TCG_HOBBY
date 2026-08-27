@@ -1,5 +1,5 @@
 {
-  "name": "@tcg-hobby/mobile",
+  "name": "@capital-hobby/mobile",
   "version": "0.1.0",
   "private": true,
   "main": "index.js",
@@ -16,7 +16,7 @@
     "@react-navigation/bottom-tabs": "^7.18.13",
     "@react-navigation/native": "^7.3.13",
     "@react-navigation/native-stack": "^7.18.5",
-    "@tcg-hobby/types": "*",
+    "@capital-hobby/types": "*",
     "expo": "^54.0.0",
     "expo-secure-store": "~15.0.8",
     "expo-web-browser": "~15.0.11",
@@ -26,7 +26,7 @@
     "react-native-screens": "~4.16.0"
   },
   "devDependencies": {
-    "@tcg-hobby/config": "*",
+    "@capital-hobby/config": "*",
     "@types/react": "~19.1.10",
     "typescript": "~5.9.2",
     "vitest": "^3.2.4"

@@ -133,7 +133,7 @@ export type ProductReleaseStatus = 'RELEASED' | 'PREORDER' | 'COMING_SOON' | 'AR
 
 export type ApiHealth = {
   status: 'ok';
-  service: 'tcg-hobby-api';
+  service: 'capital-hobby-api';
 };
 
 export type PublicStockState = 'OUT_OF_STOCK' | 'LOW_STOCK' | 'IN_STOCK';

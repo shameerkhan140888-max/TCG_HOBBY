@@ -1,4 +1,4 @@
-import { Container, PageShell, Section } from '@tcg-hobby/ui';
+import { Container, PageShell, Section } from '@capital-hobby/ui';
 import { SiteHeader } from '../../components/site-header';
 import { ResetPasswordForm } from '../../components/password-recovery-forms';
 export const metadata={title:'Choose a new password | TCG Hobby'};

@@ -12,8 +12,8 @@ import {
   StatTile,
   TrendBadge,
   WatchButton,
-} from '@tcg-hobby/ui';
-import { getNotificationCenterPreferences, getWatchlist } from '@tcg-hobby/database/storefront';
+} from '@capital-hobby/ui';
+import { getNotificationCenterPreferences, getWatchlist } from '@capital-hobby/database/storefront';
 import { requireCustomerSession } from '../../lib/auth';
 import { SiteHeader } from '../../components/site-header';
 import { toggleWatchlistAction, updateWatchlistPreferencesAction } from '../../lib/market-actions';

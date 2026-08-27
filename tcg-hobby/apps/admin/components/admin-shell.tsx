@@ -1,7 +1,7 @@
 'use client';
 
-import type { SessionUser } from '@tcg-hobby/auth';
-import { BrandMark, Button } from '@tcg-hobby/ui';
+import type { SessionUser } from '@capital-hobby/auth';
+import { BrandMark, Button } from '@capital-hobby/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';

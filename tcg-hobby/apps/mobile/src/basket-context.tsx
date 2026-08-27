@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { PublicBasket, PublicBasketInputItem } from '@tcg-hobby/types';
+import type { PublicBasket, PublicBasketInputItem } from '@capital-hobby/types';
 import { apiRequest } from './api';
 import { useAuth } from './auth-context';
 

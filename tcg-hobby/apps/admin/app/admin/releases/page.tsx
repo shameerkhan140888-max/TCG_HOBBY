@@ -1,4 +1,4 @@
-import { Button, Container, EmptyTableState, PageHeader, SearchToolbar, StatusBadge, AdminTable, Section } from '@tcg-hobby/ui';
+import { Button, Container, EmptyTableState, PageHeader, SearchToolbar, StatusBadge, AdminTable, Section } from '@capital-hobby/ui';
 import { getCurrentAdminReleases } from '../../../lib/releases';
 
 export const dynamic = 'force-dynamic';

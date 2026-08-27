@@ -3,6 +3,6 @@ import { AppService } from './app.service.js';
 
 describe('AppService', () => {
   it('reports API health', () => {
-    expect(new AppService().getHealth()).toEqual({ status: 'ok', service: 'tcg-hobby-api' });
+    expect(new AppService().getHealth()).toEqual({ status: 'ok', service: 'capital-hobby-api' });
   });
 });

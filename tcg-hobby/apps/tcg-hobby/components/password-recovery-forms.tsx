@@ -1,7 +1,7 @@
 'use client';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { AuthCard, Button, ErrorMessage, FormField, Input } from '@tcg-hobby/ui';
+import { AuthCard, Button, ErrorMessage, FormField, Input } from '@capital-hobby/ui';
 import { requestPasswordResetAction, resetPasswordAction, type PasswordRecoveryState } from '../lib/password-recovery-actions';
 const initial: PasswordRecoveryState = { fieldErrors: {} };
 function Submit({ label, pending }: { label: string; pending: string }) { const status=useFormStatus(); return <Button className="w-full" type="submit" disabled={status.pending}>{status.pending?pending:label}</Button>; }

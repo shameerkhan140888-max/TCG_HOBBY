@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { Button, Container, PageShell, Section } from '@tcg-hobby/ui';
-import { unsubscribeMarketingSubscriberByToken } from '@tcg-hobby/database/storefront';
+import { Button, Container, PageShell, Section } from '@capital-hobby/ui';
+import { unsubscribeMarketingSubscriberByToken } from '@capital-hobby/database/storefront';
 import { LaunchHeader } from '../../components/launch-header';
 
 export const dynamic = 'force-dynamic';

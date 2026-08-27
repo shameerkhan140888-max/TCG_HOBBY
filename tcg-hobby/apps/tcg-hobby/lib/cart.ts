@@ -2,7 +2,7 @@ import 'server-only';
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import type { CartLineItem } from '@tcg-hobby/types';
+import type { CartLineItem } from '@capital-hobby/types';
 import {
   addProductToCart as addMemberCartItem,
   clearCart as clearMemberCart,
@@ -14,7 +14,7 @@ import {
   updateCartItemQuantity as updateMemberCartItemQuantity,
   validateQuantityAgainstAvailability,
   validateQuantityAgainstPurchaseLimit,
-} from '@tcg-hobby/database/storefront';
+} from '@capital-hobby/database/storefront';
 import { getCurrentCustomerSession } from './auth';
 
 const GUEST_CART_COOKIE = 'tcg-hobby-basket';

@@ -37,7 +37,7 @@ The Admin application uses the canonical `User`, `Session`, password hash, and e
    ```
 
 4. The command fails if the account is absent or unverified, does not create or print a password, is idempotent, and records a successful role change in `AdminRoleChange`. Actorless bootstrap is allowed only while no `ADMIN` exists.
-5. Sign in at `/login` on the deployed Admin origin. The intended production URL is `https://admin.tcg-hobby.co.uk/login`; DNS and deployment must be verified before launch because the repository cannot prove that hostname is live.
+5. Sign in at `/login` on the deployed Admin origin. The intended production URL is `https://admin.capitalhobbygroup.co.uk/login`; DNS and deployment must be verified before launch because the repository cannot prove that hostname is live.
 
 ### Additional Staff and Administrators
 

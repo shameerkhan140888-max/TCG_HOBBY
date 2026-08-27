@@ -4,7 +4,7 @@ Work Package 2A adds the backend foundation for deterministic product merchandis
 
 ## Architecture
 
-The engine lives in `packages/database/src/merchandising.ts` and is exported from `@tcg-hobby/database`.
+The engine lives in `packages/database/src/merchandising.ts` and is exported from `@capital-hobby/database`.
 
 It is built around three layers:
 

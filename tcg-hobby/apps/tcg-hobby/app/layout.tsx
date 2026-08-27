@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense, type ReactNode } from 'react';
-import { PageShell } from '@tcg-hobby/ui';
+import { PageShell } from '@capital-hobby/ui';
 import { SiteFooter } from '../components/site-footer';
 import { LaunchFooter } from '../components/launch-footer';
 import { CookieConsentBanner, MetaAnalyticsProvider } from '../components/analytics/meta-analytics';

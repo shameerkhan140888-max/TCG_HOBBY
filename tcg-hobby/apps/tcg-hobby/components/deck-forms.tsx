@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Button, ErrorMessage, FormField, Input } from '@tcg-hobby/ui';
+import { Button, ErrorMessage, FormField, Input } from '@capital-hobby/ui';
 import { createDeckAction, type DeckCreateFormState } from '../lib/deck-actions';
 
 const emptyState: DeckCreateFormState = {

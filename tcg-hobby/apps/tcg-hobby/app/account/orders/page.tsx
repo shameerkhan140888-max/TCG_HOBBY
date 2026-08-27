@@ -1,4 +1,4 @@
-import { Button, Card, CardContent, Container, EmptyState, Section } from '@tcg-hobby/ui';
+import { Button, Card, CardContent, Container, EmptyState, Section } from '@capital-hobby/ui';
 import { getCurrentCustomerOrders } from '../../../lib/orders';
 
 export default async function AccountOrdersPage() {

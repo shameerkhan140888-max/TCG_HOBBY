@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Button, Input } from '@tcg-hobby/ui';
+import { Button, Input } from '@capital-hobby/ui';
 import { loginAdminAction, loginIronSprueAdminAction, type AdminLoginState } from '../lib/auth-actions.server';
 
 const initialState: AdminLoginState = { fieldErrors: {}, values: { email: '' } };

@@ -1,4 +1,4 @@
-import type { CatalogueProduct } from '@tcg-hobby/types';
+import type { CatalogueProduct } from '@capital-hobby/types';
 import { prisma } from './client.js';
 
 type WishlistProductRow = {

@@ -1,4 +1,4 @@
-import { buildStorefrontProductPath } from '@tcg-hobby/utils';
+import { buildStorefrontProductPath } from '@capital-hobby/utils';
 
 const defaultStorefrontUrl = process.env.NODE_ENV === 'production' ? 'https://tcg-hobby.co.uk' : 'http://localhost:3000';
 

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { BrandMark, Button, Container } from '@tcg-hobby/ui';
+import { BrandMark, Button, Container } from '@capital-hobby/ui';
 
 export function LaunchHeader() {
   const handleJoinClick = (event: React.MouseEvent<HTMLAnchorElement>) => {

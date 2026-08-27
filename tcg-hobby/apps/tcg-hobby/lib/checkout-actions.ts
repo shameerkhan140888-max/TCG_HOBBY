@@ -1,6 +1,6 @@
 'use server';
 
-import type { CheckoutAddress, ShippingMethodCode } from '@tcg-hobby/types';
+import type { CheckoutAddress, ShippingMethodCode } from '@capital-hobby/types';
 import { randomUUID } from 'node:crypto';
 import {
   attachStripeSessionToOrder,
@@ -9,7 +9,7 @@ import {
   getAvailableShippingMethods,
   isStripeCheckoutConfigured,
   releaseCheckoutOrderReservation,
-} from '@tcg-hobby/database/storefront';
+} from '@capital-hobby/database/storefront';
 import type { CheckoutFieldErrors, CheckoutFormState } from './checkout';
 import { getCurrentCustomerCart } from './cart';
 import { getCurrentCustomerSession } from './auth';

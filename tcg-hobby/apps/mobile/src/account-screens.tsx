@@ -2,7 +2,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import type { PublicOrderDetail, PublicOrderSummary } from '@tcg-hobby/types';
+import type { PublicOrderDetail, PublicOrderSummary } from '@capital-hobby/types';
 import { apiRequest } from './api'; import { useAuth } from './auth-context'; import { Button, money, ScreenState } from './components'; import type { RootStackParamList } from './navigation-types'; import { sharedStyles as s } from './styles'; import { colors, spacing } from './theme';
 
 export function AccountScreen() {

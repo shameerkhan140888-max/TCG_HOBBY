@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react';
-import type { NotificationPreference, ProductReleaseStatus, ReleaseCalendarEntry, ReleaseProduct, ReleaseSummary } from '@tcg-hobby/types';
+import type { NotificationPreference, ProductReleaseStatus, ReleaseCalendarEntry, ReleaseProduct, ReleaseSummary } from '@capital-hobby/types';
 import { Button } from './button';
 import { Badge } from './badge';
 import { Card, CardContent } from './card';

@@ -1,5 +1,5 @@
 import { Prisma, ProductCondition } from '@prisma/client';
-import { slugify } from '@tcg-hobby/utils';
+import { slugify } from '@capital-hobby/utils';
 import { prisma } from './client.js';
 import { derivePublicStockState } from './product-import.js';
 

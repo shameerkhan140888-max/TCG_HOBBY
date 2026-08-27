@@ -1,4 +1,4 @@
-import type { CollectionDashboard, CollectionItem, CollectionSummary, CatalogueProduct } from '@tcg-hobby/types';
+import type { CollectionDashboard, CollectionItem, CollectionSummary, CatalogueProduct } from '@capital-hobby/types';
 import { prisma } from './client.js';
 import { seedCategories, seedCollectionItems, seedCollections, seedDecks, seedProducts } from './seed-data.js';
 import { getWishlistItems, getWishlistProductIds } from './wishlist.js';

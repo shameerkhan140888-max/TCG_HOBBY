@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { AccountShell } from '@tcg-hobby/ui';
+import { AccountShell } from '@capital-hobby/ui';
 import { requireCustomerSession } from '../../lib/auth';
 import { logoutCustomerAction } from '../../lib/auth-actions';
 import { AccountSidebar } from '../../components/account-sidebar';

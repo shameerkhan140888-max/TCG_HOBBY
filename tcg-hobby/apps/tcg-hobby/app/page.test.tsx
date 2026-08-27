@@ -27,7 +27,7 @@ vi.mock('../lib/auth', () => ({
   getCurrentCustomerSession: mocks.getCurrentCustomerSession,
 }));
 
-vi.mock('@tcg-hobby/database/storefront', () => ({
+vi.mock('@capital-hobby/database/storefront', () => ({
   getWishlistProductIds: mocks.getWishlistProductIds,
 }));
 
@@ -56,7 +56,7 @@ vi.mock('./coming-soon/page', () => ({
 }));
 
 import HomePage from './page';
-import type { MerchandisingRecommendation } from '@tcg-hobby/database/storefront';
+import type { MerchandisingRecommendation } from '@capital-hobby/database/storefront';
 
 function recommendation(overrides: Partial<MerchandisingRecommendation> = {}): MerchandisingRecommendation {
   return {

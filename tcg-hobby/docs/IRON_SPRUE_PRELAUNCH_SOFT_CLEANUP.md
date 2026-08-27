@@ -103,7 +103,7 @@ This soft cleanup preserves the current production architecture:
 
 Deferred to the later controlled hard cleanup / namespace migration:
 
-- `@tcg-hobby/*` package scope changes.
+- `@capital-hobby/*` package scope changes.
 - GitHub repository slug changes.
 - Railway, Cloudflare, and Vercel project/service identifiers.
 - Coordinated production env variable renames.

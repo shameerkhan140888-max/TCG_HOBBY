@@ -12,8 +12,8 @@ import {
   OrderSummary,
   SecureCheckoutNotice,
   ShippingMethodCard,
-} from '@tcg-hobby/ui';
-import type { CartLineItem } from '@tcg-hobby/types';
+} from '@capital-hobby/ui';
+import type { CartLineItem } from '@capital-hobby/types';
 import type { CheckoutFormState } from '../lib/checkout';
 import { placeCheckoutOrderAction } from '../lib/checkout-actions';
 

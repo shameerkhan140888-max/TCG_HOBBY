@@ -1,6 +1,6 @@
 'use server';
 
-import { upsertMarketingSubscriberSignup, validateSubscriberEmail } from '@tcg-hobby/database/storefront';
+import { upsertMarketingSubscriberSignup, validateSubscriberEmail } from '@capital-hobby/database/storefront';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { LAUNCH_MARKETING_CONSENT_VALUE } from './launch-consent';

@@ -1,6 +1,6 @@
 'use client';
 
-import type { SessionUser } from '@tcg-hobby/auth';
+import type { SessionUser } from '@capital-hobby/auth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React, { type ReactNode } from 'react';

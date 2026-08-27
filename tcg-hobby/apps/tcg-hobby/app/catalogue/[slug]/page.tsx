@@ -1,8 +1,8 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { Badge, Breadcrumbs, Button, Container, Section, WishlistButton, NotifyButton } from '@tcg-hobby/ui';
-import { buildStorefrontProductPath, formatMoney } from '@tcg-hobby/utils';
-import { getCatalogueProductBySlug, getCustomerNotificationSubscriptions, getRelatedProducts, getWishlistProductIds } from '@tcg-hobby/database/storefront';
+import { Badge, Breadcrumbs, Button, Container, Section, WishlistButton, NotifyButton } from '@capital-hobby/ui';
+import { buildStorefrontProductPath, formatMoney } from '@capital-hobby/utils';
+import { getCatalogueProductBySlug, getCustomerNotificationSubscriptions, getRelatedProducts, getWishlistProductIds } from '@capital-hobby/database/storefront';
 import { SiteHeader } from '../../../components/site-header';
 import { ProductGallery } from '../../../components/product-gallery';
 import { AddToCartWithQuantityForm } from '../../../components/cart-actions';

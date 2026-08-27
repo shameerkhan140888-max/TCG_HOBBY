@@ -8,7 +8,7 @@ import type {
   PaymentStatus,
   ShippingMethod,
   ShippingMethodCode,
-} from '@tcg-hobby/types';
+} from '@capital-hobby/types';
 import type { Prisma } from '@prisma/client';
 import { prisma } from './client.js';
 import {

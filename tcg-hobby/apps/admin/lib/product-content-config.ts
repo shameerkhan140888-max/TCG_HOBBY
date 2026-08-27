@@ -1,4 +1,4 @@
-import type { GeneratedContentField, GeneratedProductContent, ProductFactInput, ProductFactKey } from '@tcg-hobby/database';
+import type { GeneratedContentField, GeneratedProductContent, ProductFactInput, ProductFactKey } from '@capital-hobby/database';
 
 export const productFactKeysForAdmin = [
   'manufacturer',

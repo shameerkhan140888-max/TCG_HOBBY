@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   getActiveStorefrontBanner: vi.fn(async () => null),
 }));
 
-vi.mock('@tcg-hobby/database/storefront', () => ({
+vi.mock('@capital-hobby/database/storefront', () => ({
   getActiveStorefrontBanner: mocks.getActiveStorefrontBanner,
 }));
 

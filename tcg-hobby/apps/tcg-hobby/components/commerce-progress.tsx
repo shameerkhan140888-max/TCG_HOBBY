@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from 'react';
-import { Card, CardContent, cn } from '@tcg-hobby/ui';
+import { Card, CardContent, cn } from '@capital-hobby/ui';
 
 export type CommerceProgressStep = 'basket' | 'delivery' | 'payment' | 'confirmation';
 

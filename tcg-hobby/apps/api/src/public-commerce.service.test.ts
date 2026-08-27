@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import type { CatalogueProduct, CatalogueProductDetail } from '@tcg-hobby/types';
+import type { CatalogueProduct, CatalogueProductDetail } from '@capital-hobby/types';
 import { publicStockState, toPublicProductDetail, toPublicProductSummary } from './public-commerce.service.js';
 
 const originalPublicCommerceStoreCode = process.env.PUBLIC_COMMERCE_STORE_CODE;

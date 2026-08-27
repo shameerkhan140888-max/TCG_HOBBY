@@ -134,11 +134,11 @@ After updating local environment values, run:
 npm run db:generate
 npm run db:status
 npm run db:verify
-npm run typecheck -w @tcg-hobby/database
-npm run test -w @tcg-hobby/database
-npm run typecheck -w @tcg-hobby/admin
-npm run test -w @tcg-hobby/admin
-npm run build -w @tcg-hobby/admin
+npm run typecheck -w @capital-hobby/database
+npm run test -w @capital-hobby/database
+npm run typecheck -w @capital-hobby/admin
+npm run test -w @capital-hobby/admin
+npm run build -w @capital-hobby/admin
 npm run typecheck -w @capital-hobby/iron-sprue
 npm run test -w @capital-hobby/iron-sprue
 npm run build -w @capital-hobby/iron-sprue

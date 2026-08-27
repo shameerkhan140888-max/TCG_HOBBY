@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { AccountNav } from '@tcg-hobby/ui';
+import { AccountNav } from '@capital-hobby/ui';
 import type { logoutCustomerAction } from '../lib/auth-actions';
 
 const items = [

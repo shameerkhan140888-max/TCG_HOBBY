@@ -6,7 +6,7 @@ import {
   getIronSprueAdminPrisma,
   sanitizePublicProductCopy,
   sanitizePublicProductList,
-} from '@tcg-hobby/database';
+} from '@capital-hobby/database';
 
 type ProductRow = Awaited<ReturnType<typeof loadProducts>>[number];
 

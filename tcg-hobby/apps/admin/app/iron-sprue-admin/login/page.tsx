@@ -1,4 +1,4 @@
-import { Card, CardContent, PageShell } from '@tcg-hobby/ui';
+import { Card, CardContent, PageShell } from '@capital-hobby/ui';
 import { redirect } from 'next/navigation';
 import { IronSprueAdminLoginForm } from '../../../components/admin-login-form';
 import { getCurrentIronSprueAdminSession } from '../../../lib/auth.server';

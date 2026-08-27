@@ -3,8 +3,8 @@ import {
   getIronSprueAdminImplementationMap,
   getIronSprueAdminPermissionMatrix,
   resolveIronSprueAdminPermissions,
-} from '@tcg-hobby/database';
-import { Card, CardContent, Container, PageHeader, Section } from '@tcg-hobby/ui';
+} from '@capital-hobby/database';
+import { Card, CardContent, Container, PageHeader, Section } from '@capital-hobby/ui';
 import type { AdminSession } from '../lib/auth.server';
 
 function StatusPill({ status }: { status: string }) {

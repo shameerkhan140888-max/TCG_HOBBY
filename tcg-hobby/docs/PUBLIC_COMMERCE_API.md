@@ -4,7 +4,7 @@ The reusable public commerce API lives in `apps/api` and is versioned under `/v1
 
 ## Authority
 
-The API calls `@tcg-hobby/database` repositories for catalogue visibility, prices, VAT-inclusive totals, inventory, purchase limits, shipping, carts, checkout and orders. Public responses never include exact stock quantities, supplier details, costs or internal merchandising fields.
+The API calls `@capital-hobby/database` repositories for catalogue visibility, prices, VAT-inclusive totals, inventory, purchase limits, shipping, carts, checkout and orders. Public responses never include exact stock quantities, supplier details, costs or internal merchandising fields.
 
 ## Endpoints
 
@@ -32,7 +32,7 @@ The API calls `@tcg-hobby/database` repositories for catalogue visibility, price
 
 ## Authentication
 
-The API reuses the existing `User` and `Session` identity tables and `@tcg-hobby/auth` password/session utilities. It issues an opaque bearer session token with the existing expiry policy. It does not create a parallel mobile identity.
+The API reuses the existing `User` and `Session` identity tables and `@capital-hobby/auth` password/session utilities. It issues an opaque bearer session token with the existing expiry policy. It does not create a parallel mobile identity.
 
 ## Errors
 

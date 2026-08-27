@@ -1,5 +1,5 @@
-import { ProductRecommendationType, type AdminProductDetail, type AdminProductMerchandisingPanel } from '@tcg-hobby/database';
-import { AdminTable, Button, Card, CardContent, FormSection, Input, StatusBadge } from '@tcg-hobby/ui';
+import { ProductRecommendationType, type AdminProductDetail, type AdminProductMerchandisingPanel } from '@capital-hobby/database';
+import { AdminTable, Button, Card, CardContent, FormSection, Input, StatusBadge } from '@capital-hobby/ui';
 import {
   addProductRecommendationAction,
   deleteProductRecommendationAction,

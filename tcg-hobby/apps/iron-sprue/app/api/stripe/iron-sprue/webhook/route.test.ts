@@ -9,8 +9,8 @@ describe('Iron Sprue Cloudflare Stripe webhook route', () => {
   it('forwards to the Railway API without importing local database or Stripe processors', () => {
     expect(source).toContain('/api/stripe/iron-sprue/webhook');
     expect(source).toContain('IRON_SPRUE_PRODUCTION_API_BASE_URL');
-    expect(source).not.toContain('@tcg-hobby/database');
-    expect(source).not.toContain('@tcg-hobby/database/storefront');
+    expect(source).not.toContain('@capital-hobby/database');
+    expect(source).not.toContain('@capital-hobby/database/storefront');
     expect(source).not.toContain("from 'stripe'");
     expect(source).not.toContain('node:fs');
     expect(source).not.toContain('node:path');

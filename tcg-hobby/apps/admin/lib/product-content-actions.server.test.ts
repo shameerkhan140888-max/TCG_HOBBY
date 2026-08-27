@@ -11,7 +11,7 @@ vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock('./auth.server', () => ({ requireAdminSession: mocks.requireAdminSession }));
 vi.mock('./product-content-provider.server', () => ({ createOpenAiContentProvider: vi.fn() }));
 vi.mock('./product-content-generation', () => ({ generateProductReviewDraft: mocks.generateProductReviewDraft }));
-vi.mock('@tcg-hobby/database', () => ({
+vi.mock('@capital-hobby/database', () => ({
   GENERATED_CONTENT_FIELDS: ['shortDescription'],
   countRecentContentGenerations: mocks.countRecentContentGenerations,
   createContentGenerationDraft: vi.fn(),

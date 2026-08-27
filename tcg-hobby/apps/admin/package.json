@@ -1,5 +1,5 @@
 {
-  "name": "@tcg-hobby/admin",
+  "name": "@capital-hobby/admin",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,18 +12,18 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1092.0",
-    "@tcg-hobby/auth": "*",
-    "@tcg-hobby/database": "*",
-    "@tcg-hobby/types": "*",
-    "@tcg-hobby/ui": "*",
-    "@tcg-hobby/utils": "*",
+    "@capital-hobby/auth": "*",
+    "@capital-hobby/database": "*",
+    "@capital-hobby/types": "*",
+    "@capital-hobby/ui": "*",
+    "@capital-hobby/utils": "*",
     "next": "^15.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sharp": "^0.35.3"
   },
   "devDependencies": {
-    "@tcg-hobby/config": "*",
+    "@capital-hobby/config": "*",
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",

@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode, type TextareaHTMLAttributes } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Button, FormField, Input } from '@tcg-hobby/ui';
+import { Button, FormField, Input } from '@capital-hobby/ui';
 import {
   emptyProductFormValues,
   type ProductFormState,

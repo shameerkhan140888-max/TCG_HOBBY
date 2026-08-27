@@ -24,14 +24,14 @@ Capital Hobby Group Ltd is the parent/corporate identity. Iron Sprue and TCG Hob
 
 - GitHub repository name `TCG_HOBBY`: requires remote rename, local clone updates, Cloudflare/Railway GitHub integration checks and user-facing coordination.
 - Physical root directory `tcg-hobby`: local/developer path migration only; safe after launch but noisy before launch.
-- npm workspace namespace `@tcg-hobby/*`: used across imports, package-lock, deployed builds and tests. Rename to a parent namespace such as `@capital-hobby/*` only as a coordinated post-launch migration.
+- npm workspace namespace `@capital-hobby/*`: used across imports, package-lock, deployed builds and tests. Rename to a parent namespace such as `@capital-hobby/*` only as a coordinated post-launch migration.
 - Railway project/service names: must be changed in Railway with deployment-variable and webhook checks; do not rename before launch for cosmetics.
 - Cloudflare Worker/Pages project names and deployed URLs: must remain stable while staging/live verification is active.
 - Environment variable names containing `IRON_SPRUE_DATABASE_URL` and related aliases: retain compatibility while platform variables are consolidated.
 
 ### Deferred Post-Launch
 
-- Shared package names such as `@tcg-hobby/database`, `@tcg-hobby/ui`, `@tcg-hobby/types`, `@tcg-hobby/config`, `@tcg-hobby/utils`.
+- Shared package names such as `@capital-hobby/database`, `@capital-hobby/ui`, `@capital-hobby/types`, `@capital-hobby/config`, `@capital-hobby/utils`.
 - TCG Hobby Cloudflare feasibility docs and package names where they genuinely refer to the TCG Hobby child brand.
 - Database/schema naming where it is not user-facing and is already guarded by `storeCode`.
 - Legacy Iron Sprue import/media scripts with explicit Neon guards. They should not be loosened during launch housekeeping because doing so could allow old tools to write to Railway production outside the current admin/publication path.

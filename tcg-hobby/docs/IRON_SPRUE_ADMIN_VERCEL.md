@@ -6,7 +6,7 @@ The Iron Sprue admin is deployed as a dedicated Vercel project for `apps/admin`.
 
 - Project root directory: `apps/admin`
 - Install command: `cd ../.. && npm ci`
-- Build command: `cd ../.. && npm run build -w @tcg-hobby/database && npm run build -w @tcg-hobby/admin`
+- Build command: `cd ../.. && npm run build -w @capital-hobby/database && npm run build -w @capital-hobby/admin`
 - Framework preset: Next.js
 - Intended hostname: `admin.capitalhobbygroup.co.uk`
 - Acceptable fallback hostname: `ironsprue-admin.capitalhobbygroup.co.uk`

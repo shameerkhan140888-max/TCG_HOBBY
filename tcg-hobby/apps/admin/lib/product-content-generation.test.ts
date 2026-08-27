@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { GeneratedProductContent, ProductFactInput } from '@tcg-hobby/database';
+import type { GeneratedProductContent, ProductFactInput } from '@capital-hobby/database';
 import { generateProductReviewDraft } from './product-content-generation';
 
 const generatedContent: GeneratedProductContent = {

@@ -1,5 +1,5 @@
 {
-  "name": "@tcg-hobby/config",
+  "name": "@capital-hobby/config",
   "version": "0.1.0",
   "private": true,
   "files": ["tsconfig.base.json", "tailwind.preset.ts"]

@@ -1,4 +1,4 @@
-import type { CatalogueSort, PublicProductSummary, PublicStockState } from '@tcg-hobby/types';
+import type { CatalogueSort, PublicProductSummary, PublicStockState } from '@capital-hobby/types';
 
 export function normaliseHttpOrigin(value: string, label: string): string {
   try {

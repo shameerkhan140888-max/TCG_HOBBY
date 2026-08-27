@@ -1,6 +1,6 @@
-import { Button, Container, EmptyState, Section } from '@tcg-hobby/ui';
+import { Button, Container, EmptyState, Section } from '@capital-hobby/ui';
 import { randomUUID } from 'node:crypto';
-import { calculateVatEstimateMinor } from '@tcg-hobby/database/storefront';
+import { calculateVatEstimateMinor } from '@capital-hobby/database/storefront';
 import { CheckoutForm } from '../../components/checkout-form';
 import { CommerceProgress } from '../../components/commerce-progress';
 import { SiteHeader } from '../../components/site-header';

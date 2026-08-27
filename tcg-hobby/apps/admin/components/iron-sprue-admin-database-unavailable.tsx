@@ -1,5 +1,5 @@
-import { getIronSprueAdminDatabaseTargetInfo } from '@tcg-hobby/database';
-import { Card, CardContent, Container, PageHeader, Section } from '@tcg-hobby/ui';
+import { getIronSprueAdminDatabaseTargetInfo } from '@capital-hobby/database';
+import { Card, CardContent, Container, PageHeader, Section } from '@capital-hobby/ui';
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);

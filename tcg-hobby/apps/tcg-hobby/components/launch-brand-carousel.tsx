@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button } from '@tcg-hobby/ui';
+import { Button } from '@capital-hobby/ui';
 
 type LaunchBrandSlide = {
   name: string;

@@ -1,4 +1,4 @@
-import { hashPassword } from '@tcg-hobby/auth';
+import { hashPassword } from '@capital-hobby/auth';
 import type {
   CatalogueCategory,
   CatalogueProduct,
@@ -7,7 +7,7 @@ import type {
   NotificationPreference,
   NotificationType,
   ProductReleaseStatus,
-} from '@tcg-hobby/types';
+} from '@capital-hobby/types';
 
 type CategorySeed = {
   id: string;

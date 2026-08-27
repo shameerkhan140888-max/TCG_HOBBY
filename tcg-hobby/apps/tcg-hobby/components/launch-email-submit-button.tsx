@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useFormStatus } from 'react-dom';
-import { Button } from '@tcg-hobby/ui';
+import { Button } from '@capital-hobby/ui';
 
 export function LaunchEmailSubmitButton({ compact = false }: { compact?: boolean }) {
   const { pending } = useFormStatus();

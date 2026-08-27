@@ -1,4 +1,4 @@
-import type { HeroDisplayMode, HeroImageSource } from '@tcg-hobby/database';
+import type { HeroDisplayMode, HeroImageSource } from '@capital-hobby/database';
 
 export function getRecommendedHeroDisplayMode(
   imageWidth: number | null | undefined,

@@ -1,6 +1,6 @@
-import { Button, Container, EmptyState, Input, PageShell, Pagination, Section } from '@tcg-hobby/ui';
-import { getCatalogueCategories, getCatalogueProducts } from '@tcg-hobby/database/storefront';
-import type { CatalogueSort } from '@tcg-hobby/types';
+import { Button, Container, EmptyState, Input, PageShell, Pagination, Section } from '@capital-hobby/ui';
+import { getCatalogueCategories, getCatalogueProducts } from '@capital-hobby/database/storefront';
+import type { CatalogueSort } from '@capital-hobby/types';
 import { requireCustomerSession } from '../../../lib/auth';
 import { SiteHeader } from '../../../components/site-header';
 import { CollectionImportForm } from '../../../components/collection-forms';

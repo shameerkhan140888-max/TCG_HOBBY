@@ -1,6 +1,6 @@
 'use server';
 import { revalidatePath } from 'next/cache';
-import { applyContentGeneration, countRecentContentGenerations, createContentGenerationDraft, discardContentGeneration, GENERATED_CONTENT_FIELDS, getProductContentWorkspace, replaceProductFacts, restoreContentGeneration, setProductReviewLifecycle, type GeneratedContentField, type ProductFactInput } from '@tcg-hobby/database';
+import { applyContentGeneration, countRecentContentGenerations, createContentGenerationDraft, discardContentGeneration, GENERATED_CONTENT_FIELDS, getProductContentWorkspace, replaceProductFacts, restoreContentGeneration, setProductReviewLifecycle, type GeneratedContentField, type ProductFactInput } from '@capital-hobby/database';
 import { requireAdminSession } from './auth.server';
 import { createOpenAiContentProvider } from './product-content-provider.server';
 import { generateProductReviewDraft } from './product-content-generation';

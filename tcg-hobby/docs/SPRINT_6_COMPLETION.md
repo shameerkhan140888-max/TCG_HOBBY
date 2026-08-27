@@ -43,7 +43,7 @@ Sprint 6 turns the admin shell into the first operational control center for TCG
 docker compose up -d
 npm run db:generate
 npm run db:seed
-npm run dev -w @tcg-hobby/admin
+npm run dev -w @capital-hobby/admin
 ```
 
 Then open:

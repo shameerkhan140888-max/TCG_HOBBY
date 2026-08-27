@@ -1,6 +1,6 @@
-import { Container, Section } from '@tcg-hobby/ui';
-import { PageHeader } from '@tcg-hobby/ui';
-import { getAdminProducts, getCatalogueMasterDataOptions } from '@tcg-hobby/database';
+import { Container, Section } from '@capital-hobby/ui';
+import { PageHeader } from '@capital-hobby/ui';
+import { getAdminProducts, getCatalogueMasterDataOptions } from '@capital-hobby/database';
 import { ProductForm } from '../../../../components/product-form';
 
 export const dynamic = 'force-dynamic';

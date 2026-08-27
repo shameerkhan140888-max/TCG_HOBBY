@@ -1,4 +1,4 @@
-import type { GeneratedContentField, GeneratedProductContent } from '@tcg-hobby/database';
+import type { GeneratedContentField, GeneratedProductContent } from '@capital-hobby/database';
 import type { ProductContentProvider } from './product-content-provider.server';
 
 type ContentWorkspace = {

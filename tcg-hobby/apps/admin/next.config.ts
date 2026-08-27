@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
-  transpilePackages: ['@tcg-hobby/ui'],
+  transpilePackages: ['@capital-hobby/ui'],
 };
 
 export default nextConfig;

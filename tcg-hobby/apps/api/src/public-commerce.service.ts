@@ -30,7 +30,7 @@ import {
   removeCartItem,
   resolveGuestCart,
   updateCartItemQuantity,
-} from '@tcg-hobby/database';
+} from '@capital-hobby/database';
 import type {
   CartSummary,
   CatalogueFilters,
@@ -53,7 +53,7 @@ import type {
   PublicProductSummary,
   PublicStockState,
   ShippingMethod,
-} from '@tcg-hobby/types';
+} from '@capital-hobby/types';
 import { AuthService } from './auth.service.js';
 
 const SORTS: PublicCatalogueFilterOptions['sorts'] = [

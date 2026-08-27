@@ -1,4 +1,4 @@
-import { Button, Container, EmptyState, ProductCard, Section, WishlistButton } from '@tcg-hobby/ui';
+import { Button, Container, EmptyState, ProductCard, Section, WishlistButton } from '@capital-hobby/ui';
 import { getCustomerProfile } from '../../../lib/auth';
 import { AddToCartButton } from '../../../components/cart-actions';
 import { toggleWishlistAction } from '../../../lib/wishlist';

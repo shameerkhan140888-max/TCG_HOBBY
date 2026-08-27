@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Button, ErrorMessage, FormField, Input, MoneyInput } from '@tcg-hobby/ui';
+import { Button, ErrorMessage, FormField, Input, MoneyInput } from '@capital-hobby/ui';
 import { addCollectionItemAction, type CollectionImportFormState } from '../lib/collection-actions';
 
 const emptyState: CollectionImportFormState = {

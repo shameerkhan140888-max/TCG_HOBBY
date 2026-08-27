@@ -1,4 +1,4 @@
-import { Button, Card, CardContent, Container, Section } from '@tcg-hobby/ui';
+import { Button, Card, CardContent, Container, Section } from '@capital-hobby/ui';
 import { getCustomerProfile } from '../../lib/auth';
 import { getCurrentCustomerOrders } from '../../lib/orders';
 

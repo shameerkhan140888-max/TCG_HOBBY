@@ -8,7 +8,7 @@ import type {
   PaginationMeta,
   PaymentStatus,
   ShippingMethod,
-} from '@tcg-hobby/types';
+} from '@capital-hobby/types';
 import type { HTMLAttributes, ReactNode } from 'react';
 import { Button, buttonVariants } from './button';
 import { Badge } from './badge';

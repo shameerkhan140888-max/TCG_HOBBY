@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { createSessionExpiry, generateSessionToken, hashPassword, normalizeEmail, validateLoginInput, validateProfileInput, validateRegisterInput, verifyPassword } from '@tcg-hobby/auth';
-import { prisma } from '@tcg-hobby/database';
-import type { PublicAccount, PublicSession, PublicSessionUser } from '@tcg-hobby/types';
+import { createSessionExpiry, generateSessionToken, hashPassword, normalizeEmail, validateLoginInput, validateProfileInput, validateRegisterInput, verifyPassword } from '@capital-hobby/auth';
+import { prisma } from '@capital-hobby/database';
+import type { PublicAccount, PublicSession, PublicSessionUser } from '@capital-hobby/types';
 
 type Credentials = { email?: unknown; password?: unknown; confirmPassword?: unknown };
 

@@ -1,4 +1,4 @@
-import { Button, Container, EmptyState } from '@tcg-hobby/ui';
+import { Button, Container, EmptyState } from '@capital-hobby/ui';
 
 export default function ProductNotFound() {
   return (

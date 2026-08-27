@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { PublicProductSummary } from '@tcg-hobby/types';
+import type { PublicProductSummary } from '@capital-hobby/types';
 import type { RootStackParamList } from './navigation-types';
 import { stockLabel } from './mobile-utils';
 import { colors, spacing } from './theme';

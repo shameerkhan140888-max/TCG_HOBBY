@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import type { PublicOrderDetail } from '@tcg-hobby/types';
+import type { PublicOrderDetail } from '@capital-hobby/types';
 import { CheckoutSuccessClient } from '../../../components/checkout-success-client';
 
 export const dynamic = 'force-dynamic';

@@ -1,4 +1,4 @@
-import type { PublicApiError } from '@tcg-hobby/types';
+import type { PublicApiError } from '@capital-hobby/types';
 import { mobileConfig } from './config';
 
 export const API_BASE_URL = mobileConfig.apiOrigin;

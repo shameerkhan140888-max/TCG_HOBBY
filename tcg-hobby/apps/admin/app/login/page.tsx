@@ -1,4 +1,4 @@
-import { BrandMark, Card, CardContent, PageShell } from '@tcg-hobby/ui';
+import { BrandMark, Card, CardContent, PageShell } from '@capital-hobby/ui';
 import { redirect } from 'next/navigation';
 import { AdminLoginForm } from '../../components/admin-login-form';
 import { getCurrentAdminSession } from '../../lib/auth.server';

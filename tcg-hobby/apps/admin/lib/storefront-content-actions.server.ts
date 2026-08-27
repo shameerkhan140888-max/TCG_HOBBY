@@ -16,7 +16,7 @@ import {
   type HeroFocalPoint,
   type HeroImageSource,
   type HeroOverlayStrength,
-} from '@tcg-hobby/database';
+} from '@capital-hobby/database';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdminRole } from './auth.server';

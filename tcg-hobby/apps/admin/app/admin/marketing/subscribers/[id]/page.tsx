@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { Button, Container, FormSection, PageHeader, Section, StatusBadge } from '@tcg-hobby/ui';
-import { MarketingSubscriberStatus, getMarketingSubscriberById } from '@tcg-hobby/database';
+import { Button, Container, FormSection, PageHeader, Section, StatusBadge } from '@capital-hobby/ui';
+import { MarketingSubscriberStatus, getMarketingSubscriberById } from '@capital-hobby/database';
 import { updateSubscriberStatusAction, updateSubscriberTagsAction } from '../../../../../lib/marketing-actions.server';
 
 export const dynamic = 'force-dynamic';

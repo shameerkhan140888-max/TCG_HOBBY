@@ -1,4 +1,4 @@
-import { promoteExistingUser } from '@tcg-hobby/database';
+import { promoteExistingUser } from '@capital-hobby/database';
 function value(name: string): string | null { const index = process.argv.indexOf(name); return index >= 0 ? process.argv[index + 1] ?? null : null; }
 const email = value('--email'); const roleValue = (value('--role') ?? 'ADMIN').toUpperCase(); const actorEmail = value('--actor-email');
 if (!email) throw new Error('Usage: npm run admin:promote -- --email user@example.com [--role ADMIN|STAFF] [--actor-email admin@example.com]');

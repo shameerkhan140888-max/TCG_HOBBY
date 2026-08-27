@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { PublicAccount, PublicSession, PublicSessionUser } from '@tcg-hobby/types';
+import type { PublicAccount, PublicSession, PublicSessionUser } from '@capital-hobby/types';
 import { apiRequest } from './api';
 
 const SESSION_KEY = 'tcg-hobby-session-token';

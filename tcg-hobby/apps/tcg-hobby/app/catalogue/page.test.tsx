@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   getWishlistProductIds: vi.fn(async () => []),
 }));
 
-vi.mock('@tcg-hobby/database/storefront', () => ({
+vi.mock('@capital-hobby/database/storefront', () => ({
   getCatalogueMasterDataOptions: mocks.getCatalogueMasterDataOptions,
   getCatalogueProducts: mocks.getCatalogueProducts,
   getCustomerNotificationSubscriptions: mocks.getCustomerNotificationSubscriptions,

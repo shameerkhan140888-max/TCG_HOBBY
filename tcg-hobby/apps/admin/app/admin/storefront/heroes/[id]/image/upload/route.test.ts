@@ -19,7 +19,7 @@ vi.mock('../../../../../../../lib/product-storage.server', () => ({
   deleteProductImageObjects: mocks.deleteProductImageObjects,
   thumbnailKeyFor: (key: string) => key.replace('/main.webp', '/thumbnail.webp'),
 }));
-vi.mock('@tcg-hobby/database', () => ({
+vi.mock('@capital-hobby/database', () => ({
   setManagedHomepageHeroImage: mocks.setManagedHomepageHeroImage,
   detachHomepageHeroImage: mocks.detachHomepageHeroImage,
   recordHomepageHeroImageCleanupFailure: mocks.recordCleanupFailure,

@@ -3,7 +3,7 @@
 import { Resend } from 'resend';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { validateSubscriberEmail } from '@tcg-hobby/database/storefront';
+import { validateSubscriberEmail } from '@capital-hobby/database/storefront';
 import { isSignupRateLimited } from './signup-rate-limit';
 
 type ContactField = 'name' | 'email' | 'subject' | 'message';

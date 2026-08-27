@@ -1,7 +1,7 @@
 import { ProductRecommendationType } from '@prisma/client';
 import type { OrderStatus as PrismaOrderStatus, PaymentStatus as PrismaPaymentStatus, Prisma } from '@prisma/client';
-import type { PaginationMeta, PaymentStatus, FulfilmentStatus, ProductCondition } from '@tcg-hobby/types';
-import { slugify } from '@tcg-hobby/utils';
+import type { PaginationMeta, PaymentStatus, FulfilmentStatus, ProductCondition } from '@capital-hobby/types';
+import { slugify } from '@capital-hobby/utils';
 import { prisma } from './client.js';
 import { calculateMarginPercentage, calculateAvailableStock } from './admin-math.js';
 import { derivePublicStockState } from './product-import.js';

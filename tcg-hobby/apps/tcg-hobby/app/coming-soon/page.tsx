@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import React from 'react';
-import { Badge, Container, PageShell, Section } from '@tcg-hobby/ui';
+import { Badge, Container, PageShell, Section } from '@capital-hobby/ui';
 import { LaunchBrandCarousel } from '../../components/launch-brand-carousel';
 import { LaunchSignupConversionTracker } from '../../components/analytics/meta-analytics';
 import { LaunchEmailCapture } from '../../components/launch-email-capture';

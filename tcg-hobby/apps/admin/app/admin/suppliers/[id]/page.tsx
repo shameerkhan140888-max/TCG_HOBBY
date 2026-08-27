@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
-import { Button, Card, CardContent, Container, Section } from '@tcg-hobby/ui';
-import { AdminTable, PageHeader, StatusBadge } from '@tcg-hobby/ui';
-import { getAdminSupplierById } from '@tcg-hobby/database';
+import { Button, Card, CardContent, Container, Section } from '@capital-hobby/ui';
+import { AdminTable, PageHeader, StatusBadge } from '@capital-hobby/ui';
+import { getAdminSupplierById } from '@capital-hobby/database';
 import { SupplierForm } from '../../../../components/supplier-form';
 
 export const dynamic = 'force-dynamic';

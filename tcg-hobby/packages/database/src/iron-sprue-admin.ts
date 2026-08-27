@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Prisma, type IronSprueAdminProduct, type UserRole } from '@prisma/client';
-import { slugify } from '@tcg-hobby/utils';
+import { slugify } from '@capital-hobby/utils';
 import { getIronSprueAdminDatabaseTargetInfo, getIronSprueAdminPrisma } from './client.js';
 import {
   generateIronSprueOrderNumber,

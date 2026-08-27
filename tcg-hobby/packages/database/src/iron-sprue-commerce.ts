@@ -10,7 +10,7 @@ import type {
   PaymentStatus,
   ShippingMethod,
   ShippingMethodCode,
-} from '@tcg-hobby/types';
+} from '@capital-hobby/types';
 import type { IronSprueVatInvoice, IronSprueVatInvoiceLine, Prisma } from '@prisma/client';
 import { getIronSprueAdminPrisma } from './client.js';
 import {

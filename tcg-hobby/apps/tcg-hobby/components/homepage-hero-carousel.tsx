@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import React from 'react';
 import { useEffect, useId, useMemo, useState } from 'react';
-import { Badge, Button } from '@tcg-hobby/ui';
+import { Badge, Button } from '@capital-hobby/ui';
 import type { HomepageHeroSlide } from '../lib/homepage-data';
 
 function useReducedMotion() {

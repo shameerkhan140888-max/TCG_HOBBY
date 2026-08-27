@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "npm ci",
-  "buildCommand": "npm run build -w @tcg-hobby/auth && DATABASE_URL=$IRON_SPRUE_ADMIN_DATABASE_URL npm run build -w @tcg-hobby/database && npm run build -w @tcg-hobby/admin",
+  "buildCommand": "npm run build -w @capital-hobby/auth && DATABASE_URL=$IRON_SPRUE_ADMIN_DATABASE_URL npm run build -w @capital-hobby/database && npm run build -w @capital-hobby/admin",
   "outputDirectory": "apps/admin/.next"
 }

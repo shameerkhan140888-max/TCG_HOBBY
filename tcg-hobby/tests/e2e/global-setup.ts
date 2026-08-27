@@ -1,5 +1,5 @@
-import { hashPassword } from '@tcg-hobby/auth';
-import { prisma } from '@tcg-hobby/database';
+import { hashPassword } from '@capital-hobby/auth';
+import { prisma } from '@capital-hobby/database';
 
 export const E2E_STAFF_EMAIL = 'e2e-admin@tcghobby.invalid';
 export const E2E_STAFF_PASSWORD = 'E2eAdminOnly123!';

@@ -2,10 +2,10 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm ci && npm run build -w @tcg-hobby/database && npm run build -w @tcg-hobby/admin"
+    "buildCommand": "npm ci && npm run build -w @capital-hobby/database && npm run build -w @capital-hobby/admin"
   },
   "deploy": {
-    "startCommand": "npm run start -w @tcg-hobby/admin",
+    "startCommand": "npm run start -w @capital-hobby/admin",
     "healthcheckPath": "/iron-sprue-admin/login",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",

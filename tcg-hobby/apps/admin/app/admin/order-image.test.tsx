@@ -11,7 +11,7 @@ vi.mock('next/navigation', () => ({
     throw new Error('not-found');
   },
 }));
-vi.mock('@tcg-hobby/database', () => ({
+vi.mock('@capital-hobby/database', () => ({
   getAdminOrderByNumber: mocks.getOrder,
 }));
 

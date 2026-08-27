@@ -1,6 +1,6 @@
-import { Container, Section, Card, CardContent, Button } from '@tcg-hobby/ui';
-import { PageHeader, StatusBadge } from '@tcg-hobby/ui';
-import { getCatalogueMasterDataOverview } from '@tcg-hobby/database';
+import { Container, Section, Card, CardContent, Button } from '@capital-hobby/ui';
+import { PageHeader, StatusBadge } from '@capital-hobby/ui';
+import { getCatalogueMasterDataOverview } from '@capital-hobby/database';
 
 export const dynamic = 'force-dynamic';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CheckoutAddress, PublicBasket, PublicBasketInputItem, ShippingMethodCode } from '@tcg-hobby/types';
+import type { CheckoutAddress, PublicBasket, PublicBasketInputItem, ShippingMethodCode } from '@capital-hobby/types';
 import { trackIronSprueEcommerceEvent } from '../lib/analytics';
 import { PaymentMethodStrip } from './payment-method-strip';
 

@@ -1,4 +1,4 @@
-import { Container, PageShell, Section } from '@tcg-hobby/ui';
+import { Container, PageShell, Section } from '@capital-hobby/ui';
 import { requireCustomerSession } from '../../../lib/auth';
 import { SiteHeader } from '../../../components/site-header';
 import { DeckCreateForm } from '../../../components/deck-forms';

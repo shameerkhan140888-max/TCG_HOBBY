@@ -1,8 +1,8 @@
-import { Button, Container, EmptyCollection, PageShell, Section } from '@tcg-hobby/ui';
-import { getCustomerDecks } from '@tcg-hobby/database/storefront';
+import { Button, Container, EmptyCollection, PageShell, Section } from '@capital-hobby/ui';
+import { getCustomerDecks } from '@capital-hobby/database/storefront';
 import { requireCustomerSession } from '../../lib/auth';
 import { SiteHeader } from '../../components/site-header';
-import { DeckList } from '@tcg-hobby/ui';
+import { DeckList } from '@capital-hobby/ui';
 
 export const dynamic = 'force-dynamic';
 

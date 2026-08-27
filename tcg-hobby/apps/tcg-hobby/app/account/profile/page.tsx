@@ -1,4 +1,4 @@
-import { Container, Section } from '@tcg-hobby/ui';
+import { Container, Section } from '@capital-hobby/ui';
 import { getCustomerProfile } from '../../../lib/auth';
 import { ProfileForm } from '../../../components/auth-forms';
 

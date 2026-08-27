@@ -6,7 +6,7 @@ import {
   getOrderByStripeCheckoutSessionId,
   type CustomerOrderSummary,
   type OrderWithItems,
-} from '@tcg-hobby/database/storefront';
+} from '@capital-hobby/database/storefront';
 import { requireCustomerSession } from './auth';
 
 export async function getCurrentCustomerOrders(): Promise<CustomerOrderSummary[]> {

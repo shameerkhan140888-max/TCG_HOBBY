@@ -9,14 +9,14 @@ Navigation:
 - Root stack: main tabs, product, login, registration, checkout, profile, orders and order detail.
 - Main tabs: Home, Catalogue, Basket and Account.
 
-The typed API client is `src/api.ts`. Public environment validation is in `src/config.ts`. Shared public contracts are in `@tcg-hobby/types`.
+The typed API client is `src/api.ts`. Public environment validation is in `src/config.ts`. Shared public contracts are in `@capital-hobby/types`.
 
 ## Local Setup
 
 Run the API and Expo in separate terminals:
 
 ```powershell
-npm run dev -w @tcg-hobby/api
+npm run dev -w @capital-hobby/api
 npm run dev:mobile
 ```
 
@@ -49,9 +49,9 @@ Home, catalogue, product, basket and order flows include loading, empty, recover
 ## Validation
 
 ```powershell
-npm run typecheck -w @tcg-hobby/mobile
-npm run test -w @tcg-hobby/mobile
-npm run build -w @tcg-hobby/mobile
+npm run typecheck -w @capital-hobby/mobile
+npm run test -w @capital-hobby/mobile
+npm run build -w @capital-hobby/mobile
 cd apps/mobile
 npx expo-doctor
 npx expo export --platform ios --output-dir $env:TEMP\tcg-hobby-mobile-export

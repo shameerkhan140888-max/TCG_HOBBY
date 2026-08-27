@@ -115,7 +115,7 @@ Stripe test mode notes:
 docker compose up -d
 npm run db:generate
 npm run db:seed
-npm run dev -w @tcg-hobby/admin
+npm run dev -w @capital-hobby/admin
 ```
 
 Then open:

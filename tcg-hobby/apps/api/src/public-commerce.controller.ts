@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Headers, Inject, Param, Patch, Post, Query } from '@nestjs/common';
-import type { PublicBasketInputItem, PublicCheckoutRequest } from '@tcg-hobby/types';
+import type { PublicBasketInputItem, PublicCheckoutRequest } from '@capital-hobby/types';
 import { PublicCommerceService } from './public-commerce.service.js';
 
 @Controller('v1')

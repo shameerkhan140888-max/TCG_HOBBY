@@ -1,5 +1,5 @@
 import { requireAdminRole } from '../../../../../lib/auth.server';
-import { MarketingSubscriberStatus, exportMarketingSubscribersCsv } from '@tcg-hobby/database';
+import { MarketingSubscriberStatus, exportMarketingSubscribersCsv } from '@capital-hobby/database';
 
 export const dynamic = 'force-dynamic';
 

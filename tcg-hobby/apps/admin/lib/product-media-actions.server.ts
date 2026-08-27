@@ -1,6 +1,6 @@
 'use server';
 import { revalidatePath } from 'next/cache';
-import { completeProductImageDeletion, isProductImageReferencedByOrder, markProductImageForDeletion, recordProductImageCleanupFailure, reorderProductImages, setPrimaryProductImage, updateProductImageAltText } from '@tcg-hobby/database';
+import { completeProductImageDeletion, isProductImageReferencedByOrder, markProductImageForDeletion, recordProductImageCleanupFailure, reorderProductImages, setPrimaryProductImage, updateProductImageAltText } from '@capital-hobby/database';
 import { requireAdminSession } from './auth.server';
 import { deleteProductImageObjects, thumbnailKeyFor } from './product-storage.server';
 

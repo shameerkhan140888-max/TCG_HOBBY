@@ -2,8 +2,8 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createSessionExpiry, generateSessionToken, SESSION_COOKIE_NAME, validateLoginInput, verifyPassword } from '@tcg-hobby/auth';
-import { getIronSprueAdminPrisma, prisma } from '@tcg-hobby/database';
+import { createSessionExpiry, generateSessionToken, SESSION_COOKIE_NAME, validateLoginInput, verifyPassword } from '@capital-hobby/auth';
+import { getIronSprueAdminPrisma, prisma } from '@capital-hobby/database';
 import { requireAdminSession, requireIronSprueAdminSession } from './auth.server';
 
 export type AdminLoginState = {

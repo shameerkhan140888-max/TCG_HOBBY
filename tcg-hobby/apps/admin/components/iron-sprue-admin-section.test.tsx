@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => ({
   listIronSprueR2Objects: vi.fn(),
 }));
 
-vi.mock('@tcg-hobby/database', () => ({
+vi.mock('@capital-hobby/database', () => ({
   getIronSprueAdminDashboard: mocks.getIronSprueAdminDashboard,
   getIronSprueAdminReferenceData: mocks.getIronSprueAdminReferenceData,
   getIronSprueAdminStorefrontControls: mocks.getIronSprueAdminStorefrontControls,

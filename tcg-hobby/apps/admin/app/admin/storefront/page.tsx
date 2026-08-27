@@ -6,8 +6,8 @@ import {
   SHOP_LANDING_DEFAULTS,
   STOREFRONT_BANNER_ICONS,
   type ShopLandingScope,
-} from '@tcg-hobby/database';
-import { Button, Card, CardContent, Container, FormField, Input, Section } from '@tcg-hobby/ui';
+} from '@capital-hobby/database';
+import { Button, Card, CardContent, Container, FormField, Input, Section } from '@capital-hobby/ui';
 import {
   saveShopLandingPageAction,
   saveStorefrontBannerAction,

@@ -1,4 +1,4 @@
-import type { OrderWithItems } from '@tcg-hobby/database/storefront';
+import type { OrderWithItems } from '@capital-hobby/database/storefront';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildOrderConfirmationEmail, buildSignupEmail, getTransactionalEmailLogoUrl } from './email-templates';
 

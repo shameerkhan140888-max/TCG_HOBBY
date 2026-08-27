@@ -2,7 +2,7 @@ import { prisma } from './client.js';
 import { FREE_STANDARD_DELIVERY_THRESHOLD_MINOR } from './commerce.js';
 import { resolveProductCardImage, resolveProductImageUrl } from './product-image-resolution.js';
 import { getStorefrontPublicProductWhere } from './product-visibility.js';
-import { buildStorefrontProductPath } from '@tcg-hobby/utils';
+import { buildStorefrontProductPath } from '@capital-hobby/utils';
 
 export const STOREFRONT_BANNER_ICONS = ['DELIVERY', 'PARCEL', 'ANNOUNCEMENT', 'OFFER', 'INFORMATION'] as const;
 export type StorefrontBannerIcon = (typeof STOREFRONT_BANNER_ICONS)[number];

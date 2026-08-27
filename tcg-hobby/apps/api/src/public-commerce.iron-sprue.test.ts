@@ -15,10 +15,26 @@ const databaseMocks = vi.hoisted(() => ({
   createHostedCheckoutSession: vi.fn(),
 }));
 
-vi.mock('@tcg-hobby/database', async () => {
-  const actual = await vi.importActual<Record<string, unknown>>('@tcg-hobby/database');
+vi.mock('@capital-hobby/database', async () => {
   return {
-    ...actual,
+    addProductToCart: vi.fn(),
+    clearCart: vi.fn(),
+    getAvailableShippingMethods: vi.fn(),
+    getAvailableStockByProductIds: vi.fn().mockResolvedValue(new Map()),
+    getCatalogueMasterDataOptions: vi.fn(),
+    getCustomerOrderByNumber: vi.fn(),
+    getCustomerOrders: vi.fn(),
+    removeCartItem: vi.fn(),
+    resolveGuestCart: vi.fn(),
+    updateCartItemQuantity: vi.fn(),
+    clearIronSprueCart: vi.fn(),
+    getIronSprueAvailableShippingMethods: vi.fn(),
+    getIronSprueCustomerOrderByNumber: vi.fn(),
+    getIronSprueCustomerOrders: vi.fn(),
+    removeIronSprueCartItem: vi.fn(),
+    resolveIronSprueGuestCart: vi.fn(),
+    updateIronSprueCartItemQuantity: vi.fn(),
+    isStripeCheckoutConfigured: vi.fn().mockReturnValue(true),
     ...databaseMocks,
   };
 });

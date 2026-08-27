@@ -3,8 +3,8 @@ import 'server-only';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { canAccessAdmin, SESSION_COOKIE_NAME, type SessionUser } from '@tcg-hobby/auth';
-import { getIronSprueAdminPrisma, prisma } from '@tcg-hobby/database';
+import { canAccessAdmin, SESSION_COOKIE_NAME, type SessionUser } from '@capital-hobby/auth';
+import { getIronSprueAdminPrisma, prisma } from '@capital-hobby/database';
 
 export type AdminSession = {
   user: SessionUser;

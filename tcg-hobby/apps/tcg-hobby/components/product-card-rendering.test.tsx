@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { CatalogueProduct } from '@tcg-hobby/types';
-import { ProductCard } from '@tcg-hobby/ui';
+import type { CatalogueProduct } from '@capital-hobby/types';
+import { ProductCard } from '@capital-hobby/ui';
 import { describe, expect, it } from 'vitest';
 
 function product(overrides: Partial<CatalogueProduct> = {}): CatalogueProduct {

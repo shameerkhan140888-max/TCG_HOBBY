@@ -1,6 +1,6 @@
-import { Container, Section } from '@tcg-hobby/ui';
-import { AdminTable, PageHeader, StatusBadge } from '@tcg-hobby/ui';
-import { getAdminInventoryRows, getStockAdjustmentHistory } from '@tcg-hobby/database';
+import { Container, Section } from '@capital-hobby/ui';
+import { AdminTable, PageHeader, StatusBadge } from '@capital-hobby/ui';
+import { getAdminInventoryRows, getStockAdjustmentHistory } from '@capital-hobby/database';
 import { StockAdjustmentForm } from '../../../components/stock-adjustment-form';
 
 export const dynamic = 'force-dynamic';

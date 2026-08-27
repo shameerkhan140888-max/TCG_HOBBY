@@ -1,7 +1,7 @@
-import { Button, Container, EmptyState, Input, PageShell, Section } from '@tcg-hobby/ui';
-import { AnnouncementBanner, ReleaseTimeline } from '@tcg-hobby/ui';
-import { getCatalogueCategories, getReleaseCalendar } from '@tcg-hobby/database/storefront';
-import type { ReleaseCalendarEntry } from '@tcg-hobby/types';
+import { Button, Container, EmptyState, Input, PageShell, Section } from '@capital-hobby/ui';
+import { AnnouncementBanner, ReleaseTimeline } from '@capital-hobby/ui';
+import { getCatalogueCategories, getReleaseCalendar } from '@capital-hobby/database/storefront';
+import type { ReleaseCalendarEntry } from '@capital-hobby/types';
 import { SiteHeader } from '../../components/site-header';
 
 export const dynamic = 'force-dynamic';

@@ -1,4 +1,4 @@
-import { Container } from '@tcg-hobby/ui';
+import { Container } from '@capital-hobby/ui';
 
 function SkeletonBlock({ className }: { className: string }) {
   return <div className={`animate-pulse rounded-md bg-white/10 ${className}`} />;

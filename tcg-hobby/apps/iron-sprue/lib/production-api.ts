@@ -5,7 +5,7 @@ import type {
   PublicProductDetail,
   PublicProductImage,
   PublicProductSummary,
-} from '@tcg-hobby/types';
+} from '@capital-hobby/types';
 import type { IronSprueProduct } from './catalogue';
 import type { IronSprueHomepagePlacement } from './admin-storefront-controls';
 

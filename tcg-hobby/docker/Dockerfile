@@ -15,6 +15,6 @@ FROM deps AS build
 ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 
 RUN npm run db:generate
-RUN npm run build -w @tcg-hobby/auth
-RUN npm run build -w @tcg-hobby/database
-RUN npm run build -w @tcg-hobby/api
+RUN npm run build -w @capital-hobby/auth
+RUN npm run build -w @capital-hobby/database
+RUN npm run build -w @capital-hobby/api

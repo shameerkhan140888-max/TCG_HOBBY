@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { createAdminRelease, getAdminReleaseById, getAdminReleases, updateAdminRelease } from '@tcg-hobby/database';
+import { createAdminRelease, getAdminReleaseById, getAdminReleases, updateAdminRelease } from '@capital-hobby/database';
 import { redirect } from 'next/navigation';
 import { requireAdminSession } from './auth.server';
 

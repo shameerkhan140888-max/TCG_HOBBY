@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createManagedProductImage } from '@tcg-hobby/database';
+import { createManagedProductImage } from '@capital-hobby/database';
 import { requireAdminSession } from '../../../../../../lib/auth.server';
 import { deleteProductImageObjects, processProductImage, uploadProcessedProductImage } from '../../../../../../lib/product-storage.server';
 export const runtime = 'nodejs';

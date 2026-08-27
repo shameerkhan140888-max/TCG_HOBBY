@@ -24,7 +24,7 @@ export default defineConfig({
       timeout: 120_000,
     },
     {
-      command: 'npm run dev -w @tcg-hobby/admin',
+      command: 'npm run dev -w @capital-hobby/admin',
       url: 'http://127.0.0.1:3001/admin',
       reuseExistingServer: true,
       timeout: 120_000,

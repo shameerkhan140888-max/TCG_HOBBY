@@ -18,7 +18,7 @@ import {
   resolveIronSprueGuestCart,
   sendIronSprueOrderConfirmationEmail,
   updateIronSprueCartItemQuantity,
-} from '@tcg-hobby/database';
+} from '@capital-hobby/database';
 import type {
   CartSummary,
   CheckoutAddress,
@@ -30,7 +30,7 @@ import type {
   PublicOrderSummary,
   PublicStockState,
   ShippingMethod,
-} from '@tcg-hobby/types';
+} from '@capital-hobby/types';
 import { AuthService } from './auth.service.js';
 
 function publicStockState(line: { inStock: boolean }): PublicStockState {

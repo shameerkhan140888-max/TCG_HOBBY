@@ -22,7 +22,7 @@ const databaseMocks = vi.hoisted(() => ({
   updateIronSprueCartItemQuantity: vi.fn(),
 }));
 
-vi.mock('@tcg-hobby/database', () => databaseMocks);
+vi.mock('@capital-hobby/database', () => databaseMocks);
 
 function signedInternalHeaders(input: { method: string; pathname: string; query?: string; body?: string }) {
   const timestamp = new Date().toISOString();
