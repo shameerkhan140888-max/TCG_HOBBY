@@ -169,11 +169,19 @@ export function sanitizePublicProductList(values: string[] | null | undefined) {
 }
 
 function publicSpecifications(product: IronSprueCatalogueProductRow): Record<string, string> {
+  const internalSpecificationKeys = new Set([
+    'adminSourceReference',
+    'catalogueReference',
+    'manufacturerReference',
+    'sourceReference',
+    'supplierCode',
+    'supplierReference',
+    'supplierSku',
+  ]);
   const entries: Array<[string, unknown]> = [
     ['manufacturer', product.brand?.name],
     ['category', product.category?.name],
     ['productType', product.buildType ?? product.category?.name],
-    ['manufacturerReference', product.mpn ?? product.supplierProductCode],
     ['scale', product.scale],
     ['buildLevel', product.difficulty],
     ['material', product.material],
@@ -187,6 +195,7 @@ function publicSpecifications(product: IronSprueCatalogueProductRow): Record<str
     : [];
 
   return [...structured, ...entries].reduce<Record<string, string>>((result, [key, value]) => {
+    if (internalSpecificationKeys.has(key)) return result;
     const text = typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
       ? String(value).trim()
       : '';
@@ -264,6 +273,7 @@ function mapProduct(product: IronSprueCatalogueProductRow): CatalogueProduct {
   const productType = product.buildType ?? categoryName;
   const availableStock = stockOnHand(product);
   const reserved = reservedStock(product);
+  const specifications = publicSpecifications(product);
 
   return {
     id: product.id,
@@ -294,9 +304,9 @@ function mapProduct(product: IronSprueCatalogueProductRow): CatalogueProduct {
     imageAlt: image?.asset.altText ?? product.customerTitle,
     heroImageUrl: null,
     vatRate: product.vatRate,
-    scale: product.scale,
-    buildLevel: product.difficulty,
-    specifications: publicSpecifications(product),
+    scale: specifications.scale ?? product.scale,
+    buildLevel: specifications.buildLevel ?? product.difficulty,
+    specifications,
     freeUkStandardShipping: false,
     shippingPromotionProductOnly: false,
     releaseStatus: product.comingSoon ? 'COMING_SOON' : 'RELEASED',

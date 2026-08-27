@@ -385,6 +385,7 @@ function ProductFlagForm({ product }: { product: Awaited<ReturnType<typeof listI
   return (
     <form action={updateIronSprueProductFlagsAction} className="grid gap-2 text-xs sm:grid-cols-5">
       <input type="hidden" name="productId" value={product.id} />
+      <input type="hidden" name="returnTo" value={productReturnPath(product)} />
       {flags.map(([name, label, checked]) => (
         <label key={name} className="flex items-center gap-2 rounded-md border border-surface-line bg-surface-ink px-2 py-1">
           <input name={name} type="checkbox" defaultChecked={checked} />
@@ -419,6 +420,7 @@ function ProductReviewActionPanel({
       <form action={approveIronSprueProductReviewAction} className="mt-2 flex flex-wrap items-center gap-2">
         <input type="hidden" name="productSku" value={product.sku} />
         <input type="hidden" name="reviewId" value={review.id} />
+        <input type="hidden" name="returnTo" value={productReturnPath(product)} />
         <Button type="submit" size="sm" variant="primary">Approve {reason.category} review</Button>
         <span className="text-xs text-amber-200/80">Approves {review.fieldName} and refreshes product readiness.</span>
       </form>
@@ -431,6 +433,7 @@ function ProductReviewActionPanel({
         <form action={approveIronSprueProductReviewAction} className="mt-2 flex flex-wrap items-center gap-2">
           <input type="hidden" name="productSku" value={product.sku} />
           <input type="hidden" name="mediaId" value={pendingPrimaryMedia.id} />
+          <input type="hidden" name="returnTo" value={productReturnPath(product)} />
           <Button type="submit" size="sm" variant="primary">Approve primary image</Button>
           <span className="text-xs text-amber-200/80">Marks this catalogue-primary image as approved and primary.</span>
         </form>
@@ -539,12 +542,17 @@ function ProductCommercialInventoryPanel({ product }: { product: Awaited<ReturnT
   );
 }
 
+function actionableProductContentReviews(product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number]) {
+  return product.contentReviews.filter((review) => review.status !== 'APPROVED' && review.status !== 'REJECTED');
+}
+
 function ProductReviewRowsPanel({ product }: { product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number] }) {
-  if (!product.contentReviews.length) return <EmptyNote>No review/import rows recorded for this product.</EmptyNote>;
+  const reviews = actionableProductContentReviews(product);
+  if (!reviews.length) return <EmptyNote>No outstanding content/import review rows for this product.</EmptyNote>;
   return (
     <div className="grid gap-2 rounded-md border border-surface-line bg-surface-ink p-3">
-      <p className="text-sm font-bold text-neutral-100">Review and import rows</p>
-      {product.contentReviews.map((review) => (
+      <p className="text-sm font-bold text-neutral-100">Outstanding content/import rows</p>
+      {reviews.map((review) => (
         <div key={review.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-surface-line bg-black/30 p-2 text-sm">
           <span className="text-neutral-300">{review.fieldName}</span>
           <div className="flex flex-wrap gap-2">
@@ -578,6 +586,7 @@ function ProductAdminCard({
     ? Boolean(readiness.isReadyToPublish && ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState))
     : ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState) && blockers.length === 0;
   const blockerCount = readiness?.blockingReasons.length ?? blockers.length;
+  const outstandingReviewCount = actionableProductContentReviews(product).length;
 
   return (
     <details className="group rounded-md border border-surface-line bg-surface-ink">
@@ -606,7 +615,7 @@ function ProductAdminCard({
         <div className="grid grid-cols-3 gap-3 text-right text-sm text-neutral-400">
           <p>Stock <strong className="block text-neutral-100">{product.inventory?.availableStock ?? 0}</strong></p>
           <p>Media <strong className="block text-neutral-100">{canonicalOperationalProductMediaAssets(product.mediaAssets).length}</strong></p>
-          <p>Reviews <strong className="block text-neutral-100">{product.contentReviews.length}</strong></p>
+          <p>Reviews <strong className="block text-neutral-100">{outstandingReviewCount}</strong></p>
         </div>
       </summary>
       <div className="grid gap-4 border-t border-surface-line p-4 xl:grid-cols-[minmax(0,1fr)_420px]">
@@ -932,6 +941,7 @@ const CUSTOMER_FACING_SPECIFICATION_KEYS = new Set([
   'brand',
   'buildTime',
   'buildType',
+  'buildLevel',
   'category',
   'colour',
   'completedDimensions',
@@ -1330,13 +1340,14 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
   const modeMedia = mode === 'rejected' ? rejectedMedia : media;
   const currentReturnPath = `/iron-sprue-admin/media${mode === 'pending' ? '' : `?status=${mode}`}`;
   const pendingCount = reviewableIronSprueMediaAssets(media, 'pending').length;
-  const approvedCount = media.filter((asset) => asset.approvalState === 'APPROVED').length;
-  const rejectedCount = rejectedMedia.length;
+  const approvedCount = reviewableIronSprueMediaAssets(media, 'approved').length;
+  const rejectedCount = reviewableIronSprueMediaAssets(rejectedMedia, 'rejected').length;
+  const allReviewableCount = reviewableIronSprueMediaAssets(media, 'all').length;
   const reviewableMedia = reviewableIronSprueMediaAssets(modeMedia, mode);
   const productGroups = groupMediaByProduct(reviewableMedia, modeMedia, mode);
   const r2Candidates = r2CandidatesByProductRole([...r2ProductObjects, ...r2ArchiveProductObjects]);
   const r2CandidateCount = [...r2Candidates.values()].reduce((total, items) => total + items.length, 0);
-  const hiddenCount = media.filter((asset) => asset.approvalState !== 'FAILED' && isIronSprueDisplayableImageAsset(asset)).length - reviewableMedia.length;
+  const hiddenCount = Math.max(allReviewableCount - reviewableMedia.length, 0);
   const bulkApprovableMediaCount = reviewableMedia.filter((asset) => asset.approvalState !== 'APPROVED').length;
   const bulkPublishableProductCount = new Set(productGroups
     .map((group) => group.product)
@@ -1345,7 +1356,7 @@ async function MediaSection({ searchParams }: { searchParams?: SearchParams }) {
 
   return (
     <div className="space-y-4">
-      <ReviewTabs baseHref="/iron-sprue-admin/media" mode={mode} pendingCount={pendingCount} approvedCount={approvedCount} rejectedCount={rejectedCount} allCount={media.length} />
+      <ReviewTabs baseHref="/iron-sprue-admin/media" mode={mode} pendingCount={pendingCount} approvedCount={approvedCount} rejectedCount={rejectedCount} allCount={allReviewableCount} />
       <form id="iron-sprue-media-bulk-approval" action={bulkApproveIronSprueMediaAction} />
       <form id="iron-sprue-media-product-bulk-publish" action={bulkPublishIronSprueProductsAction} />
       <IronSprueBulkApprovalControls

@@ -2137,17 +2137,17 @@ export async function reconcileIronSprueR2ProductMedia(
         continue;
       }
 
-      if (role === 'catalogue-primary' && candidates.length > 1) {
+      if (candidates.length > 1) {
         ambiguous.push({
           sku: product.sku,
           role,
           keys: candidates.map((candidate) => candidate.key),
-          reason: 'Multiple catalogue-primary R2 image candidates exist; choose the primary product image manually.',
+          reason: `Multiple ${role} R2 image candidates exist; choose the correct product image manually so reconciliation does not add duplicates or cropped/mismatched derivatives.`,
         });
         continue;
       }
 
-      for (const [index, candidate] of candidates.entries()) {
+      for (const candidate of candidates) {
         matchedObjects += 1;
         const isPrimary = role === 'catalogue-primary';
         const approvalState = 'APPROVED';
@@ -2164,7 +2164,7 @@ export async function reconcileIronSprueR2ProductMedia(
             byteSize: candidate.size ?? null,
             approvalState,
             isPrimary,
-            sortOrder: candidate.sortOrder + index,
+            sortOrder: candidate.sortOrder,
             uploadedById: actor.id,
             approvedById: actor.id,
             approvedAt: new Date(),
@@ -2179,7 +2179,7 @@ export async function reconcileIronSprueR2ProductMedia(
             byteSize: candidate.size ?? null,
             approvalState,
             isPrimary,
-            sortOrder: candidate.sortOrder + index,
+            sortOrder: candidate.sortOrder,
             uploadedById: actor.id,
             approvedById: actor.id,
             approvedAt: new Date(),
@@ -2366,7 +2366,10 @@ export async function promoteIronSprueAdminMediaToCataloguePrimary(
         storeCode: IRON_SPRUE_STORE_CODE,
         productId,
         role: 'catalogue-primary',
-        url: sourceUrl,
+        OR: [
+          { url: sourceUrl },
+          ...(storageKey ? [{ storageKey }] : []),
+        ],
       },
     });
 

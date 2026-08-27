@@ -71,9 +71,36 @@ describe('Iron Sprue product description pipeline', () => {
     expect(copy.shortDescription).toContain('Toyota 2000GT Red');
     expect(copy.description).toContain('Aoshima');
     expect(copy.features).toContain('Toyota 2000GT colour variant: Red');
-    expect(copy.specifications).toMatchObject({ manufacturer: 'Aoshima', manufacturerReference: '05628' });
+    expect(copy.features).not.toContain('Manufacturer reference 05628');
+    expect(copy.specifications).toMatchObject({ manufacturer: 'Aoshima' });
+    expect(copy.specifications).not.toHaveProperty('manufacturerReference');
     expect(copy.omittedUncertainSpecifications).toContain('piece count');
     expect(copy.description).not.toMatch(/perfect for collectors and hobbyists/i);
+  });
+
+  it('uses verified customer facts in feature bullets and build specifications when available', () => {
+    const copy = generateIronSprueProductDescription({
+      sku: 'IS-PIN-S1025',
+      name: '3D Jigsaw Vase - Magpies on a Plum Tree',
+      brand: 'Pintoo',
+      category: 'Vases',
+      productType: '3D puzzle object',
+      supplierSku: 'S1025',
+      specifications: {
+        pieces: 160,
+        buildLevel: 'Intermediate',
+        dimensions: '10 x 10 x 24 cm',
+      },
+    });
+
+    expect(copy.features).toEqual(expect.arrayContaining(['160 pieces', 'Intermediate build level']));
+    expect(copy.features.join(' ')).not.toMatch(/supplier|manufacturer reference|source|catalogue/i);
+    expect(copy.specifications).toMatchObject({
+      pieces: '160',
+      buildLevel: 'Intermediate',
+      dimensions: '10 x 10 x 24 cm',
+    });
+    expect(copy.omittedUncertainSpecifications).not.toEqual(expect.arrayContaining(['piece count', 'skill level', 'dimensions']));
   });
 
   it('generates tool copy around the actual bench use without unsupported performance claims', () => {

@@ -188,15 +188,15 @@ export async function approveIronSprueProductReviewAction(formData: FormData) {
       throw new Error('Select a review or media item to approve.');
     }
   } catch (error) {
-    redirect(adminStatusPath('products', 'error', actionError(error)));
+    redirect(adminReturnPath(formData, 'products', 'error', actionError(error)));
   }
   revalidatePath('/iron-sprue-admin');
   revalidatePath('/iron-sprue-admin/products');
   revalidatePath('/iron-sprue-admin/media');
   revalidatePath('/iron-sprue-admin/content-review');
   revalidateIronSprueStorefront();
-  const query = productSku ? `?q=${encodeURIComponent(productSku)}&saved=${encodeURIComponent('Review approval saved.')}` : `?saved=${encodeURIComponent('Review approval saved.')}`;
-  redirect(`/iron-sprue-admin/products${query}`);
+  const fallback = productSku ? `products?q=${encodeURIComponent(productSku)}` : 'products';
+  redirect(adminReturnPath(formData, fallback, 'saved', 'Review approval saved.'));
 }
 
 export async function bulkApproveIronSprueContentReviewsAction(formData: FormData) {
@@ -239,12 +239,12 @@ export async function updateIronSprueProductFlagsAction(formData: FormData) {
       actor,
     );
   } catch (error) {
-    redirect(adminStatusPath('products', 'error', actionError(error)));
+    redirect(adminReturnPath(formData, 'products', 'error', actionError(error)));
   }
   revalidatePath('/iron-sprue-admin');
   revalidatePath('/iron-sprue-admin/products');
   revalidateIronSprueStorefront();
-  redirect(adminStatusPath('products', 'saved', 'Product flags saved.'));
+  redirect(adminReturnPath(formData, 'products', 'saved', 'Product flags saved.'));
 }
 
 export async function updateIronSpruePublicationStateAction(formData: FormData) {

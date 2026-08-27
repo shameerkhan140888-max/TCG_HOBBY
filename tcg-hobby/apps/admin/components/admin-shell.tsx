@@ -77,7 +77,7 @@ function NavIcon({ name }: { name: NavIconName }) {
 }
 
 export function AdminShell({ children, user }: { children: ReactNode; user: SessionUser }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const drawerRef = useRef<HTMLElement>(null);

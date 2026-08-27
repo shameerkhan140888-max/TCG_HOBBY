@@ -70,6 +70,10 @@ export type IronSprueDescriptionProduct = {
   supplierSku?: string;
   manufacturerReference?: string;
   scale?: string;
+  pieces?: string | number;
+  skillLevel?: string;
+  buildLevel?: string;
+  difficulty?: string;
   glueRequired?: boolean;
   paintRequired?: boolean;
   shortDescription?: string;
@@ -100,7 +104,7 @@ export function isPlaceholderDescription(product: Pick<IronSprueDescriptionProdu
 
 export function generateIronSprueProductDescription(product: IronSprueDescriptionProduct): IronSprueGeneratedDescription {
   const factualSpecs = buildFactualSpecifications(product);
-  const omittedUncertainSpecifications = ['dimensions', 'piece count', 'age rating', 'skill level', 'materials'].filter((field) => !factualSpecs[field]);
+  const omittedUncertainSpecifications = omittedSpecificationLabels(factualSpecs);
   const sourceConfidence = hasSourceMaterial(product) ? 'sufficient' : 'limited';
 
   if (product.brand === 'Aoshima') {
@@ -136,12 +140,39 @@ function buildFactualSpecifications(product: IronSprueDescriptionProduct) {
   if (product.brand) specs.manufacturer = product.brand;
   if (product.category) specs.category = product.category;
   if (product.productType) specs.productType = product.productType;
-  if (product.manufacturerReference || product.supplierSku) specs.manufacturerReference = product.manufacturerReference ?? product.supplierSku ?? '';
   if (product.scale) specs.scale = product.scale;
+  appendStringSpec(specs, 'pieces', product.pieces);
+  appendStringSpec(specs, 'buildLevel', product.buildLevel ?? product.skillLevel ?? product.difficulty);
   if (typeof product.glueRequired === 'boolean') specs.glueRequired = product.glueRequired ? 'Yes' : 'No';
   if (typeof product.paintRequired === 'boolean') specs.paintRequired = product.paintRequired ? 'Yes' : 'No';
+  if (product.specifications && typeof product.specifications === 'object') {
+    appendStringSpec(specs, 'scale', product.specifications.scale);
+    appendStringSpec(specs, 'pieces', product.specifications.pieces ?? product.specifications.pieceCount);
+    appendStringSpec(specs, 'buildLevel', product.specifications.buildLevel ?? product.specifications.skillLevel ?? product.specifications.difficulty);
+    appendStringSpec(specs, 'dimensions', product.specifications.dimensions);
+    appendStringSpec(specs, 'contents', product.specifications.contents);
+  }
 
   return specs;
+}
+
+function omittedSpecificationLabels(specifications: Record<string, string>) {
+  return [
+    { key: 'dimensions', label: 'dimensions' },
+    { key: 'pieces', label: 'piece count' },
+    { key: 'safetyAgeGuidance', label: 'age rating' },
+    { key: 'buildLevel', label: 'skill level' },
+    { key: 'material', label: 'materials' },
+  ]
+    .filter(({ key }) => !specifications[key])
+    .map(({ label }) => label);
+}
+
+function appendStringSpec(specs: Record<string, string>, key: string, value: unknown) {
+  if (specs[key]) return;
+  if (value == null) return;
+  const text = String(value).trim();
+  if (text) specs[key] = text;
 }
 
 function hasSourceMaterial(product: IronSprueDescriptionProduct) {
@@ -160,6 +191,24 @@ function titleWithoutColour(name: string) {
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function customerFeatureFallback(product: IronSprueDescriptionProduct, label: string) {
+  return `${product.brand} ${label}`;
+}
+
+function factualFeatureBullets(
+  product: IronSprueDescriptionProduct,
+  factualSpecs: Record<string, string>,
+  primary: string,
+) {
+  const bullets = [primary];
+  if (factualSpecs.scale) bullets.push(`${factualSpecs.scale} scale`);
+  if (factualSpecs.pieces) bullets.push(`${factualSpecs.pieces} pieces`);
+  if (factualSpecs.buildLevel) bullets.push(`${factualSpecs.buildLevel} build level`);
+  if (factualSpecs.contents) bullets.push(factualSpecs.contents);
+  if (bullets.length < 2) bullets.push(customerFeatureFallback(product, product.productType.toLowerCase()));
+  return Array.from(new Set(bullets));
 }
 
 function createBaseResponse(
@@ -199,11 +248,7 @@ function createAoshimaCopy(
       ? `The recorded scale is ${factualSpecs.scale}. It suits modellers looking for a compact vehicle subject with strong visual appeal once completed.`
       : 'It suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.',
   ];
-  const features = [
-    `${product.brand} vehicle model kit`,
-    `${subject}${colour ? ` colour variant: ${colour}` : ''}`,
-    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
-  ];
+  const features = factualFeatureBullets(product, factualSpecs, `${subject}${colour ? ` colour variant: ${colour}` : ''}`);
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
 }
@@ -219,11 +264,7 @@ function createCubicFunCopy(
     `This CubicFun model centres on ${product.name}, giving customers a structured display build rather than another vehicle or bench accessory.`,
     'The finished subject gives the project a clear display purpose, making it a good fit for customers who want an architectural build with a recognisable result.',
   ];
-  const features = [
-    'CubicFun 3D display build',
-    `${product.name} subject`,
-    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
-  ];
+  const features = factualFeatureBullets(product, factualSpecs, `${product.name} subject`);
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
 }
@@ -250,11 +291,7 @@ function createPintooCopy(
     `This Pintoo piece is built around the ${product.name} design, offering a more giftable and display-led alternative to a conventional flat puzzle.`,
     'The appeal is in the completed decorative form: a puzzle build that can remain on show rather than being packed away after assembly.',
   ];
-  const features = [
-    `Pintoo ${format} puzzle`,
-    `${product.name} design`,
-    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
-  ];
+  const features = factualFeatureBullets(product, factualSpecs, `${product.name} design`);
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
 }
@@ -278,11 +315,7 @@ function createDeluxeMaterialsCopy(
     `${product.name} gives Iron Sprue customers a named Deluxe Materials option for ${use}. It is positioned as a practical workshop companion rather than a display kit.`,
     'Customers should follow the manufacturer packaging for application and safety guidance.',
   ];
-  const features = [
-    'Deluxe Materials bench product',
-    sentenceCase(use),
-    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
-  ];
+  const features = factualFeatureBullets(product, factualSpecs, sentenceCase(use));
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
 }
@@ -298,11 +331,7 @@ function createOccreCopy(
     `${product.name} adds an OcCre Creations support item to the Iron Sprue bench range. It is listed for customers building out a more organised modelling setup alongside kits, adhesives and finishing tools.`,
     'It is aimed at builders who value a satisfying project and a finished piece with display character.',
   ];
-  const features = [
-    'OcCre Creations workshop accessory',
-    'Supports modelling bench organisation or preparation',
-    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
-  ];
+  const features = factualFeatureBullets(product, factualSpecs, 'Supports modelling bench organisation or preparation');
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
 }
@@ -334,11 +363,7 @@ function createToolCopy(
     `${product.name} is a functional tool rather than a kit, helping with ${use} during model, puzzle or display-build preparation.`,
     'It is a straightforward addition to the workbench for modellers building out a reliable set of everyday tools and accessories.',
   ];
-  const features = [
-    'Bench tool or accessory',
-    sentenceCase(use),
-    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
-  ];
+  const features = factualFeatureBullets(product, factualSpecs, sentenceCase(use));
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
 }
@@ -354,11 +379,7 @@ function createGenericCopy(
     `${product.name} supports customers looking across model kits, display builds and workshop essentials.`,
     'It has a clear place in the Iron Sprue modelling and hobby range.',
   ];
-  const features = [
-    `${product.brand} product`,
-    product.productType,
-    product.manufacturerReference || product.supplierSku ? `Manufacturer reference ${product.manufacturerReference ?? product.supplierSku}` : 'Manufacturer reference to be confirmed',
-  ];
+  const features = factualFeatureBullets(product, factualSpecs, product.productType);
 
   return createBaseResponse(product, shortDescription, paragraphs, features, factualSpecs, omittedUncertainSpecifications, sourceConfidence);
 }

@@ -139,6 +139,74 @@ describe('Iron Sprue production catalogue adapter', () => {
     });
   });
 
+  it('projects verified scale and build level from canonical specifications when direct columns are empty', async () => {
+    const client = {
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([
+          ironSprueProduct({
+            scale: null,
+            difficulty: null,
+            specifications: { scale: '1:32', buildLevel: 'Beginner', pieces: '160' },
+          }),
+        ]),
+      },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    const result = await getIronSprueCatalogueProducts({
+      search: '',
+      category: '',
+      sort: 'featured',
+      page: 1,
+      pageSize: 20,
+    }, client as never);
+
+    expect(result.products[0]).toMatchObject({
+      scale: '1:32',
+      buildLevel: 'Beginner',
+      specifications: expect.objectContaining({
+        scale: '1:32',
+        buildLevel: 'Beginner',
+        pieces: '160',
+      }),
+    });
+  });
+
+  it('keeps supplier and manufacturer reference codes out of public specifications', async () => {
+    const client = {
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([
+          ironSprueProduct({
+            scale: null,
+            supplierProductCode: '05628',
+            mpn: '05628',
+            specifications: {
+              scale: '1:32',
+              supplierCode: '05628',
+              manufacturerReference: '05628',
+              adminSourceReference: 'launch-import',
+            },
+          }),
+        ]),
+      },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    const result = await getIronSprueCatalogueProducts({
+      search: '',
+      category: '',
+      sort: 'featured',
+      page: 1,
+      pageSize: 20,
+    }, client as never);
+
+    expect(result.products[0]?.sku).toBe('IS-AOS-05628');
+    expect(result.products[0]?.specifications).toMatchObject({ scale: '1:32' });
+    expect(result.products[0]?.specifications).not.toHaveProperty('supplierCode');
+    expect(result.products[0]?.specifications).not.toHaveProperty('manufacturerReference');
+    expect(result.products[0]?.specifications).not.toHaveProperty('adminSourceReference');
+  });
+
   it('applies brand and category filters to Iron Sprue relationships', async () => {
     const client = {
       ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue([]) },

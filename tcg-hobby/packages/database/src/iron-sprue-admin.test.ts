@@ -183,12 +183,22 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       { key: 'products/is-aos-05603/source-required.json', size: 100 },
     ], actor, client as never);
 
-    expect(result.upsertedMedia).toBe(4);
+    expect(result.upsertedMedia).toBe(2);
     expect(result.affectedProducts).toBe(1);
     expect(result.unmatched).toEqual(expect.arrayContaining([
       expect.objectContaining({ key: 'products/is-aos-99999/image-2/missing.png' }),
       expect.objectContaining({ key: 'products/is-aos-05603/source-required.json' }),
     ]));
+    expect(result.ambiguous).toEqual([
+      expect.objectContaining({
+        sku: 'IS-AOS-05603',
+        role: 'manufacturer-original',
+        keys: [
+          'archive/products/aoshima-05603-pagani-zonda-f/original/better-source.jpg',
+          'archive/products/is-aos-05603-aoshima-05603-pagani-zonda-f/original/manufacturer-source.jpg',
+        ],
+      }),
+    ]);
     expect(client.ironSprueAdminMediaAsset.upsert).toHaveBeenCalledWith(expect.objectContaining({
       create: expect.objectContaining({
         productId: 'product-1',
@@ -199,25 +209,11 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         url: 'r2://products/is-aos-05603/image-2/iron-sprue-image-2-ddc9b0dbc551.png',
       }),
     }));
-    expect(client.ironSprueAdminMediaAsset.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      create: expect.objectContaining({
-        productId: 'product-1',
-        role: 'manufacturer-original',
-        approvalState: 'APPROVED',
-        isPrimary: false,
-        storageKey: 'archive/products/is-aos-05603-aoshima-05603-pagani-zonda-f/original/manufacturer-source.jpg',
-        url: 'r2://archive/products/is-aos-05603-aoshima-05603-pagani-zonda-f/original/manufacturer-source.jpg',
-      }),
+    expect(client.ironSprueAdminMediaAsset.upsert).not.toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({ storageKey: 'archive/products/is-aos-05603-aoshima-05603-pagani-zonda-f/original/manufacturer-source.jpg' }),
     }));
-    expect(client.ironSprueAdminMediaAsset.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      create: expect.objectContaining({
-        productId: 'product-1',
-        role: 'manufacturer-original',
-        approvalState: 'APPROVED',
-        isPrimary: false,
-        storageKey: 'archive/products/aoshima-05603-pagani-zonda-f/original/better-source.jpg',
-        url: 'r2://archive/products/aoshima-05603-pagani-zonda-f/original/better-source.jpg',
-      }),
+    expect(client.ironSprueAdminMediaAsset.upsert).not.toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({ storageKey: 'archive/products/aoshima-05603-pagani-zonda-f/original/better-source.jpg' }),
     }));
     expect(client.ironSprueAdminMediaAsset.updateMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ productId: 'product-1', role: 'catalogue-primary' }),
@@ -876,6 +872,80 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         productId: 'product-1',
       }),
     }));
+  });
+
+  it('reuses an existing catalogue-primary media row with the same R2 storage key when promoting', async () => {
+    const sourceMedia = {
+      id: 'media-source',
+      storeCode: 'IRON_SPRUE',
+      productId: 'product-1',
+      role: 'manufacturer-original',
+      approvalState: 'APPROVED',
+      isPrimary: false,
+      storageKey: 'archive/products/is-aos-05628/original/source.jpg',
+      url: null,
+      altText: 'Toyota 2000GT Red source image',
+      mimeType: 'image/jpeg',
+      byteSize: 1200,
+      width: 800,
+      height: 600,
+      sortOrder: 0,
+      product: { id: 'product-1', sku: 'IS-AOS-05628', customerTitle: 'Toyota 2000GT Red' },
+    };
+    const existingCataloguePrimary = {
+      ...sourceMedia,
+      id: 'media-existing-primary',
+      role: 'catalogue-primary',
+      isPrimary: false,
+    };
+    const tx = {
+      ironSprueAdminMediaAsset: {
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+        findFirst: vi.fn().mockResolvedValue(existingCataloguePrimary),
+        create: vi.fn(),
+        update: vi.fn().mockResolvedValue({
+          ...existingCataloguePrimary,
+          approvalState: 'APPROVED',
+          isPrimary: true,
+        }),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+    const client = {
+      ironSprueAdminMediaAsset: {
+        findFirst: vi.fn().mockResolvedValue(sourceMedia),
+      },
+      ironSprueAdminProduct: {
+        findFirst: vi.fn().mockResolvedValue(readyProduct({
+          id: 'product-1',
+          publicationState: 'MEDIA_PENDING',
+          mediaAssets: [{ ...existingCataloguePrimary, approvalState: 'APPROVED', isPrimary: true }],
+        })),
+        update: vi.fn().mockResolvedValue(readyProduct({ publicationState: 'READY_TO_PUBLISH' })),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn() },
+      $transaction: vi.fn(async (callback: (transaction: typeof tx) => Promise<unknown>) => callback(tx)),
+    };
+
+    await promoteIronSprueAdminMediaToCataloguePrimary('media-source', actor, client as never);
+
+    expect(tx.ironSprueAdminMediaAsset.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        role: 'catalogue-primary',
+        OR: [
+          { url: `r2://${sourceMedia.storageKey}` },
+          { storageKey: sourceMedia.storageKey },
+        ],
+      }),
+    }));
+    expect(tx.ironSprueAdminMediaAsset.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'media-existing-primary' },
+      data: expect.objectContaining({
+        approvalState: 'APPROVED',
+        isPrimary: true,
+      }),
+    }));
+    expect(tx.ironSprueAdminMediaAsset.create).not.toHaveBeenCalled();
   });
 
   it('rejects approving a non-image catalogue-primary record as storefront media', async () => {

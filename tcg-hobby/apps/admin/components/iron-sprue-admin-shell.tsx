@@ -62,7 +62,7 @@ function isActive(pathname: string, href: string) {
 }
 
 export function IronSprueAdminShell({ children, user }: { children: ReactNode; user: SessionUser }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
 
   return (
     <div className="min-h-screen bg-[#070907] text-neutral-50 lg:grid lg:grid-cols-[264px_minmax(0,1fr)]">
