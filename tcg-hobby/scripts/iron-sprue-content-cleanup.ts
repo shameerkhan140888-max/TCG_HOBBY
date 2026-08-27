@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import {
@@ -9,6 +9,42 @@ import {
 } from '@tcg-hobby/database';
 
 type ProductRow = Awaited<ReturnType<typeof loadProducts>>[number];
+
+function applyLocalEnvFile(relativePath: string) {
+  const filePath = resolve(process.cwd(), relativePath);
+  if (!existsSync(filePath)) return;
+  const contents = readFileSync(filePath, 'utf8');
+  for (const rawLine of contents.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const separatorIndex = line.indexOf('=');
+    if (separatorIndex === -1) continue;
+    const key = line.slice(0, separatorIndex).trim();
+    if (!key || process.env[key]) continue;
+    let value = line.slice(separatorIndex + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    process.env[key] = value;
+  }
+}
+
+for (const envFile of ['.env.local', 'apps/admin/.env.local', 'apps/iron-sprue/.env.local']) {
+  applyLocalEnvFile(envFile);
+}
+
+if (!process.env.IRON_SPRUE_ADMIN_DATABASE_URL?.trim()) {
+  throw new Error('IRON_SPRUE_ADMIN_DATABASE_URL is required. This Iron Sprue cleanup tool must use the explicit guarded admin database target.');
+}
+
+delete process.env.DATABASE_URL;
+
+if (process.platform === 'win32') {
+  const prismaEnginePath = resolve(process.cwd(), 'node_modules/@prisma/engines/query_engine-windows.dll.node');
+  if (existsSync(prismaEnginePath) && !process.env.PRISMA_QUERY_ENGINE_LIBRARY) {
+    process.env.PRISMA_QUERY_ENGINE_LIBRARY = prismaEnginePath;
+  }
+}
 
 const args = new Set(process.argv.slice(2));
 if (args.has('--help')) {
