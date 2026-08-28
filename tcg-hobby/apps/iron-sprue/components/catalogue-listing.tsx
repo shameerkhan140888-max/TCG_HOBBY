@@ -171,29 +171,31 @@ export async function CatalogueListing({
                 const availabilityClass = productAvailabilityClass(product);
                 return (
                   <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
-                    <a className="product-image" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
-                      {imageUrl ? <img src={imageUrl} alt={product.name} width="1000" height="1000" /> : <span>{product.brand}</span>}
-                    </a>
-                    <div className="product-card-body">
-                      <p className="product-brand">{product.brand}</p>
-                      <h2>{product.name}</h2>
-                      <p>{product.category}</p>
-                      <strong>{formatPrice(product)} inc VAT</strong>
-                      <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
-                      <p className="meta">Manufacturer Reference {product.manufacturerReference ?? product.supplierSku}</p>
-                      <div className="product-actions">
-                        <a href={`/products/${product.slug}`}>View details</a>
-                        <AddToBasketButton
-                          item={{
-                            productId: productCommerceId(product),
-                            productName: product.name,
-                            productSlug: product.slug,
-                            unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,
-                            availableQuantity,
-                            imageUrl,
-                            imageAlt: product.name,
-                          }}
-                        />
+                    <div className="product-card-surface">
+                      <a className="product-image" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
+                        {imageUrl ? <img src={imageUrl} alt={product.name} width="1000" height="1000" /> : <span>{product.brand}</span>}
+                      </a>
+                      <div className="product-card-body">
+                        <p className="product-brand">{product.brand}</p>
+                        <h2>{product.name}</h2>
+                        <p>{product.category}</p>
+                        <strong>{formatPrice(product)} inc VAT</strong>
+                        <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
+                        <p className="meta">Manufacturer Reference {product.manufacturerReference ?? product.supplierSku}</p>
+                        <div className="product-actions">
+                          <a href={`/products/${product.slug}`}>View details</a>
+                          <AddToBasketButton
+                            item={{
+                              productId: productCommerceId(product),
+                              productName: product.name,
+                              productSlug: product.slug,
+                              unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,
+                              availableQuantity,
+                              imageUrl,
+                              imageAlt: product.name,
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
                   </article>
