@@ -22,8 +22,8 @@
     "retailPriceMinor": 1999,
     "compareAtPriceMinor": 1999,
     "vatRate": 20,
-    "shortDescription": "Toyota 2000GT White from Aoshima is a plastic model kit centred on the Toyota 2000GT in White, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Toyota 2000GT White from Aoshima is a plastic model kit centred on the Toyota 2000GT in White, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Toyota 2000GT White from Aoshima",
+    "description": "Toyota 2000GT White is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -45,6 +45,7 @@
       }
     ],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Toyota 2000GT colour variant: White",
       "Manufacturer reference 05627"
@@ -53,14 +54,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "05627"
+      "manufacturerReference": "05627",
+      "scale": "1:32"
     },
     "seoTitle": "Toyota 2000GT White | Aoshima | Iron Sprue",
-    "metaDescription": "Toyota 2000GT White from Aoshima is a plastic model kit centred on the Toyota 2000GT in White, chosen for builders who enjoy automotive subjects with a clea",
+    "metaDescription": "Toyota 2000GT White from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 3,
@@ -85,8 +88,8 @@
     "retailPriceMinor": 1999,
     "compareAtPriceMinor": 1999,
     "vatRate": 20,
-    "shortDescription": "Toyota 2000GT Red from Aoshima is a plastic model kit centred on the Toyota 2000GT in Red, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Toyota 2000GT Red from Aoshima is a plastic model kit centred on the Toyota 2000GT in Red, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Toyota 2000GT Red from Aoshima",
+    "description": "Toyota 2000GT Red is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -108,6 +111,7 @@
       }
     ],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Toyota 2000GT colour variant: Red",
       "Manufacturer reference 05628"
@@ -116,14 +120,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "05628"
+      "manufacturerReference": "05628",
+      "scale": "1:32"
     },
     "seoTitle": "Toyota 2000GT Red | Aoshima | Iron Sprue",
-    "metaDescription": "Toyota 2000GT Red from Aoshima is a plastic model kit centred on the Toyota 2000GT in Red, chosen for builders who enjoy automotive subjects with a clean fi",
+    "metaDescription": "Toyota 2000GT Red from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 4,
@@ -148,8 +154,8 @@
     "retailPriceMinor": 1999,
     "compareAtPriceMinor": 1999,
     "vatRate": 20,
-    "shortDescription": "Toyota 2000GT Silver from Aoshima is a plastic model kit centred on the Toyota 2000GT in Silver, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Toyota 2000GT Silver from Aoshima is a plastic model kit centred on the Toyota 2000GT in Silver, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Toyota 2000GT Silver from Aoshima",
+    "description": "Toyota 2000GT Silver is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -171,6 +177,7 @@
       }
     ],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Toyota 2000GT colour variant: Silver",
       "Manufacturer reference 05629"
@@ -179,14 +186,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "05629"
+      "manufacturerReference": "05629",
+      "scale": "1:32"
     },
     "seoTitle": "Toyota 2000GT Silver | Aoshima | Iron Sprue",
-    "metaDescription": "Toyota 2000GT Silver from Aoshima is a plastic model kit centred on the Toyota 2000GT in Silver, chosen for builders who enjoy automotive subjects with a cl",
+    "metaDescription": "Toyota 2000GT Silver from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 5,
@@ -211,8 +220,8 @@
     "retailPriceMinor": 1999,
     "compareAtPriceMinor": 1999,
     "vatRate": 20,
-    "shortDescription": "Suzuki Jimny Blue from Aoshima is a plastic model kit centred on the Suzuki Jimny in Blue, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Suzuki Jimny Blue from Aoshima is a plastic model kit centred on the Suzuki Jimny in Blue, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Suzuki Jimny Blue from Aoshima",
+    "description": "Suzuki Jimny Blue is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -228,6 +237,7 @@
     "imageReferences": [],
     "sourceMediaLinks": [],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Suzuki Jimny colour variant: Blue",
       "Manufacturer reference 05778"
@@ -236,14 +246,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "05778"
+      "manufacturerReference": "05778",
+      "scale": "1:32"
     },
     "seoTitle": "Suzuki Jimny Blue | Aoshima | Iron Sprue",
-    "metaDescription": "Suzuki Jimny Blue from Aoshima is a plastic model kit centred on the Suzuki Jimny in Blue, chosen for builders who enjoy automotive subjects with a clean fi",
+    "metaDescription": "Suzuki Jimny Blue from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 6,
@@ -268,8 +280,8 @@
     "retailPriceMinor": 1699,
     "compareAtPriceMinor": 1699,
     "vatRate": 20,
-    "shortDescription": "Nissan Fairlady Z Silver from Aoshima is a plastic model kit centred on the Nissan Fairlady Z in Silver, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Nissan Fairlady Z Silver from Aoshima is a plastic model kit centred on the Nissan Fairlady Z in Silver, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Nissan Fairlady Z Silver from Aoshima",
+    "description": "Nissan Fairlady Z Silver is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -285,6 +297,7 @@
     "imageReferences": [],
     "sourceMediaLinks": [],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Nissan Fairlady Z colour variant: Silver",
       "Manufacturer reference 06258"
@@ -293,14 +306,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06258"
+      "manufacturerReference": "06258",
+      "scale": "1:32"
     },
     "seoTitle": "Nissan Fairlady Z Silver | Aoshima | Iron Sprue",
-    "metaDescription": "Nissan Fairlady Z Silver from Aoshima is a plastic model kit centred on the Nissan Fairlady Z in Silver, chosen for builders who enjoy automotive subjects w",
+    "metaDescription": "Nissan Fairlady Z Silver from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 7,
@@ -325,8 +340,8 @@
     "retailPriceMinor": 1699,
     "compareAtPriceMinor": 1699,
     "vatRate": 20,
-    "shortDescription": "Nissan Fairlady Z Blue from Aoshima is a plastic model kit centred on the Nissan Fairlady Z in Blue, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Nissan Fairlady Z Blue from Aoshima is a plastic model kit centred on the Nissan Fairlady Z in Blue, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Nissan Fairlady Z Blue from Aoshima",
+    "description": "Nissan Fairlady Z Blue is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -348,6 +363,7 @@
       }
     ],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Nissan Fairlady Z colour variant: Blue",
       "Manufacturer reference 06259"
@@ -356,14 +372,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06259"
+      "manufacturerReference": "06259",
+      "scale": "1:32"
     },
     "seoTitle": "Nissan Fairlady Z Blue | Aoshima | Iron Sprue",
-    "metaDescription": "Nissan Fairlady Z Blue from Aoshima is a plastic model kit centred on the Nissan Fairlady Z in Blue, chosen for builders who enjoy automotive subjects with ",
+    "metaDescription": "Nissan Fairlady Z Blue from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 8,
@@ -388,8 +406,8 @@
     "retailPriceMinor": 2499,
     "compareAtPriceMinor": 2499,
     "vatRate": 20,
-    "shortDescription": "Lamborghini Aventador White from Aoshima is a plastic model kit centred on the Lamborghini Aventador in White, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Lamborghini Aventador White from Aoshima is a plastic model kit centred on the Lamborghini Aventador in White, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Lamborghini Aventador White from Aoshima",
+    "description": "Lamborghini Aventador White is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -411,6 +429,7 @@
       }
     ],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Lamborghini Aventador colour variant: White",
       "Manufacturer reference 06345"
@@ -419,14 +438,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06345"
+      "manufacturerReference": "06345",
+      "scale": "1:32"
     },
     "seoTitle": "Lamborghini Aventador White | Aoshima | Iron Sprue",
-    "metaDescription": "Lamborghini Aventador White from Aoshima is a plastic model kit centred on the Lamborghini Aventador in White, chosen for builders who enjoy automotive subj",
+    "metaDescription": "Lamborghini Aventador White from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 9,
@@ -451,8 +472,8 @@
     "retailPriceMinor": 2499,
     "compareAtPriceMinor": 2499,
     "vatRate": 20,
-    "shortDescription": "Lamborghini Aventador Red from Aoshima is a plastic model kit centred on the Lamborghini Aventador in Red, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Lamborghini Aventador Red from Aoshima is a plastic model kit centred on the Lamborghini Aventador in Red, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Lamborghini Aventador Red from Aoshima",
+    "description": "Lamborghini Aventador Red is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -473,6 +494,7 @@
     ],
     "sourceMediaLinks": [],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Lamborghini Aventador colour variant: Red",
       "Manufacturer reference 06347"
@@ -481,14 +503,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06347"
+      "manufacturerReference": "06347",
+      "scale": "1:32"
     },
     "seoTitle": "Lamborghini Aventador Red | Aoshima | Iron Sprue",
-    "metaDescription": "Lamborghini Aventador Red from Aoshima is a plastic model kit centred on the Lamborghini Aventador in Red, chosen for builders who enjoy automotive subjects",
+    "metaDescription": "Lamborghini Aventador Red from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 10,
@@ -513,8 +537,8 @@
     "retailPriceMinor": 2499,
     "compareAtPriceMinor": 2499,
     "vatRate": 20,
-    "shortDescription": "Lamborghini Aventador Blue from Aoshima is a plastic model kit centred on the Lamborghini Aventador in Blue, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Lamborghini Aventador Blue from Aoshima is a plastic model kit centred on the Lamborghini Aventador in Blue, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Lamborghini Aventador Blue from Aoshima",
+    "description": "Lamborghini Aventador Blue is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -530,6 +554,7 @@
     "imageReferences": [],
     "sourceMediaLinks": [],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Lamborghini Aventador colour variant: Blue",
       "Manufacturer reference 06349"
@@ -538,14 +563,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06349"
+      "manufacturerReference": "06349",
+      "scale": "1:32"
     },
     "seoTitle": "Lamborghini Aventador Blue | Aoshima | Iron Sprue",
-    "metaDescription": "Lamborghini Aventador Blue from Aoshima is a plastic model kit centred on the Lamborghini Aventador in Blue, chosen for builders who enjoy automotive subjec",
+    "metaDescription": "Lamborghini Aventador Blue from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 11,
@@ -570,8 +597,8 @@
     "retailPriceMinor": 1999,
     "compareAtPriceMinor": 1999,
     "vatRate": 20,
-    "shortDescription": "Skyline GTR Red Pearl from Aoshima is a plastic model kit centred on the Skyline GTR in Red Pearl, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Skyline GTR Red Pearl from Aoshima is a plastic model kit centred on the Skyline GTR in Red Pearl, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Skyline GTR Red Pearl from Aoshima",
+    "description": "Skyline GTR Red Pearl is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 2,
@@ -595,6 +622,7 @@
       }
     ],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Skyline GTR colour variant: Red Pearl",
       "Manufacturer reference 06357"
@@ -603,14 +631,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06357"
+      "manufacturerReference": "06357",
+      "scale": "1:32"
     },
     "seoTitle": "Skyline GTR Red Pearl | Aoshima | Iron Sprue",
-    "metaDescription": "Skyline GTR Red Pearl from Aoshima is a plastic model kit centred on the Skyline GTR in Red Pearl, chosen for builders who enjoy automotive subjects with a ",
+    "metaDescription": "Skyline GTR Red Pearl from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 12,
@@ -635,8 +665,8 @@
     "retailPriceMinor": 1999,
     "compareAtPriceMinor": 1999,
     "vatRate": 20,
-    "shortDescription": "Toyota GR86 Spark Red from Aoshima is a plastic model kit centred on the Toyota GR86 Spark in Red, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Toyota GR86 Spark Red from Aoshima is a plastic model kit centred on the Toyota GR86 Spark in Red, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Toyota GR86 Spark Red from Aoshima",
+    "description": "Toyota GR86 Spark Red is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 2,
@@ -660,6 +690,7 @@
       }
     ],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Toyota GR86 Spark colour variant: Red",
       "Manufacturer reference 06459"
@@ -668,14 +699,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06459"
+      "manufacturerReference": "06459",
+      "scale": "1:32"
     },
     "seoTitle": "Toyota GR86 Spark Red | Aoshima | Iron Sprue",
-    "metaDescription": "Toyota GR86 Spark Red from Aoshima is a plastic model kit centred on the Toyota GR86 Spark in Red, chosen for builders who enjoy automotive subjects with a ",
+    "metaDescription": "Toyota GR86 Spark Red from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 13,
@@ -700,8 +733,8 @@
     "retailPriceMinor": 1999,
     "compareAtPriceMinor": 1999,
     "vatRate": 20,
-    "shortDescription": "Toyota GR86 White Pearl from Aoshima is a plastic model kit centred on the Toyota GR86 White Pearl in White, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Toyota GR86 White Pearl from Aoshima is a plastic model kit centred on the Toyota GR86 White Pearl in White, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Toyota GR86 White Pearl from Aoshima",
+    "description": "Toyota GR86 White Pearl is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 2,
@@ -717,6 +750,7 @@
     "imageReferences": [],
     "sourceMediaLinks": [],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Toyota GR86 White Pearl colour variant: White",
       "Manufacturer reference 06460"
@@ -725,14 +759,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06460"
+      "manufacturerReference": "06460",
+      "scale": "1:32"
     },
     "seoTitle": "Toyota GR86 White Pearl | Aoshima | Iron Sprue",
-    "metaDescription": "Toyota GR86 White Pearl from Aoshima is a plastic model kit centred on the Toyota GR86 White Pearl in White, chosen for builders who enjoy automotive subjec",
+    "metaDescription": "Toyota GR86 White Pearl from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 14,
@@ -757,8 +793,8 @@
     "retailPriceMinor": 1699,
     "compareAtPriceMinor": 1699,
     "vatRate": 20,
-    "shortDescription": "Nissan S30 Fairlady Z Red Custom Wheels from Aoshima is a plastic model kit centred on the Nissan S30 Fairlady Z Red Custom Wheels in Red, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Nissan S30 Fairlady Z Red Custom Wheels from Aoshima is a plastic model kit centred on the Nissan S30 Fairlady Z Red Custom Wheels in Red, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Nissan S30 Fairlady Z Red Custom Wheels from Aoshima",
+    "description": "Nissan S30 Fairlady Z Red Custom Wheels is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -774,6 +810,7 @@
     "imageReferences": [],
     "sourceMediaLinks": [],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Nissan S30 Fairlady Z Red Custom Wheels colour variant: Red",
       "Manufacturer reference 06474"
@@ -782,14 +819,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06474"
+      "manufacturerReference": "06474",
+      "scale": "1:32"
     },
     "seoTitle": "Nissan S30 Fairlady Z Red Custom Wheels | Aoshima | Iron Sprue",
-    "metaDescription": "Nissan S30 Fairlady Z Red Custom Wheels from Aoshima is a plastic model kit centred on the Nissan S30 Fairlady Z Red Custom Wheels in Red, chosen for builde",
+    "metaDescription": "Nissan S30 Fairlady Z Red Custom Wheels from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 15,
@@ -814,8 +853,8 @@
     "retailPriceMinor": 1699,
     "compareAtPriceMinor": 1699,
     "vatRate": 20,
-    "shortDescription": "Nissan S30 Fairlady Z Blue Custom Wheels from Aoshima is a plastic model kit centred on the Nissan S30 Fairlady Z Blue Custom Wheels in Blue, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Nissan S30 Fairlady Z Blue Custom Wheels from Aoshima is a plastic model kit centred on the Nissan S30 Fairlady Z Blue Custom Wheels in Blue, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Nissan S30 Fairlady Z Blue Custom Wheels from Aoshima",
+    "description": "Nissan S30 Fairlady Z Blue Custom Wheels is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -837,6 +876,7 @@
       }
     ],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Nissan S30 Fairlady Z Blue Custom Wheels colour variant: Blue",
       "Manufacturer reference 06475"
@@ -845,14 +885,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06475"
+      "manufacturerReference": "06475",
+      "scale": "1:32"
     },
     "seoTitle": "Nissan S30 Fairlady Z Blue Custom Wheels | Aoshima | Iron Sprue",
-    "metaDescription": "Nissan S30 Fairlady Z Blue Custom Wheels from Aoshima is a plastic model kit centred on the Nissan S30 Fairlady Z Blue Custom Wheels in Blue, chosen for bui",
+    "metaDescription": "Nissan S30 Fairlady Z Blue Custom Wheels from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 16,
@@ -877,8 +919,8 @@
     "retailPriceMinor": 1699,
     "compareAtPriceMinor": 1699,
     "vatRate": 20,
-    "shortDescription": "Nissan S30 Fairlady Z Brown Custom Wheels from Aoshima is a plastic model kit centred on the Nissan S30 Fairlady Z Brown Custom Wheels, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Nissan S30 Fairlady Z Brown Custom Wheels from Aoshima is a plastic model kit centred on the Nissan S30 Fairlady Z Brown Custom Wheels, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Nissan S30 Fairlady Z Brown Custom Wheels from Aoshima",
+    "description": "Nissan S30 Fairlady Z Brown Custom Wheels is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -894,6 +936,7 @@
     "imageReferences": [],
     "sourceMediaLinks": [],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Manufacturer reference 06477"
     ],
@@ -901,14 +944,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06477"
+      "manufacturerReference": "06477",
+      "scale": "1:32"
     },
     "seoTitle": "Nissan S30 Fairlady Z Brown Custom Wheels | Aoshima | Iron Sprue",
-    "metaDescription": "Nissan S30 Fairlady Z Brown Custom Wheels from Aoshima is a plastic model kit centred on the Nissan S30 Fairlady Z Brown Custom Wheels, chosen for builders ",
+    "metaDescription": "Nissan S30 Fairlady Z Brown Custom Wheels from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 17,
@@ -933,8 +978,8 @@
     "retailPriceMinor": 2199,
     "compareAtPriceMinor": 2199,
     "vatRate": 20,
-    "shortDescription": "Lamborghini Countach LPI 800-4 White from Aoshima is a plastic model kit centred on the Lamborghini Countach LPI 800-4 in White, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Lamborghini Countach LPI 800-4 White from Aoshima is a plastic model kit centred on the Lamborghini Countach LPI 800-4 in White, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Lamborghini Countach LPI 800-4 White from Aoshima",
+    "description": "Lamborghini Countach LPI 800-4 White is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -950,6 +995,7 @@
     "imageReferences": [],
     "sourceMediaLinks": [],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Lamborghini Countach LPI 800-4 colour variant: White",
       "Manufacturer reference 06539"
@@ -958,14 +1004,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06539"
+      "manufacturerReference": "06539",
+      "scale": "1:32"
     },
     "seoTitle": "Lamborghini Countach LPI 800-4 White | Aoshima | Iron Sprue",
-    "metaDescription": "Lamborghini Countach LPI 800-4 White from Aoshima is a plastic model kit centred on the Lamborghini Countach LPI 800-4 in White, chosen for builders who enj",
+    "metaDescription": "Lamborghini Countach LPI 800-4 White from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 18,
@@ -990,8 +1038,8 @@
     "retailPriceMinor": 2199,
     "compareAtPriceMinor": 2199,
     "vatRate": 20,
-    "shortDescription": "Lamborghini Countach LPI 800-4 Red from Aoshima is a plastic model kit centred on the Lamborghini Countach LPI 800-4 in Red, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Lamborghini Countach LPI 800-4 Red from Aoshima is a plastic model kit centred on the Lamborghini Countach LPI 800-4 in Red, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Lamborghini Countach LPI 800-4 Red from Aoshima",
+    "description": "Lamborghini Countach LPI 800-4 Red is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -1007,6 +1055,7 @@
     "imageReferences": [],
     "sourceMediaLinks": [],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Lamborghini Countach LPI 800-4 colour variant: Red",
       "Manufacturer reference 06540"
@@ -1015,14 +1064,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06540"
+      "manufacturerReference": "06540",
+      "scale": "1:32"
     },
     "seoTitle": "Lamborghini Countach LPI 800-4 Red | Aoshima | Iron Sprue",
-    "metaDescription": "Lamborghini Countach LPI 800-4 Red from Aoshima is a plastic model kit centred on the Lamborghini Countach LPI 800-4 in Red, chosen for builders who enjoy a",
+    "metaDescription": "Lamborghini Countach LPI 800-4 Red from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 19,
@@ -1047,8 +1098,8 @@
     "retailPriceMinor": 4999,
     "compareAtPriceMinor": 4999,
     "vatRate": 20,
-    "shortDescription": "Pagani Zonda F from Aoshima is a plastic model kit centred on the Pagani Zonda F, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Pagani Zonda F from Aoshima is a plastic model kit centred on the Pagani Zonda F, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Pagani Zonda F from Aoshima",
+    "description": "Pagani Zonda F is a 1:24 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -1070,6 +1121,7 @@
       }
     ],
     "features": [
+      "1:24 scale",
       "Aoshima Plastic model kit",
       "Manufacturer reference 05603"
     ],
@@ -1077,14 +1129,16 @@
       "manufacturer": "Aoshima",
       "category": "Model Kits",
       "productType": "Plastic model kit",
-      "manufacturerReference": "05603"
+      "manufacturerReference": "05603",
+      "scale": "1:24"
     },
     "seoTitle": "Pagani Zonda F | Aoshima | Iron Sprue",
-    "metaDescription": "Pagani Zonda F from Aoshima is a plastic model kit centred on the Pagani Zonda F, chosen for builders who enjoy automotive subjects with a clean finished di",
+    "metaDescription": "Pagani Zonda F from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:24"
   },
   {
     "sourceRow": 20,
@@ -1109,8 +1163,8 @@
     "retailPriceMinor": 1499,
     "compareAtPriceMinor": 1499,
     "vatRate": 20,
-    "shortDescription": "Honda Motocompo from Aoshima is a plastic model kit centred on the Honda Motocompo, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Honda Motocompo from Aoshima is a plastic model kit centred on the Honda Motocompo, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Honda Motocompo from Aoshima",
+    "description": "Honda Motocompo is a 1:32 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -1126,6 +1180,7 @@
     "imageReferences": [],
     "sourceMediaLinks": [],
     "features": [
+      "1:32 scale",
       "Aoshima Plastic model kit",
       "Manufacturer reference 06290"
     ],
@@ -1133,14 +1188,16 @@
       "manufacturer": "Aoshima",
       "category": "Motorcycles & Small Vehicles",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06290"
+      "manufacturerReference": "06290",
+      "scale": "1:32"
     },
     "seoTitle": "Honda Motocompo | Aoshima | Iron Sprue",
-    "metaDescription": "Honda Motocompo from Aoshima is a plastic model kit centred on the Honda Motocompo, chosen for builders who enjoy automotive subjects with a clean finished ",
+    "metaDescription": "Honda Motocompo from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:32"
   },
   {
     "sourceRow": 21,
@@ -1165,8 +1222,8 @@
     "retailPriceMinor": 5999,
     "compareAtPriceMinor": 5999,
     "vatRate": 20,
-    "shortDescription": "Back to the Future Part II from Aoshima is a plastic model kit centred on the Back to the Future Part II, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Back to the Future Part II from Aoshima is a plastic model kit centred on the Back to the Future Part II, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Back to the Future Part II from Aoshima",
+    "description": "Back to the Future Part II is a 1:24 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -1188,6 +1245,7 @@
       }
     ],
     "features": [
+      "1:24 scale",
       "Aoshima Plastic model kit",
       "Manufacturer reference 06437"
     ],
@@ -1195,14 +1253,16 @@
       "manufacturer": "Aoshima",
       "category": "Film & Television Vehicles",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06437"
+      "manufacturerReference": "06437",
+      "scale": "1:24"
     },
     "seoTitle": "Back to the Future Part II | Aoshima | Iron Sprue",
-    "metaDescription": "Back to the Future Part II from Aoshima is a plastic model kit centred on the Back to the Future Part II, chosen for builders who enjoy automotive subjects ",
+    "metaDescription": "Back to the Future Part II from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:24"
   },
   {
     "sourceRow": 22,
@@ -1227,8 +1287,8 @@
     "retailPriceMinor": 5999,
     "compareAtPriceMinor": 5999,
     "vatRate": 20,
-    "shortDescription": "Back to the Future Part III from Aoshima is a plastic model kit centred on the Back to the Future Part III, chosen for builders who enjoy automotive subjects with a clean finished display presence.",
-    "description": "Back to the Future Part III from Aoshima is a plastic model kit centred on the Back to the Future Part III, chosen for builders who enjoy automotive subjects with a clean finished display presence.\n\nIt suits modellers looking for a compact vehicle subject with strong visual appeal once completed, whether displayed on its own or alongside a wider automotive collection.",
+    "shortDescription": "Back to the Future Part III from Aoshima",
+    "description": "Back to the Future Part III is a 1:24 Aoshima snap-kit selected for a clean finished display build. It suits modellers looking for a compact vehicle subject with strong shelf presence once completed.",
     "launchRole": "Core",
     "merchandisingRole": "Core range",
     "reorderLevel": 1,
@@ -1250,6 +1310,7 @@
       }
     ],
     "features": [
+      "1:24 scale",
       "Aoshima Plastic model kit",
       "Manufacturer reference 06438"
     ],
@@ -1257,14 +1318,16 @@
       "manufacturer": "Aoshima",
       "category": "Film & Television Vehicles",
       "productType": "Plastic model kit",
-      "manufacturerReference": "06438"
+      "manufacturerReference": "06438",
+      "scale": "1:24"
     },
     "seoTitle": "Back to the Future Part III | Aoshima | Iron Sprue",
-    "metaDescription": "Back to the Future Part III from Aoshima is a plastic model kit centred on the Back to the Future Part III, chosen for builders who enjoy automotive subject",
+    "metaDescription": "Back to the Future Part III from Aoshima",
     "descriptionReview": {
       "status": "READY_FOR_REVIEW",
       "generatedAt": "2026-08-11T00:00:00.000Z"
-    }
+    },
+    "scale": "1:24"
   },
   {
     "sourceRow": 23,
