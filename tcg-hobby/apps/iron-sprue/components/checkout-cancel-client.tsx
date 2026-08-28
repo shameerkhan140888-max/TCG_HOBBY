@@ -31,5 +31,9 @@ export function CheckoutCancelClient({ sessionId }: { sessionId: string | null }
     };
   }, [sessionId]);
 
-  return <p className="form-status" aria-live="polite">{status}</p>;
+  return (
+    <p className="sr-only" aria-live="polite">
+      {status}
+    </p>
+  );
 }

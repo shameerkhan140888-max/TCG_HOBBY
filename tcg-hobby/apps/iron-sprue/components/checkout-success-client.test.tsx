@@ -19,7 +19,7 @@ describe('Iron Sprue checkout result state', () => {
     expect(ironSprueCheckoutResultState('EXPIRED')).toBe('failure');
   });
 
-  it('renders durable VAT invoice details for paid orders', () => {
+  it('renders paid order confirmation without exposing invoice details', () => {
     const markup = renderToStaticMarkup(<CheckoutSuccessClient
       checkoutReference="cs_test_1"
       initialOrder={{
@@ -75,9 +75,11 @@ describe('Iron Sprue checkout result state', () => {
       }}
     />);
 
-    expect(markup).toContain('IS-VAT-2026-000001');
-    expect(markup).toContain('VAT No.');
-    expect(markup).toContain('525 2040 33');
-    expect(markup).toContain('Net total');
+    expect(markup).toContain('Order <span class="order-reference-heading">IS-20260824-ABC123</span> confirmed');
+    expect(markup).toContain('Thank you. Your payment has been received and your order is now confirmed.');
+    expect(markup).toContain('Continue shopping');
+    expect(markup).not.toContain('IS-VAT-2026-000001');
+    expect(markup).not.toContain('VAT No.');
+    expect(markup).not.toContain('Net total');
   });
 });

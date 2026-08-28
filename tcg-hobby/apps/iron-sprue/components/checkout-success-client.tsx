@@ -113,28 +113,32 @@ export function CheckoutSuccessClient({
   }, [hasTrackedPurchase, order]);
 
   return (
-    <section className="section-block checkout-result-page">
-      <p className="eyebrow">Iron Sprue checkout</p>
+    <section className="section-block checkout-result-page checkout-confirmation-page">
       {!order || ironSprueCheckoutResultState(order.paymentStatus) === 'processing' ? (
         <div className="checkout-processing-card" role="status" aria-live="polite">
+          <p className="eyebrow">Iron Sprue checkout</p>
           <span className="payment-spinner" aria-hidden="true" />
           <h1>Processing your payment.</h1>
           <p className="lead">Please wait while we securely confirm your payment.</p>
           <p className="form-status notice">Please do not refresh or close this page while payment is being confirmed.</p>
         </div>
       ) : ironSprueCheckoutResultState(order.paymentStatus) === 'failure' ? (
-        <>
-          <h1>Payment not completed.</h1>
-          <div className="checkout-result-card">
-            <p className="lead">Your payment was not completed. Your basket can be reviewed before trying again.</p>
-          </div>
-        </>
-      ) : (
-        <>
-        <h1>Order confirmed.</h1>
         <div className="checkout-result-card">
-          <p className="lead">Order {order.orderNumber}</p>
-          <p className="checkout-confirmation-note">Payment received. Your Iron Sprue order is confirmed.</p>
+          <p className="eyebrow">Iron Sprue checkout</p>
+          <h1>Payment not completed.</h1>
+          <p className="lead">Your payment was not completed. Your basket can be reviewed before trying again.</p>
+          <div className="checkout-step-actions">
+            <a className="button" href="/checkout">Retry payment</a>
+            <a className="button secondary" href="/shop">Continue shopping</a>
+          </div>
+        </div>
+      ) : (
+        <div className="checkout-result-card">
+          <p className="eyebrow">Iron Sprue checkout</p>
+          <h1>
+            Order <span className="order-reference-heading">{order.orderNumber}</span> confirmed
+          </h1>
+          <p className="lead">Thank you. Your payment has been received and your order is now confirmed.</p>
           <h2>Items</h2>
           <ul className="order-lines">
             {order.items.map((item) => (
@@ -163,7 +167,6 @@ export function CheckoutSuccessClient({
           ) : null}
           <h2>Order summary</h2>
           <dl className="receipt-summary">
-            {order.invoice ? <div><dt>VAT invoice</dt><dd>{order.invoice.invoiceNumber}</dd></div> : null}
             <div><dt>Payment</dt><dd>Paid</dd></div>
             <div><dt>Order status</dt><dd>Confirmed</dd></div>
             <div><dt>Subtotal</dt><dd>{formatPrice(order.subtotalMinor)}</dd></div>
@@ -173,26 +176,11 @@ export function CheckoutSuccessClient({
             <div className="receipt-total"><dt>Total</dt><dd>{formatPrice(order.totalMinor)}</dd></div>
             <div><dt>Delivery method</dt><dd>{order.shippingMethodName}</dd></div>
           </dl>
-          {order.invoice ? (
-            <>
-              <h2>VAT invoice details</h2>
-              <dl className="receipt-summary">
-                <div><dt>Seller</dt><dd>{order.invoice.sellerLegalName}</dd></div>
-                <div><dt>Company number</dt><dd>{order.invoice.sellerCompanyNumber}</dd></div>
-                <div><dt>VAT No.</dt><dd>{order.invoice.sellerVatNumber}</dd></div>
-                <div><dt>Net total</dt><dd>{formatPrice(order.invoice.orderNetTotalMinor)}</dd></div>
-                <div><dt>VAT total</dt><dd>{formatPrice(order.invoice.vatTotalMinor)}</dd></div>
-                <div className="receipt-total"><dt>Gross total</dt><dd>{formatPrice(order.invoice.grossTotalMinor)}</dd></div>
-              </dl>
-            </>
-          ) : null}
+          <div className="checkout-step-actions">
+            <a className="button" href="/shop">Continue shopping</a>
+          </div>
         </div>
-        </>
       )}
-      <div className="hero-actions">
-        {order && isPaymentFailure(order.paymentStatus) ? <a className="button" href="/checkout">Retry payment</a> : null}
-        {resultState !== 'processing' ? <a className="button" href="/shop">Continue shopping</a> : null}
-      </div>
     </section>
   );
 }

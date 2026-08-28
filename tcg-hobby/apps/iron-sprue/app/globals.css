@@ -2050,6 +2050,12 @@ p {
   padding: 5px;
 }
 
+.order-lines .basket-image-fallback {
+  width: 72px;
+  height: 72px;
+  font-size: 11px;
+}
+
 .order-lines span {
   display: grid;
   gap: 3px;
@@ -5978,5 +5984,401 @@ body::before {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+/* Batch 3 commerce rollout: basket, checkout and transactional surfaces. */
+body:has(.checkout-result-page) .promo-strip,
+body:has(.checkout-result-page) .trust-workshop-band {
+  display: none;
+}
+
+.commerce-flow-page,
+.checkout-result-page {
+  width: min(calc(100% - 48px), 1320px);
+  margin: clamp(28px, 4vw, 58px) auto;
+  padding: 0;
+}
+
+.checkout-result-page {
+  margin-top: clamp(38px, 5vw, 72px);
+}
+
+.commerce-flow-page > .section-head,
+.checkout-result-page > .eyebrow,
+.checkout-result-page > h1,
+.checkout-result-page > .lead {
+  width: min(100%, 980px);
+}
+
+.commerce-flow-page > .section-head h1 {
+  max-width: 760px;
+  font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
+  font-size: clamp(34px, 5vw, 62px);
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.02;
+}
+
+.commerce-flow-page > .section-head .lead {
+  max-width: 760px;
+  color: rgba(255, 250, 241, 0.78);
+}
+
+.basket-page-stack,
+.checkout-page-stack,
+.checkout-details-layout {
+  margin-top: clamp(18px, 2.6vw, 30px);
+}
+
+.basket-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+  gap: clamp(16px, 2vw, 24px);
+  align-items: start;
+}
+
+.basket-review-panel {
+  align-self: start;
+  grid-column: 2;
+  grid-row: 1;
+  margin-top: 0;
+  top: 0;
+}
+
+.checkout-details-layout {
+  grid-template-columns: minmax(0, 0.92fr) minmax(360px, 0.76fr);
+}
+
+.checkout-task-stack,
+.checkout-details-main {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.basket-line,
+.checkout-panel,
+.checkout-result-card,
+.checkout-processing-card,
+.basket-upsell-section,
+.basket-upsell-card,
+.commerce-flow-page .empty-state {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(3, 4, 3, 0.98);
+  border-radius: 9px;
+  background:
+    linear-gradient(180deg, rgba(86, 92, 84, 0.48), rgba(17, 19, 17, 0.94) 20%, rgba(5, 6, 5, 0.99) 76%, #010101),
+    linear-gradient(135deg, rgba(255, 250, 241, 0.07), transparent 30%, rgba(0, 0, 0, 0.52) 68%, rgba(184, 112, 31, 0.28)),
+    repeating-linear-gradient(0deg, rgba(255, 250, 241, 0.03) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(90deg, rgba(255, 250, 241, 0.018) 0 1px, transparent 1px 11px);
+  background-color: #10130f;
+  background-blend-mode: normal, overlay, soft-light, soft-light;
+  color: rgba(255, 250, 241, 0.84);
+  box-shadow:
+    0 1px 0 rgba(255, 250, 241, 0.13),
+    0 0 0 1px rgba(190, 122, 37, 0.34),
+    0 0 0 3px rgba(0, 0, 0, 0.88),
+    inset 0 1px 0 rgba(255, 250, 241, 0.13),
+    inset 1px 0 0 rgba(255, 250, 241, 0.045),
+    inset -1px 0 0 rgba(0, 0, 0, 0.68),
+    inset 0 0 0 1px rgba(166, 101, 28, 0.18),
+    0 18px 34px rgba(0, 0, 0, 0.28);
+}
+
+.basket-line::after,
+.checkout-panel::after,
+.checkout-result-card::after,
+.checkout-processing-card::after,
+.basket-upsell-section::after,
+.basket-upsell-card::after {
+  display: none;
+}
+
+.checkout-panel::before,
+.basket-upsell-section::before {
+  background: transparent;
+}
+
+.basket-line {
+  grid-template-columns: 108px minmax(0, 1fr) 82px auto;
+  gap: 14px;
+  padding: clamp(18px, 2.2vw, 24px);
+}
+
+.basket-line img,
+.basket-image-fallback {
+  width: 108px;
+  height: 108px;
+  border-color: rgba(3, 4, 3, 0.94);
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 1px rgba(183, 129, 44, 0.18),
+    0 0 0 2px rgba(0, 0, 0, 0.76);
+}
+
+.basket-line a {
+  font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.22;
+  text-decoration: none;
+}
+
+.basket-line p,
+.basket-summary-copy,
+.checkout-review-line span,
+.checkout-review-grid p,
+.checkout-reassurance p,
+.checkout-result-card .lead,
+.checkout-result-card address,
+.checkout-processing-card .lead {
+  color: rgba(255, 250, 241, 0.78);
+}
+
+.basket-line input,
+.checkout-grid input,
+.checkout-grid select {
+  min-height: 42px;
+  border-color: rgba(3, 4, 3, 0.98);
+  background: rgba(247, 248, 246, 0.94);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    0 0 0 1px rgba(190, 122, 37, 0.18);
+}
+
+.checkout-panel,
+.checkout-result-card,
+.checkout-processing-card,
+.commerce-flow-page .empty-state {
+  padding: clamp(22px, 3vw, 34px);
+}
+
+.checkout-panel h2,
+.checkout-result-card h1,
+.checkout-processing-card h1,
+.commerce-flow-page .empty-state h2 {
+  color: var(--paper-soft);
+  font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.04;
+}
+
+.checkout-result-card h1 {
+  max-width: 900px;
+  font-size: clamp(34px, 4.8vw, 58px);
+}
+
+.checkout-result-page .order-reference-heading {
+  white-space: nowrap;
+}
+
+.checkout-result-card h2,
+.checkout-processing-card h2,
+.basket-upsell-section h2 {
+  color: var(--paper-soft);
+  font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
+  font-size: clamp(22px, 2.6vw, 32px);
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.06;
+  text-transform: none;
+}
+
+.checkout-fieldset,
+.receipt-summary,
+.checkout-order-review,
+.checkout-review-grid section,
+.checkout-reassurance,
+.checkout-review-line {
+  border-color: rgba(190, 122, 37, 0.2);
+  background: rgba(255, 250, 241, 0.045);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.08),
+    inset 0 0 0 1px rgba(3, 4, 3, 0.42);
+}
+
+.checkout-totals,
+.basket-summary-items {
+  border-color: rgba(190, 122, 37, 0.24);
+}
+
+.checkout-step-actions {
+  justify-content: flex-start;
+}
+
+.checkout-panel button:not(.secondary):not(.text-button):not(.quantity-stepper),
+.checkout-step-actions .button:not(.secondary),
+.commerce-flow-page .empty-state .button,
+.basket-review-panel > .button,
+.basket-action-stack button:not(:disabled) {
+  display: inline-grid;
+  min-height: 54px;
+  place-items: center;
+  border: 1px solid rgba(3, 4, 3, 0.98);
+  border-radius: 7px;
+  background:
+    linear-gradient(180deg, rgba(51, 57, 50, 0.95), rgba(4, 6, 5, 1) 58%, #000),
+    linear-gradient(135deg, rgba(255, 250, 241, 0.08), transparent 38%, rgba(184, 112, 31, 0.32));
+  box-shadow:
+    0 1px 0 rgba(255, 250, 241, 0.11),
+    0 0 0 1px rgba(190, 122, 37, 0.48),
+    0 0 0 2px rgba(0, 0, 0, 0.76),
+    inset 0 1px 0 rgba(255, 250, 241, 0.14),
+    inset 0 0 0 1px rgba(184, 112, 31, 0.22);
+  color: var(--paper-soft);
+  font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.checkout-step-actions .button.secondary,
+.checkout-payment-page .button.secondary,
+.basket-line > .button.secondary,
+.basket-review-panel .text-link {
+  color: var(--paper-soft);
+}
+
+.payment-element-shell {
+  border-color: rgba(190, 122, 37, 0.2);
+  background: rgba(255, 250, 241, 0.045);
+}
+
+.basket-upsell-section {
+  padding: clamp(22px, 3vw, 34px);
+}
+
+.basket-upsell-grid {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 4px 18px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.basket-upsell-card {
+  flex: 0 0 clamp(220px, 23vw, 270px);
+  min-width: clamp(220px, 23vw, 270px);
+  grid-template-rows: auto 1fr;
+  padding: 14px;
+  scroll-snap-align: start;
+}
+
+.basket-upsell-card img,
+.basket-upsell-card .basket-image-fallback {
+  height: 150px;
+}
+
+.checkout-result-page {
+  min-height: min(680px, calc(100vh - 210px));
+  align-content: start;
+  padding-top: clamp(18px, 3vw, 42px);
+}
+
+.checkout-result-card {
+  width: min(100%, 920px);
+  margin: 0 auto;
+}
+
+.order-lines li {
+  border-color: rgba(190, 122, 37, 0.18);
+  background: rgba(255, 250, 241, 0.05);
+}
+
+.checkout-confirmation-page .checkout-step-actions {
+  margin-top: 6px;
+}
+
+@media (max-width: 920px) {
+  .commerce-flow-page,
+  .checkout-result-page {
+    width: min(calc(100% - 28px), 720px);
+    margin-block: 22px;
+  }
+
+  .checkout-result-page {
+    margin-top: 28px;
+  }
+
+  .basket-layout,
+  .checkout-details-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .basket-review-panel {
+    position: static;
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .basket-line {
+    grid-template-columns: 86px minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  .basket-line img,
+  .basket-image-fallback {
+    width: 86px;
+    height: 86px;
+  }
+
+  .basket-line label,
+  .basket-line > .button.secondary {
+    grid-column: 1 / -1;
+  }
+
+  .checkout-panel,
+  .checkout-result-card,
+  .checkout-processing-card,
+  .commerce-flow-page .empty-state,
+  .basket-upsell-section {
+    padding: 20px;
+  }
+
+  .checkout-grid,
+  .checkout-review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-panel button:not(.secondary):not(.text-button):not(.quantity-stepper),
+  .checkout-step-actions .button:not(.secondary),
+  .basket-review-panel > .button,
+  .basket-action-stack button:not(:disabled) {
+    min-height: 50px;
+  }
+
+  .basket-upsell-card {
+    flex-basis: clamp(210px, 64vw, 260px);
+    min-width: clamp(210px, 64vw, 260px);
+  }
+
+  .order-lines li {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .checkout-result-page .order-reference-heading {
+    display: block;
+    font-size: 0.76em;
+    line-height: 0.95;
+  }
+
+  .order-lines li > strong:last-child {
+    grid-column: 2;
+  }
+
+  .order-lines img {
+    width: 58px;
+    height: 58px;
+  }
+
+  .order-lines .basket-image-fallback {
+    width: 58px;
+    height: 58px;
+    font-size: 10px;
   }
 }

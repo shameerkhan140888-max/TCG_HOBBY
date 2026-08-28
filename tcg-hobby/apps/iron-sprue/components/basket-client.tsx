@@ -911,7 +911,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             <span>Total to pay</span><strong>{formatPrice(checkoutPaymentIntent.totalMinor)}</strong>
           </div>
           <div className="checkout-reassurance checkout-reassurance-icons">
-            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h8a4 4 0 0 1 0 8h-4v2h5v2h-5v4H9v-4H6v-2h3v-2H6v-2h3V6H6V4zm4 2v4h4a2 2 0 0 0 0-4z" /></svg></span><span><strong>Secure payment</strong> Card details are handled by the embedded payment provider form. Digital wallets may appear where supported by your device and browser.</span></p>
+            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h8a4 4 0 0 1 0 8h-4v2h5v2h-5v4H9v-4H6v-2h3v-2H6v-2h3V6H6V4zm4 2v4h4a2 2 0 0 0 0-4z" /></svg></span><span><strong>Secure payment</strong> Card details are handled securely by our payment partner. Digital wallets may appear where supported by your device and browser.</span></p>
             <p><strong>Order reference</strong> {checkoutPaymentIntent.orderNumber}</p>
           </div>
           <PaymentMethodStrip compact />
@@ -926,62 +926,64 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     <div className="basket-layout checkout-details-layout">
       <div className="checkout-details-main">
         {basketLines}
+      </div>
+
+      <div className="checkout-task-stack">
+        <form
+          className="checkout-panel"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setStatus('');
+            if (hasUnavailableItems) {
+              setStatus('One or more basket items are no longer available. Return to basket and remove them before checkout.');
+              return;
+            }
+            if (!requiredDetailsComplete) {
+              setStatus('Complete the required delivery and contact details before reviewing your order.');
+              return;
+            }
+            setCheckoutStep('review');
+          }}
+        >
+          <p className="eyebrow">Delivery details</p>
+          <h2>Where should we send it?</h2>
+          {hasUnavailableItems ? (
+            <p className="form-status error">One or more basket items are no longer available. Return to basket and remove them before checkout.</p>
+          ) : null}
+          <fieldset className="checkout-fieldset">
+            <legend>Contact and delivery</legend>
+            <div className="checkout-grid">
+              <label htmlFor="checkout-full-name">Full name<input id="checkout-full-name" required value={address.fullName} onChange={(event) => setAddress({ ...address, fullName: event.target.value })} /></label>
+              <label htmlFor="checkout-email">Email<input id="checkout-email" required type="email" value={address.email} onChange={(event) => setAddress({ ...address, email: event.target.value })} /></label>
+              <label htmlFor="checkout-line-1">Address line 1<input id="checkout-line-1" required value={address.line1} onChange={(event) => setAddress({ ...address, line1: event.target.value })} /></label>
+              <label htmlFor="checkout-line-2">Address line 2<input id="checkout-line-2" value={address.line2 ?? ''} onChange={(event) => setAddress({ ...address, line2: event.target.value || null })} /></label>
+              <label htmlFor="checkout-city">City<input id="checkout-city" required value={address.city} onChange={(event) => setAddress({ ...address, city: event.target.value })} /></label>
+              <label htmlFor="checkout-postcode">Postcode<input id="checkout-postcode" required value={address.postalCode} onChange={(event) => setAddress({ ...address, postalCode: event.target.value })} /></label>
+              <label htmlFor="checkout-country">Country<input id="checkout-country" required value={address.country} onChange={(event) => setAddress({ ...address, country: event.target.value.toUpperCase() })} /></label>
+              <label>Delivery
+                <select value={shippingMethodCode} onChange={(event) => setShippingMethodCode(event.target.value as ShippingMethodCode)}>
+                  <option value="UK_STANDARD">Standard delivery</option>
+                  <option value="UK_EXPRESS">Express delivery</option>
+                </select>
+              </label>
+              <label>Discount code<input value={discountCode} onChange={(event) => setDiscountCode(event.target.value.toUpperCase())} /></label>
+            </div>
+          </fieldset>
+          <div className="checkout-totals">
+            <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>
+            <span>Delivery</span><strong>{formatPrice(deliveryMinor)}</strong>
+            <span>VAT included estimate</span><strong>{formatPrice(vatIncludedEstimateMinor)}</strong>
+            <span>Total</span><strong>{formatPrice(totalMinor)}</strong>
+          </div>
+          <button type="submit" disabled={hasUnavailableItems}>Continue to review order</button>
+          {status ? <p className="form-status error">{status}</p> : null}
+        </form>
         <section className="checkout-panel checkout-reassurance checkout-reassurance-icons" aria-label="Delivery returns and payment information">
           <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK standard delivery is £3.99 unless a promotion or basket threshold applies. Costs are confirmed before payment.</span></p>
           <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Unused items can be returned in line with the published returns policy.</span></p>
-          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Payments</strong> Secure card payments are handled by the embedded payment form. Digital wallets may appear where supported.</span></p>
+          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Payments</strong> Secure card payments are handled by our payment partner. Digital wallets may appear where supported.</span></p>
         </section>
       </div>
-
-      <form
-        className="checkout-panel"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setStatus('');
-          if (hasUnavailableItems) {
-            setStatus('One or more basket items are no longer available. Return to basket and remove them before checkout.');
-            return;
-          }
-          if (!requiredDetailsComplete) {
-            setStatus('Complete the required delivery and contact details before reviewing your order.');
-            return;
-          }
-          setCheckoutStep('review');
-        }}
-      >
-        <p className="eyebrow">Delivery details</p>
-        <h2>Where should we send it?</h2>
-        {hasUnavailableItems ? (
-          <p className="form-status error">One or more basket items are no longer available. Return to basket and remove them before checkout.</p>
-        ) : null}
-        <fieldset className="checkout-fieldset">
-          <legend>Contact and delivery</legend>
-          <div className="checkout-grid">
-            <label htmlFor="checkout-full-name">Full name<input id="checkout-full-name" required value={address.fullName} onChange={(event) => setAddress({ ...address, fullName: event.target.value })} /></label>
-            <label htmlFor="checkout-email">Email<input id="checkout-email" required type="email" value={address.email} onChange={(event) => setAddress({ ...address, email: event.target.value })} /></label>
-            <label htmlFor="checkout-line-1">Address line 1<input id="checkout-line-1" required value={address.line1} onChange={(event) => setAddress({ ...address, line1: event.target.value })} /></label>
-            <label htmlFor="checkout-line-2">Address line 2<input id="checkout-line-2" value={address.line2 ?? ''} onChange={(event) => setAddress({ ...address, line2: event.target.value || null })} /></label>
-            <label htmlFor="checkout-city">City<input id="checkout-city" required value={address.city} onChange={(event) => setAddress({ ...address, city: event.target.value })} /></label>
-            <label htmlFor="checkout-postcode">Postcode<input id="checkout-postcode" required value={address.postalCode} onChange={(event) => setAddress({ ...address, postalCode: event.target.value })} /></label>
-            <label htmlFor="checkout-country">Country<input id="checkout-country" required value={address.country} onChange={(event) => setAddress({ ...address, country: event.target.value.toUpperCase() })} /></label>
-            <label>Delivery
-              <select value={shippingMethodCode} onChange={(event) => setShippingMethodCode(event.target.value as ShippingMethodCode)}>
-                <option value="UK_STANDARD">Standard delivery</option>
-                <option value="UK_EXPRESS">Express delivery</option>
-              </select>
-            </label>
-            <label>Discount code<input value={discountCode} onChange={(event) => setDiscountCode(event.target.value.toUpperCase())} /></label>
-          </div>
-        </fieldset>
-        <div className="checkout-totals">
-          <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>
-          <span>Delivery</span><strong>{formatPrice(deliveryMinor)}</strong>
-          <span>VAT included estimate</span><strong>{formatPrice(vatIncludedEstimateMinor)}</strong>
-          <span>Total</span><strong>{formatPrice(totalMinor)}</strong>
-        </div>
-        <button type="submit" disabled={hasUnavailableItems}>Continue to review order</button>
-        {status ? <p className="form-status error">{status}</p> : null}
-      </form>
     </div>
   );
 }

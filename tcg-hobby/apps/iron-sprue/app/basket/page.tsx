@@ -39,7 +39,7 @@ export default async function BasketPage() {
     .map(toUpsellProduct);
 
   return (
-    <section className="section-block">
+    <section className="section-block commerce-flow-page basket-route">
       <div className="section-head">
         <p className="eyebrow">Basket</p>
         <h1>Your basket</h1>
