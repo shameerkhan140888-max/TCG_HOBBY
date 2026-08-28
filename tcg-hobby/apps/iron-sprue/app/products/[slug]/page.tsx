@@ -72,7 +72,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const availableQuantity = productSellableQuantity(product);
   const isOutOfStock = availableQuantity <= 0;
   const availabilityClass = productAvailabilityClass(product);
-  const addonProducts = productDetailAddons(storefrontProducts, product.sku, 4);
+  const addonProducts = productDetailAddons(storefrontProducts, product.sku, 6);
 
   return (
     <section className="section-block product-detail-page">
@@ -148,42 +148,44 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </section>
       </article>
 
-      <section className="section-block compact">
-        <div className="section-head split">
-          <div>
-            <p className="eyebrow">Recommended add-ons</p>
-            <h2>Useful bench companions.</h2>
+      {addonProducts.length ? (
+        <section className="section-block compact pdp-addon-panel">
+          <div className="section-head split">
+            <div>
+              <p className="eyebrow">Recommended add-ons</p>
+              <h2>Useful bench companions.</h2>
+            </div>
+            <a className="text-link" href="/shop?category=workshop-essentials">View add-ons</a>
           </div>
-          <a className="text-link" href="/shop?category=workshop-essentials">View add-ons</a>
-        </div>
-        <div className="addon-grid">
-          {addonProducts.map((item) => {
-            const addonImage = productImage(item);
-            const addonAvailableQuantity = productSellableQuantity(item);
-            return (
-              <article className="addon-card" key={item.sku}>
-                <a className="addon-card-link" href={`/products/${item.slug}`}>
-                  {addonImage ? <img src={addonImage} alt={item.name} /> : null}
-                  <span>{item.brand}</span>
-                  <strong>{item.name}</strong>
-                  <small>{formatPrice(item)} inc VAT</small>
-                </a>
-                <AddToBasketButton
-                  item={{
-                    productId: productCommerceId(item),
-                    productName: item.name,
-                    productSlug: item.slug,
-                    unitPriceMinor: item.priceMinor ?? item.retailPriceMinor ?? 0,
-                    availableQuantity: addonAvailableQuantity,
-                    imageUrl: addonImage ?? null,
-                    imageAlt: item.name,
-                  }}
-                />
-              </article>
-            );
-          })}
-        </div>
-      </section>
+          <div className="addon-grid" aria-label="Recommended add-on products">
+            {addonProducts.map((item) => {
+              const addonImage = productImage(item);
+              const addonAvailableQuantity = productSellableQuantity(item);
+              return (
+                <article className="addon-card" key={item.sku}>
+                  <a className="addon-card-link" href={`/products/${item.slug}`}>
+                    {addonImage ? <img src={addonImage} alt={item.name} /> : null}
+                    <span>{item.brand}</span>
+                    <strong>{item.name}</strong>
+                    <small>{formatPrice(item)} inc VAT</small>
+                  </a>
+                  <AddToBasketButton
+                    item={{
+                      productId: productCommerceId(item),
+                      productName: item.name,
+                      productSlug: item.slug,
+                      unitPriceMinor: item.priceMinor ?? item.retailPriceMinor ?? 0,
+                      availableQuantity: addonAvailableQuantity,
+                      imageUrl: addonImage ?? null,
+                      imageAlt: item.name,
+                    }}
+                  />
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
     </section>
   );
 }
