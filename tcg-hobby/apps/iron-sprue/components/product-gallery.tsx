@@ -16,6 +16,10 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
   const activeImage = images[activeIndex] ?? null;
 
   useEffect(() => {
+    if (activeIndex >= images.length) setActiveIndex(0);
+  }, [activeIndex, images.length]);
+
+  useEffect(() => {
     if (!enlarged) return;
 
     const previousActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;

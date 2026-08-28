@@ -224,7 +224,11 @@ describe('Iron Sprue production API client', () => {
         shortDescription: 'Customer PDP summary.',
         longDescription: 'Customer PDP long description.',
         contents: ['Plastic parts', 'Decals'],
-        images: [{ id: 'img-1', url: 'https://media.ironsprue.co.uk/products/is-aos-05627/image-2/toyota.webp', altText: 'Toyota image', sortOrder: 1, isPrimary: true }],
+        images: [
+          { id: 'img-1', url: 'https://media.ironsprue.co.uk/products/is-aos-05627/image-2/toyota.webp', altText: 'Toyota image', sortOrder: 1, isPrimary: true },
+          { id: 'img-2', url: 'https://media.ironsprue.co.uk/products/is-aos-05627/workshop/toyota-workshop.webp', altText: 'Toyota workshop image', sortOrder: 20, isPrimary: false },
+          { id: 'img-3', url: 'https://media.ironsprue.co.uk/archive/products/aoshima-05627/original/source.jpg', altText: 'Toyota source image', sortOrder: 40, isPrimary: false },
+        ],
         relatedProducts: [],
       }),
     });
@@ -239,7 +243,11 @@ describe('Iron Sprue production API client', () => {
     expect(result).toMatchObject({
       description: 'Customer PDP long description.',
       features: ['Plastic parts', 'Decals'],
-      imageReferences: ['/media/iron-sprue/products/is-aos-05627/image-2/toyota.webp'],
+      imageReferences: [
+        '/media/iron-sprue/products/is-aos-05627/image-2/toyota.webp',
+        '/media/iron-sprue/products/is-aos-05627/workshop/toyota-workshop.webp',
+        '/media/iron-sprue/archive/products/aoshima-05627/original/source.jpg',
+      ],
     });
   });
 
