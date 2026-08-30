@@ -12,7 +12,7 @@ export default function AboutPage() {
         <article className="legal-board">
           <section>
             <h2>Who we are</h2>
-            <p>Iron Sprue is operated by {ironSprueBrand.legalEntity}, trading as Iron Sprue. The storefront focuses on model kits, display builds, puzzles and practical workshop essentials for builders who value accurate subjects, clean presentation and reliable order handling.</p>
+            <p>Iron Sprue is a trading name of {ironSprueBrand.legalEntity}. The storefront focuses on model kits, display builds, puzzles and practical workshop essentials for builders who value accurate subjects, clean presentation and reliable order handling.</p>
           </section>
           <section>
             <h2>What we stock</h2>

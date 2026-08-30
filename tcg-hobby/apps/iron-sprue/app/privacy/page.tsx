@@ -54,7 +54,7 @@ export default function PrivacyPage() {
           </section>
           <section>
             <h2>Cookies and similar technologies</h2>
-            <p>Essential technologies are used for security, account sessions, basket and checkout. Optional analytics or marketing technologies are controlled through the cookie choices available on the site where required.</p>
+            <p>Strictly necessary cookies and cache storage are used for security, account sessions, basket, checkout and reliable page delivery. Optional analytics and marketing cookies are controlled through the cookie choices available on the site where required.</p>
           </section>
         </article>
       </div>

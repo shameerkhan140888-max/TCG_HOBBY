@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { LAUNCH_LIST_CONSENT_WORDING } from '../lib/launch-list';
 
 type FormState = {
   tone: 'idle' | 'success' | 'error';
@@ -67,9 +66,11 @@ export function LaunchListForm() {
           {' '}<a href="/privacy">Privacy Policy</a>
         </span>
       </label>
-      <p className={`form-status ${state.tone}`} role="status" aria-live="polite">
-        {state.message || LAUNCH_LIST_CONSENT_WORDING}
-      </p>
+      {state.message ? (
+        <p className={`form-status ${state.tone}`} role="status" aria-live="polite">
+          {state.message}
+        </p>
+      ) : null}
     </form>
   );
 }

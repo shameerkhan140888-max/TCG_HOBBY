@@ -154,9 +154,18 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <p>Premium model kits, display builds and workshop essentials curated by {ironSprueBrand.legalEntity}.</p>
               <a className="footer-instagram" href={ironSprueBrand.instagramUrl} rel="noreferrer" target="_blank" aria-label="Instagram - @iron.sprue">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="3" y="3" width="18" height="18" rx="5" />
+                  <defs>
+                    <radialGradient id="instagram-app-gradient" cx="30%" cy="107%" r="140%">
+                      <stop offset="0%" stopColor="#fdf497" />
+                      <stop offset="12%" stopColor="#fdf497" />
+                      <stop offset="45%" stopColor="#fd5949" />
+                      <stop offset="62%" stopColor="#d6249f" />
+                      <stop offset="90%" stopColor="#285aeb" />
+                    </radialGradient>
+                  </defs>
+                  <rect x="2" y="2" width="20" height="20" rx="5.2" />
                   <circle cx="12" cy="12" r="4" />
-                  <circle cx="17" cy="7" r="1.2" />
+                  <circle cx="17.2" cy="6.8" r="1.25" />
                 </svg>
                 <span>{ironSprueBrand.instagramHandle}</span>
               </a>
@@ -166,19 +175,18 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <a href="/about">About</a>
               <a href="/privacy">Privacy</a>
               <a href="/terms">Terms</a>
-              <a href="/contact">Contact</a>
+              <a href="/cookies">Cookies</a>
+              <IronSprueCookiePreferenceLink />
             </nav>
             <nav aria-label="Help links">
               <h2>Help</h2>
               <a href="/delivery">Delivery</a>
               <a href="/returns">Returns</a>
-              <a href="/cookies">Cookies</a>
-              <IronSprueCookiePreferenceLink />
+              <a href="/contact">Contact</a>
             </nav>
             <div className="footer-company">
-              <h2>Iron Sprue</h2>
+              <h2>Iron Sprue <span>A trading name of {ironSprueBrand.legalEntity}</span></h2>
               <p>Capital Hobby Group Ltd</p>
-              <p>Trading as Iron Sprue</p>
               <p>Company Number 17336948</p>
               <p>VAT No. {ironSprueBrand.vatNumber}</p>
               <p>Registered in England &amp; Wales</p>

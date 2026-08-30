@@ -189,17 +189,17 @@ export function IronSprueCookieConsentBanner() {
     <section className="cookie-consent" aria-label="Cookie preferences">
       <div>
         <h2>Cookie preferences</h2>
-        <p>Essential storage keeps basket, account and checkout features working. With your permission, Iron Sprue also uses analytics and marketing tags to measure storefront performance.</p>
+        <p>Strictly necessary cookies and cache storage keep basket, account, checkout and reliable page delivery working and cannot be switched off through the site controls. With your permission, Iron Sprue also uses analytics and marketing cookies to measure visits, improve the storefront and understand campaign performance.</p>
         {showPreferences ? (
           <div className="cookie-preference-panel" aria-label="Optional cookie preferences">
-            <p><strong>Essential cookies</strong> Always on for security, basket, account and checkout.</p>
+            <p><strong>Strictly necessary cookies and cache storage</strong> Always on for security, basket, account, checkout and reliable page delivery.</p>
             <label>
               <input
                 type="checkbox"
                 checked={marketingEnabled}
                 onChange={(event) => setMarketingEnabled(event.target.checked)}
               />
-              Optional analytics and marketing
+              Optional analytics and marketing cookies
             </label>
           </div>
         ) : null}
@@ -220,7 +220,7 @@ export function IronSprueCookieConsentBanner() {
         ) : (
           <button type="button" onClick={() => setShowPreferences(true)}>Manage preferences</button>
         )}
-        <button type="button" className="button" onClick={() => { setIronSprueAnalyticsConsent('marketing'); setConsent('marketing'); }}>Accept analytics</button>
+        <button type="button" className="button" onClick={() => { setIronSprueAnalyticsConsent('marketing'); setConsent('marketing'); }}>Accept all</button>
       </div>
     </section>
   );

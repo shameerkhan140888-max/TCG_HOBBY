@@ -26,7 +26,7 @@ export default function ContactPage() {
           </section>
           <section>
             <h2>Company details</h2>
-            <p>Iron Sprue is a trading division of {ironSprueBrand.legalEntity}. Registered office: {ironSprueBrand.registeredOffice.join(', ')}. Company number {ironSprueBrand.companyNumber}. VAT No. {ironSprueBrand.vatNumber}.</p>
+            <p>Iron Sprue is a trading name of {ironSprueBrand.legalEntity}. Registered office: {ironSprueBrand.registeredOffice.join(', ')}. Company number {ironSprueBrand.companyNumber}. VAT No. {ironSprueBrand.vatNumber}.</p>
           </section>
           <section>
             <h2>Security reminder</h2>
