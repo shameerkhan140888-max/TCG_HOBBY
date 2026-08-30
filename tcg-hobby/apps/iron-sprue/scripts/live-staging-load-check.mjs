@@ -24,6 +24,7 @@ const profiles = {
   'storefront-mobile-low': { iterations: 5, concurrency: 2, mobile: true },
   'storefront-moderate': { iterations: 10, concurrency: 5, mobile: false },
   'media-reload': { iterations: 8, concurrency: 4, mobile: true },
+  'commerce-readiness': { iterations: 5, concurrency: 2, mobile: true, commerce: true },
 };
 
 const selected = profiles[profile];
@@ -37,6 +38,8 @@ const routes = [
   { name: 'storefront.category.model-kits', url: `${storefrontUrl}/shop/model-kits` },
   { name: 'storefront.pdp.aoshima', url: `${storefrontUrl}/products/aoshima-06347-lamborghini-aventador-red` },
   { name: 'storefront.pdp.multi-media', url: `${storefrontUrl}/products/pintoo-q1035-jigsaw-vase-peaceful-koi` },
+  { name: 'storefront.basket', url: `${storefrontUrl}/basket` },
+  { name: 'storefront.checkout', url: `${storefrontUrl}/checkout` },
   { name: 'api.health', url: `${apiUrl}/v1/health` },
   { name: 'api.home', url: `${apiUrl}/v1/home` },
   { name: 'api.catalogue', url: `${apiUrl}/v1/catalogue?pageSize=24` },
@@ -47,9 +50,37 @@ if (adminUrl) {
   routes.push({ name: 'admin.login', url: `${adminUrl}/iron-sprue-admin/login` });
 }
 
-const discoveredMedia = await discoverMediaUrls();
-for (const [index, url] of discoveredMedia.entries()) {
+const productProbe = await discoverProductProbe();
+for (const [index, url] of productProbe.mediaUrls.entries()) {
   routes.push({ name: `media.product.${index + 1}`, url });
+}
+if (selected.commerce && productProbe.productId) {
+  routes.push({
+    name: 'api.basket.resolve.guest',
+    url: `${apiUrl}/v1/basket/resolve`,
+    method: 'POST',
+    body: {
+      items: [
+        {
+          productId: productProbe.productId,
+          quantity: 1,
+        },
+      ],
+    },
+  });
+  routes.push({
+    name: 'storefront.cart.resolve.guest',
+    url: `${storefrontUrl}/api/cart/resolve`,
+    method: 'POST',
+    body: {
+      items: [
+        {
+          productId: productProbe.productId,
+          quantity: 1,
+        },
+      ],
+    },
+  });
 }
 
 const work = [];
@@ -110,18 +141,19 @@ function cleanBaseUrl(raw) {
   return raw.trim().replace(/\/+$/, '');
 }
 
-async function discoverMediaUrls() {
+async function discoverProductProbe() {
   try {
     const response = await fetch(`${apiUrl}/v1/catalogue/aoshima-06347-lamborghini-aventador-red`, { signal: AbortSignal.timeout(10_000) });
-    if (!response.ok) return [];
+    if (!response.ok) return { productId: null, mediaUrls: [] };
     const product = await response.json();
-    return (product.images || [])
+    const mediaUrls = (product.images || [])
       .map((image) => image?.url)
       .filter((url) => typeof url === 'string' && url.startsWith('/media/iron-sprue/'))
       .slice(0, 3)
       .map((url) => `${storefrontUrl}${url}`);
+    return { productId: typeof product.id === 'string' ? product.id : null, mediaUrls };
   } catch {
-    return [];
+    return { productId: null, mediaUrls: [] };
   }
 }
 
@@ -143,11 +175,14 @@ async function timeRequest(item, mobile) {
   const started = performance.now();
   try {
     const response = await fetch(item.url, {
+      method: item.method ?? 'GET',
       headers: {
         'user-agent': mobile
           ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1'
           : 'IronSpruePrelaunchLoadCheck/1.0',
+        ...(item.body ? { 'content-type': 'application/json' } : {}),
       },
+      ...(item.body ? { body: JSON.stringify(item.body) } : {}),
       redirect: 'follow',
       signal: AbortSignal.timeout(20_000),
     });

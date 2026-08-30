@@ -101,6 +101,33 @@ Profile: `storefront-moderate` with `IRON_SPRUE_LOAD_ADMIN_URL=https://admin.cap
 
 The live admin route was unauthenticated, so this verifies only the public login surface during storefront traffic. Authenticated product/order read load still needs an approved signed-in session or a safe read-only admin test token.
 
+### Commerce Readiness, No Stripe Sessions
+
+Profile: `commerce-readiness`, concurrency 2, iterations 5.
+
+This profile loaded basket and checkout pages and posted guest basket-resolution payloads through both Railway and the storefront proxy. It did not create checkout sessions, payment intents, orders, stock reservations or authenticated cart rows.
+
+| Route | Status | p50 | p95 |
+| --- | --- | ---: | ---: |
+| Storefront home | 200 | 253 ms | 779 ms |
+| Shop | 200 | 233 ms | 780 ms |
+| Model kits category | 200 | 186 ms | 298 ms |
+| Aoshima PDP | 200 | 204 ms | 309 ms |
+| Multi-media PDP | 200 | 219 ms | 308 ms |
+| Basket page | 200 | 204 ms | 304 ms |
+| Checkout page | 200 | 109 ms | 203 ms |
+| API health | 200 | 38 ms | 39 ms |
+| API home | 200 | 92 ms | 155 ms |
+| API catalogue | 200 | 80 ms | 94 ms |
+| API PDP | 200 | 55 ms | 100 ms |
+| Railway guest basket resolve | 201 | 53 ms | 56 ms |
+| Storefront guest basket resolve | 201 | 69 ms | 72 ms |
+| Product media 1 | 200 | 154 ms | 259 ms |
+| Product media 2 | 200 | 108 ms | 139 ms |
+| Product media 3 | 200 | 172 ms | 282 ms |
+
+An earlier commerce probe used `/v1/cart/resolve` and returned 404. That was a harness mistake; the actual Railway public route is `/v1/basket/resolve`, while the storefront compatibility route remains `/api/cart/resolve`.
+
 ## Mobile Media Reliability
 
 Mobile browser checks against the staging Worker at 390px width were run on an Aoshima PDP with three product media entries.
@@ -158,6 +185,7 @@ Reasons this is not GREEN yet:
 
 - Authenticated admin load has not been measured.
 - Stateful basket/checkout-start load has not been measured.
+- Guest basket resolution and basket/checkout page loading are clean; checkout-session/payment-intent creation is still deliberately untested pending explicit volume caps.
 - Railway DB connection peaks were not sampled during combined traffic.
 - Deployment packaging on Windows produced a stale-live-output incident and needs a safer repeatable path.
 
