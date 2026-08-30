@@ -4,6 +4,7 @@ import {
   getIronSprueProductionApiBrandPresentation,
   getIronSprueProductionApiHomepagePlacements,
   getIronSprueProductionApiHomeProducts,
+  getIronSprueProductionApiHomeSnapshot,
   getIronSprueProductionApiProduct,
   IRON_SPRUE_PRODUCTION_API_BASE_URL,
   requireIronSprueProductionApiBaseUrl,
@@ -268,6 +269,76 @@ describe('Iron Sprue production API client', () => {
         approvalStatus: 'LOGO_APPROVED',
         logoUrl: '/media/iron-sprue/brands/logos/aoshima-approved.webp',
         altText: 'Aoshima approved logo',
+      },
+    ]);
+  });
+
+  it('loads homepage products, placements and approved brand logos from one Railway home snapshot', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        featuredProducts: [product({ slug: 'featured-kit' })],
+        latestProducts: [product({ slug: 'latest-kit', id: 'latest-1' })],
+        categories: [],
+        homepagePlacements: [
+          {
+            id: 'brand-slot',
+            placementKey: 'brand-carousel',
+            title: 'Brands we stock',
+            ctaLabel: null,
+            ctaHref: null,
+            imageUrl: null,
+            active: true,
+            sortOrder: 2,
+          },
+        ],
+        brandPresentation: [
+          {
+            name: 'CubicFun',
+            slug: 'cubicfun',
+            logoUrl: 'https://media.ironsprue.co.uk/brands/logos/cubicfun-approved.webp',
+            logoAltText: 'CubicFun approved logo',
+            sortOrder: 1,
+            active: true,
+            featured: true,
+            productCount: 8,
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getIronSprueProductionApiHomeSnapshot();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      new URL('https://considerate-unity-production-b734.up.railway.app/v1/home'),
+      expect.objectContaining({ cache: 'no-store' }),
+    );
+    expect(result.products.map((item) => item.slug)).toEqual(['featured-kit', 'latest-kit']);
+    expect(result.homepagePlacements).toEqual([
+      {
+        id: 'brand-slot',
+        placementKey: 'brand-carousel',
+        title: 'Brands we stock',
+        ctaLabel: null,
+        ctaHref: null,
+        imageUrl: null,
+        active: true,
+        sortOrder: 2,
+      },
+    ]);
+    expect(result.brandPresentation).toEqual([
+      {
+        name: 'CubicFun',
+        slug: 'cubicfun',
+        href: '/shop?brand=CubicFun',
+        productCount: 8,
+        displayOrder: 1,
+        active: true,
+        approvalStatus: 'LOGO_APPROVED',
+        logoUrl: '/media/iron-sprue/brands/logos/cubicfun-approved.webp',
+        altText: 'CubicFun approved logo',
       },
     ]);
   });

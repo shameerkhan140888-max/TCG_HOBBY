@@ -7,8 +7,7 @@ import type {
   PublicProductImage,
   PublicProductSummary,
 } from '@capital-hobby/types';
-import type { IronSprueProduct } from './catalogue';
-import type { IronSprueBrandRecord } from './catalogue';
+import type { IronSprueBrandRecord, IronSprueProduct } from './catalogue';
 import type { IronSprueHomepagePlacement } from './admin-storefront-controls';
 
 export const IRON_SPRUE_PRODUCTION_API_BASE_URL = 'IRON_SPRUE_PRODUCTION_API_BASE_URL';
@@ -142,8 +141,7 @@ export async function getIronSprueProductionApiProduct(slug: string) {
   }
 }
 
-export async function getIronSprueProductionApiHomeProducts() {
-  const response = await fetchProductionApiJson<PublicHomeResponse>('/v1/home');
+async function productsFromPublicHomeResponse(response: PublicHomeResponse) {
   const placementSlugs = (response.homepagePlacements ?? [])
     .filter((placement) => placement.active)
     .map((placement) => {
@@ -162,6 +160,21 @@ export async function getIronSprueProductionApiHomeProducts() {
   }
   const products = [...response.featuredProducts, ...response.latestProducts, ...placementProducts];
   return Array.from(new Map(products.map((product) => [product.slug, ironSprueProductFromPublicSummary(product)])).values());
+}
+
+export async function getIronSprueProductionApiHomeSnapshot() {
+  const response = await fetchProductionApiJson<PublicHomeResponse>('/v1/home');
+  const products = await productsFromPublicHomeResponse(response);
+  const homepagePlacements = (response.homepagePlacements ?? []).map(ironSprueHomepagePlacementFromPublic);
+  const brandPresentation = (response.brandPresentation ?? [])
+    .map(ironSprueBrandPresentationFromPublic)
+    .filter((brand): brand is IronSprueBrandRecord => Boolean(brand));
+
+  return { products, homepagePlacements, brandPresentation };
+}
+
+export async function getIronSprueProductionApiHomeProducts() {
+  return (await getIronSprueProductionApiHomeSnapshot()).products;
 }
 
 export function ironSprueHomepagePlacementFromPublic(placement: PublicHomepagePlacement): IronSprueHomepagePlacement {

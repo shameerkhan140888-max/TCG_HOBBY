@@ -10,7 +10,7 @@ import {
   productsFromFeaturedPlacements,
 } from '../lib/admin-storefront-controls';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
-import { getIronSprueProductionApiHomeProducts, shouldUseIronSprueProductionApi } from '../lib/production-api';
+import { getIronSprueProductionApiHomeSnapshot, shouldUseIronSprueProductionApi } from '../lib/production-api';
 import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCommerceId, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { AddToBasketButton } from '../components/basket-client';
@@ -63,14 +63,20 @@ function ProductCard({ product }: { product: IronSprueProduct }) {
 }
 
 export default async function HomePage() {
-  const [activeHeroSlides, homepagePlacements, storefrontProducts] = await Promise.all([
+  const useProductionApi = shouldUseIronSprueProductionApi();
+  const [activeHeroSlides, productionHome, fallbackHomepagePlacements, fallbackStorefrontProducts] = await Promise.all([
     getIronSprueHeroSlides(),
-    getIronSprueHomepagePlacements(),
-    shouldUseIronSprueProductionApi() ? getIronSprueProductionApiHomeProducts() : getIronSprueStorefrontProducts(products),
+    useProductionApi ? getIronSprueProductionApiHomeSnapshot() : Promise.resolve(null),
+    useProductionApi ? Promise.resolve([]) : getIronSprueHomepagePlacements(),
+    useProductionApi ? Promise.resolve([]) : getIronSprueStorefrontProducts(products),
   ]);
+  const homepagePlacements = productionHome?.homepagePlacements ?? fallbackHomepagePlacements;
+  const storefrontProducts = productionHome?.products ?? fallbackStorefrontProducts;
   const previewProducts = storefrontProducts.map((product) => ({ ...product, published: true }));
-  const brandsWeStock = await getIronSprueBrandPresentation(previewProducts)
-    .then((brands) => brands.length ? brands : withOfficialBrandLogos(deriveBrandsWeStock(previewProducts)));
+  const brandsWeStock = productionHome?.brandPresentation.length
+    ? productionHome.brandPresentation
+    : await getIronSprueBrandPresentation(previewProducts)
+      .then((brands) => brands.length ? brands : withOfficialBrandLogos(deriveBrandsWeStock(previewProducts)));
   const newArrivals = productsFromFeaturedPlacements(storefrontProducts, homepagePlacements, 4);
   const productSections = productSectionsFromPlacements(storefrontProducts, homepagePlacements);
   const homepagePromoPanels = promoPanelsFromPlacements(homepagePlacements, 3);
