@@ -15,6 +15,12 @@ Intended shape: Cloudflare for the public frontend/domain layer, Railway for bac
 - R2-backed media is consumed through configured public/preview URL helpers.
 - GA4 and Meta Pixel IDs are runtime environment configuration, not hard-coded.
 
+### Production Data Source Guard
+
+For live Iron Sprue catalogue, publication, media and readiness audits, use Railway Postgres only. The canonical target is `IRON_SPRUE_ADMIN_DATABASE_URL` for admin/local audit work, or Railway runtime `DATABASE_URL` when commands execute inside the Railway production environment.
+
+Local `apps/iron-sprue/.env.local` compatibility variables such as `IRON_SPRUE_DATABASE_URL`, `IRON_SPRUE_DIRECT_DATABASE_URL` and `IRON_SPRUE_WORKER_READ_DATABASE_URL` may still point at the legacy dedicated Neon database. They must not be used for current live product/media counts unless the task is explicitly a legacy Neon comparison. Reports should identify the target as Railway/Neon by host/database metadata without printing credentials.
+
 ### Required Runtime Configuration
 
 - Railway database connection variables used by the API/Admin runtime and migration tooling.

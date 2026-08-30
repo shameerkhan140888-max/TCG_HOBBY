@@ -16,6 +16,19 @@ Product source/media tracing links are taken from the earlier provisional PO whe
 
 Do not commit the source workbook or any supplier payment, bank, credential or private account details.
 
+## Production Data Source
+
+Railway Postgres is the canonical live Iron Sprue catalogue, admin, commerce and media-review database.
+
+Use the Railway production database for any current-state audit, publication check, media reconciliation or admin readiness report. The safe local route is the explicit admin target:
+
+- `IRON_SPRUE_ADMIN_DATABASE_URL`
+- Railway runtime `DATABASE_URL` when the command is running inside the Railway production environment
+
+Do not use local `apps/iron-sprue/.env.local` `IRON_SPRUE_DATABASE_URL`, `IRON_SPRUE_DIRECT_DATABASE_URL` or `IRON_SPRUE_WORKER_READ_DATABASE_URL` for live product/media audits unless the task is explicitly a legacy Neon comparison. Those variables have existed as compatibility paths and may point at the older dedicated Neon database in local development, which can produce stale publication/media counts.
+
+When a local audit needs the live Railway database, open the guarded Railway Postgres tunnel first, then connect through `IRON_SPRUE_ADMIN_DATABASE_URL`/the tunnel target. Keep reports redacted: print host/database/status/counts only, never database credentials.
+
 ## Import
 
 Run a redacted dry-run first:
@@ -102,7 +115,7 @@ Iron Sprue product media must use the dedicated R2 bucket:
 - Bucket: `iron-sprue-product-media`
 - Production public host: `https://media.ironsprue.co.uk`
 
-The import creates review placeholders only. It does not upload product images. A product cannot move to published launch state until the approved Image 2 storefront-primary asset exists and is approved.
+The import creates review placeholders only. It does not upload product images. A product cannot move to published launch state until the approved Image 2 storefront-primary asset exists and is approved, except for tools and accessories where one approved displayable product/manufacturer image may satisfy the media gate when richer generated media is not required.
 
 Required per-product media stages:
 
@@ -113,6 +126,8 @@ Required per-product media stages:
 - optional supporting workshop image;
 - separate hero artwork when the product is used in merchandising.
 
+Tools and accessories use the lighter one-image gate: one approved displayable product image may satisfy publication media readiness. Model kits, Pintoo, CubicFun and other image-led products still require the richer Image 2/workshop review flow unless explicitly approved otherwise.
+
 ## Storefront Handoff
 
 The public Iron Sprue storefront reads `apps/iron-sprue/data/launch-products.json` as a preview projection while the Admin data is reviewed. This keeps products visually reviewable without enabling checkout. The commerce sprint should replace this preview path with approved database-backed publication data after Stripe, order and basket flows are explicitly authorised.
@@ -121,7 +136,7 @@ The public Iron Sprue storefront reads `apps/iron-sprue/data/launch-products.jso
 
 - R2 read, write, get and delete access has been verified against the dedicated `iron-sprue-product-media` bucket.
 - Product-specific supplier source pages are available for 43 rows from the provisional PO; the remaining 38 rows still need source link preparation.
-- Downloaded originals and delivery derivatives do not count as completed Image 2 assets.
+- Downloaded originals and delivery derivatives do not count as completed Image 2 assets for image-led products. Tools and accessories may use a single approved product/manufacturer image where appropriate.
 - True Image 2 assets still need creative/background-removal processing, validation, approval and upload.
 - Five workbook-noted products remain review-blocked.
 - Static preview images exist only for selected hero/placeholder products.

@@ -511,6 +511,40 @@ export function selectIronSpruePrimaryCatalogueMedia(product: Pick<ProductWithRe
     .sort((left, right) => left.asset.sortOrder - right.asset.sortOrder || left.asset.id.localeCompare(right.asset.id))[0] ?? null;
 }
 
+function canUseSingleApprovedSourceImage(product: Pick<ProductWithReadiness, 'category'>) {
+  const category = `${product.category?.name ?? ''} ${product.category?.slug ?? ''}`.toLowerCase();
+  const singleImageCategorySlugs = new Set([
+    'accessories',
+    'knives-blades',
+    'magnification',
+    'measuring-tools',
+    'pin-vices-drills',
+    'sanding-files',
+    'tool-sets',
+    'tools',
+    'tweezers-pliers',
+  ]);
+  return singleImageCategorySlugs.has(product.category?.slug ?? '')
+    || /\btools?\b/.test(category)
+    || /\baccessories?\b/.test(category);
+}
+
+function selectIronSpruePublishableMedia(product: Pick<ProductWithReadiness, 'category' | 'mediaAssets'>) {
+  const primaryMedia = selectIronSpruePrimaryCatalogueMedia(product);
+  if (primaryMedia || !canUseSingleApprovedSourceImage(product)) return primaryMedia;
+
+  return [...product.mediaAssets]
+    .filter((asset) => asset.approvalState === 'APPROVED' && isIronSprueOperationalMediaRole(asset.role) && isIronSprueDisplayableImageAsset(asset))
+    .map((asset) => ({ asset, url: resolveIronSpruePublicMediaUrl(asset) }))
+    .filter((item): item is { asset: ProductWithReadiness['mediaAssets'][number]; url: string } => Boolean(item.url))
+    .sort((left, right) => {
+      const roleRank = (role: string) => role === 'manufacturer-original' ? 0 : role === 'catalogue-primary' ? 1 : 2;
+      return roleRank(left.asset.role) - roleRank(right.asset.role)
+        || left.asset.sortOrder - right.asset.sortOrder
+        || left.asset.id.localeCompare(right.asset.id);
+    })[0] ?? null;
+}
+
 function hasStructuredValue(value: unknown) {
   if (value == null) return false;
   if (typeof value === 'string') return value.trim().length > 0;
@@ -529,7 +563,8 @@ export function getIronSprueProductReadiness(product: ProductWithReadiness): Iro
   const mediaActionHref = productActionHref;
   const contentActionHref = productActionHref;
   const inventoryActionHref = `/iron-sprue-admin/inventory?q=${encodeURIComponent(product.sku)}`;
-  const primaryMedia = selectIronSpruePrimaryCatalogueMedia(product);
+  const primaryMedia = selectIronSpruePublishableMedia(product);
+  const singleSourceAllowed = canUseSingleApprovedSourceImage(product);
   const approvedPrimaryUnusable = product.mediaAssets.some(
     (asset) => asset.role === 'catalogue-primary' && asset.approvalState === 'APPROVED' && asset.isPrimary && (!resolveIronSpruePublicMediaUrl(asset) || !isIronSprueDisplayableImageAsset(asset)),
   );
@@ -575,8 +610,10 @@ export function getIronSprueProductReadiness(product: ProductWithReadiness): Iro
         ? 'Approved primary catalogue media must be a resolvable image file.'
         : pendingPrimaryMedia > 0
           ? `${pendingPrimaryMedia} customer-facing catalogue image candidate${pendingPrimaryMedia === 1 ? ' requires' : 's require'} approval.`
-          : 'A customer-facing catalogue-primary Image 2 is required before publication; manufacturer/source images are admin references and do not publish to the storefront.',
-      source: 'mediaAssets.catalogue-primary',
+          : singleSourceAllowed
+            ? 'Tools and accessories require at least one approved product image before publication.'
+            : 'A customer-facing catalogue-primary Image 2 is required before publication; manufacturer/source images are admin references and do not publish to the storefront.',
+      source: singleSourceAllowed ? 'mediaAssets.approved-product-image' : 'mediaAssets.catalogue-primary',
       actionable: true,
       actionHref: mediaActionHref,
     }));
@@ -650,7 +687,7 @@ export function evaluateIronSprueProductReadiness(product: ProductWithReadiness)
     { key: 'identity', label: 'Confirmed identity', passed: !failed.has('identity'), detail: 'Title, SKU, slug, brand and category are required.' },
     { key: 'descriptions', label: 'Required descriptions', passed: !readiness.blockingReasons.some((reason) => reason.code.startsWith('content.short') || reason.code.startsWith('content.full')), detail: 'Short and full descriptions are required.' },
     { key: 'specifications', label: 'Required specifications', passed: !readiness.blockingReasons.some((reason) => reason.code === 'content.specifications_missing'), detail: 'Structured specifications must be reviewed.' },
-    { key: 'media', label: 'Image 2 primary media', passed: !failed.has('media'), detail: 'An approved catalogue-primary Image 2 must be primary and publicly resolvable.' },
+    { key: 'media', label: 'Approved product media', passed: !failed.has('media'), detail: 'Image-led products require approved Image 2 media; tools and accessories may use one approved product image.' },
     { key: 'seo', label: 'Minimum SEO', passed: !readiness.blockingReasons.some((reason) => reason.code === 'content.seo_missing'), detail: 'SEO title and meta description are required.' },
     { key: 'commercial', label: 'Commercial/import checks', passed: !failed.has('commercial'), detail: 'Price and import/commercial conflicts must be resolved.' },
     { key: 'inventory', label: 'Sellable inventory', passed: !failed.has('inventory'), detail: 'Sellable stock is required before publication.' },

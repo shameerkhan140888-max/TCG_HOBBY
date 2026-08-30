@@ -63,12 +63,36 @@ function readyProduct(overrides: Record<string, unknown> = {}) {
     seoTitle: 'Aoshima Kit',
     metaDescription: 'Aoshima kit for modellers',
     inventory: { availableStock: 2, reservedStock: 0 },
+    category: { id: 'category-1', name: 'Model Kits', slug: 'model-kits' },
     mediaAssets: [
       { id: 'media-1', role: 'catalogue-primary', approvalState: 'APPROVED', isPrimary: true, storageKey: 'products/is-aoshima-1/image-2/primary.png', url: null, sortOrder: 0 },
     ],
     contentReviews: [],
     ...overrides,
   } as any;
+}
+
+function toolProduct(overrides: Record<string, unknown> = {}) {
+  return readyProduct({
+    customerTitle: 'Reverse Tweezers',
+    sourceTitle: 'Reverse Tweezers',
+    sku: 'IS-TAS-TW01',
+    slug: 'tasma-tw-01-reverse-tweezers',
+    category: { id: 'category-tools', name: 'Tools', slug: 'tools' },
+    mediaAssets: [
+      {
+        id: 'media-tool-original',
+        role: 'manufacturer-original',
+        approvalState: 'APPROVED',
+        isPrimary: false,
+        storageKey: 'products/is-tas-tw01/manufacturer-original/tasma-approved.jpg',
+        url: null,
+        mimeType: 'image/jpeg',
+        sortOrder: 30,
+      },
+    ],
+    ...overrides,
+  });
 }
 
 describe('Iron Sprue dedicated Admin foundation', () => {
@@ -106,6 +130,25 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     expect(checks.find((check) => check.key === 'seo')?.passed).toBe(false);
     expect(checks.find((check) => check.key === 'content-conflicts')?.passed).toBe(false);
     expect(evaluateIronSprueProductReadiness(readyProduct()).every((check) => check.passed)).toBe(true);
+  });
+
+  it('allows tools and accessories to publish with one approved product image', () => {
+    expect(getIronSprueProductReadiness(toolProduct())).toMatchObject({
+      status: 'READY',
+      isReadyToPublish: true,
+      primaryImageUrl: '/media/iron-sprue/products/is-tas-tw01/manufacturer-original/tasma-approved.jpg',
+      blockingReasons: [],
+    });
+
+    const blockedTool = getIronSprueProductReadiness(toolProduct({ mediaAssets: [] }));
+    expect(blockedTool.isReadyToPublish).toBe(false);
+    expect(blockedTool.blockingReasons).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        code: 'media.primary_missing',
+        source: 'mediaAssets.approved-product-image',
+        message: 'Tools and accessories require at least one approved product image before publication.',
+      }),
+    ]));
   });
 
   it('resolves R2-backed image rows to the public media origin and rejects JSON placeholders', () => {
