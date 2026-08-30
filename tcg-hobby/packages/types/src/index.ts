@@ -215,11 +215,23 @@ export type PublicHomepagePlacement = {
   sortOrder: number;
 };
 
+export type PublicBrandPresentation = {
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  logoAltText: string | null;
+  sortOrder: number;
+  active: boolean;
+  featured: boolean;
+  productCount: number;
+};
+
 export type PublicHomeResponse = {
   featuredProducts: PublicProductSummary[];
   latestProducts: PublicProductSummary[];
   categories: PublicCatalogueOption[];
   homepagePlacements?: PublicHomepagePlacement[];
+  brandPresentation?: PublicBrandPresentation[];
 };
 
 export type PublicBasketInputItem = {

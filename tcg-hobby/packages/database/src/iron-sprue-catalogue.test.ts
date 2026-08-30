@@ -372,6 +372,7 @@ describe('Iron Sprue production catalogue adapter', () => {
       },
       ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
       ironSprueAdminHomepagePlacement: { findMany: vi.fn().mockResolvedValue([]) },
+      ironSprueAdminBrand: { findMany: vi.fn().mockResolvedValue([]) },
     };
 
     const home = await getIronSprueCatalogueHomeData(client as never);
@@ -425,6 +426,7 @@ describe('Iron Sprue production catalogue adapter', () => {
           },
         ]),
       },
+      ironSprueAdminBrand: { findMany: vi.fn().mockResolvedValue([]) },
     };
 
     const home = await getIronSprueCatalogueHomeData(client as never);

@@ -2,13 +2,14 @@ import launchProducts from '../data/launch-products.json';
 import { brandSlug, deriveBrandsWeStock, type IronSprueBrandRecord, type IronSprueProduct } from './catalogue';
 import {
   getIronSprueProductionApiCatalogueProducts,
+  getIronSprueProductionApiBrandPresentation,
   getIronSprueProductionApiHomepagePlacements,
   shouldUseIronSprueProductionApi,
 } from './production-api';
 import { brandLogoRegistry, categoryNavigation, featuredProducts, heroSlides, promoPanels } from './storefront';
 
 const STORE_CODE = 'IRON_SPRUE';
-const fallbackPromoStripItems = ['Free UK delivery on orders over \u00a375', 'Fast dispatch on stocked lines', 'Safe and secure checkout'];
+const fallbackPromoStripItems = ['Free UK delivery on orders over \u00a330', 'Fast dispatch on stocked lines', 'Safe and secure checkout'];
 const launchCatalogue = launchProducts as IronSprueProduct[];
 let localIronSprueEnv: Record<string, string> | null = null;
 
@@ -690,6 +691,11 @@ export function promoPanelsFromPlacements(placements: IronSprueHomepagePlacement
 }
 
 export async function getIronSprueBrandPresentation(products: IronSprueProduct[]): Promise<IronSprueBrandRecord[]> {
+  if (shouldUseIronSprueProductionApi()) {
+    const productionBrands = await getIronSprueProductionApiBrandPresentation();
+    if (productionBrands.length) return productionBrands;
+  }
+
   const fallbackBrands = deriveBrandsWeStock(products);
   const fallbackByName = new Map(fallbackBrands.map((brand) => [brand.name, brand]));
   const rows = await queryStorefrontRows<BrandPresentationRow>((sql) => sql`
@@ -746,7 +752,7 @@ export async function getIronSpruePromoStripItems() {
   const promoItems = placements
     .filter((placement) => placement.active && /promo|banner|strip/i.test(placement.placementKey))
     .map((placement, index) => {
-      const label = placement.title.trim();
+      const label = normalizePromoStripLabel(placement.title.trim());
       return label ? { label, icon: normalizePromoStripIcon(placement.ctaLabel, label, index) } : null;
     })
     .filter((item): item is IronSpruePromoStripItem => Boolean(item));
@@ -754,6 +760,10 @@ export async function getIronSpruePromoStripItems() {
   return promoItems.length
     ? promoItems.slice(0, 3)
     : fallbackPromoStripItems.map((label, index) => ({ label, icon: promoStripIconForLabel(label, index) }));
+}
+
+function normalizePromoStripLabel(label: string) {
+  return label.replace(/free\s+uk\s+delivery\s+on\s+orders\s+over\s+£\s*\d+/i, fallbackPromoStripItems[0] ?? label);
 }
 
 function categoryHref(slug: string) {

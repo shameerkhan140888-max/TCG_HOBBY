@@ -32,6 +32,7 @@ export const IRON_SPRUE_REGISTERED_OFFICE = '4-6 Greatorex Street, London, Unite
 export const IRON_SPRUE_VAT_RATE = 20;
 export const IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR = 399;
 export const IRON_SPRUE_UK_EXPRESS_DELIVERY_MINOR = 599;
+export const IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR = 3000;
 const CURRENCY: CurrencyCode = 'GBP';
 
 type DatabaseClient = ReturnType<typeof getIronSprueAdminPrisma>;
@@ -431,14 +432,18 @@ export async function clearIronSprueCart(userId: string, db: DatabaseClient = ge
 }
 
 export function getIronSprueAvailableShippingMethods(country: string, qualifyingSubtotalMinor = 0) {
-  return getShippingMethodsForCountry(country, qualifyingSubtotalMinor).map((method) => {
-    if (method.code === 'UK_STANDARD' && method.amountMinor > 0) {
-      return { ...method, amountMinor: IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR };
+  const normalizedCountry = country.trim().toUpperCase();
+  const qualifiesForFreeStandard = (normalizedCountry === 'GB' || normalizedCountry === 'UK')
+    && qualifyingSubtotalMinor >= IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR;
+
+  return getShippingMethodsForCountry(country, 0).map((method) => {
+    if (method.code === 'UK_STANDARD') {
+      return { ...method, amountMinor: qualifiesForFreeStandard ? 0 : IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR };
     }
-    if (method.code === 'UK_EXPRESS' && method.amountMinor > 0) {
+    if (method.code === 'UK_EXPRESS') {
       return {
         ...method,
-        amountMinor: qualifyingSubtotalMinor >= 5000 ? IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR : IRON_SPRUE_UK_EXPRESS_DELIVERY_MINOR,
+        amountMinor: qualifiesForFreeStandard ? IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR : IRON_SPRUE_UK_EXPRESS_DELIVERY_MINOR,
       };
     }
     return method;

@@ -5,6 +5,7 @@ import type {
   CatalogueProductDetail,
   CatalogueProductImage,
   PaginationMeta,
+  PublicBrandPresentation,
   PublicHomepagePlacement,
 } from '@capital-hobby/types';
 import type { Prisma } from '@prisma/client';
@@ -37,6 +38,7 @@ export type IronSprueCatalogueHomeData = {
   categories: CatalogueCategory[];
   featuredProducts: CatalogueProduct[];
   homepagePlacements: PublicHomepagePlacement[];
+  brandPresentation: PublicBrandPresentation[];
 };
 
 const productInclude = {
@@ -512,7 +514,7 @@ export async function getIronSprueCatalogueProductBySlug(
 
 export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIronSprueAdminPrisma()): Promise<IronSprueCatalogueHomeData> {
   const now = new Date();
-  const [categories, homepagePlacements] = await Promise.all([
+  const [categories, homepagePlacements, brandRows] = await Promise.all([
     getIronSprueCatalogueCategories(db),
     db.ironSprueAdminHomepagePlacement.findMany({
       where: {
@@ -521,6 +523,21 @@ export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIron
         AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
       },
       orderBy: [{ active: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }],
+    }),
+    db.ironSprueAdminBrand.findMany({
+      where: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        active: true,
+        featured: true,
+        products: { some: publicProductWhere },
+      },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      include: {
+        products: {
+          where: publicProductWhere,
+          select: { id: true },
+        },
+      },
     }),
   ]);
   const activeFeaturedSlugs = homepagePlacements
@@ -554,6 +571,21 @@ export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIron
       active: placement.active,
       sortOrder: placement.sortOrder,
     })),
+    brandPresentation: brandRows
+      .map((brand) => ({
+        name: brand.name,
+        slug: brand.slug || slugLabel(brand.name),
+        logoUrl: resolveIronSprueStorefrontMediaUrl(
+          resolveIronSpruePublicMediaUrl({ url: brand.logoUrl, storageKey: null }),
+          process.env.PUBLIC_STOREFRONT_URL ?? process.env.IRON_SPRUE_SITE_URL ?? process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL,
+        ),
+        logoAltText: brand.logoAltText ?? `${brand.name} logo`,
+        sortOrder: brand.sortOrder,
+        active: brand.active,
+        featured: brand.featured,
+        productCount: brand.products.length,
+      }))
+      .filter((brand) => brand.productCount > 0 && brand.logoUrl),
   };
 }
 

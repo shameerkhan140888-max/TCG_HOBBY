@@ -185,7 +185,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <a href="/contact">Contact</a>
             </nav>
             <div className="footer-company">
-              <h2>Iron Sprue <span>A trading name of {ironSprueBrand.legalEntity}</span></h2>
+              <h2>Iron Sprue <span>A trading name of</span></h2>
               <p>Capital Hobby Group Ltd</p>
               <p>Company Number 17336948</p>
               <p>VAT No. {ironSprueBrand.vatNumber}</p>
@@ -195,7 +195,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           </div>
           <div className="footer-bottom">
             <p>&copy; 2026 Iron Sprue. All rights reserved.</p>
-            <p>Built for modellers, makers and the UK hobby community.</p>
           </div>
         </footer>
         <IronSprueCookieConsentBanner />

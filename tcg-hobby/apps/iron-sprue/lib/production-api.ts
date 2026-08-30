@@ -1,4 +1,5 @@
 import type {
+  PublicBrandPresentation,
   PublicCatalogueResponse,
   PublicHomeResponse,
   PublicHomepagePlacement,
@@ -7,6 +8,7 @@ import type {
   PublicProductSummary,
 } from '@capital-hobby/types';
 import type { IronSprueProduct } from './catalogue';
+import type { IronSprueBrandRecord } from './catalogue';
 import type { IronSprueHomepagePlacement } from './admin-storefront-controls';
 
 export const IRON_SPRUE_PRODUCTION_API_BASE_URL = 'IRON_SPRUE_PRODUCTION_API_BASE_URL';
@@ -178,4 +180,27 @@ export function ironSprueHomepagePlacementFromPublic(placement: PublicHomepagePl
 export async function getIronSprueProductionApiHomepagePlacements() {
   const response = await fetchProductionApiJson<PublicHomeResponse>('/v1/home');
   return (response.homepagePlacements ?? []).map(ironSprueHomepagePlacementFromPublic);
+}
+
+export function ironSprueBrandPresentationFromPublic(brand: PublicBrandPresentation): IronSprueBrandRecord | null {
+  const logoUrl = storefrontMediaUrl(brand.logoUrl);
+  if (!brand.active || !brand.featured || brand.productCount <= 0 || !logoUrl) return null;
+  return {
+    name: brand.name,
+    slug: brand.slug,
+    href: `/shop?brand=${encodeURIComponent(brand.name)}`,
+    productCount: brand.productCount,
+    displayOrder: brand.sortOrder,
+    active: brand.active,
+    approvalStatus: 'LOGO_APPROVED',
+    logoUrl,
+    altText: brand.logoAltText || `${brand.name} logo`,
+  };
+}
+
+export async function getIronSprueProductionApiBrandPresentation() {
+  const response = await fetchProductionApiJson<PublicHomeResponse>('/v1/home');
+  return (response.brandPresentation ?? [])
+    .map(ironSprueBrandPresentationFromPublic)
+    .filter((brand): brand is IronSprueBrandRecord => Boolean(brand));
 }

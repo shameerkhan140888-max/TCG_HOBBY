@@ -7,6 +7,8 @@ import { Suspense } from 'react';
 import {
   IRON_SPRUE_ANALYTICS_CONSENT_CHANGED_EVENT,
   IRON_SPRUE_ANALYTICS_ECOMMERCE_EVENT,
+  NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT,
+  UNKNOWN_IRON_SPRUE_ANALYTICS_CONSENT,
   clearIronSprueAnalyticsConsent,
   getIronSprueAnalyticsConsent,
   setIronSprueAnalyticsConsent,
@@ -100,7 +102,7 @@ function metaEventName(eventName: string) {
 function IronSprueAnalyticsRuntime({ ga4Id, metaPixelId: pixelId }: { ga4Id: string | null; metaPixelId: string | null }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [consent, setConsent] = useState<IronSprueAnalyticsConsent>('unknown');
+  const [consent, setConsent] = useState<IronSprueAnalyticsConsent>(UNKNOWN_IRON_SPRUE_ANALYTICS_CONSENT);
   const lastEventKey = useRef<string | null>(null);
 
   useEffect(() => {
@@ -117,39 +119,48 @@ function IronSprueAnalyticsRuntime({ ga4Id, metaPixelId: pixelId }: { ga4Id: str
   }, []);
 
   useEffect(() => {
-    if (consent !== 'marketing') return;
+    if (!consent.analytics && !consent.marketing) return;
     const key = `${pathname}?${searchParams.toString()}`;
     if (lastEventKey.current === key) return;
     lastEventKey.current = key;
     const eventName = eventNameForPath(pathname);
 
-    void initializeGa4(ga4Id ?? '').then((loaded) => {
-      if (loaded && getIronSprueAnalyticsConsent() === 'marketing') {
-        window.gtag?.('event', eventName, { page_path: pathname, page_location: window.location.href });
-      }
-    });
-    void initializeMeta(pixelId ?? '').then((loaded) => {
-      if (loaded && getIronSprueAnalyticsConsent() === 'marketing') {
-        window.fbq?.('track', metaEventName(eventName));
-      }
-    });
+    if (consent.analytics) {
+      void initializeGa4(ga4Id ?? '').then((loaded) => {
+        if (loaded && getIronSprueAnalyticsConsent().analytics) {
+          window.gtag?.('event', eventName, { page_path: pathname, page_location: window.location.href });
+        }
+      });
+    }
+    if (consent.marketing) {
+      void initializeMeta(pixelId ?? '').then((loaded) => {
+        if (loaded && getIronSprueAnalyticsConsent().marketing) {
+          window.fbq?.('track', metaEventName(eventName));
+        }
+      });
+    }
   }, [consent, ga4Id, pathname, pixelId, searchParams]);
 
   useEffect(() => {
     function handleEcommerceEvent(event: Event) {
-      if (getIronSprueAnalyticsConsent() !== 'marketing') return;
+      const currentConsent = getIronSprueAnalyticsConsent();
+      if (!currentConsent.analytics && !currentConsent.marketing) return;
       const detail = (event as CustomEvent<{ eventName?: string; parameters?: Record<string, unknown> }>).detail;
       if (!detail?.eventName) return;
-      void initializeGa4(ga4Id ?? '').then((loaded) => {
-        if (loaded && getIronSprueAnalyticsConsent() === 'marketing') {
-          window.gtag?.('event', detail.eventName!, detail.parameters ?? {});
-        }
-      });
-      void initializeMeta(pixelId ?? '').then((loaded) => {
-        if (loaded && getIronSprueAnalyticsConsent() === 'marketing') {
-          window.fbq?.('track', metaEventName(detail.eventName!), detail.parameters ?? {});
-        }
-      });
+      if (currentConsent.analytics) {
+        void initializeGa4(ga4Id ?? '').then((loaded) => {
+          if (loaded && getIronSprueAnalyticsConsent().analytics) {
+            window.gtag?.('event', detail.eventName!, detail.parameters ?? {});
+          }
+        });
+      }
+      if (currentConsent.marketing) {
+        void initializeMeta(pixelId ?? '').then((loaded) => {
+          if (loaded && getIronSprueAnalyticsConsent().marketing) {
+            window.fbq?.('track', metaEventName(detail.eventName!), detail.parameters ?? {});
+          }
+        });
+      }
     }
     window.addEventListener(IRON_SPRUE_ANALYTICS_ECOMMERCE_EVENT, handleEcommerceEvent);
     return () => window.removeEventListener(IRON_SPRUE_ANALYTICS_ECOMMERCE_EVENT, handleEcommerceEvent);
@@ -167,9 +178,10 @@ export function IronSprueAnalyticsProvider(props: { ga4Id: string | null; metaPi
 }
 
 export function IronSprueCookieConsentBanner() {
-  const [consent, setConsent] = useState<IronSprueAnalyticsConsent>('unknown');
+  const [consent, setConsent] = useState<IronSprueAnalyticsConsent>(UNKNOWN_IRON_SPRUE_ANALYTICS_CONSENT);
   const [checkedStoredConsent, setCheckedStoredConsent] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
   const [marketingEnabled, setMarketingEnabled] = useState(false);
 
   useEffect(() => {
@@ -183,34 +195,42 @@ export function IronSprueCookieConsentBanner() {
     return () => window.removeEventListener(IRON_SPRUE_ANALYTICS_CONSENT_CHANGED_EVENT, handleConsentChange);
   }, []);
 
-  if (!checkedStoredConsent || consent !== 'unknown') return null;
+  if (!checkedStoredConsent || consent.status !== 'unknown') return null;
 
   return (
     <section className="cookie-consent" aria-label="Cookie preferences">
       <div>
         <h2>Cookie preferences</h2>
-        <p>Strictly necessary cookies and cache storage keep basket, account, checkout and reliable page delivery working and cannot be switched off through the site controls. With your permission, Iron Sprue also uses analytics and marketing cookies to measure visits, improve the storefront and understand campaign performance.</p>
+        <p>Necessary cookies keep basket, account, checkout, security, consent choices and essential delivery/cache features working. Optional analytics and marketing technologies only run where enabled and consented.</p>
         {showPreferences ? (
           <div className="cookie-preference-panel" aria-label="Optional cookie preferences">
-            <p><strong>Strictly necessary cookies and cache storage</strong> Always on for security, basket, account, checkout and reliable page delivery.</p>
+            <p><strong>Strictly necessary</strong> Always on for basket/session, security, consent preference storage and essential technical delivery.</p>
+            <label>
+              <input
+                type="checkbox"
+                checked={analyticsEnabled}
+                onChange={(event) => setAnalyticsEnabled(event.target.checked)}
+              />
+              <span><strong>Analytics</strong> If enabled, analytics technologies help us understand how visitors use Iron Sprue so we can improve the site.</span>
+            </label>
             <label>
               <input
                 type="checkbox"
                 checked={marketingEnabled}
                 onChange={(event) => setMarketingEnabled(event.target.checked)}
               />
-              Optional analytics and marketing cookies
+              <span><strong>Marketing</strong> If enabled, marketing technologies help us measure campaigns and understand product interest.</span>
             </label>
           </div>
         ) : null}
       </div>
       <div className="cookie-consent-actions">
-        <button type="button" onClick={() => { setIronSprueAnalyticsConsent('necessary'); setConsent('necessary'); }}>Necessary only</button>
+        <button type="button" onClick={() => { setIronSprueAnalyticsConsent(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT); setConsent(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT); }}>Necessary only</button>
         {showPreferences ? (
           <button
             type="button"
             onClick={() => {
-              const nextConsent = marketingEnabled ? 'marketing' : 'necessary';
+              const nextConsent = { status: 'saved' as const, analytics: analyticsEnabled, marketing: marketingEnabled };
               setIronSprueAnalyticsConsent(nextConsent);
               setConsent(nextConsent);
             }}
@@ -220,7 +240,11 @@ export function IronSprueCookieConsentBanner() {
         ) : (
           <button type="button" onClick={() => setShowPreferences(true)}>Manage preferences</button>
         )}
-        <button type="button" className="button" onClick={() => { setIronSprueAnalyticsConsent('marketing'); setConsent('marketing'); }}>Accept all</button>
+        <button type="button" className="button" onClick={() => {
+          const nextConsent = { status: 'saved' as const, analytics: true, marketing: true };
+          setIronSprueAnalyticsConsent(nextConsent);
+          setConsent(nextConsent);
+        }}>Accept all</button>
       </div>
     </section>
   );

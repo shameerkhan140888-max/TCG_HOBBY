@@ -7,7 +7,7 @@ export default function CookiesPage() {
       <div className="section-head">
         <p className="eyebrow">Cookies</p>
         <h1>Cookie policy</h1>
-        <p className="lead">How Iron Sprue uses strictly necessary cookies and cache storage, plus optional analytics or marketing technologies where enabled.</p>
+        <p className="lead">How Iron Sprue uses strictly necessary cookies and essential technical delivery, plus optional analytics or marketing technologies where enabled and consented.</p>
       </div>
       <div className="detail-panels">
         <article className="legal-board">
@@ -16,14 +16,17 @@ export default function CookiesPage() {
             <p>Cookies and similar browser storage help a website remember information between pages and visits. Some are essential for the service to work; others are optional and should only run where consent or another lawful basis allows.</p>
           </section>
           <section>
-            <h2>Strictly necessary cookies and cache storage</h2>
-            <p>Strictly necessary cookies, cache storage and similar technologies may be used for security, account sessions, basket persistence, checkout, fraud prevention, staging access, reliable page delivery and basic service performance.</p>
+            <h2>Strictly necessary cookies and technical delivery</h2>
+            <p>Strictly necessary cookies, cache storage and similar technologies may be used for security, account sessions, basket persistence, checkout, fraud prevention, consent preference storage, reliable page delivery, cache and load balancing.</p>
             <p>These are necessary for the storefront to operate and cannot be switched off through the site controls.</p>
           </section>
           <section>
-            <h2>Analytics and marketing</h2>
-            <p>Where Iron Sprue uses optional analytics or marketing cookies, the site should request and respect the appropriate consent before those optional tools are used.</p>
-            <p>Analytics cookies may help us understand site performance, product interest and customer journeys. Marketing cookies, where enabled, may help measure advertising, campaign and ecommerce activity.</p>
+            <h2>Analytics</h2>
+            <p>If enabled, analytics technologies help us understand how visitors use Iron Sprue so we can improve the site. Analytics will not run unless the relevant integration exists and you have consented.</p>
+          </section>
+          <section>
+            <h2>Marketing</h2>
+            <p>If enabled, marketing technologies help us measure campaigns and understand product interest. Marketing or advertising technologies will not run unless the relevant integration exists and you have consented.</p>
           </section>
           <section>
             <h2>Payment, email and delivery services</h2>

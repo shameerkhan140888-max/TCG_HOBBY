@@ -38,7 +38,7 @@ export default function TermsPage() {
           </section>
           <section>
             <h2>Delivery</h2>
-            <p>Delivery options, prices and any available tracking information are shown during checkout or after dispatch where applicable. Estimated delivery windows are not guaranteed unless a selected service expressly says so.</p>
+            <p>Delivery options, prices and any available tracking information are shown during checkout or after dispatch where applicable. UK standard delivery is currently £3.99 unless a promotion or basket threshold applies. The current Iron Sprue launch fallback for free standard UK delivery is £30 VAT-inclusive qualifying spend after discounts, excluding shipping. Estimated delivery windows are not guaranteed unless a selected service expressly says so.</p>
             <p>Risk in the products passes to you when the products are delivered to the delivery address supplied at checkout.</p>
           </section>
           <section>

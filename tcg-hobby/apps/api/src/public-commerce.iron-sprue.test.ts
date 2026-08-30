@@ -186,6 +186,18 @@ describe('PublicCommerceService Iron Sprue source selection', () => {
           sortOrder: 0,
         },
       ],
+      brandPresentation: [
+        {
+          name: 'Aoshima',
+          slug: 'aoshima',
+          logoUrl: '/media/iron-sprue/brands/logos/aoshima-approved.webp',
+          logoAltText: 'Aoshima approved logo',
+          sortOrder: 1,
+          active: true,
+          featured: true,
+          productCount: 12,
+        },
+      ],
     });
     databaseMocks.getIronSprueCatalogueProducts.mockResolvedValue({
       products: [catalogueProduct({ id: 'latest-1', slug: 'latest-kit' })],
@@ -203,6 +215,13 @@ describe('PublicCommerceService Iron Sprue source selection', () => {
     expect(result.latestProducts[0]?.slug).toBe('latest-kit');
     expect(result.homepagePlacements).toEqual([
       expect.objectContaining({ placementKey: 'featured-products', title: '1:24 Scale Aoshima' }),
+    ]);
+    expect(result.brandPresentation).toEqual([
+      expect.objectContaining({
+        name: 'Aoshima',
+        logoUrl: '/media/iron-sprue/brands/logos/aoshima-approved.webp',
+        productCount: 12,
+      }),
     ]);
   });
 

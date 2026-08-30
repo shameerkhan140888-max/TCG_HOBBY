@@ -3591,18 +3591,21 @@ label {
 .info-page .section-head h1 {
   max-width: 880px;
   margin-bottom: 12px;
-  font-family: var(--iron-sprue-heading-font, Impact, "Arial Narrow", "Franklin Gothic Condensed", Arial, sans-serif);
-  line-height: 0.98;
+  font-family: var(--iron-sprue-body-font, "Segoe UI", "Bahnschrift", Arial, sans-serif);
+  font-size: calc(clamp(34px, 5vw, 62px) * var(--iron-sprue-heading-scale-factor, 1));
+  font-weight: var(--iron-sprue-heading-weight, 900);
+  letter-spacing: 0;
+  line-height: 1.04;
 }
 
 .info-page .section-head .lead {
-  max-width: 760px;
-  color: rgba(255, 250, 241, 0.88);
+  max-width: 820px;
+  color: rgba(255, 250, 241, 0.94);
   font-family: var(--iron-sprue-body-font, Arial, Helvetica, sans-serif);
   font-size: calc(clamp(16px, 1.55vw, 18px) * var(--iron-sprue-body-scale-factor, 1));
-  font-weight: var(--iron-sprue-body-weight, 400);
+  font-weight: 600;
   line-height: 1.55;
-  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.42);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.72);
 }
 
 .info-page .detail-panels {
@@ -3690,16 +3693,16 @@ label {
   margin: 0 0 8px;
   color: var(--brass);
   font-family: var(--iron-sprue-body-font, Arial, Helvetica, sans-serif);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 900;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.02em;
   line-height: 1.35;
   text-transform: uppercase;
 }
 
 .info-page .detail-panels article.legal-board p,
 .info-page .detail-panels article.legal-board li {
-  color: rgba(255, 250, 241, 0.78);
+  color: rgba(255, 250, 241, 0.86);
   font-size: 15px;
   line-height: 1.65;
 }
@@ -3779,7 +3782,8 @@ label {
 .footer-instagram {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  flex-direction: column;
+  gap: 5px;
   justify-self: start;
   margin-top: 8px;
   border-radius: 999px;
@@ -3836,8 +3840,9 @@ label {
 }
 
 .footer-bottom {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 16px;
   margin-top: 12px;
   border-top: 1px solid rgba(255, 250, 241, 0.12);
@@ -3846,7 +3851,6 @@ label {
 }
 
 .footer-bottom p:last-child {
-  justify-self: end;
   text-align: right;
 }
 
@@ -3982,14 +3986,31 @@ label {
   }
 
   .footer-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     row-gap: 16px;
   }
 
-  .footer-brand,
-  .footer-company,
-  .footer-instagram {
+  .footer-brand {
     grid-column: 1 / -1;
+  }
+
+  .footer-company {
+    grid-column: auto;
+    justify-items: start;
+    text-align: left;
+  }
+
+  .footer-instagram {
+    grid-column: auto;
+  }
+
+  .footer-bottom {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .footer-bottom p {
+    white-space: nowrap;
   }
 
   .info-page {
@@ -4090,9 +4111,55 @@ label {
   }
 
   .cookie-consent {
-    inset: auto 12px 12px;
-    align-items: flex-start;
+    inset: auto 10px max(10px, env(safe-area-inset-bottom));
+    display: grid;
+    max-height: min(62vh, 420px);
+    overflow: auto;
+    align-items: stretch;
     flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .cookie-consent::after {
+    inset: 6px;
+  }
+
+  .cookie-consent h2 {
+    margin-bottom: 3px;
+    font-size: 13px;
+  }
+
+  .cookie-consent p {
+    max-width: none;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .cookie-preference-panel {
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .cookie-preference-panel label {
+    align-items: flex-start;
+    font-size: 11px;
+    line-height: 1.32;
+  }
+
+  .cookie-consent-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    gap: 7px;
+  }
+
+  .cookie-consent-actions button {
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 10px;
+    font-size: 11px;
   }
 }
 
@@ -4386,16 +4453,16 @@ label {
 @media (max-width: 700px) {
   .header-main {
     grid-template-columns: minmax(150px, 1fr) auto;
-    gap: 10px;
+    gap: 8px;
     padding: 10px 14px;
   }
 
   .brand-link img {
-    width: min(190px, 50vw);
+    width: min(202px, 52vw);
   }
 
   .header-actions {
-    gap: 8px;
+    gap: 7px;
   }
 
   .search-shell summary,
@@ -4407,8 +4474,10 @@ label {
   }
 
   .menu-shell summary {
+    width: 38px;
+    min-width: 38px;
     min-height: 38px;
-    padding: 8px 9px;
+    padding: 8px;
     font-size: 0;
   }
 
@@ -4496,6 +4565,20 @@ label {
 
   .hero-message {
     top: 40%;
+  }
+}
+
+@media (max-width: 374px) {
+  .header-main {
+    gap: 6px;
+  }
+
+  .brand-link img {
+    width: min(156px, 43vw);
+  }
+
+  .header-actions {
+    gap: 5px;
   }
 }
 

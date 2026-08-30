@@ -632,7 +632,7 @@ describe('IronSprueAdminSection operational controls', () => {
       homepagePlacements: [{
         id: 'placement-1',
         placementKey: 'promo-banner',
-        title: 'Free UK delivery on orders over £75',
+        title: 'Free UK delivery on orders over £30',
         ctaLabel: '',
         ctaHref: '',
         imageUrl: null,
@@ -715,7 +715,7 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Promo strips and banners');
     expect(markup).toContain('Strip icon');
     expect(markup).toContain('Current promo banner state');
-    expect(markup).toContain('Free UK delivery on orders over £75');
+    expect(markup).toContain('Free UK delivery on orders over £30');
     expect(markup).toContain('promo-banner');
     expect(markup).toContain('Create promo banner');
     expect(markup).toContain('Opening bench picks row');

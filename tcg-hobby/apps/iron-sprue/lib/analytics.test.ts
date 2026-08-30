@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   IRON_SPRUE_ANALYTICS_CONSENT_COOKIE_NAME,
+  IRON_SPRUE_ANALYTICS_CONSENT_STORAGE_KEY,
+  NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT,
+  UNKNOWN_IRON_SPRUE_ANALYTICS_CONSENT,
   hasTrackedIronSpruePurchase,
   getIronSprueAnalyticsConsent,
   markIronSpruePurchaseTracked,
@@ -14,10 +17,15 @@ describe('Iron Sprue analytics helpers', () => {
   });
 
   it('normalises unsupported consent values to unknown', () => {
-    expect(normalizeIronSprueAnalyticsConsent('marketing')).toBe('marketing');
-    expect(normalizeIronSprueAnalyticsConsent('necessary')).toBe('necessary');
-    expect(normalizeIronSprueAnalyticsConsent('optional')).toBe('unknown');
-    expect(normalizeIronSprueAnalyticsConsent(null)).toBe('unknown');
+    expect(normalizeIronSprueAnalyticsConsent('marketing')).toEqual({ status: 'saved', analytics: true, marketing: true });
+    expect(normalizeIronSprueAnalyticsConsent('necessary')).toEqual(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT);
+    expect(normalizeIronSprueAnalyticsConsent('optional')).toEqual(UNKNOWN_IRON_SPRUE_ANALYTICS_CONSENT);
+    expect(normalizeIronSprueAnalyticsConsent(null)).toEqual(UNKNOWN_IRON_SPRUE_ANALYTICS_CONSENT);
+    expect(normalizeIronSprueAnalyticsConsent('{"analytics":true,"marketing":false}')).toEqual({
+      status: 'saved',
+      analytics: true,
+      marketing: false,
+    });
   });
 
   it('remembers purchase tracking by order number without throwing', () => {
@@ -54,9 +62,10 @@ describe('Iron Sprue analytics helpers', () => {
       dispatchEvent: vi.fn(),
     });
 
-    setIronSprueAnalyticsConsent('necessary');
+    setIronSprueAnalyticsConsent(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT);
 
-    expect(documentStub.cookie).toContain(`${IRON_SPRUE_ANALYTICS_CONSENT_COOKIE_NAME}=necessary`);
-    expect(getIronSprueAnalyticsConsent()).toBe('necessary');
+    expect(decodeURIComponent(documentStub.cookie)).toContain(`${IRON_SPRUE_ANALYTICS_CONSENT_COOKIE_NAME}={"analytics":false,"marketing":false}`);
+    expect(storage.get(IRON_SPRUE_ANALYTICS_CONSENT_STORAGE_KEY)).toBe('{"analytics":false,"marketing":false}');
+    expect(getIronSprueAnalyticsConsent()).toEqual(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT);
   });
 });

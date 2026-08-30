@@ -15,6 +15,7 @@ export const IRON_SPRUE_LEGACY_BASKET_STORAGE_KEYS = [
 ] as const;
 
 const ALL_BASKET_STORAGE_KEYS = [IRON_SPRUE_BASKET_STORAGE_KEY, ...IRON_SPRUE_LEGACY_BASKET_STORAGE_KEYS] as const;
+const IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR = 3000;
 
 export type StoredBasketItem = {
   productId: string;
@@ -564,8 +565,8 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   const subtotalMinor = resolved?.subtotalMinor ?? basketLineItems.reduce((sum, item) => sum + item.unitPriceMinor * item.quantity, 0);
   const hasUnavailableItems = basketLineItems.some((item) => Boolean(basketLineWarning(item)));
   const deliveryMinor = useMemo(() => {
-    if (shippingMethodCode === 'UK_STANDARD' && subtotalMinor >= 5000) return 0;
-    if (shippingMethodCode === 'UK_EXPRESS' && subtotalMinor >= 5000) return 399;
+    if (shippingMethodCode === 'UK_STANDARD' && subtotalMinor >= IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR) return 0;
+    if (shippingMethodCode === 'UK_EXPRESS' && subtotalMinor >= IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR) return 399;
     return shippingMethodCode === 'UK_EXPRESS' ? 599 : 399;
   }, [shippingMethodCode, subtotalMinor]);
   const totalMinor = checkoutPaymentIntent?.totalMinor ?? subtotalMinor + deliveryMinor;

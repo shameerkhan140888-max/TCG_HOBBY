@@ -1833,7 +1833,7 @@ function CurrentPromoBannerOverview({ placements }: { placements: HomepagePlacem
     .filter((placement) => /promo|banner|strip/i.test(placement.placementKey))
     .sort((left, right) => Number(right.active) - Number(left.active) || (left.sortOrder ?? 0) - (right.sortOrder ?? 0));
   const activePromo = promoPlacements.filter((placement) => placement.active);
-  const fallbackStrip = ['Free UK delivery on orders over £75', 'Fast dispatch on stocked lines', 'Safe and secure checkout'];
+  const fallbackStrip = ['Free UK delivery on orders over £30', 'Fast dispatch on stocked lines', 'Safe and secure checkout'];
 
   return (
     <Card>

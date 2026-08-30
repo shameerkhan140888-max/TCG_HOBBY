@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getIronSprueProductionApiCatalogueProducts,
+  getIronSprueProductionApiBrandPresentation,
   getIronSprueProductionApiHomepagePlacements,
   getIronSprueProductionApiHomeProducts,
   getIronSprueProductionApiProduct,
@@ -212,6 +213,61 @@ describe('Iron Sprue production API client', () => {
         imageUrl: '/media/iron-sprue/products/is-aos-05603/image-2/pagani.webp',
         active: true,
         sortOrder: 1,
+      },
+    ]);
+  });
+
+  it('loads approved brand carousel logos from Railway /v1/home', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        featuredProducts: [],
+        latestProducts: [],
+        categories: [],
+        homepagePlacements: [],
+        brandPresentation: [
+          {
+            name: 'Aoshima',
+            slug: 'aoshima',
+            logoUrl: 'https://media.ironsprue.co.uk/brands/logos/aoshima-approved.webp',
+            logoAltText: 'Aoshima approved logo',
+            sortOrder: 2,
+            active: true,
+            featured: true,
+            productCount: 19,
+          },
+          {
+            name: 'Hidden Brand',
+            slug: 'hidden-brand',
+            logoUrl: 'https://media.ironsprue.co.uk/brands/logos/hidden.webp',
+            logoAltText: null,
+            sortOrder: 3,
+            active: false,
+            featured: true,
+            productCount: 1,
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getIronSprueProductionApiBrandPresentation();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      new URL('https://considerate-unity-production-b734.up.railway.app/v1/home'),
+      expect.objectContaining({ cache: 'no-store' }),
+    );
+    expect(result).toEqual([
+      {
+        name: 'Aoshima',
+        slug: 'aoshima',
+        href: '/shop?brand=Aoshima',
+        productCount: 19,
+        displayOrder: 2,
+        active: true,
+        approvalStatus: 'LOGO_APPROVED',
+        logoUrl: '/media/iron-sprue/brands/logos/aoshima-approved.webp',
+        altText: 'Aoshima approved logo',
       },
     ]);
   });

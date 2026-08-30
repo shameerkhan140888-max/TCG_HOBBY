@@ -200,7 +200,7 @@ describe('Iron Sprue Stripe commerce', () => {
 
   it('uses the Iron Sprue-specific UK delivery charge without changing shared shipping fixtures', () => {
     const underThreshold = getIronSprueAvailableShippingMethods('GB', 0);
-    const overThreshold = getIronSprueAvailableShippingMethods('GB', 5000);
+    const overThreshold = getIronSprueAvailableShippingMethods('GB', 3000);
 
     expect(underThreshold.find((method) => method.code === 'UK_STANDARD')?.amountMinor).toBe(399);
     expect(underThreshold.find((method) => method.code === 'UK_EXPRESS')?.amountMinor).toBe(599);

@@ -198,6 +198,7 @@ export class PublicCommerceService {
         latestProducts: latest.products.filter((product) => !featuredIds.has(product.id)).slice(0, 4).map(toPublicProductSummary),
         categories: home.categories.map((category) => ({ id: category.id, name: category.name, value: category.slug, gameId: null })),
         homepagePlacements: home.homepagePlacements,
+        brandPresentation: home.brandPresentation,
       };
     }
 
