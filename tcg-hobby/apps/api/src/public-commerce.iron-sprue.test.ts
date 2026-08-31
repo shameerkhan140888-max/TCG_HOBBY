@@ -62,6 +62,7 @@ function catalogueProduct(overrides: Record<string, unknown> = {}) {
     reservedStock: 0,
     supplierName: 'Tasma Products',
     badge: 'New',
+    specialOffer: false,
     imageLabel: 'Toyota 2000GT Red',
     imageUrl: '/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp',
     imageAlt: 'Toyota 2000GT Red clean catalogue image',
@@ -147,7 +148,24 @@ describe('PublicCommerceService Iron Sprue source selection', () => {
       scale: '1:24',
       buildLevel: 'Beginner',
       specifications: { scale: '1:24', buildLevel: 'Beginner' },
+      specialOffer: false,
     });
+  });
+
+  it('passes offer filters and exposes the product offer flag', async () => {
+    const { PublicCommerceService } = await import('./public-commerce.service.js');
+    databaseMocks.getIronSprueCatalogueProducts.mockResolvedValue({
+      products: [catalogueProduct({ badge: 'Sale', specialOffer: true })],
+      pagination: pagination(),
+      categories: [],
+      filters: { search: '', category: '', sort: 'featured', page: 1, pageSize: 20, offers: 'true' },
+    });
+    const service = new PublicCommerceService({} as never);
+
+    const result = await service.catalogue({ offers: 'true' });
+
+    expect(databaseMocks.getIronSprueCatalogueProducts).toHaveBeenCalledWith(expect.objectContaining({ offers: 'true' }));
+    expect(result.products[0]).toMatchObject({ specialOffer: true });
   });
 
   it('passes scale filters and allows the full Iron Sprue launch catalogue page size', async () => {
@@ -166,6 +184,44 @@ describe('PublicCommerceService Iron Sprue source selection', () => {
       category: 'model-kits',
       scale: '1-24',
       pageSize: 100,
+    }));
+  });
+
+  it('passes canonical product-fact filters to the Iron Sprue catalogue adapter', async () => {
+    const { PublicCommerceService } = await import('./public-commerce.service.js');
+    databaseMocks.getIronSprueCatalogueProducts.mockResolvedValue({
+      products: [],
+      pagination: pagination(),
+      categories: [],
+      filters: {
+        search: '',
+        category: '3d-puzzles-and-builds',
+        pieceCount: '160',
+        structure: 'Vase',
+        buildType: '3D puzzle object',
+        vehicleManufacturer: '',
+        availability: 'in-stock',
+        sort: 'featured',
+        page: 1,
+        pageSize: 20,
+      },
+    });
+    const service = new PublicCommerceService({} as never);
+
+    await service.catalogue({
+      category: '3d-puzzles-and-builds',
+      pieceCount: '160',
+      structure: 'Vase',
+      buildType: '3D puzzle object',
+      availability: 'in-stock',
+    });
+
+    expect(databaseMocks.getIronSprueCatalogueProducts).toHaveBeenCalledWith(expect.objectContaining({
+      category: '3d-puzzles-and-builds',
+      pieceCount: '160',
+      structure: 'Vase',
+      buildType: '3D puzzle object',
+      availability: 'in-stock',
     }));
   });
 

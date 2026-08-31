@@ -67,6 +67,7 @@ export type IronSprueProduct = {
   validationWarnings?: string[];
   publicationState?: string;
   published?: boolean;
+  specialOffer?: boolean;
 };
 
 export const launchCatalogueStatus = {
@@ -203,15 +204,70 @@ function normalizedScale(value: string | null | undefined) {
   return value?.trim().toLowerCase().replace(/\s+/g, '').replace(/[/:]/g, '-') ?? '';
 }
 
-export function scaleOptions(products: IronSprueProduct[]) {
-  return Array.from(new Set(products.map((product) => product.scale).filter((value): value is string => Boolean(value?.trim())))).sort();
+function specificationText(product: IronSprueProduct, keys: string[]) {
+  const specifications = product.specifications && typeof product.specifications === 'object' && !Array.isArray(product.specifications)
+    ? product.specifications
+    : {};
+  for (const key of keys) {
+    const value = specifications[key];
+    if (value != null && String(value).trim()) return String(value).trim();
+  }
+  return '';
 }
 
-export function filterIronSprueProducts(products: IronSprueProduct[], query: { brand?: string | undefined; category?: string | undefined; scale?: string | undefined; search?: string | undefined; vehicleManufacturer?: string | undefined }) {
+export function productScale(product: IronSprueProduct) {
+  return product.scale || specificationText(product, ['scale']);
+}
+
+export function productPieceCount(product: IronSprueProduct) {
+  const value = specificationText(product, ['pieces', 'pieceCount']);
+  const parsed = value.match(/\d+/)?.[0];
+  return parsed ? Number(parsed) : null;
+}
+
+export function productStructure(product: IronSprueProduct) {
+  const explicit = specificationText(product, ['structure', 'form', 'subject', 'theme']);
+  if (explicit) return explicit;
+  const searchable = `${product.name} ${product.productType} ${product.category}`.toLowerCase();
+  if (/\bvase\b/.test(searchable)) return 'Vase';
+  if (/\b(clock|time)\b/.test(searchable)) return 'Clock';
+  if (/\b(ship|boat|navigation)\b/.test(searchable)) return 'Ship';
+  if (/\b(landmark|building|architecture|tower|bridge|temple|palace|stadium)\b/.test(searchable)) return 'Landmark';
+  if (/\b(lightbox|lantern)\b/.test(searchable)) return 'Lightbox';
+  if (/\bflowerpot\b/.test(searchable)) return 'Flowerpot';
+  return '';
+}
+
+export function productBuildType(product: IronSprueProduct) {
+  return product.skillLevel || specificationText(product, ['buildLevel', 'buildType', 'assemblyMethod']);
+}
+
+export function scaleOptions(products: IronSprueProduct[]) {
+  return Array.from(new Set(products.map(productScale).filter((value): value is string => Boolean(value?.trim())))).sort();
+}
+
+export function pieceCountOptions(products: IronSprueProduct[]) {
+  return Array.from(new Set(products.map(productPieceCount).filter((value): value is number => typeof value === 'number' && Number.isFinite(value)))).sort((left, right) => left - right);
+}
+
+export function structureOptions(products: IronSprueProduct[]) {
+  return Array.from(new Set(products.map(productStructure).filter((value): value is string => Boolean(value?.trim())))).sort();
+}
+
+export function buildTypeOptions(products: IronSprueProduct[]) {
+  return Array.from(new Set(products.map(productBuildType).filter((value): value is string => Boolean(value?.trim())))).sort();
+}
+
+export function filterIronSprueProducts(products: IronSprueProduct[], query: { availability?: string | undefined; brand?: string | undefined; buildType?: string | undefined; category?: string | undefined; offers?: string | undefined; pieceCount?: string | undefined; scale?: string | undefined; search?: string | undefined; structure?: string | undefined; vehicleManufacturer?: string | undefined }) {
+  const availability = query.availability?.trim().toLowerCase();
   const brand = query.brand?.trim().toLowerCase();
+  const buildType = query.buildType?.trim().toLowerCase();
   const category = query.category?.trim().toLowerCase();
+  const offers = query.offers?.trim().toLowerCase();
+  const pieceCount = query.pieceCount?.trim();
   const scale = normalizedScale(query.scale);
   const search = query.search?.trim().toLowerCase();
+  const structure = query.structure?.trim().toLowerCase();
   const vehicleManufacturer = query.vehicleManufacturer?.trim().toLowerCase();
 
   return products.filter((product) => {
@@ -224,7 +280,14 @@ export function filterIronSprueProducts(products: IronSprueProduct[], query: { b
         return false;
       }
     }
-    if (scale && normalizedScale(product.scale) !== scale) return false;
+    if (['1', 'true', 'yes'].includes(offers ?? '') && !product.specialOffer) return false;
+    if (availability === 'in-stock' && product.stockQuantity <= 0) return false;
+    if (availability === 'low-stock' && !(product.stockQuantity > 0 && product.stockQuantity <= 2)) return false;
+    if (availability === 'coming-soon' && product.publicationState !== 'COMING_SOON' && product.published !== false) return false;
+    if (scale && normalizedScale(productScale(product)) !== scale) return false;
+    if (pieceCount && String(productPieceCount(product) ?? '') !== pieceCount) return false;
+    if (structure && productStructure(product).toLowerCase() !== structure) return false;
+    if (buildType && productBuildType(product).toLowerCase() !== buildType) return false;
     if (vehicleManufacturer && vehicleManufacturerForProduct(product)?.toLowerCase() !== vehicleManufacturer) return false;
     if (search) {
       const specifications = product.specifications && typeof product.specifications === 'object'
@@ -235,7 +298,11 @@ export function filterIronSprueProducts(products: IronSprueProduct[], query: { b
         product.brand,
         product.category,
         product.productType,
-        product.scale,
+        productScale(product),
+        productBuildType(product),
+        productPieceCount(product) ? `${productPieceCount(product)} pieces` : '',
+        productStructure(product),
+        vehicleManufacturerForProduct(product),
         product.skillLevel,
         specifications,
         ...(product.features ?? []),

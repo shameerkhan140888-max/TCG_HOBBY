@@ -111,7 +111,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                   <nav aria-label="Featured shop navigation">
                     <h2>Featured</h2>
                     <a href="/shop">All products</a>
-                    <a href="/shop?sort=new">New arrivals</a>
+                    <a href="/shop?sort=newest">New arrivals</a>
                     <a href="/shop?offers=true">Offers</a>
                     <a href="/brands">Brands we stock</a>
                   </nav>

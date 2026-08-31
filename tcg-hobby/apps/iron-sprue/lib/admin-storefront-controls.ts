@@ -587,7 +587,7 @@ export function applyInventoryToProducts(products: IronSprueProduct[], inventory
 
 export async function getIronSprueStorefrontProducts(products: IronSprueProduct[]) {
   if (shouldUseIronSprueProductionApi()) {
-    return getIronSprueProductionApiCatalogueProducts(new URLSearchParams({ pageSize: '50' }));
+    return getIronSprueProductionApiCatalogueProducts(new URLSearchParams({ pageSize: '100' }));
   }
 
   const [approvedMediaBySku, inventoryBySku] = await Promise.all([
@@ -803,7 +803,7 @@ export async function getIronSprueCategoryNavigation() {
   return [
     ...adminCategories,
     { label: 'Brands', href: '/brands' },
-    { label: 'New Arrivals', href: '/shop?sort=new' },
+    { label: 'New Arrivals', href: '/shop?sort=newest' },
     { label: 'Coming Soon', href: '/shop?availability=coming-soon' },
     { label: 'Offers', href: '/shop?offers=true' },
   ];

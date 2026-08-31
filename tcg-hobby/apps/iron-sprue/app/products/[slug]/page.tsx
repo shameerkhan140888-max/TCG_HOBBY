@@ -15,6 +15,48 @@ const products = launchProducts as IronSprueProduct[];
 
 export const dynamic = 'force-dynamic';
 
+const productSpecificationLabels: Record<string, string> = {
+  assemblyMethod: 'Assembly method',
+  buildLevel: 'Build level',
+  category: 'Category',
+  contents: 'Contents',
+  dimensions: 'Finished size',
+  glueRequirement: 'Glue requirement',
+  manufacturer: 'Manufacturer',
+  material: 'Material',
+  pieces: 'Piece count',
+  pieceCount: 'Piece count',
+  productType: 'Product type',
+  scale: 'Scale',
+  structure: 'Structure',
+  subject: 'Subject',
+  theme: 'Theme',
+  vehicleManufacturer: 'Vehicle marque',
+};
+
+const hiddenSpecificationKeys = new Set([
+  'adminSourceReference',
+  'catalogueReference',
+  'manufacturerReference',
+  'sourceReference',
+  'supplierCode',
+  'supplierReference',
+  'supplierSku',
+]);
+
+function customerFacingSpecifications(product: IronSprueProduct) {
+  const raw = product.specifications && typeof product.specifications === 'object' && !Array.isArray(product.specifications)
+    ? product.specifications
+    : {};
+  return Object.entries(raw)
+    .filter(([key, value]) => !hiddenSpecificationKeys.has(key) && value != null && String(value).trim().length > 0)
+    .map(([key, value]) => ({
+      key,
+      label: productSpecificationLabels[key] ?? key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (letter) => letter.toUpperCase()),
+      value: String(value).trim(),
+    }));
+}
+
 export function generateStaticParams() {
   if (shouldUseIronSprueProductionApi()) return [];
   return products.map((product) => ({ slug: product.slug }));
@@ -74,6 +116,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const isOutOfStock = availableQuantity <= 0;
   const availabilityClass = productAvailabilityClass(product);
   const addonProducts = productDetailAddons(storefrontProducts, product.sku, 6);
+  const specifications = customerFacingSpecifications(product);
 
   return (
     <section className="section-block product-detail-page">
@@ -132,6 +175,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <section className="product-specification-zone" aria-labelledby="product-build-information-heading">
           <div>
             <h2 id="product-build-information-heading">Build information</h2>
+            {specifications.length ? (
+              <dl className="product-specification-list">
+                {specifications.map((specification) => (
+                  <React.Fragment key={specification.key}>
+                    <dt>{specification.label}</dt>
+                    <dd>{specification.value}</dd>
+                  </React.Fragment>
+                ))}
+              </dl>
+            ) : null}
             {product.features?.length ? (
               <ul className="product-key-details">
                 {product.features.map((feature) => (

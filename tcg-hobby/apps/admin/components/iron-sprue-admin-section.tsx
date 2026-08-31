@@ -74,6 +74,16 @@ function ironSprueMediaPreviewUrl(asset: { url: string | null; storageKey: strin
   return ironSprueAdminPreviewUrl(asset.url, asset.storageKey);
 }
 
+function adminProductsPath(searchParams: SearchParams | undefined, hash?: string) {
+  const params = new URLSearchParams();
+  for (const key of ['q', 'state', 'brandId', 'categoryId', 'supplierId']) {
+    const value = param(searchParams, key);
+    if (value) params.set(key, value);
+  }
+  const query = params.toString();
+  return `/iron-sprue-admin/products${query ? `?${query}` : ''}${hash ? `#${hash}` : ''}`;
+}
+
 function productReturnPath(product: { sku: string }) {
   return `/iron-sprue-admin/products?q=${encodeURIComponent(product.sku)}`;
 }
@@ -341,9 +351,11 @@ function productCanAttemptPublish(product: ReviewProductSummary | null | undefin
 function ReviewProductPublishControls({
   bulkFormId,
   product,
+  returnTo,
 }: {
   bulkFormId: string;
   product: ReviewProductSummary | null | undefined;
+  returnTo?: string;
 }) {
   if (!product) return null;
   const canAttemptPublish = productCanAttemptPublish(product);
@@ -365,7 +377,7 @@ function ReviewProductPublishControls({
       ) : null}
       <form action={publishIronSprueProductAction}>
         <input type="hidden" name="productId" value={product.id} />
-        <input type="hidden" name="returnTo" value={productReturnPath(product)} />
+        {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
         <Button type="submit" disabled={!canAttemptPublish} size="sm" variant={canAttemptPublish ? 'primary' : 'outline'}>Publish product</Button>
       </form>
       {canAttemptPublish ? <p className="text-xs text-neutral-500">Publishing will stop if media, content or conflict blockers remain.</p> : null}
@@ -373,7 +385,13 @@ function ReviewProductPublishControls({
   );
 }
 
-function ProductFlagForm({ product }: { product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number] }) {
+function ProductFlagForm({
+  product,
+  returnTo,
+}: {
+  product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number];
+  returnTo: string;
+}) {
   const flags = [
     ['featured', 'Featured', product.featured],
     ['newArrival', 'New', product.newArrival],
@@ -385,7 +403,7 @@ function ProductFlagForm({ product }: { product: Awaited<ReturnType<typeof listI
   return (
     <form action={updateIronSprueProductFlagsAction} className="grid gap-2 text-xs sm:grid-cols-5">
       <input type="hidden" name="productId" value={product.id} />
-      <input type="hidden" name="returnTo" value={productReturnPath(product)} />
+      <input type="hidden" name="returnTo" value={returnTo} />
       {flags.map(([name, label, checked]) => (
         <label key={name} className="flex items-center gap-2 rounded-md border border-surface-line bg-surface-ink px-2 py-1">
           <input name={name} type="checkbox" defaultChecked={checked} />
@@ -400,9 +418,11 @@ function ProductFlagForm({ product }: { product: Awaited<ReturnType<typeof listI
 function ProductReviewActionPanel({
   product,
   reason,
+  returnTo,
 }: {
   product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number];
   reason: { code: string; category: string; message: string; source: string; actionable: boolean; actionHref?: string };
+  returnTo: string;
 }) {
   const sourceField = reason.source.startsWith('contentReviews.') ? reason.source.replace('contentReviews.', '') : null;
   const review = sourceField
@@ -420,7 +440,7 @@ function ProductReviewActionPanel({
       <form action={approveIronSprueProductReviewAction} className="mt-2 flex flex-wrap items-center gap-2">
         <input type="hidden" name="productSku" value={product.sku} />
         <input type="hidden" name="reviewId" value={review.id} />
-        <input type="hidden" name="returnTo" value={productReturnPath(product)} />
+        <input type="hidden" name="returnTo" value={returnTo} />
         <Button type="submit" size="sm" variant="primary">Approve {reason.category} review</Button>
         <span className="text-xs text-amber-200/80">Approves {review.fieldName} and refreshes product readiness.</span>
       </form>
@@ -433,7 +453,7 @@ function ProductReviewActionPanel({
         <form action={approveIronSprueProductReviewAction} className="mt-2 flex flex-wrap items-center gap-2">
           <input type="hidden" name="productSku" value={product.sku} />
           <input type="hidden" name="mediaId" value={pendingPrimaryMedia.id} />
-          <input type="hidden" name="returnTo" value={productReturnPath(product)} />
+          <input type="hidden" name="returnTo" value={returnTo} />
           <Button type="submit" size="sm" variant="primary">Approve primary image</Button>
           <span className="text-xs text-amber-200/80">Marks this catalogue-primary image as approved and primary.</span>
         </form>
@@ -447,7 +467,7 @@ function ProductReviewActionPanel({
             The current catalogue-primary record is not an image file ({unusablePrimaryMedia.mimeType ?? 'unknown type'}). Upload a real product image below.
           </p>
         ) : null}
-        <ProductMediaUploadForm product={product} role="catalogue-primary" />
+        <ProductMediaUploadForm product={product} returnTo={returnTo} role="catalogue-primary" />
       </div>
     );
   }
@@ -458,9 +478,11 @@ function ProductReviewActionPanel({
 function ProductMediaReadinessPanel({
   product,
   r2Candidates,
+  returnTo,
 }: {
   product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number];
   r2Candidates: Map<string, IronSprueR2Object[]>;
+  returnTo: string;
 }) {
   const activeDisplayableAssets = canonicalOperationalProductMediaAssets(product.mediaAssets);
   const linkedStorageKeys = new Set(product.mediaAssets.map((asset) => asset.storageKey).filter((key): key is string => Boolean(key)));
@@ -475,7 +497,7 @@ function ProductMediaReadinessPanel({
         </div>
       </div>
       <p className="rounded-md border border-surface-line bg-black/30 p-2 text-xs text-neutral-400">
-        Publish requires one approved primary catalogue image. Manufacturer/source images stay visible as admin references; approving them does not satisfy the public storefront image requirement.
+        Image-led products require one approved primary catalogue image. Tools and accessories can publish with one approved displayable product image.
       </p>
       {activeDisplayableAssets.length ? (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -497,9 +519,9 @@ function ProductMediaReadinessPanel({
                   <StatusBadge tone={asset.role === 'catalogue-primary' ? 'accent' : 'neutral'}>{productMediaRequirementLabel(asset)}</StatusBadge>
                 </div>
                 <p className="break-all text-xs text-neutral-500">{asset.storageKey ?? asset.url ?? 'No storage key'}</p>
-                <MediaActionForms mediaId={asset.id} returnTo={productReturnPath(product)} />
+                <MediaActionForms mediaId={asset.id} returnTo={returnTo} />
                 {asset.approvalState === 'APPROVED' && asset.role !== 'catalogue-primary' ? (
-                  <PromoteToCataloguePrimaryForm mediaId={asset.id} returnTo={productReturnPath(product)} />
+                  <PromoteToCataloguePrimaryForm mediaId={asset.id} returnTo={returnTo} />
                 ) : null}
               </div>
             );
@@ -516,7 +538,7 @@ function ProductMediaReadinessPanel({
           candidates={r2CandidatesForProductRole(r2Candidates, product.sku, role)}
           linkedStorageKeys={linkedStorageKeys}
           product={product}
-          returnTo={productReturnPath(product)}
+          returnTo={returnTo}
           role={role}
         />
       ))}
@@ -568,9 +590,11 @@ function ProductReviewRowsPanel({ product }: { product: Awaited<ReturnType<typeo
 function ProductAdminCard({
   product,
   r2Candidates,
+  returnTo,
 }: {
   product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number];
   r2Candidates: Map<string, IronSprueR2Object[]>;
+  returnTo: string;
 }) {
   const readiness = 'readiness' in product && product.readiness && typeof product.readiness === 'object'
     ? product.readiness as {
@@ -589,7 +613,7 @@ function ProductAdminCard({
   const outstandingReviewCount = actionableProductContentReviews(product).length;
 
   return (
-    <details className="group rounded-md border border-surface-line bg-surface-ink">
+    <details id={`product-${product.id}`} className="group rounded-md border border-surface-line bg-surface-ink">
       <summary className="grid cursor-pointer list-none gap-3 px-4 py-3 outline-none focus:ring-2 focus:ring-accent lg:grid-cols-[minmax(0,1fr)_auto]">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -635,7 +659,7 @@ function ProductAdminCard({
                       <span>{reason.message}</span>
                     </div>
                     <p className="mt-1 text-xs text-amber-200/80">Source: {reason.source}</p>
-                    <ProductReviewActionPanel product={product} reason={reason} />
+                    <ProductReviewActionPanel product={product} reason={reason} returnTo={returnTo} />
                   </li>
                 ))}
               </ul>
@@ -650,19 +674,19 @@ function ProductAdminCard({
           ) : (
             <p className="rounded-md border border-emerald-500/40 bg-emerald-950/20 p-3 text-sm font-semibold text-emerald-100">Ready to publish.</p>
           )}
-          <ProductFlagForm product={product} />
+          <ProductFlagForm product={product} returnTo={returnTo} />
         </div>
         <div className="grid content-start gap-3">
-          <ProductMediaReadinessPanel product={product} r2Candidates={r2Candidates} />
+          <ProductMediaReadinessPanel product={product} r2Candidates={r2Candidates} returnTo={returnTo} />
           <form action={publishIronSprueProductAction} className="grid gap-2">
             <input type="hidden" name="productId" value={product.id} />
-            <input type="hidden" name="returnTo" value={productReturnPath(product)} />
+            <input type="hidden" name="returnTo" value={returnTo} />
             <Button type="submit" disabled={!canPublish} variant={canPublish ? 'primary' : 'outline'}>Publish product</Button>
             {!canPublish && product.publicationState !== 'PUBLISHED' ? <p className="text-xs text-neutral-500">Publishing unlocks when all mandatory review checks pass.</p> : null}
           </form>
           <form action={updateIronSpruePublicationStateAction} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-3">
             <input type="hidden" name="productId" value={product.id} />
-            <input type="hidden" name="returnTo" value={productReturnPath(product)} />
+            <input type="hidden" name="returnTo" value={returnTo} />
             <Field label="Manual override">
               <select name="publicationState" defaultValue={product.publicationState === 'READY' ? 'READY_TO_PUBLISH' : product.publicationState} className={fieldClass}>
                 {['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY_TO_PUBLISH', 'ARCHIVED'].map((state) => <option key={state} value={state}>{state}</option>)}
@@ -701,6 +725,16 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
   if (!result.products.length) return <EmptyNote>No Iron Sprue products found.</EmptyNote>;
   const r2Candidates = r2CandidatesByProductRole([...r2ProductObjects, ...r2ArchiveProductObjects]);
   const r2CandidateCount = [...r2Candidates.values()].reduce((total, candidates) => total + candidates.length, 0);
+  const showingPublished = normalizedPublicationState === 'PUBLISHED';
+  const displayedProducts = (showingPublished
+    ? result.products.filter((product) => product.publicationState === 'PUBLISHED')
+    : result.products.filter((product) => product.publicationState !== 'PUBLISHED')
+  ).sort((left, right) => {
+    const leftBlockers = left.readiness?.blockingReasons.length ?? left.readinessBlockers.length;
+    const rightBlockers = right.readiness?.blockingReasons.length ?? right.readinessBlockers.length;
+    if (Boolean(rightBlockers) !== Boolean(leftBlockers)) return Number(Boolean(rightBlockers)) - Number(Boolean(leftBlockers));
+    return rightBlockers - leftBlockers || left.customerTitle.localeCompare(right.customerTitle);
+  });
 
   return (
     <div className="space-y-4">
@@ -715,23 +749,21 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
               <Button type="submit" variant="primary">Reconcile R2 media</Button>
             </form>
           </div>
-          <div className="mb-4 flex flex-wrap gap-2">
-            {[
-              ['READY_TO_PUBLISH', 'Ready to publish'],
-              ['MEDIA_PENDING', 'Media pending'],
-              ['CONTENT_PENDING', 'Content pending'],
-              ['REVIEW_REQUIRED', 'Review required'],
-              ['PUBLISHED', 'Published'],
-            ].map(([state, label]) => (
-              <a
-                aria-current={publicationState === state ? 'page' : undefined}
-                className={`rounded-md border px-3 py-2 text-sm font-semibold ${publicationState === state ? 'border-accent bg-accent/20 text-accent' : 'border-surface-line text-neutral-300'}`}
-                href={`/iron-sprue-admin/products?state=${state}`}
-                key={state}
-              >
-                {label}
-              </a>
-            ))}
+          <div className="mb-4 flex flex-wrap gap-2" aria-label="Product working views">
+            <a
+              aria-current={!showingPublished ? 'page' : undefined}
+              className={`rounded-md border px-3 py-2 text-sm font-semibold ${!showingPublished ? 'border-accent bg-accent/20 text-accent' : 'border-surface-line text-neutral-300'}`}
+              href="/iron-sprue-admin/products"
+            >
+              Action queue
+            </a>
+            <a
+              aria-current={showingPublished ? 'page' : undefined}
+              className={`rounded-md border px-3 py-2 text-sm font-semibold ${showingPublished ? 'border-accent bg-accent/20 text-accent' : 'border-surface-line text-neutral-300'}`}
+              href="/iron-sprue-admin/products?state=PUBLISHED"
+            >
+              Published
+            </a>
           </div>
           <form className="grid gap-3 lg:grid-cols-[minmax(220px,1.5fr)_repeat(4,minmax(150px,1fr))_auto]">
             <Field label="Search">
@@ -763,14 +795,14 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
             </Field>
             <Button type="submit" className="self-end">Filter</Button>
           </form>
-          <p className="mt-3 text-sm text-neutral-400">{result.pagination.total} product{result.pagination.total === 1 ? '' : 's'} match the current filters.</p>
+          <p className="mt-3 text-sm text-neutral-400">{displayedProducts.length} product{displayedProducts.length === 1 ? '' : 's'} in this view.</p>
         </CardContent>
       </Card>
       <AdminDisclosure
         defaultOpen
         summary={
           <span>
-            Product results <span className="text-neutral-500">({result.pagination.total})</span>
+            {showingPublished ? 'Published products' : 'Outstanding product actions'} <span className="text-neutral-500">({displayedProducts.length})</span>
           </span>
         }
       >
@@ -780,9 +812,16 @@ async function ProductsSection({ searchParams }: { searchParams?: SearchParams }
             actions={[{ label: 'Publish selected', value: 'PUBLISHED' }]}
             formId="iron-sprue-product-bulk-publish"
             itemLabel="eligible products"
-            totalCount={result.products.filter((product) => ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState)).length}
+            totalCount={displayedProducts.filter((product) => ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState)).length}
           />
-          {result.products.map((product) => <ProductAdminCard key={product.id} product={product} r2Candidates={r2Candidates} />)}
+          {displayedProducts.map((product) => (
+            <ProductAdminCard
+              key={product.id}
+              product={product}
+              r2Candidates={r2Candidates}
+              returnTo={adminProductsPath(searchParams, `product-${product.id}`)}
+            />
+          ))}
         </div>
       </AdminDisclosure>
     </div>
@@ -1212,9 +1251,11 @@ function ProductDescriptorCoverage({
 
 function ProductMediaUploadForm({
   product,
+  returnTo,
   role,
 }: {
   product: { id: string; sku: string; customerTitle: string } | null;
+  returnTo?: string;
   role: 'catalogue-primary' | 'workshop-photography' | 'manufacturer-original';
 }) {
   if (!product) return null;
@@ -1223,6 +1264,7 @@ function ProductMediaUploadForm({
       <input type="hidden" name="productId" value={product.id} />
       <input type="hidden" name="sku" value={product.sku} />
       <input type="hidden" name="role" value={role} />
+      {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
       <Field label={`${role === 'catalogue-primary' ? 'Image 2' : role === 'workshop-photography' ? 'Workshop' : role} upload`}>
         <input name="image" type="file" accept="image/png,image/jpeg,image/webp" className={fieldClass} />
       </Field>
@@ -1962,7 +2004,7 @@ function FeaturedProductsManager({
           <div className="rounded-md border border-surface-line bg-black/30 p-3">
             <h3 className="text-sm font-bold">Current products in this row</h3>
             <p className="mt-1 text-xs text-neutral-500">
-              Row link: {sectionHeading?.ctaLabel || 'See new arrivals'} {`-> ${sectionHeading?.ctaHref || '/shop?sort=new'}`}
+              Row link: {sectionHeading?.ctaLabel || 'See new arrivals'} {`-> ${sectionHeading?.ctaHref || '/shop?sort=newest'}`}
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {activeFeaturedPlacements.map((placement) => {

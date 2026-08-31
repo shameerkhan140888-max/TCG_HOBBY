@@ -1,5 +1,5 @@
 import launchProducts from '../data/launch-products.json';
-import { filterIronSprueProducts, isModelKitProduct, launchCatalogueStatus, scaleOptions, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
+import { buildTypeOptions, filterIronSprueProducts, isModelKitProduct, launchCatalogueStatus, pieceCountOptions, scaleOptions, structureOptions, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
 import { getIronSprueStorefrontProducts } from '../lib/admin-storefront-controls';
 import { AddToBasketButton } from './basket-client';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
@@ -49,6 +49,12 @@ export async function CatalogueListing({
   const selectedCategory = fixedCategory ?? single(searchParams, 'category');
   const selectedScale = single(searchParams, 'scale');
   const selectedVehicleManufacturer = single(searchParams, 'vehicleManufacturer');
+  const selectedPieceCount = single(searchParams, 'pieceCount');
+  const selectedStructure = single(searchParams, 'structure');
+  const selectedBuildType = single(searchParams, 'buildType');
+  const selectedAvailability = single(searchParams, 'availability');
+  const selectedOffers = single(searchParams, 'offers');
+  const selectedSort = single(searchParams, 'sort') || 'featured';
   const search = single(searchParams, 'search');
   const storefrontProducts = await getIronSprueStorefrontProducts(importedProducts);
   const scopedProducts = storefrontProducts.filter((product) => {
@@ -60,11 +66,21 @@ export async function CatalogueListing({
     ? vehicleManufacturerOptions(scopedProducts)
     : [];
   const products = filterIronSprueProducts(scopedProducts, {
+    availability: selectedAvailability || undefined,
     brand: fixedBrand ? undefined : selectedBrand || undefined,
+    buildType: selectedBuildType || undefined,
     category: fixedCategory ? undefined : selectedCategory || undefined,
+    offers: selectedOffers || undefined,
+    pieceCount: selectedPieceCount || undefined,
     scale: selectedScale || undefined,
+    structure: selectedStructure || undefined,
     vehicleManufacturer: selectedVehicleManufacturer || undefined,
     search: search || undefined,
+  }).sort((left, right) => {
+    if (selectedSort === 'price-asc') return (left.retailPriceMinor ?? left.priceMinor ?? 0) - (right.retailPriceMinor ?? right.priceMinor ?? 0) || left.name.localeCompare(right.name);
+    if (selectedSort === 'price-desc') return (right.retailPriceMinor ?? right.priceMinor ?? 0) - (left.retailPriceMinor ?? left.priceMinor ?? 0) || left.name.localeCompare(right.name);
+    if (selectedSort === 'newest') return Number(Boolean(right.launchRole || right.merchandisingRole)) - Number(Boolean(left.launchRole || left.merchandisingRole)) || left.name.localeCompare(right.name);
+    return Number(Boolean(right.merchandisingRole)) - Number(Boolean(left.merchandisingRole)) || left.name.localeCompare(right.name);
   });
   const formAction = fixedBrand
     ? `/shop/${fixedBrand.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
@@ -74,6 +90,102 @@ export async function CatalogueListing({
   const scales = selectedBrand === 'Aoshima' || selectedCategory === 'model-kits'
     ? scaleOptions(scopedProducts)
     : [];
+  const puzzleScoped = selectedCategory === '3d-puzzles-and-builds' || selectedBrand === 'CubicFun' || selectedBrand === 'Pintoo';
+  const pieceCounts = puzzleScoped ? pieceCountOptions(scopedProducts) : [];
+  const structures = puzzleScoped ? structureOptions(scopedProducts) : [];
+  const buildTypes = selectedCategory === 'model-kits' || selectedBrand === 'Aoshima'
+    ? buildTypeOptions(scopedProducts)
+    : [];
+  const activeFilterCount = [
+    fixedBrand ? '' : selectedBrand,
+    fixedCategory ? '' : selectedCategory,
+    selectedVehicleManufacturer,
+    selectedScale,
+    selectedPieceCount,
+    selectedStructure,
+    selectedBuildType,
+    selectedAvailability,
+    selectedOffers,
+  ].filter(Boolean).length;
+  const filterControls = (idSuffix: string) => (
+    <form action={formAction}>
+      <label htmlFor={`brand-filter-${idSuffix}`}>Brand</label>
+      {fixedBrand ? (
+        <p className="locked-filter">{fixedBrand}</p>
+      ) : (
+        <select id={`brand-filter-${idSuffix}`} name="brand" defaultValue={selectedBrand}>
+          <option value="">All brands</option>
+          {brandOptions(storefrontProducts).map((brand) => <option value={brand} key={brand}>{brand}</option>)}
+        </select>
+      )}
+      <label htmlFor={`category-filter-${idSuffix}`}>Category</label>
+      {fixedCategory ? (
+        <p className="locked-filter">{title}</p>
+      ) : (
+        <select id={`category-filter-${idSuffix}`} name="category" defaultValue={selectedCategory}>
+          <option value="">All categories</option>
+          {categoryOptions(storefrontProducts).map((category) => <option value={slugForCategory(category)} key={category}>{category}</option>)}
+        </select>
+      )}
+      {vehicleManufacturers.length ? (
+        <>
+          <label htmlFor={`vehicle-manufacturer-filter-${idSuffix}`}>Vehicle manufacturer</label>
+          <select id={`vehicle-manufacturer-filter-${idSuffix}`} name="vehicleManufacturer" defaultValue={selectedVehicleManufacturer}>
+            <option value="">All vehicle manufacturers</option>
+            {vehicleManufacturers.map((manufacturer) => <option value={manufacturer} key={manufacturer}>{manufacturer}</option>)}
+          </select>
+        </>
+      ) : null}
+      {scales.length ? (
+        <>
+          <label htmlFor={`scale-filter-${idSuffix}`}>Scale</label>
+          <select id={`scale-filter-${idSuffix}`} name="scale" defaultValue={selectedScale}>
+            <option value="">All scales</option>
+            {scales.map((scale) => <option value={scale.replace(/[/:]/g, '-')} key={scale}>{scale}</option>)}
+          </select>
+        </>
+      ) : null}
+      {buildTypes.length ? (
+        <>
+          <label htmlFor={`build-type-filter-${idSuffix}`}>Build type</label>
+          <select id={`build-type-filter-${idSuffix}`} name="buildType" defaultValue={selectedBuildType}>
+            <option value="">All build types</option>
+            {buildTypes.map((buildType) => <option value={buildType} key={buildType}>{buildType}</option>)}
+          </select>
+        </>
+      ) : null}
+      {structures.length ? (
+        <>
+          <label htmlFor={`structure-filter-${idSuffix}`}>Structure/type</label>
+          <select id={`structure-filter-${idSuffix}`} name="structure" defaultValue={selectedStructure}>
+            <option value="">All structures</option>
+            {structures.map((structure) => <option value={structure} key={structure}>{structure}</option>)}
+          </select>
+        </>
+      ) : null}
+      {pieceCounts.length ? (
+        <>
+          <label htmlFor={`piece-count-filter-${idSuffix}`}>Piece count</label>
+          <select id={`piece-count-filter-${idSuffix}`} name="pieceCount" defaultValue={selectedPieceCount}>
+            <option value="">All piece counts</option>
+            {pieceCounts.map((pieceCount) => <option value={pieceCount} key={pieceCount}>{pieceCount} pieces</option>)}
+          </select>
+        </>
+      ) : null}
+      <label htmlFor={`availability-filter-${idSuffix}`}>Availability</label>
+      <select id={`availability-filter-${idSuffix}`} name="availability" defaultValue={selectedAvailability}>
+        <option value="">All states</option>
+        <option value="in-stock">In stock</option>
+        <option value="low-stock">Low stock</option>
+        <option value="coming-soon">Coming soon</option>
+      </select>
+      {search ? <input type="hidden" name="search" value={search} /> : null}
+      {selectedOffers ? <input type="hidden" name="offers" value={selectedOffers} /> : null}
+      {selectedSort && selectedSort !== 'featured' ? <input type="hidden" name="sort" value={selectedSort} /> : null}
+      <button type="submit">Apply filters</button>
+      {activeFilterCount ? <a className="filter-clear" href={formAction}>Clear filters</a> : null}
+    </form>
+  );
 
   return (
     <section className="section-block catalogue-page">
@@ -103,64 +215,36 @@ export async function CatalogueListing({
       ) : null}
 
       <div className="catalogue-layout">
+        <details className="mobile-filter-drawer">
+          <summary>Filters{activeFilterCount ? ` (${activeFilterCount})` : ''}</summary>
+          {filterControls('mobile')}
+        </details>
         <aside className="filter-panel" aria-label="Catalogue filters">
-          <form action={formAction}>
-            <label htmlFor="brand-filter">Brand</label>
-            {fixedBrand ? (
-              <p className="locked-filter">{fixedBrand}</p>
-            ) : (
-              <select id="brand-filter" name="brand" defaultValue={selectedBrand}>
-                <option value="">All brands</option>
-                {brandOptions(storefrontProducts).map((brand) => <option value={brand} key={brand}>{brand}</option>)}
-              </select>
-            )}
-            <label htmlFor="category-filter">Category</label>
-            {fixedCategory ? (
-              <p className="locked-filter">{title}</p>
-            ) : (
-              <select id="category-filter" name="category" defaultValue={selectedCategory}>
-                <option value="">All categories</option>
-                {categoryOptions(storefrontProducts).map((category) => <option value={slugForCategory(category)} key={category}>{category}</option>)}
-              </select>
-            )}
-            {vehicleManufacturers.length ? (
-              <>
-                <label htmlFor="vehicle-manufacturer-filter">Vehicle manufacturer</label>
-                <select id="vehicle-manufacturer-filter" name="vehicleManufacturer" defaultValue={selectedVehicleManufacturer}>
-                  <option value="">All vehicle manufacturers</option>
-                  {vehicleManufacturers.map((manufacturer) => <option value={manufacturer} key={manufacturer}>{manufacturer}</option>)}
-                </select>
-              </>
-            ) : null}
-            {scales.length ? (
-              <>
-                <label htmlFor="scale-filter">Scale</label>
-                <select id="scale-filter" name="scale" defaultValue={selectedScale}>
-                  <option value="">All scales</option>
-                  {scales.map((scale) => <option value={scale.replace(/[/:]/g, '-')} key={scale}>{scale}</option>)}
-                </select>
-              </>
-            ) : null}
-            <label htmlFor="availability-filter">Availability</label>
-            <select id="availability-filter" name="availability" defaultValue="">
-              <option value="">All states</option>
-              <option value="in-stock">In stock</option>
-              <option value="low-stock">Low stock</option>
-              <option value="coming-soon">Coming soon</option>
-            </select>
-            <button type="submit">Apply filters</button>
-          </form>
+          {filterControls('desktop')}
         </aside>
 
         <div>
           <div className="catalogue-toolbar">
             <p>{products.length} product{products.length === 1 ? '' : 's'}</p>
-            <select aria-label="Sort products" defaultValue="featured">
-              <option value="featured">Featured</option>
-              <option value="price-asc">Price: low to high</option>
-              <option value="price-desc">Price: high to low</option>
-              <option value="new">Newest</option>
-            </select>
+            <form action={formAction} className="catalogue-sort-form">
+              {search ? <input type="hidden" name="search" value={search} /> : null}
+              {!fixedBrand && selectedBrand ? <input type="hidden" name="brand" value={selectedBrand} /> : null}
+              {!fixedCategory && selectedCategory ? <input type="hidden" name="category" value={selectedCategory} /> : null}
+              {selectedVehicleManufacturer ? <input type="hidden" name="vehicleManufacturer" value={selectedVehicleManufacturer} /> : null}
+              {selectedScale ? <input type="hidden" name="scale" value={selectedScale} /> : null}
+              {selectedPieceCount ? <input type="hidden" name="pieceCount" value={selectedPieceCount} /> : null}
+              {selectedStructure ? <input type="hidden" name="structure" value={selectedStructure} /> : null}
+              {selectedBuildType ? <input type="hidden" name="buildType" value={selectedBuildType} /> : null}
+              {selectedAvailability ? <input type="hidden" name="availability" value={selectedAvailability} /> : null}
+              {selectedOffers ? <input type="hidden" name="offers" value={selectedOffers} /> : null}
+              <select aria-label="Sort products" name="sort" defaultValue={selectedSort}>
+                <option value="featured">Featured</option>
+                <option value="price-asc">Price: low to high</option>
+                <option value="price-desc">Price: high to low</option>
+                <option value="newest">Newest</option>
+              </select>
+              <button type="submit">Sort</button>
+            </form>
           </div>
 
           {products.length > 0 ? (

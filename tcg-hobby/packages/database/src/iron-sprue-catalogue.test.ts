@@ -95,33 +95,17 @@ describe('Iron Sprue production catalogue adapter', () => {
             status: { in: ['CONFLICT', 'REJECTED'] },
           },
         },
-        mediaAssets: {
-          some: {
-            role: 'catalogue-primary',
-            approvalState: 'APPROVED',
-            isPrimary: true,
-            AND: [
-              {
-                OR: [
-                  { mimeType: { startsWith: 'image/' } },
-                  { mimeType: null },
-                ],
-              },
-              {
-                OR: [
-                  { url: { not: null } },
-                  { storageKey: { not: null } },
-                ],
-              },
-              {
-                NOT: [
-                  { storageKey: { endsWith: '.json' } },
-                  { url: { endsWith: '.json' } },
-                ],
-              },
-            ],
-          },
-        },
+        OR: expect.arrayContaining([
+          expect.objectContaining({
+            mediaAssets: expect.objectContaining({
+              some: expect.objectContaining({
+                role: 'catalogue-primary',
+                approvalState: 'APPROVED',
+                isPrimary: true,
+              }),
+            }),
+          }),
+        ]),
       }),
     }));
     expect(result.products).toHaveLength(1);
@@ -233,13 +217,29 @@ describe('Iron Sprue production catalogue adapter', () => {
     }));
   });
 
-  it('applies scale filters to canonical Iron Sprue products', async () => {
+  it('applies scale filters to canonical Iron Sprue products after specification projection', async () => {
     const client = {
-      ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue([]) },
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([
+          ironSprueProduct({
+            id: 'scale-match',
+            scale: null,
+            specifications: { scale: '1:24' },
+          }),
+          ironSprueProduct({
+            id: 'scale-miss',
+            sku: 'IS-AOS-06347',
+            slug: 'aoshima-06347-lamborghini-aventador-red',
+            customerTitle: 'Lamborghini Aventador Red',
+            scale: null,
+            specifications: { scale: '1:32' },
+          }),
+        ]),
+      },
       ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
     };
 
-    await getIronSprueCatalogueProducts({
+    const result = await getIronSprueCatalogueProducts({
       search: '',
       brand: 'aoshima',
       category: 'model-kits',
@@ -249,21 +249,154 @@ describe('Iron Sprue production catalogue adapter', () => {
       pageSize: 20,
     }, client as never);
 
-    expect(client.ironSprueAdminProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({
-        AND: expect.arrayContaining([
-          expect.objectContaining({
-            OR: expect.arrayContaining([
-              { scale: { contains: '1:24', mode: 'insensitive' } },
-              { scale: { contains: '1/24', mode: 'insensitive' } },
-            ]),
-          }),
-        ]),
-      }),
-    }));
+    expect(result.products.map((product) => product.id)).toEqual(['scale-match']);
   });
 
-  it('requires approved primary catalogue media before a published product is public', async () => {
+  it('searches customer-facing canonical specification facts', async () => {
+    const client = {
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([
+          ironSprueProduct({
+            id: 'piece-match',
+            brand: { id: 'brand-pin', name: 'Pintoo', slug: 'pintoo' },
+            category: { id: 'cat-puzzle', name: '3D Puzzles & Builds', slug: '3d-puzzles-and-builds', description: '3D Puzzles', sortOrder: 20 },
+            buildType: '3D puzzle object',
+            customerTitle: 'Children Vase',
+            sku: 'IS-PIN-S1024',
+            slug: 'pintoo-s1024-children-vase',
+            specifications: { pieces: '160', structure: 'Vase' },
+            searchKeywords: ['vase'],
+          }),
+          ironSprueProduct({
+            id: 'piece-miss',
+            specifications: { pieces: '44', structure: 'Landmark' },
+          }),
+        ]),
+      },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    const result = await getIronSprueCatalogueProducts({
+      search: '160 pieces',
+      category: '',
+      sort: 'featured',
+      page: 1,
+      pageSize: 20,
+    }, client as never);
+
+    expect(result.products.map((product) => product.sku)).toEqual(['IS-PIN-S1024']);
+  });
+
+  it('filters offers through the canonical special-offer flag', async () => {
+    const client = {
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([
+          ironSprueProduct({ id: 'offer-match', specialOffer: true }),
+        ]),
+      },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    const result = await getIronSprueCatalogueProducts({
+      search: '',
+      category: '',
+      offers: 'true',
+      sort: 'featured',
+      page: 1,
+      pageSize: 20,
+    }, client as never);
+
+    expect(client.ironSprueAdminProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        AND: expect.arrayContaining([expect.objectContaining({ specialOffer: true })]),
+      }),
+    }));
+    expect(result.products[0]?.specialOffer).toBe(true);
+  });
+
+  it('filters customer-facing catalogue facts after specification projection', async () => {
+    const client = {
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([
+          ironSprueProduct({
+            id: 'fact-match',
+            brand: { id: 'brand-pin', name: 'Pintoo', slug: 'pintoo' },
+            category: { id: 'cat-puzzle', name: '3D Puzzles & Builds', slug: '3d-puzzles-and-builds', description: '3D Puzzles', sortOrder: 20 },
+            buildType: '3D puzzle object',
+            customerTitle: 'Children Vase',
+            sku: 'IS-PIN-S1024',
+            slug: 'pintoo-s1024-children-vase',
+            inventory: { availableStock: 2, reservedStock: 0 },
+            specifications: { pieces: '160', structure: 'Vase' },
+          }),
+          ironSprueProduct({
+            id: 'fact-miss',
+            brand: { id: 'brand-cub', name: 'CubicFun', slug: 'cubicfun' },
+            category: { id: 'cat-puzzle', name: '3D Puzzles & Builds', slug: '3d-puzzles-and-builds', description: '3D Puzzles', sortOrder: 20 },
+            buildType: '3D puzzle model',
+            customerTitle: 'Burj Al Arab',
+            sku: 'IS-CUB-C112H',
+            slug: 'cubicfun-c112h-burj-al-arab',
+            inventory: { availableStock: 12, reservedStock: 0 },
+            specifications: { pieces: '44', structure: 'Landmark' },
+          }),
+        ]),
+      },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    const result = await getIronSprueCatalogueProducts({
+      search: '',
+      category: '',
+      pieceCount: '160',
+      structure: 'Vase',
+      availability: 'low-stock',
+      sort: 'featured',
+      page: 1,
+      pageSize: 20,
+    }, client as never);
+
+    expect(result.products.map((product) => product.sku)).toEqual(['IS-PIN-S1024']);
+  });
+
+  it('filters Aoshima vehicle manufacturer from canonical/public product facts', async () => {
+    const client = {
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([
+          ironSprueProduct({
+            id: 'lambo',
+            customerTitle: 'Lamborghini Aventador Red',
+            sourceTitle: 'Lamborghini Aventador source',
+            sku: 'IS-AOS-06347',
+            slug: 'aoshima-06347-lamborghini-aventador-red',
+            specifications: { scale: '1:32' },
+          }),
+          ironSprueProduct({
+            id: 'toyota',
+            customerTitle: 'Toyota 2000GT Red',
+            sourceTitle: 'Toyota 2000GT source',
+            sku: 'IS-AOS-05628',
+            slug: 'aoshima-05628-toyota-2000gt-red',
+            specifications: { scale: '1:24' },
+          }),
+        ]),
+      },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    const result = await getIronSprueCatalogueProducts({
+      search: '',
+      category: 'model-kits',
+      vehicleManufacturer: 'Lamborghini',
+      sort: 'featured',
+      page: 1,
+      pageSize: 20,
+    }, client as never);
+
+    expect(result.products.map((product) => product.sku)).toEqual(['IS-AOS-06347']);
+  });
+
+  it('requires customer-facing media before a published product is public', async () => {
     const client = {
       ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue([]) },
       ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
@@ -280,13 +413,17 @@ describe('Iron Sprue production catalogue adapter', () => {
     expect(client.ironSprueAdminProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({
         publicationState: 'PUBLISHED',
-        mediaAssets: expect.objectContaining({
-          some: expect.objectContaining({
-            role: 'catalogue-primary',
-            approvalState: 'APPROVED',
-            isPrimary: true,
+        OR: expect.arrayContaining([
+          expect.objectContaining({
+            mediaAssets: expect.objectContaining({
+              some: expect.objectContaining({
+                role: 'catalogue-primary',
+                approvalState: 'APPROVED',
+                isPrimary: true,
+              }),
+            }),
           }),
-        }),
+        ]),
       }),
     }));
   });

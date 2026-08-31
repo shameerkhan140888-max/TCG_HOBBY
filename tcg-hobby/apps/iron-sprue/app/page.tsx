@@ -227,7 +227,7 @@ export default async function HomePage() {
               <p className="eyebrow">New arrivals</p>
               <h2>{featuredPlacement?.title || 'Opening bench picks.'}</h2>
             </div>
-            <a className="text-link" href={featuredPlacement?.ctaHref || '/shop?sort=new'}>
+            <a className="text-link" href={featuredPlacement?.ctaHref || '/shop?sort=newest'}>
               {featuredPlacement?.ctaLabel || 'See new arrivals'}
             </a>
           </div>

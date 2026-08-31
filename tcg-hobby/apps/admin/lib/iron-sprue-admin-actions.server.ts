@@ -195,7 +195,8 @@ export async function approveIronSprueProductReviewAction(formData: FormData) {
   revalidatePath('/iron-sprue-admin/media');
   revalidatePath('/iron-sprue-admin/content-review');
   revalidateIronSprueStorefront();
-  const fallback = productSku ? `products?q=${encodeURIComponent(productSku)}` : 'products';
+  void productSku;
+  const fallback = 'products';
   redirect(adminReturnPath(formData, fallback, 'saved', 'Review approval saved.'));
 }
 

@@ -142,6 +142,7 @@ export function ironSprueProductFromPublicSummary(product: PublicProductSummary)
   };
   const primaryImage = imageUrl(product.image);
   if (product.availabilityMessage) mapped.description = product.availabilityMessage;
+  if (product.specialOffer) mapped.specialOffer = product.specialOffer;
   if (product.scale) mapped.scale = product.scale;
   if (product.buildLevel) mapped.skillLevel = product.buildLevel;
   if (product.specifications) mapped.specifications = product.specifications;

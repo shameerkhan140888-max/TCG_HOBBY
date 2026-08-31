@@ -611,14 +611,14 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).not.toContain('retailPriceMinor');
     expect(markup).toContain('Sell price:');
     expect(markup).toContain('Stock on hand:');
-    expect(markup).toContain('name="returnTo" value="/iron-sprue-admin/products?q=IS-AOS-05628"');
+    expect(markup).toContain('name="returnTo" value="/iron-sprue-admin/products?state=READY_TO_PUBLISH#product-product-ready"');
     expect(markup).not.toContain('Source/placeholder records');
     expect(markup).not.toContain('catalogue-primary-placeholder.json');
     expect(markup).toContain('Existing R2 image candidates');
     expect(markup).toContain('iron-sprue-image-2-acf115ef37eb.png');
     expect(markup).toContain('manufacturer-source.jpg');
     expect(markup).toContain('manufacturer-original');
-    expect(markup).toContain('Publish requires one approved primary catalogue image.');
+    expect(markup).toContain('Tools and accessories can publish with one approved displayable product image.');
   });
 
   it('renders storefront placement and brand carousel controls', async () => {
@@ -646,7 +646,7 @@ describe('IronSprueAdminSection operational controls', () => {
         placementKey: 'featured-products',
         title: 'Opening bench picks.',
         ctaLabel: 'See new arrivals',
-        ctaHref: '/shop?sort=new',
+        ctaHref: '/shop?sort=newest',
         imageUrl: null,
         active: true,
         sortOrder: 0,
@@ -722,7 +722,7 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Current products in this row');
     expect(markup).toContain('Row link:');
     expect(markup).toContain('See new arrivals');
-    expect(markup).toContain('-&gt; /shop?sort=new');
+    expect(markup).toContain('-&gt; /shop?sort=newest');
     expect(markup).toContain('Lamborghini Aventador Blue');
     expect(markup).toContain('Additional homepage product rows');
     expect(markup).toContain('Our favourite Aoshima kits');

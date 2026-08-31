@@ -3023,6 +3023,19 @@ p {
   gap: 12px;
 }
 
+.mobile-filter-drawer {
+  display: none;
+}
+
+.filter-clear {
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .locked-filter {
   margin: 0;
   border: 1px solid var(--line);
@@ -3080,6 +3093,18 @@ label {
 
 .catalogue-toolbar select {
   width: auto;
+}
+
+.catalogue-sort-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.catalogue-sort-form button {
+  width: auto;
+  min-height: 40px;
+  padding-inline: 14px;
 }
 
 .catalogue-grid {
@@ -4160,6 +4185,37 @@ label {
     min-height: 40px;
     padding: 0 10px;
     font-size: 11px;
+  }
+}
+
+@media (max-width: 760px) {
+  .catalogue-layout {
+    gap: 14px;
+  }
+
+  .mobile-filter-drawer {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 250, 241, 0.92);
+    padding: 12px;
+  }
+
+  .mobile-filter-drawer summary {
+    cursor: pointer;
+    color: var(--ink);
+    font-weight: 900;
+    list-style: none;
+  }
+
+  .mobile-filter-drawer form {
+    display: grid;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .filter-panel {
+    display: none;
   }
 }
 
@@ -5665,6 +5721,7 @@ body::before {
 }
 
 .product-description-panel p,
+.product-specification-list,
 .product-key-details,
 .product-unified-panel .product-reassurance p {
   color: rgba(255, 250, 241, 0.78);
@@ -5683,6 +5740,30 @@ body::before {
 .product-key-details {
   margin: 12px 0 0;
   padding-left: 18px;
+}
+
+.product-specification-list {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 8px 16px;
+  margin: 14px 0 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.product-specification-list dt {
+  color: rgba(211, 160, 74, 0.92);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.product-specification-list dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: rgba(255, 250, 241, 0.9);
+  font-weight: 650;
 }
 
 .product-unified-panel .product-reassurance {

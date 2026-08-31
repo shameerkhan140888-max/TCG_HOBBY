@@ -19,11 +19,18 @@ export type CatalogueSort = 'featured' | 'newest' | 'price-asc' | 'price-desc';
 export type CatalogueFilters = {
   search: string;
   category: string;
+  brand?: string;
   game?: string;
   productType?: string;
   set?: string;
   language?: string;
   scale?: string;
+  pieceCount?: string;
+  structure?: string;
+  buildType?: string;
+  vehicleManufacturer?: string;
+  availability?: string;
+  offers?: string;
   sort: CatalogueSort;
   page: number;
   pageSize: number;
@@ -68,6 +75,7 @@ export type CatalogueProduct = {
   reservedStock: number;
   supplierName: string;
   badge: string;
+  specialOffer?: boolean;
   imageLabel: string;
   imageUrl?: string | null;
   imageAlt?: string | null;
@@ -166,6 +174,7 @@ export type PublicProductSummary = {
   purchaseLimit: number | null;
   freeUkStandardShipping: boolean;
   availabilityMessage: string | null;
+  specialOffer?: boolean;
   scale?: string | null;
   buildLevel?: string | null;
   specifications?: Record<string, string> | null;

@@ -25,6 +25,7 @@ type DatabaseClient = ReturnType<typeof getIronSprueAdminPrisma>;
 
 export type IronSprueCatalogueFilters = CatalogueFilters & {
   brand?: string;
+  offers?: string;
 };
 
 export type IronSprueCatalogueProductsResult = {
@@ -68,6 +69,120 @@ const insensitive = 'insensitive' as const;
 
 function normalizeSearch(value: string | null | undefined): string {
   return value?.trim().toLowerCase() ?? '';
+}
+
+function normalizeFactValue(value: string | null | undefined): string {
+  return normalizeSearch(value).replace(/\s+/g, ' ').trim();
+}
+
+function normalizeScaleValue(value: string | null | undefined): string {
+  return normalizeFactValue(value).replace(/[/:]/g, '-').replace(/\s+/g, '');
+}
+
+function firstSpecificationText(specifications: Record<string, string>, keys: string[]) {
+  for (const key of keys) {
+    const value = specifications[key];
+    if (value?.trim()) return value.trim();
+  }
+  return '';
+}
+
+function pieceCountValue(specifications: Record<string, string>) {
+  const value = firstSpecificationText(specifications, ['pieces', 'pieceCount', 'piece count']);
+  const parsed = value.match(/\d+/)?.[0];
+  return parsed ? Number(parsed) : null;
+}
+
+function structureValue(product: IronSprueCatalogueProductRow, specifications: Record<string, string>) {
+  const explicit = firstSpecificationText(specifications, ['structure', 'form', 'subject', 'theme']);
+  if (explicit) return explicit;
+  const searchable = `${product.customerTitle} ${product.sourceTitle} ${product.buildType ?? ''} ${product.category?.name ?? ''}`.toLowerCase();
+  if (/\bvase\b/.test(searchable)) return 'Vase';
+  if (/\b(clock|time)\b/.test(searchable)) return 'Clock';
+  if (/\b(ship|boat|navigation)\b/.test(searchable)) return 'Ship';
+  if (/\b(landmark|building|architecture|tower|bridge|temple|palace|stadium)\b/.test(searchable)) return 'Landmark';
+  if (/\b(lightbox|lantern)\b/.test(searchable)) return 'Lightbox';
+  if (/\bflowerpot\b/.test(searchable)) return 'Flowerpot';
+  return '';
+}
+
+const vehicleManufacturerCandidates = [
+  'Toyota',
+  'Lamborghini',
+  'Nissan',
+  'Pagani',
+  'Suzuki',
+  'Honda',
+  'Mazda',
+  'Subaru',
+  'Mitsubishi',
+  'Volkswagen',
+  'Ford',
+  'Porsche',
+  'BMW',
+  'Mercedes',
+] as const;
+
+function vehicleManufacturerValue(product: IronSprueCatalogueProductRow, specifications: Record<string, string>) {
+  const explicit = firstSpecificationText(specifications, ['vehicleManufacturer', 'vehicle manufacturer', 'marque']);
+  if (explicit) return explicit;
+  if (product.brand?.name !== 'Aoshima') return '';
+  const searchable = `${product.customerTitle} ${product.sourceTitle}`.toLowerCase();
+  return vehicleManufacturerCandidates.find((manufacturer) => {
+    const pattern = new RegExp(`\\b${manufacturer.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+    return pattern.test(searchable);
+  }) ?? '';
+}
+
+function buildTypeValue(product: IronSprueCatalogueProductRow, specifications: Record<string, string>) {
+  return firstSpecificationText(specifications, ['buildType', 'build type', 'buildLevel', 'assemblyMethod']) || product.buildType || product.difficulty || '';
+}
+
+function publicSearchText(product: IronSprueCatalogueProductRow) {
+  const specifications = publicSpecifications(product);
+  return [
+    product.customerTitle,
+    product.sourceTitle,
+    product.sku,
+    product.mpn,
+    product.supplierProductCode,
+    product.brand?.name,
+    product.category?.name,
+    product.buildType,
+    product.scale,
+    product.difficulty,
+    product.material,
+    product.dimensions,
+    product.assemblyMethod,
+    product.glueRequirement,
+    product.contents,
+    ...Object.entries(specifications).flatMap(([key, value]) => [key, value, key.toLowerCase().includes('piece') ? `${value} pieces` : '']),
+    ...sanitizePublicProductList(product.featureBullets),
+    ...product.searchKeywords,
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+function rowMatchesRuntimeFilters(product: IronSprueCatalogueProductRow, filters: IronSprueCatalogueFilters) {
+  const specifications = publicSpecifications(product);
+  const query = normalizeSearch(filters.search);
+  const scale = normalizeScaleValue(filters.scale);
+  const pieceCount = normalizeFactValue(filters.pieceCount);
+  const structure = normalizeFactValue(filters.structure);
+  const buildType = normalizeFactValue(filters.buildType);
+  const vehicleManufacturer = normalizeFactValue(filters.vehicleManufacturer);
+  const availability = normalizeSearch(filters.availability);
+  const availableStock = Math.max(stockOnHand(product) - reservedStock(product), 0);
+
+  if (query && !publicSearchText(product).includes(query)) return false;
+  if (scale && normalizeScaleValue(specifications.scale ?? product.scale) !== scale) return false;
+  if (pieceCount && String(pieceCountValue(specifications) ?? '') !== pieceCount) return false;
+  if (structure && normalizeFactValue(structureValue(product, specifications)) !== structure) return false;
+  if (buildType && normalizeFactValue(buildTypeValue(product, specifications)) !== buildType) return false;
+  if (vehicleManufacturer && normalizeFactValue(vehicleManufacturerValue(product, specifications)) !== vehicleManufacturer) return false;
+  if (availability === 'in-stock' && availableStock <= 0) return false;
+  if (availability === 'low-stock' && !(availableStock > 0 && availableStock <= 3)) return false;
+  if (availability === 'coming-soon' && !product.comingSoon) return false;
+  return true;
 }
 
 function slugLabel(value: string): string {
@@ -301,6 +416,7 @@ function mapProduct(product: IronSprueCatalogueProductRow): CatalogueProduct {
     reservedStock: reserved,
     supplierName: product.supplier?.name ?? 'Iron Sprue',
     badge: product.specialOffer ? 'Sale' : product.newArrival ? 'New' : categoryName,
+    specialOffer: product.specialOffer,
     imageLabel: product.customerTitle,
     imageUrl: image?.url ?? null,
     imageAlt: image?.asset.altText ?? product.customerTitle,
@@ -374,30 +490,11 @@ function mapProductDetail(product: IronSprueCatalogueProductRow): CatalogueProdu
 }
 
 function buildProductWhere(filters: IronSprueCatalogueFilters): Prisma.IronSprueAdminProductWhereInput {
-  const query = normalizeSearch(filters.search);
   const category = normalizeSearch(filters.category);
   const productType = normalizeSearch(filters.productType);
   const brand = normalizeSearch(filters.brand ?? filters.game);
-  const scale = filters.scale?.trim().toLowerCase().replace(/\s+/g, '').replace(/[/:]/g, '-') ?? '';
+  const offers = normalizeSearch(filters.offers);
   const clauses: Prisma.IronSprueAdminProductWhereInput[] = [];
-
-  if (query) {
-    clauses.push({
-      OR: [
-        { customerTitle: { contains: query, mode: insensitive } },
-        { sourceTitle: { contains: query, mode: insensitive } },
-        { sku: { contains: query, mode: insensitive } },
-        { mpn: { contains: query, mode: insensitive } },
-        { scale: { contains: query, mode: insensitive } },
-        { difficulty: { contains: query, mode: insensitive } },
-        { dimensions: { contains: query, mode: insensitive } },
-        { contents: { contains: query, mode: insensitive } },
-        { searchKeywords: { has: query } },
-        { brand: { is: { name: { contains: query, mode: insensitive } } } },
-        { category: { is: { name: { contains: query, mode: insensitive } } } },
-      ],
-    });
-  }
 
   if (category) {
     const legacyLabel = category.replace(/-/g, ' ');
@@ -419,17 +516,6 @@ function buildProductWhere(filters: IronSprueCatalogueFilters): Prisma.IronSprue
     });
   }
 
-  if (scale) {
-    const scaleLabels = Array.from(new Set([
-      scale,
-      scale.replace(/-/g, ':'),
-      scale.replace(/-/g, '/'),
-    ])).filter(Boolean);
-    clauses.push({
-      OR: scaleLabels.map((label) => ({ scale: { contains: label, mode: insensitive } })),
-    });
-  }
-
   if (brand && brand !== 'iron-sprue') {
     clauses.push({
       OR: [
@@ -438,6 +524,10 @@ function buildProductWhere(filters: IronSprueCatalogueFilters): Prisma.IronSprue
         { brand: { is: { name: { contains: brand.replace(/-/g, ' '), mode: insensitive } } } },
       ],
     });
+  }
+
+  if (['1', 'true', 'yes'].includes(offers)) {
+    clauses.push({ specialOffer: true });
   }
 
   return clauses.length ? { AND: [publicProductWhere, ...clauses] } : publicProductWhere;
@@ -487,7 +577,7 @@ export async function getIronSprueCatalogueProducts(
     include: productInclude,
     orderBy: [{ featured: 'desc' }, { updatedAt: 'desc' }, { customerTitle: 'asc' }],
   });
-  const visibleRows = rows.filter((product) => getIronSprueProductReadiness(product).isPubliclyVisible);
+  const visibleRows = rows.filter((product) => getIronSprueProductReadiness(product).isPubliclyVisible && rowMatchesRuntimeFilters(product, filters));
   const allProducts = sortProducts(visibleRows.map(mapProduct), filters.sort);
   const totalItems = allProducts.length;
   const pagination = resolvePagination(totalItems, page, pageSize);

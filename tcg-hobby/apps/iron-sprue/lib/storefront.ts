@@ -6,7 +6,7 @@ export const categoryNavigation = [
   { label: 'Tools', href: '/shop?category=tools' },
   { label: 'Adhesives & Finishing', href: '/shop?category=adhesives-finishing' },
   { label: 'Brands', href: '/brands' },
-  { label: 'New Arrivals', href: '/shop?sort=new' },
+  { label: 'New Arrivals', href: '/shop?sort=newest' },
   { label: 'Coming Soon', href: '/shop?availability=coming-soon' },
   { label: 'Offers', href: '/shop?offers=true' },
 ] as const;
@@ -19,11 +19,11 @@ export const heroSlides = [
     script: 'Bright, sharp, bench-ready.',
     copy: 'Aoshima snap-fit car kits bring bold display subjects to the modelling bench without overcomplicating the first build.',
     image: '/assets/hero-aoshima-lamborghini-workshop.png',
-    sourceProductSlug: 'aoshima-06348-lamborghini-adventador-green',
+    sourceProductSlug: 'aoshima-06347-lamborghini-aventador-red',
     brandName: 'Aoshima',
     brandLogo: '/assets/brands/aoshima.webp',
     alt: 'Green Lamborghini Aventador model on an Iron Sprue workshop cutting mat',
-    ctaHref: '/products/aoshima-06348-lamborghini-adventador-green',
+    ctaHref: '/products/aoshima-06347-lamborghini-aventador-red',
     ctaLabel: 'Shop now',
     secondaryHref: '/brands',
     meta: ['Model Kits', '3D Puzzles & Builds', 'Tools', 'Adhesives & Finishing', 'Paints & Weathering', 'Accessories'],
@@ -121,7 +121,7 @@ export function withOfficialBrandLogos(brands: IronSprueBrandRecord[]) {
 }
 
 const productImageRegistry: Record<string, string> = {
-  'aoshima-06348-lamborghini-adventador-green': '/assets/products/aoshima-lamborghini-adventador-green.jpg',
+  'aoshima-06347-lamborghini-aventador-red': '/assets/products/aoshima-lamborghini-adventador-green.jpg',
   'aoshima-06357-skyline-gtr-red-pearl': '/assets/products/aoshima-skyline-gtr-red-pearl.jpg',
   'aoshima-06459-toyota-gr86-spark-red': '/assets/products/aoshima-toyota-gr86-spark-red.jpg',
   'cubicfun-mc101h-burj-al-arab': '/assets/products/cubicfun-burj-al-arab.jpg',
@@ -221,6 +221,6 @@ export function hrefForCategoryLabel(label: string) {
   if (normalised.includes('tool')) return '/shop?category=tools';
   if (normalised.includes('adhesive') || normalised.includes('finishing')) return '/shop?category=adhesives-finishing';
   if (normalised.includes('brand')) return '/brands';
-  if (normalised.includes('new')) return '/shop?sort=new';
+  if (normalised.includes('new')) return '/shop?sort=newest';
   return `/shop?category=${encodeURIComponent(slugForCategory(label))}`;
 }

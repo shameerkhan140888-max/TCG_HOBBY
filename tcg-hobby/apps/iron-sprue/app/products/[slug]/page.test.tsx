@@ -16,6 +16,12 @@ vi.mock('../../../lib/admin-storefront-controls', () => ({
       if (product.sku === 'IS-DLM-AC20') {
         return { ...product, imageUrl: '/media/iron-sprue/products/is-dlm-ac20/original.webp' };
       }
+      if (product.sku === 'IS-PIN-S1009') {
+        return {
+          ...product,
+          specifications: { ...(product.specifications ?? {}), pieces: '160', structure: 'Vase' },
+        };
+      }
       return product;
     }),
   ),
@@ -51,6 +57,19 @@ describe('Iron Sprue product detail page', () => {
     expect(markup).toContain('Add to basket');
     expect(markup).toContain('Save to wishlist');
     expect(markup).toContain('Build information');
+    expect(markup).toContain('Scale');
+    expect(markup).toContain('1:24');
+  });
+
+  it('renders canonical piece-count specifications in build information', async () => {
+    const markup = renderToStaticMarkup(await ProductPage({
+      params: Promise.resolve({ slug: 'pintoo-s1009-3d-jigsaw-vase-children' }),
+    }));
+
+    expect(markup).toContain('Piece count');
+    expect(markup).toContain('160');
+    expect(markup).toContain('Structure');
+    expect(markup).toContain('Vase');
   });
 
   it('renders configured add-ons with their resolved product images', async () => {

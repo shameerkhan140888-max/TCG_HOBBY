@@ -529,6 +529,36 @@ function canUseSingleApprovedSourceImage(product: Pick<ProductWithReadiness, 'ca
     || /\baccessories?\b/.test(category);
 }
 
+function ironSprueDisplayableMediaWhere(role?: string, isPrimary?: boolean): Prisma.IronSprueAdminMediaAssetListRelationFilter {
+  return {
+    some: {
+      ...(role ? { role } : {}),
+      ...(typeof isPrimary === 'boolean' ? { isPrimary } : {}),
+      approvalState: 'APPROVED',
+      AND: [
+        {
+          OR: [
+            { mimeType: { startsWith: 'image/' } },
+            { mimeType: null },
+          ],
+        },
+        {
+          OR: [
+            { url: { not: null } },
+            { storageKey: { not: null } },
+          ],
+        },
+        {
+          NOT: [
+            { storageKey: { endsWith: '.json' } },
+            { url: { endsWith: '.json' } },
+          ],
+        },
+      ],
+    },
+  };
+}
+
 function selectIronSpruePublishableMedia(product: Pick<ProductWithReadiness, 'category' | 'mediaAssets'>) {
   const primaryMedia = selectIronSpruePrimaryCatalogueMedia(product);
   if (primaryMedia || !canUseSingleApprovedSourceImage(product)) return primaryMedia;
@@ -708,6 +738,18 @@ export function deriveIronSprueProductReadinessState(product: ProductWithReadine
 }
 
 export function ironSpruePublicProductWhere(): Prisma.IronSprueAdminProductWhereInput {
+  const singleImageCategorySlugs = [
+    'accessories',
+    'knives-blades',
+    'magnification',
+    'measuring-tools',
+    'pin-vices-drills',
+    'sanding-files',
+    'tool-sets',
+    'tools',
+    'tweezers-pliers',
+  ];
+
   return {
     storeCode: IRON_SPRUE_STORE_CODE,
     publicationState: 'PUBLISHED',
@@ -723,33 +765,21 @@ export function ironSpruePublicProductWhere(): Prisma.IronSprueAdminProductWhere
     seoTitle: { not: null },
     metaDescription: { not: null },
     inventory: { is: { availableStock: { gt: 0 } } },
-    mediaAssets: {
-      some: {
-        role: 'catalogue-primary',
-        approvalState: 'APPROVED',
-        isPrimary: true,
+    OR: [
+      { mediaAssets: ironSprueDisplayableMediaWhere('catalogue-primary', true) },
+      {
         AND: [
           {
             OR: [
-              { mimeType: { startsWith: 'image/' } },
-              { mimeType: null },
+              { category: { is: { slug: { in: singleImageCategorySlugs } } } },
+              { category: { is: { name: { contains: 'tool', mode: 'insensitive' } } } },
+              { category: { is: { name: { contains: 'accessor', mode: 'insensitive' } } } },
             ],
           },
-          {
-            OR: [
-              { url: { not: null } },
-              { storageKey: { not: null } },
-            ],
-          },
-          {
-            NOT: [
-              { storageKey: { endsWith: '.json' } },
-              { url: { endsWith: '.json' } },
-            ],
-          },
+          { mediaAssets: ironSprueDisplayableMediaWhere() },
         ],
       },
-    },
+    ],
     contentReviews: {
       none: {
         status: { in: ['CONFLICT', 'REJECTED'] },
