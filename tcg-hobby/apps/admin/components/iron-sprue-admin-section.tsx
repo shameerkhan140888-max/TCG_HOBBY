@@ -475,6 +475,99 @@ function ProductReviewActionPanel({
   return reason.actionHref ? <a className="mt-1 inline-block text-xs font-bold text-accent" href={reason.actionHref}>Open correction area</a> : null;
 }
 
+function ProductPublishWorkflowPanel({
+  product,
+  readiness,
+  canPublish,
+  r2Candidates,
+  returnTo,
+}: {
+  product: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number];
+  readiness: {
+    status: string;
+    isReadyToPublish: boolean;
+    blockingReasons: Array<{ code: string; category: string; message: string; source: string; actionable: boolean; actionHref?: string }>;
+  } | null;
+  canPublish: boolean;
+  r2Candidates: Map<string, IronSprueR2Object[]>;
+  returnTo: string;
+}) {
+  const reasons = readiness?.blockingReasons ?? [];
+  const firstReason = reasons[0] ?? null;
+  const linkedStorageKeys = new Set(product.mediaAssets.map((asset) => asset.storageKey).filter((key): key is string => Boolean(key)));
+  const primaryR2Candidates = r2CandidatesForProductRole(r2Candidates, product.sku, 'catalogue-primary')
+    .filter((candidate) => !linkedStorageKeys.has(candidate.key));
+
+  return (
+    <div className={`rounded-md border p-3 ${canPublish ? 'border-emerald-500/40 bg-emerald-950/20' : 'border-amber-500/40 bg-amber-950/20'}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className={`text-xs font-bold uppercase tracking-wide ${canPublish ? 'text-emerald-200' : 'text-amber-200'}`}>Publish workflow</p>
+          <h3 className="mt-1 text-base font-bold text-neutral-100">
+            {canPublish ? 'Ready to publish' : firstReason ? firstReason.message : 'Resolve outstanding checks'}
+          </h3>
+          {!canPublish && reasons.length > 1 ? (
+            <p className="mt-1 text-xs text-amber-100">{reasons.length - 1} more outstanding action{reasons.length - 1 === 1 ? '' : 's'} remain after this.</p>
+          ) : null}
+        </div>
+        <form action={publishIronSprueProductAction} className="grid min-w-48 gap-2">
+          <input type="hidden" name="productId" value={product.id} />
+          <input type="hidden" name="returnTo" value={returnTo} />
+          <Button type="submit" disabled={!canPublish} variant={canPublish ? 'primary' : 'outline'}>Publish product</Button>
+        </form>
+      </div>
+      {!canPublish && firstReason ? (
+        <div className="mt-3 rounded-md border border-amber-500/20 bg-black/20 p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-amber-300">{firstReason.category}</span>
+            <span className="text-sm text-amber-100">{firstReason.source}</span>
+          </div>
+          <ProductReviewActionPanel product={product} reason={firstReason} returnTo={returnTo} />
+          {firstReason.category === 'media' && primaryR2Candidates.length ? (
+            <div className="mt-3 grid gap-2">
+              <p className="text-xs font-bold uppercase tracking-wide text-emerald-200">Available R2 Image 2 candidates</p>
+              {primaryR2Candidates.slice(0, 2).map((candidate) => (
+                <div key={candidate.key} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-2 sm:grid-cols-[72px_1fr]">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-md border border-surface-line bg-white p-1">
+                    <img src={candidate.previewUrl} alt={`${product.customerTitle} catalogue-primary`} className="max-h-full max-w-full object-contain" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="break-all text-xs text-neutral-400">{candidate.key}</p>
+                    <form action={attachIronSprueExistingR2MediaAction} className="flex flex-wrap items-end gap-2">
+                      <input type="hidden" name="productId" value={product.id} />
+                      <input type="hidden" name="role" value="catalogue-primary" />
+                      <input type="hidden" name="storageKey" value={candidate.key} />
+                      <input type="hidden" name="altText" value={`${product.customerTitle} catalogue primary`} />
+                      <input type="hidden" name="returnTo" value={returnTo} />
+                      <Button type="submit" size="sm" variant="primary">Attach Image 2 candidate</Button>
+                    </form>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+      {!canPublish && reasons.length > 1 ? (
+        <AdminDisclosure summary={<span>All outstanding actions <span className="text-neutral-500">({reasons.length})</span></span>}>
+          <ul className="grid gap-2 text-sm text-amber-100">
+            {reasons.map((reason) => (
+              <li key={`${reason.code}:${reason.source}`} className="rounded border border-amber-500/20 bg-black/20 p-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wide text-amber-300">{reason.category}</span>
+                  <span>{reason.message}</span>
+                </div>
+                <p className="mt-1 text-xs text-amber-200/80">Source: {reason.source}</p>
+                <ProductReviewActionPanel product={product} reason={reason} returnTo={returnTo} />
+              </li>
+            ))}
+          </ul>
+        </AdminDisclosure>
+      ) : null}
+    </div>
+  );
+}
+
 function ProductMediaReadinessPanel({
   product,
   r2Candidates,
@@ -607,8 +700,8 @@ function ProductAdminCard({
     ? product.readinessBlockers as string[]
     : [];
   const canPublish = readiness
-    ? Boolean(readiness.isReadyToPublish && ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState))
-    : ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState) && blockers.length === 0;
+    ? Boolean(readiness.isReadyToPublish && !['PUBLISHED', 'ARCHIVED'].includes(product.publicationState))
+    : !['PUBLISHED', 'ARCHIVED'].includes(product.publicationState) && blockers.length === 0;
   const blockerCount = readiness?.blockingReasons.length ?? blockers.length;
   const outstandingReviewCount = actionableProductContentReviews(product).length;
 
@@ -645,36 +738,24 @@ function ProductAdminCard({
       <div className="grid gap-4 border-t border-surface-line p-4 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div className="space-y-3">
           <p className="max-w-4xl text-sm leading-6 text-neutral-300">{product.shortDescription ?? 'No short description recorded.'}</p>
-          <ProductDescriptorContentPreview product={product} />
-          <ProductCommercialInventoryPanel product={product} />
-          <ProductReviewRowsPanel product={product} />
-          {readiness?.blockingReasons.length ? (
-            <div className="rounded-md border border-amber-500/40 bg-amber-950/20 p-3">
-              <p className="text-xs font-bold uppercase tracking-wide text-amber-200">Outstanding actions</p>
-              <ul className="mt-2 grid gap-2 text-sm text-amber-100">
-                {readiness.blockingReasons.map((reason) => (
-                  <li key={`${reason.code}:${reason.source}`} className="rounded border border-amber-500/20 bg-black/20 p-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[11px] font-bold uppercase tracking-wide text-amber-300">{reason.category}</span>
-                      <span>{reason.message}</span>
-                    </div>
-                    <p className="mt-1 text-xs text-amber-200/80">Source: {reason.source}</p>
-                    <ProductReviewActionPanel product={product} reason={reason} returnTo={returnTo} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : blockers.length ? (
-            <div className="rounded-md border border-amber-500/40 bg-amber-950/20 p-3">
-              <p className="text-xs font-bold uppercase tracking-wide text-amber-200">Outstanding actions</p>
-              <ul className="mt-2 grid gap-1 text-sm text-amber-100">
+          <ProductPublishWorkflowPanel product={product} readiness={readiness} canPublish={canPublish} r2Candidates={r2Candidates} returnTo={returnTo} />
+          <ProductFlagForm product={product} returnTo={returnTo} />
+          <AdminDisclosure summary="PDP content preview">
+            <ProductDescriptorContentPreview product={product} />
+          </AdminDisclosure>
+          <AdminDisclosure summary="Commercial and stock details">
+            <ProductCommercialInventoryPanel product={product} />
+          </AdminDisclosure>
+          <AdminDisclosure summary="Content/import review rows">
+            <ProductReviewRowsPanel product={product} />
+          </AdminDisclosure>
+          {blockers.length && !readiness?.blockingReasons.length ? (
+            <AdminDisclosure summary={<span>Legacy readiness blockers <span className="text-neutral-500">({blockers.length})</span></span>}>
+              <ul className="grid gap-1 text-sm text-amber-100">
                 {blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}
               </ul>
-            </div>
-          ) : (
-            <p className="rounded-md border border-emerald-500/40 bg-emerald-950/20 p-3 text-sm font-semibold text-emerald-100">Ready to publish.</p>
-          )}
-          <ProductFlagForm product={product} returnTo={returnTo} />
+            </AdminDisclosure>
+          ) : null}
         </div>
         <div className="grid content-start gap-3">
           <ProductMediaReadinessPanel product={product} r2Candidates={r2Candidates} returnTo={returnTo} />

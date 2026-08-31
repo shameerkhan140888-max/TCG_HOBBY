@@ -515,9 +515,11 @@ function canUseSingleApprovedSourceImage(product: Pick<ProductWithReadiness, 'ca
   const category = `${product.category?.name ?? ''} ${product.category?.slug ?? ''}`.toLowerCase();
   const singleImageCategorySlugs = new Set([
     'accessories',
+    'adhesives-finishing',
     'knives-blades',
     'magnification',
     'measuring-tools',
+    'paint-weathering',
     'pin-vices-drills',
     'sanding-files',
     'tool-sets',
@@ -526,7 +528,11 @@ function canUseSingleApprovedSourceImage(product: Pick<ProductWithReadiness, 'ca
   ]);
   return singleImageCategorySlugs.has(product.category?.slug ?? '')
     || /\btools?\b/.test(category)
-    || /\baccessories?\b/.test(category);
+    || /\baccessories?\b/.test(category)
+    || /\badhesives?\b/.test(category)
+    || /\bfinishing\b/.test(category)
+    || /\bpaints?\b/.test(category)
+    || /\bweathering\b/.test(category);
 }
 
 function ironSprueDisplayableMediaWhere(role?: string, isPrimary?: boolean): Prisma.IronSprueAdminMediaAssetListRelationFilter {
@@ -740,9 +746,11 @@ export function deriveIronSprueProductReadinessState(product: ProductWithReadine
 export function ironSpruePublicProductWhere(): Prisma.IronSprueAdminProductWhereInput {
   const singleImageCategorySlugs = [
     'accessories',
+    'adhesives-finishing',
     'knives-blades',
     'magnification',
     'measuring-tools',
+    'paint-weathering',
     'pin-vices-drills',
     'sanding-files',
     'tool-sets',

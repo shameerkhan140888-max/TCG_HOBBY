@@ -132,7 +132,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     expect(evaluateIronSprueProductReadiness(readyProduct()).every((check) => check.passed)).toBe(true);
   });
 
-  it('allows tools and accessories to publish with one approved product image', () => {
+  it('allows tools, accessories and finishing consumables to publish with one approved product image', () => {
     expect(getIronSprueProductReadiness(toolProduct())).toMatchObject({
       status: 'READY',
       isReadyToPublish: true,
@@ -149,6 +149,33 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         message: 'Tools and accessories require at least one approved product image before publication.',
       }),
     ]));
+
+    const adhesive = getIronSprueProductReadiness(toolProduct({
+      customerTitle: 'Glue N Glaze',
+      sourceTitle: 'Glue N Glaze',
+      sku: 'IS-DLM-AD55',
+      slug: 'deluxe-materials-glue-n-glaze',
+      category: { id: 'category-adhesives', name: 'Adhesives & Finishing', slug: 'adhesives-finishing' },
+      mediaAssets: [
+        {
+          id: 'media-glue-original',
+          role: 'manufacturer-original',
+          approvalState: 'APPROVED',
+          isPrimary: false,
+          storageKey: 'archive/products/is-dlm-ad55/original/tasma-approved.jpg',
+          url: null,
+          mimeType: 'image/jpeg',
+          sortOrder: 30,
+        },
+      ],
+    }));
+
+    expect(adhesive).toMatchObject({
+      status: 'READY',
+      isReadyToPublish: true,
+      primaryImageUrl: '/media/iron-sprue/archive/products/is-dlm-ad55/original/tasma-approved.jpg',
+      blockingReasons: [],
+    });
   });
 
   it('resolves R2-backed image rows to the public media origin and rejects JSON placeholders', () => {
