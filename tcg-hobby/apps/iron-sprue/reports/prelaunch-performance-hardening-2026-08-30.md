@@ -196,3 +196,101 @@ Reasons this is not GREEN yet:
 - Authenticated admin read-load harness.
 - Guarded DB connection sampling during load.
 - Controlled Stripe TEST checkout-session profile with explicit volume caps.
+
+## 2026-08-31 Continuation
+
+### Runtime Fixes Applied
+
+- Added the existing `iron-sprue-product-media` bucket as the `IRON_SPRUE_PRODUCT_MEDIA` native R2 binding in the staging Worker config.
+- Updated the storefront media route so published hash-addressed media is served with long-lived immutable cache headers.
+- Added Worker Cache API use for immutable media route responses.
+- Preserved the signed R2 fetch fallback, but verified the deployed staging Worker now uses the native binding.
+- Added a short in-memory public API read cache/dedupe in the storefront production API adapter for public GET catalogue/home/PDP style reads only. Basket, checkout, auth and admin state are not cached by this adapter.
+- Added guarded load and Railway/Postgres sampling scripts. These print only safe target metadata and connection counts, not secrets.
+
+### Deployment Verification
+
+Staging Worker redeployed after reverting the unsafe page-level `revalidate` experiment.
+
+- Worker version: `4298eeac-9c41-4e1c-a7f0-eefb79b5a02a`
+- Native R2 binding visible in Wrangler deploy output: `env.IRON_SPRUE_PRODUCT_MEDIA (iron-sprue-product-media)`
+- Live smoke after deploy:
+  - `/` 200
+  - `/shop` 200
+  - `/products/aoshima-06347-lamborghini-aventador-red` 200
+  - `/basket` 200
+  - `/checkout` 200
+
+### Media Path Proof
+
+Railway is not proxying image bytes.
+
+Observed customer-facing image-byte path:
+
+`browser -> Cloudflare Worker /media/iron-sprue/... -> native R2 binding`
+
+Railway provides product/media metadata and URLs only. Deployed media responses now include:
+
+- `X-Iron-Sprue-Media-Source: r2-binding`
+- `X-Iron-Sprue-Media-Cache: hit` on repeated checks
+- `Cache-Control: public, max-age=31536000, immutable`
+- `cf-cache-status: HIT` on representative repeated checks
+
+Representative media sizes remain large:
+
+| Asset | Bytes | Notes |
+| --- | ---: | --- |
+| Aoshima image2 PNG | 1,293,201 | large for mobile/card thumbnail use |
+| Aoshima manufacturer JPG | 141,375 | acceptable |
+| Aoshima workshop PNG | 1,860,703 | large for mobile/card thumbnail use |
+
+No existing Railway catalogue payload field currently exposes a thumbnail or responsive derivative URL for Iron Sprue product images. Responsive derivative generation/delivery should therefore be treated as a separate media-delivery improvement rather than invented in the storefront layer during this hardening pass.
+
+### Consolidated Load Results
+
+| Profile | Concurrency | Requests | Duration | p50 | p95 | p99 | Errors | DB Peak | Notes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Existing baseline | 1 | 12 | n/a | n/a | n/a | n/a | 0 | not sampled | previously proven healthy |
+| Existing storefront moderate | 5 | 120 | n/a | n/a | n/a | n/a | 0 | not sampled | previously proven healthy |
+| Storefront high, post-fix | 10 | 168 | 21.5s | route p50 up to 682ms media / 476ms page | media p95 up to 10.9s on cold run | same sample ceiling | 0 | 6 total / 1 active | clean |
+| Storefront high, final combined window | 10 | 168 | 3.4s load window | route p50 up to 228ms API / 149ms page / 129ms media | page p95 up to 1.27s, media p95 up to 449ms | same sample ceiling | 0 | 8 total / 1 active | run concurrently with authenticated admin navigation |
+| Storefront stress | 20 | 210 | 57.1s | route p50 up to 17.0s media / 2.3s API | media p95 up to 20.0s timeout, pages/API up to 15.2s | same sample ceiling | 20 total route errors/timeouts | 6 total / 1 active | stress edge, not launch baseline |
+| Media-only | 4 | 36 | 36.3s | manufacturer 340ms, image2 2.71s, workshop 4.74s | manufacturer 1.63s, image2 5.84s, workshop 13.56s | same sample ceiling | 0 | 6 total / 1 active | confirms media size is the slow visible component |
+| Authenticated admin read navigation | 3 browser tabs | 33 | 25.2s | 1.55s | 4.62s | 5.46s | 0 | 3 total / 1 active | signed-in browser session, no login redirects |
+| Combined storefront high + authenticated admin | 10 storefront + 3 admin tabs | 201 | overlapping | admin p50 2.59s | admin p95 7.33s | admin p99 9.02s | 0 | 8 total / 1 active | admin slows under load, no failures |
+| Capped checkout-start/payment-intent | 1 | 34 | 16.1s | checkout intent 959ms | checkout intent 1.03s | checkout intent 1.03s | 0 | 6 total / 1 active | 2 Stripe TEST payment intents created and 2 cancelled |
+
+### Database Headroom
+
+All sampled profiles used the guarded Railway production tunnel and `pg_stat_activity`.
+
+- Storefront high: peak `6` total connections, `1` active, `5` idle.
+- Authenticated admin navigation: peak `3` total connections, `1` active, `2` idle.
+- Combined storefront high + authenticated admin: peak `8` total connections, `1` active, `7` idle.
+- Capped checkout-start: peak `6` total connections, `1` active, `5` idle.
+- No idle-in-transaction connections observed.
+- No connection exhaustion observed.
+
+Slow query and query-rate detail were not available from the current sampler beyond `pg_stat_activity` connection state. No schema/index/pooling change was made because the measured issue was not DB saturation.
+
+### Checkout
+
+The guarded stateful profile was explicitly enabled with `IRON_SPRUE_LOAD_ALLOW_STATEFUL=1`.
+
+- Stripe live payment capture was not used.
+- The harness created two staging/TEST payment-intent starts through `/api/checkout/payment-intent`.
+- Both returned `201`.
+- Both were cancelled by the harness after hook.
+- No checkout-start failures were recorded.
+
+### Worker Resource / 1102
+
+No literal Cloudflare 1102 page/code was observed in the harness output after the fixes. The earlier stress investigation did observe Worker CPU/resource-limit class failures under concurrency 20 before the public API/runtime cache work. The final concurrency-20 run still showed timeouts/fetch failures, especially around large media and some Railway/API fetches, so concurrency 20 remains an edge/stress level rather than a proven launch-safe baseline.
+
+### Current Launch Judgement
+
+Classification: AMBER.
+
+Launch-like read traffic at concurrency 10 plus authenticated admin activity stayed error-free, checkout-start was clean at the deliberately capped Stripe TEST level, and Railway/Postgres connection pressure stayed low. The remaining pre-launch risk is media weight and concurrency-20 instability: large PNGs can dominate mobile-visible completion and timed out under the stress profile.
+
+Free Cloudflare Worker tier appears adequate for the currently proven launch-like concurrency 10 profile. Paid Workers may reduce CPU/resource-limit risk under larger bursts, but the measured immediate bottleneck is oversized media delivery rather than DB connection saturation. Advanced Cloudflare caching, WAF/rate limiting, fair-launch controls and responsive media derivatives remain sensible post-launch or pre-launch hardening extensions depending on launch traffic expectations.

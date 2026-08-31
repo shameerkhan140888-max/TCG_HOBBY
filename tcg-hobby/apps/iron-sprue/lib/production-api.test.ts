@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  clearIronSprueProductionApiCacheForTests,
   getIronSprueProductionApiCatalogueProducts,
   getIronSprueProductionApiBrandPresentation,
   getIronSprueProductionApiHomepagePlacements,
@@ -43,6 +44,7 @@ function product(overrides: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
+  clearIronSprueProductionApiCacheForTests();
   vi.stubEnv('NODE_ENV', 'production');
   vi.stubEnv(IRON_SPRUE_PRODUCTION_API_BASE_URL, 'https://considerate-unity-production-b734.up.railway.app/');
 });

@@ -13,6 +13,19 @@ import type { IronSprueHomepagePlacement } from './admin-storefront-controls';
 export const IRON_SPRUE_PRODUCTION_API_BASE_URL = 'IRON_SPRUE_PRODUCTION_API_BASE_URL';
 const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
 const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
+const PUBLIC_API_CACHE_TTL_MS = 15_000;
+
+type CachedPublicApiResponse = {
+  expiresAt: number;
+  value?: unknown;
+  pending?: Promise<unknown>;
+};
+
+const publicApiCache = new Map<string, CachedPublicApiResponse>();
+
+export function clearIronSprueProductionApiCacheForTests() {
+  publicApiCache.clear();
+}
 
 function configuredProductionApiBaseUrl() {
   return process.env[IRON_SPRUE_PRODUCTION_API_BASE_URL]?.trim().replace(/\/+$/, '') ?? '';
@@ -40,18 +53,44 @@ export function requireIronSprueProductionApiBaseUrl() {
 async function fetchProductionApiJson<T>(path: string, init?: RequestInit): Promise<T> {
   const baseUrl = requireIronSprueProductionApiBaseUrl();
   const url = new URL(path, baseUrl);
-  const response = await fetch(url, {
+  const method = init?.method?.toUpperCase() ?? 'GET';
+  const canUseRuntimeCache = method === 'GET' && !init?.body;
+  const cacheKey = url.toString();
+  const now = Date.now();
+
+  if (canUseRuntimeCache) {
+    const cached = publicApiCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      if (cached.value !== undefined) return cached.value as T;
+      if (cached.pending) return cached.pending as Promise<T>;
+    }
+  }
+
+  const pending = fetch(url, {
     ...init,
     headers: {
       accept: 'application/json',
       ...(init?.headers ?? {}),
     },
     cache: 'no-store',
+  }).then(async (response) => {
+    if (!response.ok) {
+      throw new Error(`Iron Sprue production API request failed: ${response.status} ${url.pathname}`);
+    }
+    return response.json() as Promise<T>;
   });
-  if (!response.ok) {
-    throw new Error(`Iron Sprue production API request failed: ${response.status} ${url.pathname}`);
+
+  if (!canUseRuntimeCache) return pending;
+
+  publicApiCache.set(cacheKey, { expiresAt: now + PUBLIC_API_CACHE_TTL_MS, pending });
+  try {
+    const value = await pending;
+    publicApiCache.set(cacheKey, { expiresAt: Date.now() + PUBLIC_API_CACHE_TTL_MS, value });
+    return value;
+  } catch (error) {
+    publicApiCache.delete(cacheKey);
+    throw error;
   }
-  return response.json() as Promise<T>;
 }
 
 export function storefrontMediaUrl(value: string | null | undefined) {

@@ -50,6 +50,8 @@ describe('Iron Sprue public media route', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('image/png');
+    expect(response.headers.get('cache-control')).toBe('public, max-age=300');
+    expect(response.headers.get('x-iron-sprue-media-source')).toBe('r2-binding');
     expect(mocks.r2Get).toHaveBeenCalledWith('products/is-aos-05628/image-2/master.png');
     expect(mocks.fetch).not.toHaveBeenCalled();
   });
@@ -73,11 +75,41 @@ describe('Iron Sprue public media route', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('image/png');
+    expect(response.headers.get('cache-control')).toBe('public, max-age=300');
+    expect(response.headers.get('x-iron-sprue-media-source')).toBe('r2-fetch-fallback');
     expect(mocks.fetch).toHaveBeenCalledOnce();
     expect(String(mocks.fetch.mock.calls[0]?.[0])).toBe(
       'https://example.r2.cloudflarestorage.com/iron-sprue-product-media/products/is-aos-05628/image-2/master.png',
     );
     expect(mocks.fetch.mock.calls[0]?.[1]?.headers.Authorization).toContain('AWS4-HMAC-SHA256');
+  });
+
+  it('uses immutable caching for content-addressed media keys', async () => {
+    mocks.cloudflareContext.mockResolvedValue({
+      env: {
+        IRON_SPRUE_PRODUCT_MEDIA: {
+          get: mocks.r2Get.mockResolvedValue({
+            body: new ReadableStream({
+              start(controller) {
+                controller.enqueue(new TextEncoder().encode('hashed-image-bytes'));
+                controller.close();
+              },
+            }),
+            size: 18,
+            httpMetadata: { contentType: 'image/png' },
+          }),
+        },
+      },
+    });
+
+    const response = await GET(
+      new NextRequest('http://localhost:3004/media/iron-sprue/products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.png'),
+      { params: Promise.resolve({ key: ['products', 'is-aos-05628', 'image-2', 'iron-sprue-image-2-acf115ef37eb.png'] }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('public, max-age=31536000, immutable');
+    expect(response.headers.get('x-iron-sprue-media-source')).toBe('r2-binding');
   });
 
   it('rejects unsafe object keys before contacting R2', async () => {

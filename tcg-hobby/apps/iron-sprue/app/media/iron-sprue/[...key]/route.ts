@@ -89,6 +89,25 @@ function normalizeStorageKey(parts: string[]) {
   return key;
 }
 
+function cacheControlForKey(key: string) {
+  const fileName = key.split('/').pop() ?? '';
+  const hasContentHash = /(?:^|[-_])[a-f0-9]{10,}(?=\.[a-z0-9]+$)/i.test(fileName);
+  return hasContentHash
+    ? 'public, max-age=31536000, immutable'
+    : 'public, max-age=300';
+}
+
+function isImmutableMediaKey(key: string) {
+  return cacheControlForKey(key).includes('immutable');
+}
+
+function mediaRuntimeCache() {
+  const runtimeGlobals = globalThis as typeof globalThis & {
+    caches?: { default?: Cache };
+  };
+  return runtimeGlobals.caches?.default ?? null;
+}
+
 async function boundMediaBucket() {
   const runtimeEnv = await cloudflareEnv();
   return runtimeEnv?.[R2_BINDING] as BoundR2Bucket | undefined;
@@ -99,8 +118,10 @@ async function streamFromBoundR2(key: string) {
   if (!bucket) return null;
   const object = await bucket.get(key);
   if (!object?.body) return NextResponse.json({ error: 'Media object was not found.' }, { status: 404 });
-  const headers = new Headers({ 'Cache-Control': 'public, max-age=300' });
+  const headers = new Headers();
   object.writeHttpMetadata?.(headers);
+  headers.set('Cache-Control', cacheControlForKey(key));
+  headers.set('X-Iron-Sprue-Media-Source', 'r2-binding');
   if (!headers.has('Content-Type')) headers.set('Content-Type', object.httpMetadata?.contentType ?? 'application/octet-stream');
   if (object.size != null) headers.set('Content-Length', String(object.size));
   return new Response(object.body, { headers });
@@ -186,8 +207,9 @@ async function streamFromR2FetchFallback(key: string) {
   if (!response.ok || !response.body) throw new Error(`R2 media fetch failed with status ${response.status}.`);
 
   const headers = new Headers({
-    'Cache-Control': 'public, max-age=300',
+    'Cache-Control': cacheControlForKey(key),
     'Content-Type': response.headers.get('Content-Type') ?? 'application/octet-stream',
+    'X-Iron-Sprue-Media-Source': 'r2-fetch-fallback',
   });
   const contentLength = response.headers.get('Content-Length');
   if (contentLength) headers.set('Content-Length', contentLength);
@@ -195,13 +217,38 @@ async function streamFromR2FetchFallback(key: string) {
   return new Response(response.body, { headers });
 }
 
-export async function GET(_request: NextRequest, context: { params: Promise<{ key: string[] }> }) {
+async function streamWithEdgeCache(request: NextRequest, key: string) {
+  const cache = isImmutableMediaKey(key) ? mediaRuntimeCache() : null;
+  const cacheRequest = cache ? new Request(request.url, { method: 'GET' }) : null;
+  const cached = cache && cacheRequest ? await cache.match(cacheRequest) : null;
+  if (cached) {
+    const headers = new Headers(cached.headers);
+    headers.set('X-Iron-Sprue-Media-Cache', 'hit');
+    return new Response(cached.body, { status: cached.status, headers });
+  }
+
+  const response = await streamFromBoundR2(key) ?? await streamFromR2FetchFallback(key);
+  if (cache && cacheRequest && response.ok) {
+    response.headers.set('X-Iron-Sprue-Media-Cache', 'miss');
+    const cachedResponse = response.clone();
+    void cache.put(cacheRequest, cachedResponse).catch((error) => {
+      console.warn('iron_sprue_media_cache_put_failed', {
+        key,
+        reason: error instanceof Error ? error.message : 'unknown_error',
+      });
+    });
+  }
+
+  return response;
+}
+
+export async function GET(request: NextRequest, context: { params: Promise<{ key: string[] }> }) {
   const { key: keyParts } = await context.params;
   const key = normalizeStorageKey(keyParts);
   if (!key) return NextResponse.json({ error: 'Invalid media key.' }, { status: 400 });
 
   try {
-    return await streamFromBoundR2(key) ?? await streamFromR2FetchFallback(key);
+    return await streamWithEdgeCache(request, key);
   } catch (error) {
     console.error('iron_sprue_media_delivery_failed', {
       key,
