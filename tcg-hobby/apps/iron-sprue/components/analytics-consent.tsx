@@ -225,22 +225,23 @@ export function IronSprueCookieConsentBanner() {
         ) : null}
       </div>
       <div className="cookie-consent-actions">
-        <button type="button" onClick={() => { setIronSprueAnalyticsConsent(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT); setConsent(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT); }}>Necessary only</button>
+        <button type="button" aria-label="Use necessary cookies only" onClick={() => { setIronSprueAnalyticsConsent(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT); setConsent(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT); }}>Necessary</button>
         {showPreferences ? (
           <button
             type="button"
+            aria-label="Save cookie preferences"
             onClick={() => {
               const nextConsent = { status: 'saved' as const, analytics: analyticsEnabled, marketing: marketingEnabled };
               setIronSprueAnalyticsConsent(nextConsent);
               setConsent(nextConsent);
             }}
           >
-            Save preferences
+            Save
           </button>
         ) : (
-          <button type="button" onClick={() => setShowPreferences(true)}>Manage preferences</button>
+          <button type="button" aria-label="Manage cookie preferences" onClick={() => setShowPreferences(true)}>Manage</button>
         )}
-        <button type="button" className="button" onClick={() => {
+        <button type="button" className="button" aria-label="Accept all cookies" onClick={() => {
           const nextConsent = { status: 'saved' as const, analytics: true, marketing: true };
           setIronSprueAnalyticsConsent(nextConsent);
           setConsent(nextConsent);

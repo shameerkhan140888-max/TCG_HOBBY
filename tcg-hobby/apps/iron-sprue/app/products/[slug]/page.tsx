@@ -8,7 +8,7 @@ import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-co
 import { type IronSprueProduct } from '../../../lib/catalogue';
 import { getIronSprueProductionApiProduct, shouldUseIronSprueProductionApi } from '../../../lib/production-api';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../../../lib/responsive-media';
-import { formatPrice, productAvailability, productAvailabilityClass, productCommerceId, productDetailAddons, productGalleryImages, productImage, productSellableQuantity } from '../../../lib/storefront';
+import { conciseProductLead, customerProductDescription, formatPrice, productAvailability, productAvailabilityClass, productCommerceId, productDetailAddons, productGalleryImages, productImage, productSellableQuantity } from '../../../lib/storefront';
 import { addIronSprueWishlistItemAction } from '../../../lib/wishlist-actions';
 
 const products = launchProducts as IronSprueProduct[];
@@ -56,6 +56,36 @@ function customerFacingSpecifications(product: IronSprueProduct) {
       label: productSpecificationLabels[key] ?? key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (letter) => letter.toUpperCase()),
       value: String(value).trim(),
     }));
+}
+
+function customerFacingFeatures(product: IronSprueProduct, specifications: ReturnType<typeof customerFacingSpecifications>) {
+  const specificationValues = new Set(specifications.map((specification) => specification.value.toLowerCase()));
+  const specificationWords = specifications.flatMap((specification) => String(specification.value).toLowerCase().split(/\W+/).filter(Boolean));
+  const canonicalFragments = new Set([
+    product.brand.toLowerCase(),
+    product.category.toLowerCase(),
+    product.productType.toLowerCase(),
+    product.name.toLowerCase(),
+    ...(product.scale ? [product.scale.toLowerCase()] : []),
+  ]);
+
+  return (product.features ?? [])
+    .map((feature) => feature.trim())
+    .filter(Boolean)
+    .filter((feature) => {
+      const normalised = feature.toLowerCase();
+      if (specificationValues.has(normalised)) return false;
+      if (canonicalFragments.has(normalised)) return false;
+      if (/^\s*\d+\s*:\s*\d+\s*scale\s*$/i.test(feature)) return false;
+      if (/^\s*\d+\s+pieces?\s*$/i.test(feature)) return false;
+      const featureWords = normalised.split(/\W+/).filter((word) => word.length > 3);
+      const matchedSpecificationWords = featureWords.filter((word) => specificationWords.includes(word)).length;
+      if (featureWords.length && matchedSpecificationWords / featureWords.length >= 0.55) return false;
+      if (normalised.includes(product.brand.toLowerCase()) && /(model kit|plastic model kit|3d puzzle|workshop tool|adhesive|finishing product|vehicle model kit)/i.test(feature)) return false;
+      if (/(model kit|plastic model kit|3d puzzle|workshop tool|adhesive|finishing product|vehicle model kit|colour variant|manufacturer reference)/i.test(feature)) return false;
+      if (/^(manufacturer|category|product type|scale|piece count|build format|vehicle marque|structure|subject|theme)\b/i.test(feature)) return false;
+      return true;
+    });
 }
 
 export function generateStaticParams() {
@@ -118,6 +148,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const availabilityClass = productAvailabilityClass(product);
   const addonProducts = productDetailAddons(storefrontProducts, product.sku, 6);
   const specifications = customerFacingSpecifications(product);
+  const customerFeatures = customerFacingFeatures(product, specifications);
+  const lead = conciseProductLead(product);
+  const description = customerProductDescription(product);
+  const manufacturerReference = (product.manufacturerReference ?? product.supplierSku ?? '').trim();
 
   return (
     <section className="section-block product-detail-page">
@@ -128,15 +162,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             <section className="product-description-panel" aria-labelledby="product-description-heading">
               <h2 id="product-description-heading">Description</h2>
-              <p>{product.description ?? product.shortDescription}</p>
+              {description.split(/\n{2,}/).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
             </section>
           </div>
 
           <div className="product-buy-panel">
             <p className="eyebrow">{product.brand} / {product.category}</p>
             <h1>{product.name}</h1>
-            <p className="lead">{product.shortDescription}</p>
-            <p className="sku-line">SKU {product.sku} / Manufacturer Reference {product.manufacturerReference ?? product.supplierSku}</p>
+            <p className="lead">{lead}</p>
+            <p className="sku-line">SKU {product.sku}{manufacturerReference ? <> / Manufacturer Reference {manufacturerReference}</> : null}</p>
             <div className="price-row">
               <strong>{formatPrice(product)}</strong>
               <span>inc VAT</span>
@@ -186,9 +220,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ))}
               </dl>
             ) : null}
-            {product.features?.length ? (
+            {customerFeatures.length ? (
               <ul className="product-key-details">
-                {product.features.map((feature) => (
+                {customerFeatures.map((feature) => (
                   <li key={feature}>{feature}</li>
                 ))}
               </ul>

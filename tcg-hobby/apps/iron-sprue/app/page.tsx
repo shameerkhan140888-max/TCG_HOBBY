@@ -12,7 +12,7 @@ import {
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
 import { getIronSprueProductionApiHomeSnapshot, shouldUseIronSprueProductionApi } from '../lib/production-api';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
-import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCommerceId, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
+import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCardFacts, productCommerceId, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { AddToBasketButton } from '../components/basket-client';
 
@@ -30,6 +30,7 @@ function ProductCard({ product }: { product: IronSprueProduct }) {
   const availableQuantity = productSellableQuantity(product);
   const isOutOfStock = availableQuantity <= 0;
   const availabilityClass = productAvailabilityClass(product);
+  const cardFacts = productCardFacts(product);
 
   return (
     <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
@@ -52,6 +53,11 @@ function ProductCard({ product }: { product: IronSprueProduct }) {
           <p className="product-brand">{product.brand}</p>
           <h3>{product.name}</h3>
           <p>{product.category}</p>
+          {cardFacts.length ? (
+            <ul className="product-card-facts" aria-label={`${product.name} product facts`}>
+              {cardFacts.map((fact) => <li key={fact}>{fact}</li>)}
+            </ul>
+          ) : null}
           <strong>{formatPrice(product)} inc VAT</strong>
           <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
           <div className="product-actions">

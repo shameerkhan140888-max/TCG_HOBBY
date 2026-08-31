@@ -6995,3 +6995,83 @@ body:has(.product-detail-page) .payment-trust-banner {
     font-size: 10px;
   }
 }
+
+.product-card-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: -2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.product-card-facts li {
+  min-width: 0;
+  border: 1px solid rgba(190, 122, 37, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 250, 241, 0.055);
+  padding: 4px 8px;
+  color: rgba(255, 250, 241, 0.78);
+  font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: none;
+}
+
+@media (max-width: 700px) {
+  .cookie-consent {
+    inset: auto 8px max(8px, env(safe-area-inset-bottom)) 8px;
+    max-height: min(48vh, 310px);
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .cookie-consent::after {
+    inset: 5px;
+  }
+
+  .cookie-consent h2 {
+    font-size: 12px;
+  }
+
+  .cookie-consent p {
+    font-size: 10.5px;
+    line-height: 1.32;
+  }
+
+  .cookie-preference-panel {
+    gap: 5px;
+    margin-top: 7px;
+    padding-top: 7px;
+  }
+
+  .cookie-preference-panel label {
+    font-size: 10.5px;
+    line-height: 1.28;
+  }
+
+  .cookie-consent-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .cookie-consent-actions button {
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    padding: 0 5px;
+    font-size: 9.5px;
+    line-height: 1.08;
+    white-space: normal;
+  }
+
+  .product-card-facts {
+    gap: 5px;
+  }
+
+  .product-card-facts li {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+}

@@ -9,6 +9,7 @@ import {
   formatPrice,
   productAvailability,
   productAvailabilityClass,
+  productCardFacts,
   productCommerceId,
   productImage,
   productSellableQuantity,
@@ -254,6 +255,7 @@ export async function CatalogueListing({
                 const availableQuantity = productSellableQuantity(product);
                 const isOutOfStock = availableQuantity <= 0;
                 const availabilityClass = productAvailabilityClass(product);
+                const cardFacts = productCardFacts(product);
                 return (
                   <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
                     <div className="product-card-surface">
@@ -275,6 +277,11 @@ export async function CatalogueListing({
                         <p className="product-brand">{product.brand}</p>
                         <h2>{product.name}</h2>
                         <p>{product.category}</p>
+                        {cardFacts.length ? (
+                          <ul className="product-card-facts" aria-label={`${product.name} product facts`}>
+                            {cardFacts.map((fact) => <li key={fact}>{fact}</li>)}
+                          </ul>
+                        ) : null}
                         <strong>{formatPrice(product)} inc VAT</strong>
                         <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
                         <p className="meta">Manufacturer Reference {product.manufacturerReference ?? product.supplierSku}</p>

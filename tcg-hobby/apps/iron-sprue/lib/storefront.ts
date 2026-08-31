@@ -1,4 +1,14 @@
-import { brandSlug, productPriceMinor, type IronSprueBrandRecord, type IronSprueProduct } from './catalogue';
+import {
+  brandSlug,
+  productBuildType,
+  productPieceCount,
+  productPriceMinor,
+  productScale,
+  productStructure,
+  vehicleManufacturerForProduct,
+  type IronSprueBrandRecord,
+  type IronSprueProduct,
+} from './catalogue';
 
 export const categoryNavigation = [
   { label: 'Model Kits', href: '/shop/model-kits' },
@@ -133,13 +143,126 @@ export function productImage(product: IronSprueProduct) {
 }
 
 export function productGalleryImages(product: IronSprueProduct) {
-  const images = [
+  const liveImages = [
     productImage(product),
     ...(product.imageReferences ?? []),
-    productImageRegistry[product.slug] ?? null,
   ].filter((image): image is string => Boolean(image?.trim()));
 
+  const images = liveImages.length ? liveImages : [productImageRegistry[product.slug]].filter((image): image is string => Boolean(image?.trim()));
+
   return Array.from(new Set(images));
+}
+
+export function conciseProductLead(product: IronSprueProduct) {
+  return `${product.name} from ${product.brand}.`;
+}
+
+function normalisePublicCopy(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const publicCopyStopWords = new Set([
+  'about',
+  'after',
+  'again',
+  'alongside',
+  'available',
+  'because',
+  'before',
+  'bring',
+  'build',
+  'builders',
+  'clean',
+  'collection',
+  'colour',
+  'completed',
+  'display',
+  'enjoy',
+  'finished',
+  'from',
+  'looking',
+  'model',
+  'once',
+  'presence',
+  'product',
+  'selected',
+  'strong',
+  'subject',
+  'suits',
+  'their',
+  'with',
+]);
+
+function significantPublicWords(value: string) {
+  return normalisePublicCopy(value)
+    .split(' ')
+    .filter((word) => word.length > 3 && !publicCopyStopWords.has(word));
+}
+
+function publicCopySimilarity(a: string, b: string) {
+  const aWords = new Set(significantPublicWords(a));
+  const bWords = new Set(significantPublicWords(b));
+  const smallest = Math.min(aWords.size, bWords.size);
+  if (!smallest) return 0;
+  let shared = 0;
+  aWords.forEach((word) => {
+    if (bWords.has(word)) shared += 1;
+  });
+  return shared / smallest;
+}
+
+function stripInternalProductCopy(value: string) {
+  return value
+    .replace(/\b(?:todo|tbc|needs review|media pending|admin source|source reference|verified by|import row|launch import|scraped|scrape artefact|archive\/products)\b[^\n.]*/gi, '')
+    .replace(/\s+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+export function customerProductDescription(product: IronSprueProduct): string {
+  const source = stripInternalProductCopy(product.description || product.shortDescription || conciseProductLead(product));
+  const shortDescription = normalisePublicCopy(product.shortDescription || '');
+  const seen = new Set<string>();
+  const paragraphs = source
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .filter((paragraph) => {
+      const normalised = normalisePublicCopy(paragraph);
+      if (!normalised) return false;
+      if (seen.has(normalised)) return false;
+      seen.add(normalised);
+      if (shortDescription && normalised === shortDescription) return true;
+      return true;
+    });
+
+  if (!paragraphs.length) return conciseProductLead(product);
+  if (paragraphs.length === 1) return paragraphs[0] ?? conciseProductLead(product);
+
+  const [first, ...rest] = paragraphs;
+  if (!first) return conciseProductLead(product);
+  const firstNormalised = normalisePublicCopy(first);
+  const filteredRest = rest.filter((paragraph) => {
+    const normalised = normalisePublicCopy(paragraph);
+    return !firstNormalised.includes(normalised) && !normalised.includes(firstNormalised) && publicCopySimilarity(first, paragraph) < 0.58;
+  });
+  return [first, ...filteredRest].join('\n\n');
+}
+
+export function productCardFacts(product: IronSprueProduct) {
+  const facts = [
+    productScale(product),
+    productPieceCount(product) ? `${productPieceCount(product)} pieces` : '',
+    vehicleManufacturerForProduct(product),
+    productStructure(product),
+    productBuildType(product),
+  ].filter((value): value is string => Boolean(String(value ?? '').trim()));
+
+  return Array.from(new Set(facts)).slice(0, 3);
 }
 
 export function productSellableQuantity(product: IronSprueProduct) {
