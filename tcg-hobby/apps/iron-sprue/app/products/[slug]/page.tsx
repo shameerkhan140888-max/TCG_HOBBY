@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic';
 
 const productSpecificationLabels: Record<string, string> = {
   assemblyMethod: 'Assembly method',
+  buildType: 'Build format',
   buildLevel: 'Build level',
   category: 'Category',
   contents: 'Contents',

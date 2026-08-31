@@ -135,7 +135,7 @@ function vehicleManufacturerValue(product: IronSprueCatalogueProductRow, specifi
 }
 
 function buildTypeValue(product: IronSprueCatalogueProductRow, specifications: Record<string, string>) {
-  return firstSpecificationText(specifications, ['buildType', 'build type', 'buildLevel', 'assemblyMethod']) || product.buildType || product.difficulty || '';
+  return firstSpecificationText(specifications, ['buildType', 'build type', 'assemblyMethod']) || product.buildType || product.assemblyMethod || '';
 }
 
 function publicSearchText(product: IronSprueCatalogueProductRow) {
@@ -285,7 +285,7 @@ export function sanitizePublicProductList(values: string[] | null | undefined) {
     .filter((value) => value.length > 0);
 }
 
-function publicSpecifications(product: IronSprueCatalogueProductRow): Record<string, string> {
+function basePublicSpecifications(product: IronSprueCatalogueProductRow): Record<string, string> {
   const internalSpecificationKeys = new Set([
     'adminSourceReference',
     'catalogueReference',
@@ -319,6 +319,19 @@ function publicSpecifications(product: IronSprueCatalogueProductRow): Record<str
     if (text && !isInternalProductCopyBlock(text)) result[key] = text;
     return result;
   }, {});
+}
+
+function publicSpecifications(product: IronSprueCatalogueProductRow): Record<string, string> {
+  const specifications = basePublicSpecifications(product);
+  const vehicleManufacturer = vehicleManufacturerValue(product, specifications);
+  const structure = structureValue(product, specifications);
+  const buildType = buildTypeValue(product, specifications);
+
+  if (vehicleManufacturer && !specifications.vehicleManufacturer) specifications.vehicleManufacturer = vehicleManufacturer;
+  if (structure && !specifications.structure) specifications.structure = structure;
+  if (buildType && !specifications.buildType) specifications.buildType = buildType;
+
+  return specifications;
 }
 
 function publicShortDescription(product: IronSprueCatalogueProductRow) {

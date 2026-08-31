@@ -119,7 +119,12 @@ describe('Iron Sprue production catalogue adapter', () => {
       imageUrl: '/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp',
       scale: '1:24',
       buildLevel: 'Beginner',
-      specifications: expect.objectContaining({ scale: '1:24', buildLevel: 'Beginner' }),
+      specifications: expect.objectContaining({
+        scale: '1:24',
+        buildLevel: 'Beginner',
+        buildType: 'Model Kits',
+        vehicleManufacturer: 'Toyota',
+      }),
     });
   });
 
@@ -285,6 +290,11 @@ describe('Iron Sprue production catalogue adapter', () => {
     }, client as never);
 
     expect(result.products.map((product) => product.sku)).toEqual(['IS-PIN-S1024']);
+    expect(result.products[0]?.specifications).toMatchObject({
+      pieces: '160',
+      structure: 'Vase',
+      buildType: '3D puzzle object',
+    });
   });
 
   it('filters offers through the canonical special-offer flag', async () => {
@@ -369,6 +379,7 @@ describe('Iron Sprue production catalogue adapter', () => {
             sourceTitle: 'Lamborghini Aventador source',
             sku: 'IS-AOS-06347',
             slug: 'aoshima-06347-lamborghini-aventador-red',
+            scale: '1:32',
             specifications: { scale: '1:32' },
           }),
           ironSprueProduct({
@@ -394,6 +405,11 @@ describe('Iron Sprue production catalogue adapter', () => {
     }, client as never);
 
     expect(result.products.map((product) => product.sku)).toEqual(['IS-AOS-06347']);
+    expect(result.products[0]?.specifications).toMatchObject({
+      scale: '1:32',
+      buildType: 'Model Kits',
+      vehicleManufacturer: 'Lamborghini',
+    });
   });
 
   it('requires customer-facing media before a published product is public', async () => {
