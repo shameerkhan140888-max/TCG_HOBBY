@@ -11,6 +11,7 @@ import {
 } from '../lib/admin-storefront-controls';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
 import { getIronSprueProductionApiHomeSnapshot, shouldUseIronSprueProductionApi } from '../lib/production-api';
+import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCommerceId, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { AddToBasketButton } from '../components/basket-client';
@@ -34,7 +35,18 @@ function ProductCard({ product }: { product: IronSprueProduct }) {
     <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
       <div className="product-card-surface">
         <a className="product-image" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
-          {imageUrl ? <img src={imageUrl} alt={product.name} width="1000" height="1000" /> : <span>{product.brand}</span>}
+          {imageUrl ? (
+            <img
+              src={ironSprueDisplayMediaUrl(imageUrl, 480)}
+              srcSet={ironSprueDisplayMediaSrcSet(imageUrl, [320, 480, 640])}
+              sizes="(max-width: 720px) 46vw, (max-width: 1100px) 30vw, 320px"
+              alt={product.name}
+              width="1000"
+              height="1000"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : <span>{product.brand}</span>}
         </a>
         <div className="product-card-body">
           <p className="product-brand">{product.brand}</p>
@@ -100,7 +112,17 @@ export default async function HomePage() {
               key={`${slide.id ?? slide.image}-${slide.title}`}
             >
               <a className="hero-art-link" href={slide.ctaHref} aria-label={`View ${slide.title}`}>
-                <img className="hero-art" src={slide.image} alt={slide.alt} width="1536" height="864" />
+                <img
+                  className="hero-art"
+                  src={ironSprueDisplayMediaUrl(slide.image, 1400)}
+                  srcSet={ironSprueDisplayMediaSrcSet(slide.image, [640, 960, 1400])}
+                  sizes="100vw"
+                  alt={slide.alt}
+                  width="1536"
+                  height="864"
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  decoding={index === 0 ? 'sync' : 'async'}
+                />
               </a>
               {slide.brandLogo ? (
                 <div className="hero-brand">
@@ -179,7 +201,16 @@ export default async function HomePage() {
         <section className="promo-grid" aria-label="Special offers">
           {homepagePromoPanels.map((panel) => (
             <article className="promo-card" key={panel.title}>
-              <img src={panel.image} alt={panel.alt} width="900" height="600" />
+              <img
+                src={ironSprueDisplayMediaUrl(panel.image, 640)}
+                srcSet={ironSprueDisplayMediaSrcSet(panel.image, [480, 640, 960])}
+                sizes="(max-width: 700px) 72vw, 31vw"
+                alt={panel.alt}
+                width="900"
+                height="600"
+                loading="lazy"
+                decoding="async"
+              />
               <div>
                 <p className="eyebrow">{panel.eyebrow}</p>
                 <h2>{panel.title}</h2>

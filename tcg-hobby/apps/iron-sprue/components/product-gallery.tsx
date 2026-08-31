@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 
 type ProductGalleryProps = {
   images: string[];
@@ -60,7 +61,16 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
         onClick={() => setEnlarged(true)}
         aria-label={`Enlarge image of ${productName}`}
       >
-        <img src={activeImage} alt={productName} width="1000" height="1000" />
+        <img
+          src={ironSprueDisplayMediaUrl(activeImage, 960)}
+          srcSet={ironSprueDisplayMediaSrcSet(activeImage, [480, 640, 960, 1400])}
+          sizes="(max-width: 700px) 82vw, (max-width: 1100px) 48vw, 620px"
+          alt={productName}
+          width="1000"
+          height="1000"
+          loading="eager"
+          decoding="async"
+        />
       </button>
 
       {images.length > 1 ? (
@@ -74,7 +84,16 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
               aria-current={index === activeIndex ? 'true' : undefined}
               key={`${image}-${index}`}
             >
-              <img src={image} alt={`${productName} gallery image ${index + 1}`} width="160" height="160" />
+              <img
+                src={ironSprueDisplayMediaUrl(image, 320)}
+                srcSet={ironSprueDisplayMediaSrcSet(image, [320, 480])}
+                sizes="80px"
+                alt={`${productName} gallery image ${index + 1}`}
+                width="160"
+                height="160"
+                loading="lazy"
+                decoding="async"
+              />
             </button>
           ))}
         </div>

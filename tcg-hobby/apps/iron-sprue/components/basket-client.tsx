@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CheckoutAddress, PublicBasket, PublicBasketInputItem, ShippingMethodCode } from '@capital-hobby/types';
 import { trackIronSprueEcommerceEvent } from '../lib/analytics';
+import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 import { PaymentMethodStrip } from './payment-method-strip';
 
 export const IRON_SPRUE_BASKET_STORAGE_KEY = 'iron-sprue-basket-v1';
@@ -714,7 +715,18 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
         const limit = availabilityLimit(item);
         return (
         <article className={`basket-line${warning ? ' unavailable' : ''}`} key={item.productId}>
-          {item.imageUrl ? <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} width="120" height="120" /> : <span className="basket-image-fallback">Iron Sprue</span>}
+          {item.imageUrl ? (
+            <img
+              src={ironSprueDisplayMediaUrl(item.imageUrl, 320)}
+              srcSet={ironSprueDisplayMediaSrcSet(item.imageUrl, [320, 480])}
+              sizes="120px"
+              alt={item.imageAlt ?? item.productName}
+              width="120"
+              height="120"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : <span className="basket-image-fallback">Iron Sprue</span>}
           <div className="basket-line-details">
             <p className="eyebrow">Basket item</p>
             <a href={`/products/${item.productSlug}`}>{item.productName}</a>
@@ -796,7 +808,16 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
               {visibleUpsells.map((product) => (
                 <article className="basket-upsell-card" key={product.productId}>
                   <a className="basket-upsell-image" href={`/products/${product.productSlug}`}>
-                    {product.imageUrl ? <img src={product.imageUrl} alt={product.imageAlt ?? product.productName} /> : <span className="basket-image-fallback">Iron Sprue</span>}
+                    {product.imageUrl ? (
+                      <img
+                        src={ironSprueDisplayMediaUrl(product.imageUrl, 320)}
+                        srcSet={ironSprueDisplayMediaSrcSet(product.imageUrl, [320, 480])}
+                        sizes="96px"
+                        alt={product.imageAlt ?? product.productName}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : <span className="basket-image-fallback">Iron Sprue</span>}
                   </a>
                   <div className="basket-upsell-info">
                     <p className="eyebrow">Add-on</p>
@@ -822,7 +843,18 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
           <div className="checkout-review-lines receipt-lines">
             {basketLineItems.map((item) => (
               <article className="checkout-review-line" key={item.productId}>
-                {item.imageUrl ? <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} width="64" height="64" /> : <span className="basket-image-fallback">Iron Sprue</span>}
+                {item.imageUrl ? (
+                  <img
+                    src={ironSprueDisplayMediaUrl(item.imageUrl, 320)}
+                    srcSet={ironSprueDisplayMediaSrcSet(item.imageUrl, [320, 480])}
+                    sizes="64px"
+                    alt={item.imageAlt ?? item.productName}
+                    width="64"
+                    height="64"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : <span className="basket-image-fallback">Iron Sprue</span>}
                 <div className="checkout-review-item-copy">
                   <strong>{item.productName}</strong>
                   <span className="checkout-review-unit">{formatPrice(item.unitPriceMinor)} each</span>

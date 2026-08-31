@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { customerOrderStatus, getCurrentIronSprueOrder } from '../../../../lib/orders';
 import { submitIronSprueOrderRequestAction } from '../../../../lib/order-request-actions';
+import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../../../../lib/responsive-media';
 
 function money(value: number, currency = 'GBP') {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(value / 100);
@@ -54,7 +55,18 @@ export default async function AccountOrderDetailPage({
             <div className="account-line" key={item.id}>
               <div className="account-order-item">
                 <span className="account-order-thumb">
-                  {item.imageUrl ? <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} width="72" height="72" /> : 'Iron Sprue'}
+                  {item.imageUrl ? (
+                    <img
+                      src={ironSprueDisplayMediaUrl(item.imageUrl, 320)}
+                      srcSet={ironSprueDisplayMediaSrcSet(item.imageUrl, [320, 480])}
+                      sizes="72px"
+                      alt={item.imageAlt ?? item.productName}
+                      width="72"
+                      height="72"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : 'Iron Sprue'}
                 </span>
                 <span>
                   <strong>{item.productName}</strong>

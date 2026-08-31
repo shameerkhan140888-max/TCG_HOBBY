@@ -294,3 +294,77 @@ Classification: AMBER.
 Launch-like read traffic at concurrency 10 plus authenticated admin activity stayed error-free, checkout-start was clean at the deliberately capped Stripe TEST level, and Railway/Postgres connection pressure stayed low. The remaining pre-launch risk is media weight and concurrency-20 instability: large PNGs can dominate mobile-visible completion and timed out under the stress profile.
 
 Free Cloudflare Worker tier appears adequate for the currently proven launch-like concurrency 10 profile. Paid Workers may reduce CPU/resource-limit risk under larger bursts, but the measured immediate bottleneck is oversized media delivery rather than DB connection saturation. Advanced Cloudflare caching, WAF/rate limiting, fair-launch controls and responsive media derivatives remain sensible post-launch or pre-launch hardening extensions depending on launch traffic expectations.
+
+## 2026-08-31 Responsive Media Delivery Completion
+
+### Changes Applied
+
+- Added display-only WebP derivatives for published Iron Sprue media at widths `320`, `480`, `640`, `960` and `1400`.
+- Preserved all canonical full-resolution originals in R2.
+- Updated the Worker media route so `/media/iron-sprue/...?...w=<width>` serves the matching derivative through the native `IRON_SPRUE_PRODUCT_MEDIA` R2 binding.
+- Preserved fallback to the canonical original when a derivative is unavailable.
+- Updated homepage, catalogue, product cards, PDP gallery, thumbnails, basket, checkout and account order thumbnails to request responsive display candidates.
+- Kept PDP lightbox/zoom on the original high-resolution image path so full-resolution media is loaded only when the customer explicitly enlarges the image.
+- Reduced the mobile PDP main media footprint by roughly 15-20% while preserving the approved machined frame and desktop sizing.
+
+### Derivative Generation
+
+The derivative generation pass scanned the deployed catalogue and uploaded display derivatives for `139` unique public media objects. It was scoped to public product media keys only. No stock, pricing, product content, publication state, order, fulfilment, Stripe, VAT or accounting data was modified.
+
+Representative byte reductions:
+
+| Asset | Original | Mobile/display derivative | Larger display derivative |
+| --- | ---: | ---: | ---: |
+| Aoshima image2 PNG | 1,293,201 bytes, 1729x910 PNG | 12,798 bytes, 480x253 WebP | 34,422 bytes, 960x505 WebP |
+| Aoshima workshop PNG | 1,860,703 bytes, 1586x992 PNG | 20,642 bytes, 480x300 WebP | 56,914 bytes, 960x600 WebP |
+| Pintoo S1024 workshop PNG | 1,973,892 bytes, 1536x1024 PNG | 18,862 bytes, 480x320 WebP | 56,474 bytes, 960x640 WebP |
+
+### Deployed Verification
+
+- Staging Worker version: `bdb27654-e882-4a4f-b3a7-ed629ed94aa6`
+- Native R2 binding visible in deployment output: `env.IRON_SPRUE_PRODUCT_MEDIA (iron-sprue-product-media)`
+- Example live derivative response: Aoshima image2 `?w=480` returned `200`, `image/webp`, `X-Iron-Sprue-Media-Source: r2-binding-derivative`, immutable cache headers and `12,798` transferred bytes.
+- Example live derivative response: Aoshima workshop `?w=960` returned `200`, `image/webp`, `X-Iron-Sprue-Media-Source: r2-binding-derivative`, immutable cache headers and `56,914` transferred bytes.
+- Example canonical original response still returned the original PNG through `X-Iron-Sprue-Media-Source: r2-binding`.
+- Live PDP HTML contains `srcset`/`sizes` responsive candidates with `?w=` derivative URLs.
+- Browser smoke at mobile PDP, mobile homepage and desktop PDP found no horizontal overflow and no incomplete images.
+
+### Post-Fix Load Results
+
+| Profile | Concurrency | Requests | Duration | p50 | p95 | p99 | Errors | DB Peak | Notes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Media-only, post-derivative | 4 | 36 | 45s sampler window | 36ms overall | 410ms overall | 410ms overall | 0 | 6 total / 1 active | media p95 max 410ms |
+| Storefront high, post-derivative | 10 | 168 | 45s sampler window | 61ms overall | 894ms overall | 894ms overall | 0 | 6 total / 3 active | clean |
+| Storefront stress, post-derivative | 20 | 210 | 45s sampler window | 60ms overall | 1.22s overall | 1.22s overall | 0 | 6 total / 1 active | previous timeout pattern not reproduced |
+| Capped checkout-start, post-derivative | 2 | 34 | 45s sampler window | 44ms overall | 859ms overall | 859ms overall | 0 | 6 total / 1 active | 2 Stripe TEST starts returned `201`; 2 cancelled by harness |
+
+Post-fix media timings in the stress profile:
+
+| Media target | p50 | p95 | Transferred bytes across run |
+| --- | ---: | ---: | ---: |
+| product.1 | 46ms | 143ms | 516,330 |
+| product.2 | 45ms | 496ms | 1,061,580 |
+| product.3 | 47ms | 638ms | 853,710 |
+
+Before this derivative fix, the same concurrency-20 stress profile recorded `20` route errors/timeouts and media p95 reached the 20s timeout ceiling. After the derivative fix, concurrency 20 completed with `0` errors and no Worker 1102 recurrence.
+
+### Admin / Combined Verification Status
+
+Authenticated admin read-load and combined storefront + authenticated admin load were already proven before the responsive-media fix. The responsive-media change affects storefront media delivery only and reduces Worker/R2 byte pressure; it does not change admin routing, admin data access, Railway API behaviour, DB pooling, checkout logic or Stripe logic.
+
+The strict post-derivative combined authenticated-admin rerun was not executed in the local terminal because `IRON_SPRUE_LOAD_ADMIN_COOKIE` was not present and no safe cookie export tool was available in this session. Prior authenticated-admin evidence remains valid for the unchanged admin surface, but a final signed-in combined rerun can be repeated when a fresh admin cookie is supplied to the terminal.
+
+### Final Hardening Judgement
+
+Classification: GREEN for the tested launch-like storefront, media, checkout and database profiles.
+
+Evidence:
+
+- Worker 1102 was not observed after the media fix.
+- Concurrency 20 now completed cleanly with `0` errors in the comparable storefront stress profile.
+- The measured bottleneck, oversized mobile/display PNG delivery, has been materially reduced by responsive WebP derivatives.
+- DB pressure remained low: peak sampled total connections stayed at `6`, active connections peaked at `3`, and no connection exhaustion was observed.
+- Stripe TEST checkout-start remained clean at the deliberately capped profile.
+- Free Cloudflare Worker tier remains adequate for the measured launch profile. Paid Workers are not required by the current evidence, though advanced Cloudflare caching, WAF/rate limiting and fair-launch controls remain sensible post-launch hardening work.
+
+Remaining caveat: repeat one final authenticated combined run with a fresh admin session cookie before launch sign-off if strict admin-under-load evidence must be current to this exact derivative deployment.

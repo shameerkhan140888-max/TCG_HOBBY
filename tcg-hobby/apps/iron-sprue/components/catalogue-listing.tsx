@@ -2,6 +2,7 @@ import launchProducts from '../data/launch-products.json';
 import { filterIronSprueProducts, isModelKitProduct, launchCatalogueStatus, scaleOptions, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
 import { getIronSprueStorefrontProducts } from '../lib/admin-storefront-controls';
 import { AddToBasketButton } from './basket-client';
+import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 import {
   brandOptions,
   categoryOptions,
@@ -173,7 +174,18 @@ export async function CatalogueListing({
                   <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
                     <div className="product-card-surface">
                       <a className="product-image" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
-                        {imageUrl ? <img src={imageUrl} alt={product.name} width="1000" height="1000" /> : <span>{product.brand}</span>}
+                        {imageUrl ? (
+                          <img
+                            src={ironSprueDisplayMediaUrl(imageUrl, 480)}
+                            srcSet={ironSprueDisplayMediaSrcSet(imageUrl, [320, 480, 640])}
+                            sizes="(max-width: 720px) 46vw, (max-width: 1100px) 30vw, 320px"
+                            alt={product.name}
+                            width="1000"
+                            height="1000"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        ) : <span>{product.brand}</span>}
                       </a>
                       <div className="product-card-body">
                         <p className="product-brand">{product.brand}</p>

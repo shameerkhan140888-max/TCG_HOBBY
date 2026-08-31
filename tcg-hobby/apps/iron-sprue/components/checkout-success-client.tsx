@@ -7,6 +7,7 @@ import {
   markIronSpruePurchaseTracked,
   trackIronSprueEcommerceEvent,
 } from '../lib/analytics';
+import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 import { clearIronSprueBasketAfterPaidCheckout } from './basket-client';
 
 function formatPrice(minor: number) {
@@ -143,7 +144,18 @@ export function CheckoutSuccessClient({
           <ul className="order-lines">
             {order.items.map((item) => (
               <li key={item.id}>
-                {item.imageUrl ? <img src={item.imageUrl} alt={item.imageAlt ?? item.productName} width="72" height="72" /> : null}
+                {item.imageUrl ? (
+                  <img
+                    src={ironSprueDisplayMediaUrl(item.imageUrl, 320)}
+                    srcSet={ironSprueDisplayMediaSrcSet(item.imageUrl, [320, 480])}
+                    sizes="72px"
+                    alt={item.imageAlt ?? item.productName}
+                    width="72"
+                    height="72"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : null}
                 <span>
                   <strong>{item.productName}</strong>
                   <small>Qty {item.quantity} · {formatPrice(item.unitPriceMinor)} each</small>

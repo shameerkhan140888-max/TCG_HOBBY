@@ -5950,7 +5950,7 @@ body::before {
 
   .product-unified-panel .product-gallery-main {
     grid-area: auto;
-    min-height: clamp(250px, 72vw, 330px);
+    min-height: clamp(210px, 60vw, 280px);
     aspect-ratio: 1 / 1;
     padding: 10px;
     order: 1;

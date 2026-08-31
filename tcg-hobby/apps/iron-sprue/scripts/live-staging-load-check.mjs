@@ -198,7 +198,7 @@ async function discoverProductProbe() {
       .map((image) => image?.url)
       .filter((url) => typeof url === 'string' && url.startsWith('/media/iron-sprue/'))
       .slice(0, 3)
-      .map((url) => `${storefrontUrl}${url}`);
+      .map((url) => displayMediaUrl(`${storefrontUrl}${url}`, selected.mobile ? 480 : 960));
     return {
       productId: typeof product.id === 'string' ? product.id : null,
       checkoutProductId: typeof checkoutCandidate?.id === 'string' ? checkoutCandidate.id : null,
@@ -207,6 +207,12 @@ async function discoverProductProbe() {
   } catch {
     return { productId: null, checkoutProductId: null, mediaUrls: [] };
   }
+}
+
+function displayMediaUrl(value, width) {
+  const url = new URL(value);
+  url.searchParams.set('w', String(width));
+  return url.toString();
 }
 
 async function runPool(items, concurrency, worker) {

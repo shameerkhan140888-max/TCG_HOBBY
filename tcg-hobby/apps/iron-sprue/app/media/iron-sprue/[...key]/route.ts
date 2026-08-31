@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 const BUCKET = 'iron-sprue-product-media';
 const R2_BINDING = 'IRON_SPRUE_PRODUCT_MEDIA';
 const ALLOWED_PREFIX = /^(archive|products|processed|published|marketing|brands)\//;
+const DISPLAY_MEDIA_WIDTHS = [320, 480, 640, 960, 1400] as const;
 let localIronSprueEnv: Record<string, string> | null = null;
 
 type BoundR2Object = {
@@ -101,6 +102,18 @@ function isImmutableMediaKey(key: string) {
   return cacheControlForKey(key).includes('immutable');
 }
 
+function displayWidth(request: NextRequest) {
+  const raw = request.nextUrl.searchParams.get('w');
+  const value = raw ? Number(raw) : 0;
+  return DISPLAY_MEDIA_WIDTHS.find((width) => width === value) ?? null;
+}
+
+function derivativeKeyFor(key: string, width: number) {
+  const normalized = key.replace(/^\/+/, '');
+  const withoutExtension = normalized.replace(/\.[a-z0-9]+$/i, '');
+  return `derivatives/w${width}/${withoutExtension}.webp`;
+}
+
 function mediaRuntimeCache() {
   const runtimeGlobals = globalThis as typeof globalThis & {
     caches?: { default?: Cache };
@@ -113,15 +126,15 @@ async function boundMediaBucket() {
   return runtimeEnv?.[R2_BINDING] as BoundR2Bucket | undefined;
 }
 
-async function streamFromBoundR2(key: string) {
+async function streamFromBoundR2(key: string, options: { cacheKey?: string; source?: string } = {}) {
   const bucket = await boundMediaBucket();
   if (!bucket) return null;
   const object = await bucket.get(key);
   if (!object?.body) return NextResponse.json({ error: 'Media object was not found.' }, { status: 404 });
   const headers = new Headers();
   object.writeHttpMetadata?.(headers);
-  headers.set('Cache-Control', cacheControlForKey(key));
-  headers.set('X-Iron-Sprue-Media-Source', 'r2-binding');
+  headers.set('Cache-Control', cacheControlForKey(options.cacheKey ?? key));
+  headers.set('X-Iron-Sprue-Media-Source', options.source ?? 'r2-binding');
   if (!headers.has('Content-Type')) headers.set('Content-Type', object.httpMetadata?.contentType ?? 'application/octet-stream');
   if (object.size != null) headers.set('Content-Length', String(object.size));
   return new Response(object.body, { headers });
@@ -218,6 +231,7 @@ async function streamFromR2FetchFallback(key: string) {
 }
 
 async function streamWithEdgeCache(request: NextRequest, key: string) {
+  const width = displayWidth(request);
   const cache = isImmutableMediaKey(key) ? mediaRuntimeCache() : null;
   const cacheRequest = cache ? new Request(request.url, { method: 'GET' }) : null;
   const cached = cache && cacheRequest ? await cache.match(cacheRequest) : null;
@@ -227,7 +241,15 @@ async function streamWithEdgeCache(request: NextRequest, key: string) {
     return new Response(cached.body, { status: cached.status, headers });
   }
 
-  const response = await streamFromBoundR2(key) ?? await streamFromR2FetchFallback(key);
+  let response: Response | null = null;
+  if (width) {
+    const derivativeResponse = await streamFromBoundR2(derivativeKeyFor(key, width), {
+      cacheKey: key,
+      source: 'r2-binding-derivative',
+    });
+    response = derivativeResponse?.status === 404 ? null : derivativeResponse;
+  }
+  response = response ?? await streamFromBoundR2(key) ?? await streamFromR2FetchFallback(key);
   if (cache && cacheRequest && response.ok) {
     response.headers.set('X-Iron-Sprue-Media-Cache', 'miss');
     const cachedResponse = response.clone();

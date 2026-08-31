@@ -7,6 +7,7 @@ import { AddToBasketButton } from '../../../components/basket-client';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
 import { type IronSprueProduct } from '../../../lib/catalogue';
 import { getIronSprueProductionApiProduct, shouldUseIronSprueProductionApi } from '../../../lib/production-api';
+import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../../../lib/responsive-media';
 import { formatPrice, productAvailability, productAvailabilityClass, productCommerceId, productDetailAddons, productGalleryImages, productImage, productSellableQuantity } from '../../../lib/storefront';
 import { addIronSprueWishlistItemAction } from '../../../lib/wishlist-actions';
 
@@ -164,7 +165,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               return (
                 <article className="addon-card" key={item.sku}>
                   <a className="addon-card-link" href={`/products/${item.slug}`}>
-                    {addonImage ? <img src={addonImage} alt={item.name} /> : null}
+                    {addonImage ? (
+                      <img
+                        src={ironSprueDisplayMediaUrl(addonImage, 320)}
+                        srcSet={ironSprueDisplayMediaSrcSet(addonImage, [320, 480])}
+                        sizes="(max-width: 700px) 46vw, 220px"
+                        alt={item.name}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : null}
                     <span>{item.brand}</span>
                     <strong>{item.name}</strong>
                     <small>{formatPrice(item)} inc VAT</small>

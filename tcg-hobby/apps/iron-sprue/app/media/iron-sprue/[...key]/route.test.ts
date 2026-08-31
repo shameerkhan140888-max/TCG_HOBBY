@@ -112,6 +112,70 @@ describe('Iron Sprue public media route', () => {
     expect(response.headers.get('x-iron-sprue-media-source')).toBe('r2-binding');
   });
 
+  it('serves display derivatives from the R2 binding when a supported width is requested', async () => {
+    mocks.cloudflareContext.mockResolvedValue({
+      env: {
+        IRON_SPRUE_PRODUCT_MEDIA: {
+          get: mocks.r2Get.mockResolvedValue({
+            body: new ReadableStream({
+              start(controller) {
+                controller.enqueue(new TextEncoder().encode('display-derivative-bytes'));
+                controller.close();
+              },
+            }),
+            size: 24,
+            httpMetadata: { contentType: 'image/webp' },
+          }),
+        },
+      },
+    });
+
+    const response = await GET(
+      new NextRequest('http://localhost:3004/media/iron-sprue/products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.png?w=640'),
+      { params: Promise.resolve({ key: ['products', 'is-aos-05628', 'image-2', 'iron-sprue-image-2-acf115ef37eb.png'] }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/webp');
+    expect(response.headers.get('content-length')).toBe('24');
+    expect(response.headers.get('cache-control')).toBe('public, max-age=31536000, immutable');
+    expect(response.headers.get('x-iron-sprue-media-source')).toBe('r2-binding-derivative');
+    expect(mocks.r2Get).toHaveBeenCalledWith('derivatives/w640/products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.webp');
+    expect(mocks.fetch).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the original media object when a display derivative is not available', async () => {
+    mocks.cloudflareContext.mockResolvedValue({
+      env: {
+        IRON_SPRUE_PRODUCT_MEDIA: {
+          get: mocks.r2Get
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce({
+              body: new ReadableStream({
+                start(controller) {
+                  controller.enqueue(new TextEncoder().encode('original-image-bytes'));
+                  controller.close();
+                },
+              }),
+              size: 20,
+              httpMetadata: { contentType: 'image/png' },
+            }),
+        },
+      },
+    });
+
+    const response = await GET(
+      new NextRequest('http://localhost:3004/media/iron-sprue/products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.png?w=960'),
+      { params: Promise.resolve({ key: ['products', 'is-aos-05628', 'image-2', 'iron-sprue-image-2-acf115ef37eb.png'] }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/png');
+    expect(response.headers.get('x-iron-sprue-media-source')).toBe('r2-binding');
+    expect(mocks.r2Get).toHaveBeenNthCalledWith(1, 'derivatives/w960/products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.webp');
+    expect(mocks.r2Get).toHaveBeenNthCalledWith(2, 'products/is-aos-05628/image-2/iron-sprue-image-2-acf115ef37eb.png');
+  });
+
   it('rejects unsafe object keys before contacting R2', async () => {
     const response = await GET(
       new NextRequest('http://localhost:3004/media/iron-sprue/products/../secret.png'),
