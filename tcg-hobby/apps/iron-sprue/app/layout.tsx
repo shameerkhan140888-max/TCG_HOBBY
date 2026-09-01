@@ -152,6 +152,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <div className="footer-brand">
               <img src={ironSprueBrand.logoPath} alt="Iron Sprue" width="280" height="64" />
               <p>Premium model kits, display builds and workshop essentials curated by {ironSprueBrand.legalEntity}.</p>
+            </div>
+            <nav aria-label="Legal links">
+              <h2>Legal</h2>
+              <a href="/about">About</a>
+              <a href="/privacy">Privacy</a>
+              <a href="/terms">Terms</a>
+              <a href="/cookies">Cookies</a>
+              <IronSprueCookiePreferenceLink />
               <a className="footer-instagram" href={ironSprueBrand.instagramUrl} rel="noreferrer" target="_blank" aria-label="Instagram - @iron.sprue">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <defs>
@@ -169,14 +177,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 </svg>
                 <span>{ironSprueBrand.instagramHandle}</span>
               </a>
-            </div>
-            <nav aria-label="Legal links">
-              <h2>Legal</h2>
-              <a href="/about">About</a>
-              <a href="/privacy">Privacy</a>
-              <a href="/terms">Terms</a>
-              <a href="/cookies">Cookies</a>
-              <IronSprueCookiePreferenceLink />
             </nav>
             <nav aria-label="Help links">
               <h2>Help</h2>
