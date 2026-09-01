@@ -257,12 +257,9 @@ export function productCardFacts(product: IronSprueProduct) {
   const facts = [
     productScale(product),
     productPieceCount(product) ? `${productPieceCount(product)} pieces` : '',
-    vehicleManufacturerForProduct(product),
-    productStructure(product),
-    productBuildType(product),
   ].filter((value): value is string => Boolean(String(value ?? '').trim()));
 
-  return Array.from(new Set(facts)).slice(0, 3);
+  return Array.from(new Set(facts)).slice(0, 1);
 }
 
 export function productSellableQuantity(product: IronSprueProduct) {

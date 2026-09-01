@@ -518,19 +518,13 @@ export async function getApprovedIronSprueMediaBySku() {
 export function applyApprovedMediaToProducts(products: IronSprueProduct[], approvedMediaBySku: Map<string, ApprovedIronSprueProductMedia>) {
   return products.map((product) => {
     const media = approvedMediaBySku.get(product.sku);
-    const primaryImage = media?.cataloguePrimary ?? product.imageUrl ?? media?.manufacturerOriginals[0] ?? null;
+    const primaryImage = media?.cataloguePrimary ?? media?.manufacturerOriginals[0] ?? product.imageUrl ?? null;
     if (!media || !primaryImage) return product;
     const imageReferences = Array.from(new Set([
       primaryImage,
       ...(media.cataloguePrimary && media.cataloguePrimary !== primaryImage ? [media.cataloguePrimary] : []),
       ...(media.workshopPhotography ? [media.workshopPhotography] : []),
-      ...(media.manufacturerOriginals ?? []),
-      ...(product.imageReferences ?? []).filter(
-        (item) => item !== primaryImage
-          && item !== media.cataloguePrimary
-          && item !== media.workshopPhotography
-          && !(media.manufacturerOriginals ?? []).includes(item),
-      ),
+      ...(media.manufacturerOriginals[0] && media.manufacturerOriginals[0] !== primaryImage ? [media.manufacturerOriginals[0]] : []),
     ]));
 
     return {

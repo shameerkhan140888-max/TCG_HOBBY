@@ -310,9 +310,9 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
         }}
       >
         <svg className="basket-action-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M7 9 9 4h6l2 5" />
-          <path d="M5 9h14l-1.3 11H6.3L5 9Z" />
-          <path d="M9 13v3M15 13v3" />
+          <path d="M7.2 9.5c.6-3.4 2.2-5.1 4.8-5.1s4.2 1.7 4.8 5.1" />
+          <path d="M4.8 9.5h14.4l-1.4 9.8H6.2L4.8 9.5Z" />
+          <path d="M8.4 12.4h7.2" />
         </svg>
         <span>{outOfStock ? 'Out of stock' : isAdding ? 'Checking stock...' : 'Add to basket'}</span>
       </button>

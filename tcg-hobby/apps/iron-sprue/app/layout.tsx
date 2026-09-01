@@ -185,7 +185,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <a href="/contact">Contact</a>
             </nav>
             <div className="footer-company">
-              <h2>Iron Sprue <span>A trading name of</span></h2>
+              <h2><span className="footer-company-name">Iron Sprue</span><span>A trading name of</span></h2>
               <p>Capital Hobby Group Ltd</p>
               <p>Company Number 17336948</p>
               <p>VAT No. {ironSprueBrand.vatNumber}</p>

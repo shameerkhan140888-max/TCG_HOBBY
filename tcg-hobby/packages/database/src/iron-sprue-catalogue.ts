@@ -391,6 +391,28 @@ function mapImage(asset: IronSprueMediaAssetRow, product: IronSprueCatalogueProd
   };
 }
 
+function publicGalleryMedia(product: IronSprueCatalogueProductRow) {
+  const image = preferredMedia(product);
+  const selected = new Map<string, IronSprueMediaAssetRow>();
+  if (image) selected.set(image.asset.role, image.asset);
+
+  for (const role of ['workshop-photography', 'manufacturer-original'] as const) {
+    const asset = product.mediaAssets
+      .filter((candidate) => candidate.role === role && candidate.approvalState === 'APPROVED' && isIronSprueOperationalMediaRole(candidate.role))
+      .sort((left, right) => left.sortOrder - right.sortOrder || left.id.localeCompare(right.id))[0];
+    if (asset && ![...selected.values()].some((item) => item.id === asset.id)) {
+      selected.set(role, asset);
+    }
+  }
+
+  const order = new Map([
+    ['catalogue-primary', 0],
+    ['workshop-photography', 1],
+    ['manufacturer-original', 2],
+  ]);
+  return [...selected.values()].sort((left, right) => (order.get(left.role) ?? 99) - (order.get(right.role) ?? 99));
+}
+
 function stockOnHand(product: IronSprueCatalogueProductRow) {
   return product.inventory?.availableStock ?? 0;
 }
@@ -465,7 +487,7 @@ function mapProduct(product: IronSprueCatalogueProductRow): CatalogueProduct {
 
 function mapProductDetail(product: IronSprueCatalogueProductRow): CatalogueProductDetail {
   const summary = mapProduct(product);
-  const images = product.mediaAssets
+  const images = publicGalleryMedia(product)
     .map((asset) => mapImage(asset, product))
     .filter((image): image is CatalogueProductImage => image !== null);
   const contentsFromField = typeof product.contents === 'string' && product.contents.trim()

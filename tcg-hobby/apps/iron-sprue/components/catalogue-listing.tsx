@@ -277,7 +277,7 @@ export async function CatalogueListing({
                       <div className="product-card-body">
                         <p className="product-brand">{product.brand}</p>
                         <h2>{product.name}</h2>
-                        <p>{product.category}</p>
+                        <p className="product-card-category">{product.category}</p>
                         {cardFacts.length ? (
                           <ul className="product-card-facts" aria-label={`${product.name} product facts`}>
                             {cardFacts.map((fact) => <li key={fact}>{fact}</li>)}

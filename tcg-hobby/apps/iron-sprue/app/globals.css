@@ -1593,10 +1593,10 @@ p {
 }
 
 .payment-method-strip img[src*="american-express"] {
-  width: 38px;
-  height: 38px;
-  max-width: 38px;
-  max-height: 38px;
+  width: 58px;
+  height: 36px;
+  max-width: 58px;
+  max-height: 36px;
   object-fit: contain;
 }
 
@@ -1607,10 +1607,10 @@ p {
 }
 
 .payment-method-strip.compact img[src*="american-express"] {
-  width: 38px;
-  height: 38px;
-  max-width: 38px;
-  max-height: 38px;
+  width: 52px;
+  height: 32px;
+  max-width: 52px;
+  max-height: 32px;
   object-fit: contain;
 }
 
@@ -3820,7 +3820,7 @@ label {
   flex-direction: column;
   gap: 5px;
   justify-self: start;
-  margin-top: 10px;
+  margin-top: 12px;
   border-radius: 999px;
   color: #fff;
 }
@@ -3849,9 +3849,14 @@ label {
 .footer-company {
   display: grid;
   align-content: start;
-  gap: 2px;
+  gap: 0;
   justify-items: start;
   text-align: left;
+}
+
+.footer-company h2 {
+  margin: 0 0 1px;
+  line-height: 1.08;
 }
 
 .footer-company p {
@@ -3861,13 +3866,24 @@ label {
 }
 
 .footer-company h2 span {
-  display: inline;
-  margin-left: 4px;
+  display: block;
+  margin-left: 0;
   margin-top: 0;
   color: rgba(255, 250, 241, 0.7);
   font-size: 10px;
-  line-height: 1.25;
+  line-height: 1.1;
   letter-spacing: 0.04em;
+}
+
+.footer-company h2 span:not(.footer-company-name) {
+  text-transform: none;
+}
+
+.footer-company-name {
+  display: inline !important;
+  color: var(--brass) !important;
+  font-size: inherit !important;
+  letter-spacing: inherit !important;
 }
 
 .footer-company p span {
@@ -4022,8 +4038,9 @@ label {
   }
 
   .footer-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 0.72fr) minmax(154px, 1.56fr);
     row-gap: 16px;
+    column-gap: 8px;
   }
 
   .footer-brand {
@@ -4186,16 +4203,23 @@ label {
 
   .cookie-consent-actions {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     width: 100%;
-    gap: 7px;
+    gap: 6px;
   }
 
   .cookie-consent-actions button {
     min-width: 0;
-    min-height: 40px;
-    padding: 0 10px;
-    font-size: 11px;
+    min-height: 36px;
+    padding: 0 7px;
+    font-size: 10px;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 340px) {
+  .cookie-consent-actions {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -4380,8 +4404,8 @@ label {
 .product-buy-panel .stock-badge {
   width: fit-content;
   border-radius: 3px;
-  padding: 4px 0;
-  border-width: 0 0 2px;
+  padding: 0;
+  border: 0;
   background: transparent;
 }
 
@@ -4586,6 +4610,10 @@ label {
     width: min(calc(100% - 20px), 1320px);
     margin-block: 18px;
     padding: 16px;
+  }
+
+  .homepage-board {
+    overflow: visible;
   }
 
   .homepage-board::after,
@@ -6452,8 +6480,8 @@ body::before {
 
   .homepage-board .category-strip {
     display: flex;
-    width: calc(100% + 32px);
-    margin-inline: -16px;
+    width: 100vw;
+    margin-inline: calc(50% - 50vw);
     border-right: 0;
     border-left: 0;
     border-radius: 0;
@@ -6471,8 +6499,8 @@ body::before {
   }
 
   .homepage-board .category-strip a {
-    flex: 0 0 clamp(230px, 76vw, 300px);
-    min-width: clamp(230px, 76vw, 300px);
+    flex: 0 0 clamp(260px, 88vw, 360px);
+    min-width: clamp(260px, 88vw, 360px);
     min-height: 82px;
     scroll-snap-align: start;
   }
@@ -6493,8 +6521,8 @@ body::before {
   .homepage-board .promo-grid {
     display: grid;
     grid-template-columns: 1fr;
-    width: calc(100% + 32px);
-    margin-inline: -16px;
+    width: 100vw;
+    margin-inline: calc(50% - 50vw);
     gap: 0;
     overflow: hidden;
     padding: 4px 0 18px;
@@ -6509,7 +6537,7 @@ body::before {
   .homepage-board .promo-card {
     grid-area: 1 / 1;
     width: 100%;
-    min-height: clamp(300px, 78vw, 380px);
+    min-height: clamp(250px, 62vw, 320px);
     opacity: 0;
     animation: heroCarousel 15s infinite;
   }
@@ -6555,37 +6583,40 @@ body::before {
   }
 
   .homepage-board .product-card .product-image {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 1 / 0.54;
+    padding: 10px;
   }
 
   .homepage-board .product-card-body {
     display: grid;
-    grid-template-rows: auto auto auto auto auto 1fr;
-    min-height: 268px;
-    padding: 16px 14px;
+    grid-template-rows: auto minmax(2.4em, auto) auto auto auto 38px;
+    min-height: 172px;
+    padding: 11px 10px 10px;
+    gap: 5px;
   }
 
   .homepage-board .product-card h3 {
-    font-size: 16px;
-    line-height: 1.2;
+    font-size: 13px;
+    line-height: 1.18;
   }
 
   .homepage-board .product-card strong {
-    font-size: 17px;
+    font-size: 14px;
   }
 
   .homepage-board .product-card .product-actions {
     align-self: end;
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 0;
+    margin: 0;
+    padding: 0;
   }
 
-  .homepage-board .product-card .product-actions a,
   .homepage-board .product-card .basket-action-stack button {
-    height: 52px;
-    min-height: 52px;
-    max-height: 52px;
-    padding: 0 10px;
+    height: 38px;
+    min-height: 38px;
+    max-height: 38px;
+    padding: 0;
   }
 
   .homepage-board .section-head.split {
@@ -7318,7 +7349,8 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 
   .product-card .product-image {
-    aspect-ratio: 1 / 0.74;
+    aspect-ratio: 1 / 0.54;
+    padding: 10px;
   }
 
   .product-card .product-image img {
@@ -7328,10 +7360,10 @@ body:has(.product-detail-page) .payment-trust-banner {
   .product-card-body,
   .homepage-board .product-card-body {
     display: grid;
-    grid-template-rows: auto minmax(2.45em, auto) auto auto auto 42px;
-    min-height: 188px;
+    grid-template-rows: auto minmax(2.4em, auto) auto auto auto 38px;
+    min-height: 172px;
     padding: 11px 10px 10px;
-    gap: 6px;
+    gap: 5px;
   }
 
   .product-card .product-brand {
@@ -7361,6 +7393,10 @@ body:has(.product-detail-page) .payment-trust-banner {
     gap: 4px;
     margin: 0;
     overflow: hidden;
+  }
+
+  .product-card-facts li:nth-child(n + 2) {
+    display: none;
   }
 
   .product-card-facts li {
@@ -7409,9 +7445,9 @@ body:has(.product-detail-page) .payment-trust-banner {
   .homepage-board .product-card .basket-action-stack button {
     display: grid;
     width: 100%;
-    height: 42px;
-    min-height: 42px;
-    max-height: 42px;
+    height: 38px;
+    min-height: 38px;
+    max-height: 38px;
     padding: 0;
     place-items: center;
   }
