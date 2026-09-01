@@ -83,9 +83,11 @@ vi.mock('../lib/iron-sprue-admin-actions.server', () => ({
   bulkApproveIronSprueContentReviewsAction: vi.fn(),
   bulkApproveIronSprueMediaAction: vi.fn(),
   bulkPublishIronSprueProductsAction: vi.fn(),
+  createIronSprueProductAction: vi.fn(),
   publishIronSprueProductAction: vi.fn(),
   promoteIronSprueMediaToCataloguePrimaryAction: vi.fn(),
   reconcileIronSprueExistingR2MediaAction: vi.fn(),
+  reinstateIronSprueProductAction: vi.fn(),
   saveIronSprueFeaturedProductPlacementAction: vi.fn(),
   saveIronSprueHeroAction: vi.fn(),
   saveIronSprueHomepagePlacementAction: vi.fn(),
@@ -95,6 +97,7 @@ vi.mock('../lib/iron-sprue-admin-actions.server', () => ({
   updateIronSprueBrandControlsAction: vi.fn(),
   updateIronSprueContentReviewAction: vi.fn(),
   updateIronSprueMediaApprovalAction: vi.fn(),
+  updateIronSprueProductAction: vi.fn(),
   updateIronSprueProductFlagsAction: vi.fn(),
   updateIronSpruePublicationStateAction: vi.fn(),
   uploadIronSprueProductMediaAction: vi.fn(),
@@ -589,29 +592,31 @@ describe('IronSprueAdminSection operational controls', () => {
       },
     ]);
 
-    const markup = await renderAsync(await IronSprueAdminSection({ section: 'products', searchParams: { state: 'READY_TO_PUBLISH' } }));
+    const markup = await renderAsync(await IronSprueAdminSection({ section: 'products', searchParams: { tab: 'ready' } }));
 
+    expect(markup).toContain('Total products');
+    expect(markup).toContain('Pending / Ready');
+    expect(markup).toContain('Requires Attention');
+    expect(markup).toContain('Paused');
+    expect(markup).toContain('Add product');
     expect(markup).toContain('Ready to publish');
-    expect(markup).toContain('Publish product');
     expect(markup).toContain('Publish selected');
-    expect(markup).toContain('data-bulk-group="iron-sprue-product-bulk-publish"');
+    expect(markup).toContain('Publish');
     expect(markup).toContain('READY_TO_PUBLISH');
-    expect(markup).toContain('Existing R2 product images detected:');
-    expect(markup).toContain('Reconcile R2 media');
+    expect(markup).toContain('Product information');
+    expect(markup).toContain('Content / description');
     expect(markup).toContain('Full PDP descriptor copy for the product.');
-    expect(markup).not.toContain('catalogue currently confirms');
-    expect(markup).not.toContain('Unsupported claims');
-    expect(markup).not.toContain('launch catalogue');
-    expect(markup).not.toContain('Supplier code 05628');
+    expect(markup).toContain('catalogue currently confirms');
+    expect(markup).toContain('Unsupported claims');
+    expect(markup).toContain('Supplier code 05628');
     expect(markup).toContain('Scale');
     expect(markup).toContain('1:24');
-    expect(markup).not.toContain('supplierCode');
-    expect(markup).not.toContain('manufacturerReference');
-    expect(markup).not.toContain('sourceRow');
-    expect(markup).not.toContain('retailPriceMinor');
-    expect(markup).toContain('Sell price:');
-    expect(markup).toContain('Stock on hand:');
-    expect(markup).toContain('name="returnTo" value="/iron-sprue-admin/products?state=READY_TO_PUBLISH#product-product-ready"');
+    expect(markup).toContain('supplierCode');
+    expect(markup).toContain('manufacturerReference');
+    expect(markup).toContain('sourceRow');
+    expect(markup).toContain('retailPriceMinor');
+    expect(markup).toContain('Sell price');
+    expect(markup).toContain('name="returnTo" value="/iron-sprue-admin/products?tab=ready&amp;productId=product-ready"');
     expect(markup).not.toContain('Source/placeholder records');
     expect(markup).not.toContain('catalogue-primary-placeholder.json');
     expect(markup).toContain('Existing R2 image candidates');

@@ -1,8 +1,10 @@
 'use server';
 
+import type { Prisma } from '@prisma/client';
 import {
   cancelIronSprueOrderForMerchant,
   adjustIronSprueStock,
+  createIronSprueAdminProduct,
   createIronSprueAdminMediaAsset,
   createIronSprueManualOrder,
   processIronSprueOrderReturn,
@@ -15,6 +17,7 @@ import {
   publishIronSprueAdminProduct,
   publishIronSprueAdminProducts,
   reconcileIronSprueR2ProductMedia,
+  reinstateIronSprueAdminProduct,
   setIronSprueProductPublicationState,
   isIronSprueAdminFulfilmentState,
   updateIronSprueAdminBrandControls,
@@ -23,6 +26,7 @@ import {
   updateIronSprueAdminMediaApproval,
   updateIronSprueAdminOrderFulfilmentStatus,
   updateIronSprueAdminOrderNotes,
+  updateIronSprueAdminProduct,
   updateIronSprueAdminProductFlags,
   upsertIronSprueDiscountCode,
   upsertIronSprueAdminHero,
@@ -53,6 +57,26 @@ function optionalNumberFromForm(value: FormDataEntryValue | null) {
 function optionalMoneyMinorFromForm(value: FormDataEntryValue | null) {
   const parsed = optionalNumberFromForm(value);
   return parsed == null ? undefined : Math.round(parsed * 100);
+}
+
+function optionalTextFromForm(value: FormDataEntryValue | null) {
+  const raw = stringFromForm(value).trim();
+  return raw || null;
+}
+
+function listFromLines(value: FormDataEntryValue | null) {
+  return stringFromForm(value)
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function jsonObjectFromForm(value: FormDataEntryValue | null): Prisma.InputJsonValue | null {
+  const raw = stringFromForm(value).trim();
+  if (!raw) return null;
+  const parsed = JSON.parse(raw) as unknown;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Specifications must be a JSON object.');
+  return parsed as Prisma.InputJsonValue;
 }
 
 function optionalDateFromForm(value: FormDataEntryValue | null) {
@@ -105,8 +129,8 @@ export async function updateIronSprueMediaApprovalAction(formData: FormData) {
   const nextState = String(formData.get('approvalState') ?? '');
   try {
     if (!mediaId) throw new Error('mediaId is required.');
-    if (!['APPROVED', 'REJECTED', 'REVIEW_REQUIRED'].includes(nextState)) throw new Error('Invalid media approval state.');
-    await updateIronSprueAdminMediaApproval(mediaId, nextState as 'APPROVED' | 'REJECTED' | 'REVIEW_REQUIRED', actor);
+    if (!['APPROVED', 'REJECTED', 'REVIEW_REQUIRED', 'PAUSED'].includes(nextState)) throw new Error('Invalid media approval state.');
+    await updateIronSprueAdminMediaApproval(mediaId, nextState as 'APPROVED' | 'REJECTED' | 'REVIEW_REQUIRED' | 'PAUSED', actor);
   } catch (error) {
     redirect(adminReturnPath(formData, 'media', 'error', actionError(error)));
   }
@@ -248,6 +272,109 @@ export async function updateIronSprueProductFlagsAction(formData: FormData) {
   redirect(adminReturnPath(formData, 'products', 'saved', 'Product flags saved.'));
 }
 
+export async function createIronSprueProductAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  try {
+    const customerTitle = optionalTextFromForm(formData.get('customerTitle'));
+    const slug = optionalTextFromForm(formData.get('slug'));
+    const grossPriceMinor = optionalMoneyMinorFromForm(formData.get('grossPrice'));
+    await createIronSprueAdminProduct(
+      {
+        sourceTitle: stringFromForm(formData.get('sourceTitle')),
+        sku: stringFromForm(formData.get('sku')),
+        supplierProductCode: optionalTextFromForm(formData.get('supplierProductCode')),
+        barcode: optionalTextFromForm(formData.get('barcode')),
+        mpn: optionalTextFromForm(formData.get('mpn')),
+        brandId: optionalTextFromForm(formData.get('brandId')),
+        categoryId: optionalTextFromForm(formData.get('categoryId')),
+        supplierId: optionalTextFromForm(formData.get('supplierId')),
+        vatRate: optionalNumberFromForm(formData.get('vatRate')) ?? 20,
+        currency: optionalTextFromForm(formData.get('currency')) ?? 'GBP',
+        ...(customerTitle ? { customerTitle } : {}),
+        ...(slug ? { slug } : {}),
+        ...(grossPriceMinor != null ? { grossPriceMinor } : {}),
+      },
+      actor,
+    );
+  } catch (error) {
+    redirect(adminReturnPath(formData, 'products', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/products');
+  redirect(adminReturnPath(formData, 'products', 'saved', 'Product created.'));
+}
+
+export async function updateIronSprueProductAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const productId = stringFromForm(formData.get('productId'));
+  try {
+    if (!productId) throw new Error('productId is required.');
+    const grossPriceMinor = optionalMoneyMinorFromForm(formData.get('grossPrice'));
+    const compareAtPriceMinor = optionalMoneyMinorFromForm(formData.get('compareAtPrice'));
+    const vatRate = optionalNumberFromForm(formData.get('vatRate'));
+    const currency = optionalTextFromForm(formData.get('currency'));
+    const input = {
+      ...(formData.has('sourceTitle') ? { sourceTitle: stringFromForm(formData.get('sourceTitle')) } : {}),
+      ...(formData.has('customerTitle') ? { customerTitle: stringFromForm(formData.get('customerTitle')) } : {}),
+      ...(formData.has('slug') ? { slug: stringFromForm(formData.get('slug')) } : {}),
+      ...(formData.has('sku') ? { sku: stringFromForm(formData.get('sku')) } : {}),
+      ...(formData.has('supplierProductCode') ? { supplierProductCode: optionalTextFromForm(formData.get('supplierProductCode')) } : {}),
+      ...(formData.has('barcode') ? { barcode: optionalTextFromForm(formData.get('barcode')) } : {}),
+      ...(formData.has('mpn') ? { mpn: optionalTextFromForm(formData.get('mpn')) } : {}),
+      ...(formData.has('brandId') ? { brandId: optionalTextFromForm(formData.get('brandId')) } : {}),
+      ...(formData.has('categoryId') ? { categoryId: optionalTextFromForm(formData.get('categoryId')) } : {}),
+      ...(formData.has('supplierId') ? { supplierId: optionalTextFromForm(formData.get('supplierId')) } : {}),
+      ...(formData.has('shortDescription') ? { shortDescription: optionalTextFromForm(formData.get('shortDescription')) } : {}),
+      ...(formData.has('fullDescription') ? { fullDescription: optionalTextFromForm(formData.get('fullDescription')) } : {}),
+      ...(formData.has('featureBullets') ? { featureBullets: listFromLines(formData.get('featureBullets')) } : {}),
+      ...(formData.has('specifications') ? { specifications: jsonObjectFromForm(formData.get('specifications')) } : {}),
+      ...(formData.has('scale') ? { scale: optionalTextFromForm(formData.get('scale')) } : {}),
+      ...(formData.has('material') ? { material: optionalTextFromForm(formData.get('material')) } : {}),
+      ...(formData.has('buildType') ? { buildType: optionalTextFromForm(formData.get('buildType')) } : {}),
+      ...(formData.has('assemblyMethod') ? { assemblyMethod: optionalTextFromForm(formData.get('assemblyMethod')) } : {}),
+      ...(formData.has('glueRequirement') ? { glueRequirement: optionalTextFromForm(formData.get('glueRequirement')) } : {}),
+      ...(formData.has('difficulty') ? { difficulty: optionalTextFromForm(formData.get('difficulty')) } : {}),
+      ...(formData.has('dimensions') ? { dimensions: optionalTextFromForm(formData.get('dimensions')) } : {}),
+      ...(formData.has('contents') ? { contents: optionalTextFromForm(formData.get('contents')) } : {}),
+      ...(formData.has('safetyAgeGuidance') ? { safetyAgeGuidance: optionalTextFromForm(formData.get('safetyAgeGuidance')) } : {}),
+      ...(formData.has('tags') ? { tags: listFromLines(formData.get('tags')) } : {}),
+      ...(formData.has('searchKeywords') ? { searchKeywords: listFromLines(formData.get('searchKeywords')) } : {}),
+      ...(formData.has('seoTitle') ? { seoTitle: optionalTextFromForm(formData.get('seoTitle')) } : {}),
+      ...(formData.has('metaDescription') ? { metaDescription: optionalTextFromForm(formData.get('metaDescription')) } : {}),
+      ...(formData.has('grossPrice') && grossPriceMinor != null ? { grossPriceMinor } : {}),
+      ...(formData.has('compareAtPrice') && compareAtPriceMinor != null ? { compareAtPriceMinor } : {}),
+      ...(formData.has('vatRate') && vatRate != null ? { vatRate } : {}),
+      ...(formData.has('currency') && currency ? { currency } : {}),
+    };
+    await updateIronSprueAdminProduct(
+      productId,
+      input,
+      actor,
+    );
+  } catch (error) {
+    redirect(adminReturnPath(formData, 'products', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/products');
+  revalidateIronSprueStorefront();
+  redirect(adminReturnPath(formData, 'products', 'saved', 'Product saved.'));
+}
+
+export async function reinstateIronSprueProductAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const productId = stringFromForm(formData.get('productId'));
+  try {
+    if (!productId) throw new Error('productId is required.');
+    await reinstateIronSprueAdminProduct(productId, actor);
+  } catch (error) {
+    redirect(adminReturnPath(formData, 'products', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin');
+  revalidatePath('/iron-sprue-admin/products');
+  revalidateIronSprueStorefront();
+  redirect(adminReturnPath(formData, 'products', 'saved', 'Product reinstated.'));
+}
+
 export async function updateIronSpruePublicationStateAction(formData: FormData) {
   const actor = await requireIronSprueActor();
   const productId = String(formData.get('productId') ?? '');
@@ -256,7 +383,7 @@ export async function updateIronSpruePublicationStateAction(formData: FormData) 
     if (!productId) throw new Error('productId is required.');
     await setIronSprueProductPublicationState(
       productId,
-      publicationState as 'DRAFT' | 'CONTENT_PENDING' | 'MEDIA_PENDING' | 'REVIEW_REQUIRED' | 'READY_TO_PUBLISH' | 'READY' | 'PUBLISHED' | 'ARCHIVED',
+      publicationState as 'DRAFT' | 'CONTENT_PENDING' | 'MEDIA_PENDING' | 'REVIEW_REQUIRED' | 'READY_TO_PUBLISH' | 'READY' | 'PUBLISHED' | 'PAUSED' | 'ARCHIVED',
       actor,
     );
   } catch (error) {
@@ -289,12 +416,12 @@ export async function bulkPublishIronSprueProductsAction(formData: FormData) {
   try {
     await publishIronSprueAdminProducts(productIds, actor);
   } catch (error) {
-    redirect(adminStatusPath('products', 'error', actionError(error)));
+    redirect(adminReturnPath(formData, 'products', 'error', actionError(error)));
   }
   revalidatePath('/iron-sprue-admin');
   revalidatePath('/iron-sprue-admin/products');
   revalidateIronSprueStorefront();
-  redirect(adminStatusPath('products', 'saved', `${productIds.length} product${productIds.length === 1 ? '' : 's'} published.`));
+  redirect(adminReturnPath(formData, 'products', 'saved', `${productIds.length} product${productIds.length === 1 ? '' : 's'} published.`));
 }
 
 export async function uploadIronSprueProductMediaAction(formData: FormData) {
@@ -335,12 +462,13 @@ export async function uploadIronSprueProductMediaAction(formData: FormData) {
       actor,
     );
   } catch (error) {
-    redirect(adminStatusPath('media', 'error', actionError(error)));
+    redirect(adminReturnPath(formData, 'media', 'error', actionError(error)));
   }
   revalidatePath('/iron-sprue-admin');
   revalidatePath('/iron-sprue-admin/media');
+  revalidatePath('/iron-sprue-admin/products');
   revalidateIronSprueStorefront();
-  redirect(adminStatusPath('media', 'saved', 'Media upload saved for review.'));
+  redirect(adminReturnPath(formData, 'media', 'saved', 'Media upload saved for review.'));
 }
 
 export async function attachIronSprueExistingR2MediaAction(formData: FormData) {

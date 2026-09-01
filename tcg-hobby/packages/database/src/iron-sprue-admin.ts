@@ -74,6 +74,7 @@ export const IRON_SPRUE_PUBLICATION_STATES = [
   'REVIEW_REQUIRED',
   'READY_TO_PUBLISH',
   'PUBLISHED',
+  'PAUSED',
   'ARCHIVED',
 ] as const;
 
@@ -248,7 +249,7 @@ const productReadinessInclude = {
   supplier: true,
   inventory: true,
   mediaAssets: {
-    where: { approvalState: { notIn: ['REJECTED', 'FAILED'] } },
+    where: { approvalState: { not: 'FAILED' } },
   },
   contentReviews: true,
 } as const satisfies Prisma.IronSprueAdminProductInclude;
@@ -806,7 +807,7 @@ export async function synchronizeIronSprueProductPublicationReadiness(
     include: productReadinessInclude,
   });
   if (!product) throw new Error('Iron Sprue product not found.');
-  if (product.publicationState === 'ARCHIVED') return product;
+  if (product.publicationState === 'ARCHIVED' || product.publicationState === 'PAUSED') return product;
 
   const readiness = getIronSprueProductReadiness(product);
   const derivedState = readiness.publicationState;
@@ -1031,6 +1032,120 @@ export async function createIronSprueAdminProduct(input: CreateIronSprueAdminPro
   });
 }
 
+export type UpdateIronSprueAdminProductInput = {
+  sourceTitle?: string;
+  customerTitle?: string;
+  slug?: string;
+  sku?: string;
+  supplierProductCode?: string | null;
+  barcode?: string | null;
+  mpn?: string | null;
+  brandId?: string | null;
+  categoryId?: string | null;
+  supplierId?: string | null;
+  shortDescription?: string | null;
+  fullDescription?: string | null;
+  featureBullets?: string[];
+  specifications?: Prisma.InputJsonValue | null;
+  scale?: string | null;
+  material?: string | null;
+  buildType?: string | null;
+  assemblyMethod?: string | null;
+  glueRequirement?: string | null;
+  difficulty?: string | null;
+  dimensions?: string | null;
+  contents?: string | null;
+  safetyAgeGuidance?: string | null;
+  tags?: string[];
+  searchKeywords?: string[];
+  seoTitle?: string | null;
+  metaDescription?: string | null;
+  grossPriceMinor?: number | null;
+  compareAtPriceMinor?: number | null;
+  vatRate?: number;
+  currency?: string;
+};
+
+function cleanOptionalString(value: string | null | undefined) {
+  const trimmed = value?.trim() ?? '';
+  return trimmed || null;
+}
+
+export async function updateIronSprueAdminProduct(
+  productId: string,
+  input: UpdateIronSprueAdminProductInput,
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const product = await client.ironSprueAdminProduct.findFirst({
+    where: { id: productId, storeCode: IRON_SPRUE_STORE_CODE },
+    include: productReadinessInclude,
+  });
+  if (!product) throw new Error('Iron Sprue product not found.');
+  if (input.grossPriceMinor != null && input.grossPriceMinor <= 0) throw new Error('Gross price must be positive when supplied.');
+  if (input.vatRate != null && (input.vatRate < 0 || input.vatRate > 100)) throw new Error('VAT rate must be between 0 and 100.');
+
+  const data: Prisma.IronSprueAdminProductUpdateInput = {
+    ...(input.sourceTitle !== undefined ? { sourceTitle: input.sourceTitle.trim() || product.sourceTitle } : {}),
+    ...(input.customerTitle !== undefined ? { customerTitle: input.customerTitle.trim() || product.customerTitle } : {}),
+    ...(input.slug !== undefined ? { slug: safeSlug(input.slug || input.customerTitle || product.customerTitle) } : {}),
+    ...(input.sku !== undefined ? { sku: input.sku.trim() || product.sku } : {}),
+    ...(input.supplierProductCode !== undefined ? { supplierProductCode: cleanOptionalString(input.supplierProductCode) } : {}),
+    ...(input.barcode !== undefined ? { barcode: cleanOptionalString(input.barcode) } : {}),
+    ...(input.mpn !== undefined ? { mpn: cleanOptionalString(input.mpn) } : {}),
+    ...(input.brandId !== undefined ? { brand: input.brandId ? { connect: { id: input.brandId } } : { disconnect: true } } : {}),
+    ...(input.categoryId !== undefined ? { category: input.categoryId ? { connect: { id: input.categoryId } } : { disconnect: true } } : {}),
+    ...(input.supplierId !== undefined ? { supplier: input.supplierId ? { connect: { id: input.supplierId } } : { disconnect: true } } : {}),
+    ...(input.shortDescription !== undefined ? { shortDescription: cleanOptionalString(input.shortDescription) } : {}),
+    ...(input.fullDescription !== undefined ? { fullDescription: cleanOptionalString(input.fullDescription) } : {}),
+    ...(input.featureBullets !== undefined ? { featureBullets: input.featureBullets.map((item) => item.trim()).filter(Boolean) } : {}),
+    ...(input.specifications !== undefined ? { specifications: input.specifications === null ? Prisma.DbNull : input.specifications } : {}),
+    ...(input.scale !== undefined ? { scale: cleanOptionalString(input.scale) } : {}),
+    ...(input.material !== undefined ? { material: cleanOptionalString(input.material) } : {}),
+    ...(input.buildType !== undefined ? { buildType: cleanOptionalString(input.buildType) } : {}),
+    ...(input.assemblyMethod !== undefined ? { assemblyMethod: cleanOptionalString(input.assemblyMethod) } : {}),
+    ...(input.glueRequirement !== undefined ? { glueRequirement: cleanOptionalString(input.glueRequirement) } : {}),
+    ...(input.difficulty !== undefined ? { difficulty: cleanOptionalString(input.difficulty) } : {}),
+    ...(input.dimensions !== undefined ? { dimensions: cleanOptionalString(input.dimensions) } : {}),
+    ...(input.contents !== undefined ? { contents: cleanOptionalString(input.contents) } : {}),
+    ...(input.safetyAgeGuidance !== undefined ? { safetyAgeGuidance: cleanOptionalString(input.safetyAgeGuidance) } : {}),
+    ...(input.tags !== undefined ? { tags: input.tags.map((item) => item.trim()).filter(Boolean) } : {}),
+    ...(input.searchKeywords !== undefined ? { searchKeywords: input.searchKeywords.map((item) => item.trim()).filter(Boolean) } : {}),
+    ...(input.seoTitle !== undefined ? { seoTitle: cleanOptionalString(input.seoTitle) } : {}),
+    ...(input.metaDescription !== undefined ? { metaDescription: cleanOptionalString(input.metaDescription) } : {}),
+    ...(input.grossPriceMinor !== undefined ? { grossPriceMinor: input.grossPriceMinor } : {}),
+    ...(input.compareAtPriceMinor !== undefined ? { compareAtPriceMinor: input.compareAtPriceMinor } : {}),
+    ...(input.vatRate !== undefined ? { vatRate: input.vatRate } : {}),
+    ...(input.currency !== undefined ? { currency: input.currency.trim() || product.currency } : {}),
+    updatedById: actor.id,
+  };
+
+  const updated = await client.$transaction(async (tx) => {
+    const saved = await tx.ironSprueAdminProduct.update({
+      where: { id: product.id },
+      data,
+      include: productReadinessInclude,
+    });
+    await tx.ironSprueAdminAuditLog.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        actorId: actor.id,
+        action: 'product.update',
+        entityType: 'product',
+        entityId: product.id,
+        productId: product.id,
+        summary: `Updated Iron Sprue product ${product.sku}.`,
+        before: { sku: product.sku, customerTitle: product.customerTitle, publicationState: product.publicationState },
+        after: { sku: saved.sku, customerTitle: saved.customerTitle, publicationState: saved.publicationState },
+      },
+    });
+    return saved;
+  });
+
+  await synchronizeIronSprueProductPublicationReadiness(updated.id, actor, client);
+  return updated;
+}
+
 export async function setIronSprueProductPublicationState(
   productId: string,
   nextState: IronSpruePublicationState | 'READY',
@@ -1084,6 +1199,21 @@ export async function publishIronSprueAdminProduct(
   client = getIronSprueAdminPrisma(),
 ) {
   return setIronSprueProductPublicationState(productId, 'PUBLISHED', actor, client);
+}
+
+export async function reinstateIronSprueAdminProduct(
+  productId: string,
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const product = await client.ironSprueAdminProduct.findFirst({
+    where: { id: productId, storeCode: IRON_SPRUE_STORE_CODE },
+    include: productReadinessInclude,
+  });
+  if (!product) throw new Error('Iron Sprue product not found.');
+  const readiness = getIronSprueProductReadiness(product);
+  const nextState = product.publishedAt && readiness.isReadyToPublish ? 'PUBLISHED' : readiness.publicationState;
+  return setIronSprueProductPublicationState(productId, nextState, actor, client);
 }
 
 export async function publishIronSprueAdminProducts(
@@ -2349,7 +2479,7 @@ export async function listIronSprueAdminContentReviews(
 
 export async function updateIronSprueAdminMediaApproval(
   mediaId: string,
-  nextState: 'APPROVED' | 'REJECTED' | 'REVIEW_REQUIRED',
+  nextState: 'APPROVED' | 'REJECTED' | 'REVIEW_REQUIRED' | 'PAUSED',
   actor: IronSprueAdminUser,
   client = getIronSprueAdminPrisma(),
 ) {

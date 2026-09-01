@@ -41,6 +41,9 @@ import {
   updateIronSprueContentReviewAction,
   updateIronSprueMediaApprovalAction,
   updateIronSprueOrderFulfilmentAction,
+  createIronSprueProductAction,
+  reinstateIronSprueProductAction,
+  updateIronSprueProductAction,
   updateIronSprueProductFlagsAction,
   updateIronSpruePublicationStateAction,
   approveIronSprueProductReviewAction,
@@ -76,7 +79,7 @@ function ironSprueMediaPreviewUrl(asset: { url: string | null; storageKey: strin
 
 function adminProductsPath(searchParams: SearchParams | undefined, hash?: string) {
   const params = new URLSearchParams();
-  for (const key of ['q', 'state', 'brandId', 'categoryId', 'supplierId']) {
+  for (const key of ['q', 'tab', 'productId', 'state', 'brandId', 'categoryId', 'supplierId']) {
     const value = param(searchParams, key);
     if (value) params.set(key, value);
   }
@@ -577,7 +580,16 @@ function ProductMediaReadinessPanel({
   r2Candidates: Map<string, IronSprueR2Object[]>;
   returnTo: string;
 }) {
-  const activeDisplayableAssets = canonicalOperationalProductMediaAssets(product.mediaAssets);
+  const activeDisplayableAssets = canonicalOperationalProductMediaAssets(product.mediaAssets)
+    .filter((asset) => !['PAUSED', 'REJECTED'].includes(asset.approvalState));
+  const displayableAssets = product.mediaAssets
+    .filter((asset) => isIronSprueOperationalMediaRole(asset.role) && isIronSprueDisplayableImageAsset(asset))
+    .sort((left, right) => (
+      (IRON_SPRUE_OPERATIONAL_MEDIA_ROLE_ORDER.get(left.role) ?? 99)
+      - (IRON_SPRUE_OPERATIONAL_MEDIA_ROLE_ORDER.get(right.role) ?? 99)
+      || (left.sortOrder ?? 0) - (right.sortOrder ?? 0)
+      || left.id.localeCompare(right.id)
+    ));
   const linkedStorageKeys = new Set(product.mediaAssets.map((asset) => asset.storageKey).filter((key): key is string => Boolean(key)));
   const roles = ['catalogue-primary', 'workshop-photography', 'manufacturer-original'] as const;
 
@@ -586,15 +598,15 @@ function ProductMediaReadinessPanel({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-bold text-neutral-100">Product media</p>
         <div className="flex flex-wrap gap-2">
-          {activeDisplayableAssets.length ? <StatePill>{`${activeDisplayableAssets.length} OPERATIONAL IMAGE${activeDisplayableAssets.length === 1 ? '' : 'S'}`}</StatePill> : <StatePill>NO OPERATIONAL IMAGE ROWS</StatePill>}
+          {activeDisplayableAssets.length ? <StatePill>{`${activeDisplayableAssets.length} ACTIVE IMAGE${activeDisplayableAssets.length === 1 ? '' : 'S'}`}</StatePill> : <StatePill>NO ACTIVE IMAGE ROWS</StatePill>}
         </div>
       </div>
       <p className="rounded-md border border-surface-line bg-black/30 p-2 text-xs text-neutral-400">
         Image-led products require one approved primary catalogue image. Tools and accessories can publish with one approved displayable product image.
       </p>
-      {activeDisplayableAssets.length ? (
+      {displayableAssets.length ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          {activeDisplayableAssets.map((asset) => {
+          {displayableAssets.map((asset) => {
             const previewUrl = ironSprueMediaPreviewUrl(asset);
             return (
               <div key={asset.id} className="grid gap-2 rounded-md border border-surface-line bg-black/30 p-2">
@@ -609,6 +621,7 @@ function ProductMediaReadinessPanel({
                   <StatePill>{asset.approvalState}</StatePill>
                   <StatePill>{asset.role}</StatePill>
                   {asset.isPrimary ? <StatePill>PRIMARY</StatePill> : null}
+                  {['PAUSED', 'REJECTED'].includes(asset.approvalState) ? <StatusBadge tone="warning">Not customer-facing</StatusBadge> : null}
                   <StatusBadge tone={asset.role === 'catalogue-primary' ? 'accent' : 'neutral'}>{productMediaRequirementLabel(asset)}</StatusBadge>
                 </div>
                 <p className="break-all text-xs text-neutral-500">{asset.storageKey ?? asset.url ?? 'No storage key'}</p>
@@ -781,130 +794,450 @@ function ProductAdminCard({
   );
 }
 
+type ProductOperationalTab = 'all' | 'published' | 'ready' | 'attention' | 'paused';
+
+function productOperationalTab(product: IronSprueAdminProductListItem): Exclude<ProductOperationalTab, 'all'> {
+  if (product.publicationState === 'PUBLISHED') return 'published';
+  if (product.publicationState === 'PAUSED' || product.publicationState === 'ARCHIVED') return 'paused';
+  if (product.readiness?.isReadyToPublish) return 'ready';
+  return 'attention';
+}
+
+function productOperationalLabel(product: IronSprueAdminProductListItem) {
+  const tab = productOperationalTab(product);
+  if (tab === 'published') return 'Published';
+  if (tab === 'paused') return product.publicationState === 'ARCHIVED' ? 'Archived' : 'Paused';
+  if (tab === 'ready') return 'Ready to publish';
+  return 'Requires attention';
+}
+
+function productOperationalTone(product: IronSprueAdminProductListItem) {
+  const tab = productOperationalTab(product);
+  if (tab === 'published' || tab === 'ready') return 'success' as const;
+  if (tab === 'attention') return 'warning' as const;
+  return 'neutral' as const;
+}
+
+function productMainImage(product: IronSprueAdminProductListItem) {
+  const readinessUrl = product.readiness?.primaryImageUrl;
+  if (readinessUrl) return ironSprueAdminPreviewUrl(readinessUrl, null);
+  const asset = canonicalOperationalProductMediaAssets(product.mediaAssets)[0];
+  return asset ? ironSprueMediaPreviewUrl(asset) : null;
+}
+
+function productBlockerSummary(product: IronSprueAdminProductListItem) {
+  const blockers = product.readiness?.blockingReasons ?? [];
+  if (!blockers.length) return productOperationalTab(product) === 'ready' ? 'Eligible for publication' : 'No active blocker';
+  const first = blockers[0]!;
+  return blockers.length === 1 ? first.message : `${first.message} +${blockers.length - 1} more`;
+}
+
+function productSpecsJson(product: IronSprueAdminProductListItem) {
+  if (!product.specifications || typeof product.specifications !== 'object') return '';
+  return JSON.stringify(product.specifications, null, 2);
+}
+
+function poundInputValue(value: number | null | undefined) {
+  return value == null ? '' : (value / 100).toFixed(2);
+}
+
+function linesValue(value: unknown) {
+  return Array.isArray(value) ? value.filter(Boolean).map(String).join('\n') : '';
+}
+
+function productTabsPath(tab: ProductOperationalTab, searchParams?: SearchParams) {
+  const params = new URLSearchParams();
+  if (tab !== 'all') params.set('tab', tab);
+  const search = param(searchParams, 'q');
+  if (search) params.set('q', search);
+  const query = params.toString();
+  return `/iron-sprue-admin/products${query ? `?${query}` : ''}`;
+}
+
+function ProductsSummary({
+  activeTab,
+  counts,
+  searchParams,
+}: {
+  activeTab: ProductOperationalTab;
+  counts: Record<ProductOperationalTab, number>;
+  searchParams?: SearchParams | undefined;
+}) {
+  const items = [
+    { key: 'all' as const, label: 'Total products', detail: 'All Iron Sprue records' },
+    { key: 'published' as const, label: 'Published', detail: 'Customer-visible' },
+    { key: 'ready' as const, label: 'Pending / Ready', detail: 'Eligible for publish' },
+    { key: 'attention' as const, label: 'Requires attention', detail: 'Missing or unresolved' },
+  ];
+  return (
+    <div className="grid gap-3 md:grid-cols-4">
+      {items.map((item) => (
+        <a
+          key={item.key}
+          href={productTabsPath(item.key, searchParams)}
+          aria-current={activeTab === item.key ? 'page' : undefined}
+          className={`rounded-lg border p-4 transition hover:border-brand-gold ${activeTab === item.key ? 'border-accent bg-accent/10' : 'border-surface-line bg-surface-ink'}`}
+        >
+          <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">{item.label}</p>
+          <strong className="mt-2 block text-3xl text-neutral-100">{counts[item.key]}</strong>
+          <span className="mt-1 block text-xs text-neutral-400">{item.detail}</span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function ProductsStateTabs({
+  activeTab,
+  counts,
+  searchParams,
+}: {
+  activeTab: ProductOperationalTab;
+  counts: Record<ProductOperationalTab, number>;
+  searchParams?: SearchParams | undefined;
+}) {
+  const tabs = [
+    ['all', 'All'] as const,
+    ['published', 'Published'] as const,
+    ['ready', 'Pending / Ready'] as const,
+    ['attention', 'Requires Attention'] as const,
+    ['paused', 'Paused'] as const,
+  ];
+  return (
+    <div className="flex flex-wrap gap-2" role="tablist" aria-label="Product operational states">
+      {tabs.map(([tab, label]) => (
+        <a
+          key={tab}
+          href={productTabsPath(tab, searchParams)}
+          aria-current={activeTab === tab ? 'page' : undefined}
+          className={`rounded-md border px-3 py-2 text-sm font-semibold ${activeTab === tab ? 'border-accent bg-accent/20 text-accent' : 'border-surface-line text-neutral-300'}`}
+        >
+          {label} ({counts[tab]})
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function ProductListRow({
+  active,
+  product,
+  searchParams,
+}: {
+  active: boolean;
+  product: IronSprueAdminProductListItem;
+  searchParams?: SearchParams | undefined;
+}) {
+  const imageUrl = productMainImage(product);
+  const params = new URLSearchParams();
+  for (const key of ['q', 'tab']) {
+    const value = param(searchParams, key);
+    if (value) params.set(key, value);
+  }
+  params.set('productId', product.id);
+  const href = `/iron-sprue-admin/products?${params.toString()}`;
+  return (
+    <a
+      href={href}
+      aria-current={active ? 'page' : undefined}
+      className={`grid gap-3 rounded-lg border p-3 transition hover:border-brand-gold sm:grid-cols-[72px_1fr] ${active ? 'border-accent bg-accent/10' : 'border-surface-line bg-surface-ink'}`}
+    >
+      <div className="flex h-16 w-16 items-center justify-center rounded-md border border-surface-line bg-white p-1">
+        {imageUrl ? <img src={imageUrl} alt="" className="max-h-full max-w-full object-contain" /> : <span className="text-[10px] font-bold uppercase text-neutral-600">No image</span>}
+      </div>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="truncate text-sm font-bold text-neutral-100">{product.customerTitle}</h3>
+          <StatusBadge tone={productOperationalTone(product)}>{productOperationalLabel(product)}</StatusBadge>
+        </div>
+        <p className="mt-1 text-xs text-neutral-400">{product.sku} / {product.mpn ?? product.supplierProductCode ?? 'No manufacturer ref'}</p>
+        <p className="mt-1 text-xs text-neutral-400">{product.brand?.name ?? 'No brand'} / {product.category?.name ?? 'No category'} / {money(product.grossPriceMinor, product.currency)}</p>
+        <p className="mt-1 text-xs text-amber-100">{productBlockerSummary(product)}</p>
+      </div>
+    </a>
+  );
+}
+
+function ProductActionStrip({ product, returnTo }: { product: IronSprueAdminProductListItem; returnTo: string }) {
+  const canPublish = Boolean(product.readiness?.isReadyToPublish && product.publicationState !== 'PUBLISHED' && product.publicationState !== 'ARCHIVED');
+  return (
+    <div className="flex flex-wrap gap-2">
+      <form action={publishIronSprueProductAction}>
+        <input type="hidden" name="productId" value={product.id} />
+        <input type="hidden" name="returnTo" value={returnTo} />
+        <Button type="submit" size="sm" variant={canPublish ? 'primary' : 'outline'} disabled={!canPublish}>Publish</Button>
+      </form>
+      {product.publicationState === 'PAUSED' || product.publicationState === 'ARCHIVED' ? (
+        <form action={reinstateIronSprueProductAction}>
+          <input type="hidden" name="productId" value={product.id} />
+          <input type="hidden" name="returnTo" value={returnTo} />
+          <Button type="submit" size="sm" variant="primary">Reinstate</Button>
+        </form>
+      ) : (
+        <form action={updateIronSpruePublicationStateAction}>
+          <input type="hidden" name="productId" value={product.id} />
+          <input type="hidden" name="publicationState" value="PAUSED" />
+          <input type="hidden" name="returnTo" value={returnTo} />
+          <Button type="submit" size="sm" variant="outline">Pause</Button>
+        </form>
+      )}
+      {product.publicationState !== 'ARCHIVED' ? (
+        <form action={updateIronSpruePublicationStateAction}>
+          <input type="hidden" name="productId" value={product.id} />
+          <input type="hidden" name="publicationState" value="ARCHIVED" />
+          <input type="hidden" name="returnTo" value={returnTo} />
+          <Button type="submit" size="sm" variant="outline">Delete / archive</Button>
+        </form>
+      ) : null}
+    </div>
+  );
+}
+
+function ProductManagementView({
+  product,
+  references,
+  r2Candidates,
+  returnTo,
+}: {
+  product: IronSprueAdminProductListItem;
+  references: Awaited<ReturnType<typeof getIronSprueAdminReferenceData>>;
+  r2Candidates: Map<string, IronSprueR2Object[]>;
+  returnTo: string;
+}) {
+  const blockers = product.readiness?.blockingReasons ?? [];
+  return (
+    <div className="grid gap-4 rounded-lg border border-surface-line bg-surface-ink p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">{product.sku}</p>
+          <h2 className="text-xl font-bold text-neutral-100">{product.customerTitle}</h2>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <StatusBadge tone={productOperationalTone(product)}>{productOperationalLabel(product)}</StatusBadge>
+            <StatePill>{product.publicationState}</StatePill>
+          </div>
+        </div>
+        <ProductActionStrip product={product} returnTo={returnTo} />
+      </div>
+
+      {blockers.length ? (
+        <div className="rounded-md border border-amber-500/30 bg-amber-950/20 p-3">
+          <p className="text-sm font-bold text-amber-100">Outstanding actions</p>
+          <ul className="mt-2 grid gap-2 text-sm text-amber-100">
+            {blockers.map((reason) => (
+              <li key={`${reason.code}:${reason.source}`} className="rounded border border-amber-500/20 bg-black/20 p-2">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-amber-300">{reason.category}</span>
+                <p>{reason.message}</p>
+                <p className="text-xs text-amber-200/80">Fix in: {reason.category === 'media' ? 'Media' : reason.category === 'inventory' ? 'Inventory' : 'Product information / content'}</p>
+                <ProductReviewActionPanel product={product} reason={reason} returnTo={returnTo} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <div className="rounded-md border border-emerald-500/30 bg-emerald-950/20 p-3 text-sm text-emerald-100">
+          This product satisfies the current publication requirements.
+        </div>
+      )}
+
+      <AdminDisclosure defaultOpen summary="Product information">
+        <form action={updateIronSprueProductAction} className="grid gap-3">
+          <input type="hidden" name="productId" value={product.id} />
+          <input type="hidden" name="returnTo" value={returnTo} />
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Customer title"><input name="customerTitle" defaultValue={product.customerTitle} className={fieldClass} /></Field>
+            <Field label="Source title"><input name="sourceTitle" defaultValue={product.sourceTitle} className={fieldClass} /></Field>
+            <Field label="Slug"><input name="slug" defaultValue={product.slug} className={fieldClass} /></Field>
+            <Field label="SKU"><input name="sku" defaultValue={product.sku} className={fieldClass} /></Field>
+            <Field label="Manufacturer reference"><input name="mpn" defaultValue={product.mpn ?? ''} className={fieldClass} /></Field>
+            <Field label="Supplier product code"><input name="supplierProductCode" defaultValue={product.supplierProductCode ?? ''} className={fieldClass} /></Field>
+            <Field label="Brand">
+              <select name="brandId" defaultValue={product.brandId ?? ''} className={fieldClass}>
+                <option value="">No brand</option>
+                {references.brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
+              </select>
+            </Field>
+            <Field label="Category">
+              <select name="categoryId" defaultValue={product.categoryId ?? ''} className={fieldClass}>
+                <option value="">No category</option>
+                {references.categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+              </select>
+            </Field>
+            <Field label="Supplier">
+              <select name="supplierId" defaultValue={product.supplierId ?? ''} className={fieldClass}>
+                <option value="">No supplier</option>
+                {references.suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}
+              </select>
+            </Field>
+            <Field label="Sell price"><input name="grossPrice" defaultValue={poundInputValue(product.grossPriceMinor)} className={fieldClass} inputMode="decimal" /></Field>
+            <Field label="Compare-at price"><input name="compareAtPrice" defaultValue={poundInputValue(product.compareAtPriceMinor)} className={fieldClass} inputMode="decimal" /></Field>
+            <Field label="VAT rate"><input name="vatRate" defaultValue={product.vatRate} className={fieldClass} inputMode="numeric" /></Field>
+            <Field label="Currency"><input name="currency" defaultValue={product.currency} className={fieldClass} /></Field>
+            <Field label="Scale"><input name="scale" defaultValue={product.scale ?? ''} className={fieldClass} /></Field>
+            <Field label="Build / product type"><input name="buildType" defaultValue={product.buildType ?? ''} className={fieldClass} /></Field>
+            <Field label="Assembly method"><input name="assemblyMethod" defaultValue={product.assemblyMethod ?? ''} className={fieldClass} /></Field>
+            <Field label="Glue requirement"><input name="glueRequirement" defaultValue={product.glueRequirement ?? ''} className={fieldClass} /></Field>
+            <Field label="Difficulty"><input name="difficulty" defaultValue={product.difficulty ?? ''} className={fieldClass} /></Field>
+            <Field label="Dimensions"><input name="dimensions" defaultValue={product.dimensions ?? ''} className={fieldClass} /></Field>
+            <Field label="Material"><input name="material" defaultValue={product.material ?? ''} className={fieldClass} /></Field>
+            <Field label="Safety / age guidance"><input name="safetyAgeGuidance" defaultValue={product.safetyAgeGuidance ?? ''} className={fieldClass} /></Field>
+          </div>
+          <Field label="Contents"><textarea name="contents" defaultValue={product.contents ?? ''} className={fieldClass} rows={2} /></Field>
+          <Button type="submit" variant="primary">Save product information</Button>
+        </form>
+      </AdminDisclosure>
+
+      <AdminDisclosure defaultOpen summary="Media">
+        <ProductMediaReadinessPanel product={product} r2Candidates={r2Candidates} returnTo={returnTo} />
+      </AdminDisclosure>
+
+      <AdminDisclosure defaultOpen summary="Content / description">
+        <form action={updateIronSprueProductAction} className="grid gap-3">
+          <input type="hidden" name="productId" value={product.id} />
+          <input type="hidden" name="sourceTitle" value={product.sourceTitle} />
+          <input type="hidden" name="customerTitle" value={product.customerTitle} />
+          <input type="hidden" name="slug" value={product.slug} />
+          <input type="hidden" name="sku" value={product.sku} />
+          <input type="hidden" name="returnTo" value={returnTo} />
+          <Field label="Short customer description"><textarea name="shortDescription" defaultValue={product.shortDescription ?? ''} className={fieldClass} rows={3} /></Field>
+          <Field label="Main PDP description"><textarea name="fullDescription" defaultValue={product.fullDescription ?? ''} className={fieldClass} rows={6} /></Field>
+          <Field label="Feature bullets"><textarea name="featureBullets" defaultValue={linesValue(product.featureBullets)} className={fieldClass} rows={4} /></Field>
+          <Field label="Specifications JSON"><textarea name="specifications" defaultValue={productSpecsJson(product)} className={`${fieldClass} font-mono`} rows={7} /></Field>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="SEO title"><input name="seoTitle" defaultValue={product.seoTitle ?? ''} className={fieldClass} /></Field>
+            <Field label="Meta description"><input name="metaDescription" defaultValue={product.metaDescription ?? ''} className={fieldClass} /></Field>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Tags"><textarea name="tags" defaultValue={linesValue(product.tags)} className={fieldClass} rows={3} /></Field>
+            <Field label="Search keywords"><textarea name="searchKeywords" defaultValue={linesValue(product.searchKeywords)} className={fieldClass} rows={3} /></Field>
+          </div>
+          <Button type="submit" variant="primary">Save customer content</Button>
+        </form>
+      </AdminDisclosure>
+    </div>
+  );
+}
+
 async function ProductsSection({ searchParams }: { searchParams?: SearchParams }) {
   const search = param(searchParams, 'q');
-  const brandId = param(searchParams, 'brandId');
-  const categoryId = param(searchParams, 'categoryId');
-  const supplierId = param(searchParams, 'supplierId');
-  const publicationState = param(searchParams, 'state');
-  const normalizedPublicationState = publicationState === 'READY' ? 'READY_TO_PUBLISH' : publicationState;
+  const activeTab = ((param(searchParams, 'tab') ?? 'attention') as ProductOperationalTab);
   const [{ categories, brands, suppliers }, result, r2ProductObjects, r2ArchiveProductObjects] = await Promise.all([
     getIronSprueAdminReferenceData(),
     listIronSprueAdminProducts({
       ...(search ? { search } : {}),
-      ...(brandId ? { brandId } : {}),
-      ...(categoryId ? { categoryId } : {}),
-      ...(supplierId ? { supplierId } : {}),
-      ...(normalizedPublicationState && ['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY_TO_PUBLISH', 'PUBLISHED', 'ARCHIVED'].includes(normalizedPublicationState)
-        ? { publicationState: normalizedPublicationState as 'DRAFT' | 'CONTENT_PENDING' | 'MEDIA_PENDING' | 'REVIEW_REQUIRED' | 'READY_TO_PUBLISH' | 'PUBLISHED' | 'ARCHIVED' }
-        : {}),
-      pageSize: 81,
+      pageSize: 100,
     }),
     listIronSprueR2Objects('products/', 1000).catch(() => []),
     listIronSprueR2Objects('archive/products/', 1000).catch(() => []),
   ]);
   if (!result.products.length) return <EmptyNote>No Iron Sprue products found.</EmptyNote>;
   const r2Candidates = r2CandidatesByProductRole([...r2ProductObjects, ...r2ArchiveProductObjects]);
-  const r2CandidateCount = [...r2Candidates.values()].reduce((total, candidates) => total + candidates.length, 0);
-  const showingPublished = normalizedPublicationState === 'PUBLISHED';
-  const displayedProducts = (showingPublished
-    ? result.products.filter((product) => product.publicationState === 'PUBLISHED')
-    : result.products.filter((product) => product.publicationState !== 'PUBLISHED')
-  ).sort((left, right) => {
-    const leftBlockers = left.readiness?.blockingReasons.length ?? left.readinessBlockers.length;
-    const rightBlockers = right.readiness?.blockingReasons.length ?? right.readinessBlockers.length;
-    if (Boolean(rightBlockers) !== Boolean(leftBlockers)) return Number(Boolean(rightBlockers)) - Number(Boolean(leftBlockers));
-    return rightBlockers - leftBlockers || left.customerTitle.localeCompare(right.customerTitle);
-  });
+  const counts = result.products.reduce<Record<ProductOperationalTab, number>>(
+    (summary, product) => {
+      summary.all += 1;
+      summary[productOperationalTab(product)] += 1;
+      return summary;
+    },
+    { all: 0, published: 0, ready: 0, attention: 0, paused: 0 },
+  );
+  const filteredProducts = result.products
+    .filter((product) => activeTab === 'all' || productOperationalTab(product) === activeTab)
+    .sort((left, right) => {
+      const leftBlockers = left.readiness?.blockingReasons.length ?? left.readinessBlockers.length;
+      const rightBlockers = right.readiness?.blockingReasons.length ?? right.readinessBlockers.length;
+      if (activeTab === 'attention') return rightBlockers - leftBlockers || left.customerTitle.localeCompare(right.customerTitle);
+      if (activeTab === 'ready') return left.customerTitle.localeCompare(right.customerTitle);
+      return left.customerTitle.localeCompare(right.customerTitle);
+    });
+  const selectedProductId = param(searchParams, 'productId');
+  const selectedProduct = filteredProducts.find((product) => product.id === selectedProductId) ?? filteredProducts[0] ?? null;
+  const selectedReturnTo = selectedProduct
+    ? `/iron-sprue-admin/products?${new URLSearchParams({
+      ...(activeTab !== 'all' ? { tab: activeTab } : {}),
+      ...(search ? { q: search } : {}),
+      productId: selectedProduct.id,
+    }).toString()}`
+    : adminProductsPath(searchParams);
+  const references = { categories, brands, suppliers };
 
   return (
     <div className="space-y-4">
       <Card>
         <CardContent>
-          <div className="mb-4 grid gap-3 rounded-md border border-emerald-500/30 bg-emerald-950/10 p-3 lg:grid-cols-[1fr_auto]">
-            <div>
-              <p className="font-bold text-emerald-100">Existing R2 product images detected: {r2CandidateCount}</p>
-              <p className="mt-1 text-sm text-neutral-400">Confident SKU-matched product images can be reconciled into canonical Railway media rows from here. JSON/source manifests are ignored by the operational media workflow.</p>
-            </div>
-            <form action={reconcileIronSprueExistingR2MediaAction} className="self-end">
-              <Button type="submit" variant="primary">Reconcile R2 media</Button>
-            </form>
+          <ProductsSummary activeTab={activeTab} counts={counts} searchParams={searchParams} />
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <ProductsStateTabs activeTab={activeTab} counts={counts} searchParams={searchParams} />
+            <AdminDisclosure summary="Add product">
+              <form action={createIronSprueProductAction} className="grid gap-3 md:grid-cols-2">
+                <input type="hidden" name="returnTo" value={productTabsPath(activeTab, searchParams)} />
+                <Field label="Source title"><input name="sourceTitle" className={fieldClass} required /></Field>
+                <Field label="Customer title"><input name="customerTitle" className={fieldClass} /></Field>
+                <Field label="SKU"><input name="sku" className={fieldClass} required /></Field>
+                <Field label="Slug"><input name="slug" className={fieldClass} /></Field>
+                <Field label="Brand">
+                  <select name="brandId" className={fieldClass}>
+                    <option value="">No brand</option>
+                    {brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Category">
+                  <select name="categoryId" className={fieldClass}>
+                    <option value="">No category</option>
+                    {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Supplier">
+                  <select name="supplierId" className={fieldClass}>
+                    <option value="">No supplier</option>
+                    {suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Sell price"><input name="grossPrice" className={fieldClass} inputMode="decimal" /></Field>
+                <Button type="submit" variant="primary" className="md:col-span-2">Create product</Button>
+              </form>
+            </AdminDisclosure>
           </div>
-          <div className="mb-4 flex flex-wrap gap-2" aria-label="Product working views">
-            <a
-              aria-current={!showingPublished ? 'page' : undefined}
-              className={`rounded-md border px-3 py-2 text-sm font-semibold ${!showingPublished ? 'border-accent bg-accent/20 text-accent' : 'border-surface-line text-neutral-300'}`}
-              href="/iron-sprue-admin/products"
-            >
-              Action queue
-            </a>
-            <a
-              aria-current={showingPublished ? 'page' : undefined}
-              className={`rounded-md border px-3 py-2 text-sm font-semibold ${showingPublished ? 'border-accent bg-accent/20 text-accent' : 'border-surface-line text-neutral-300'}`}
-              href="/iron-sprue-admin/products?state=PUBLISHED"
-            >
-              Published
-            </a>
-          </div>
-          <form className="grid gap-3 lg:grid-cols-[minmax(220px,1.5fr)_repeat(4,minmax(150px,1fr))_auto]">
+          <form className="mt-4 grid gap-3 lg:grid-cols-[minmax(220px,1fr)_auto]">
             <Field label="Search">
               <input name="q" defaultValue={param(searchParams, 'q') ?? ''} className={fieldClass} placeholder="SKU, title, barcode or MPN" />
             </Field>
-            <Field label="State">
-              <select name="state" defaultValue={publicationState ?? ''} className={fieldClass}>
-                <option value="">All states</option>
-                {['DRAFT', 'CONTENT_PENDING', 'MEDIA_PENDING', 'REVIEW_REQUIRED', 'READY_TO_PUBLISH', 'PUBLISHED', 'ARCHIVED'].map((state) => <option key={state} value={state}>{state}</option>)}
-              </select>
-            </Field>
-            <Field label="Brand">
-              <select name="brandId" defaultValue={param(searchParams, 'brandId') ?? ''} className={fieldClass}>
-                <option value="">All brands</option>
-                {brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
-              </select>
-            </Field>
-            <Field label="Category">
-              <select name="categoryId" defaultValue={param(searchParams, 'categoryId') ?? ''} className={fieldClass}>
-                <option value="">All categories</option>
-                {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-              </select>
-            </Field>
-            <Field label="Supplier">
-              <select name="supplierId" defaultValue={param(searchParams, 'supplierId') ?? ''} className={fieldClass}>
-                <option value="">All suppliers</option>
-                {suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}
-              </select>
-            </Field>
             <Button type="submit" className="self-end">Filter</Button>
           </form>
-          <p className="mt-3 text-sm text-neutral-400">{displayedProducts.length} product{displayedProducts.length === 1 ? '' : 's'} in this view.</p>
+          <p className="mt-3 text-sm text-neutral-400">{filteredProducts.length} product{filteredProducts.length === 1 ? '' : 's'} in this view. Requires Attention is the default landing view so publish blockers are first.</p>
         </CardContent>
       </Card>
-      <AdminDisclosure
-        defaultOpen
-        summary={
-          <span>
-            {showingPublished ? 'Published products' : 'Outstanding product actions'} <span className="text-neutral-500">({displayedProducts.length})</span>
-          </span>
-        }
-      >
-        <div className="space-y-3">
-          <form id="iron-sprue-product-bulk-publish" action={bulkPublishIronSprueProductsAction} />
-          <IronSprueBulkApprovalControls
-            actions={[{ label: 'Publish selected', value: 'PUBLISHED' }]}
-            formId="iron-sprue-product-bulk-publish"
-            itemLabel="eligible products"
-            totalCount={displayedProducts.filter((product) => ['READY_TO_PUBLISH', 'READY'].includes(product.publicationState)).length}
-          />
-          {displayedProducts.map((product) => (
-            <ProductAdminCard
-              key={product.id}
-              product={product}
-              r2Candidates={r2Candidates}
-              returnTo={adminProductsPath(searchParams, `product-${product.id}`)}
+      <div className="grid gap-4 xl:grid-cols-[minmax(360px,0.82fr)_minmax(0,1.5fr)]">
+        <div className="grid content-start gap-3">
+          <form id="iron-sprue-product-bulk-publish" action={bulkPublishIronSprueProductsAction}>
+            <input type="hidden" name="returnTo" value={productTabsPath(activeTab, searchParams)} />
+          </form>
+          {activeTab === 'ready' ? (
+            <IronSprueBulkApprovalControls
+              actions={[{ label: 'Publish selected', value: 'PUBLISHED' }]}
+              formId="iron-sprue-product-bulk-publish"
+              itemLabel="ready products"
+              totalCount={filteredProducts.length}
             />
-          ))}
+          ) : null}
+          {filteredProducts.length ? filteredProducts.map((product) => (
+            <div key={product.id} className="relative">
+              {activeTab === 'ready' ? (
+                <input
+                  aria-label={`Select ${product.customerTitle} for bulk publishing`}
+                  className="absolute right-3 top-3 z-10"
+                  form="iron-sprue-product-bulk-publish"
+                  name="productId"
+                  type="checkbox"
+                  value={product.id}
+                />
+              ) : null}
+              <ProductListRow active={selectedProduct?.id === product.id} product={product} searchParams={searchParams} />
+            </div>
+          )) : <EmptyNote>No products in this operational state.</EmptyNote>}
         </div>
-      </AdminDisclosure>
+        {selectedProduct ? (
+          <ProductManagementView product={selectedProduct} references={references} r2Candidates={r2Candidates} returnTo={selectedReturnTo} />
+        ) : <EmptyNote>Select a product to manage its information, media and customer-facing content.</EmptyNote>}
+      </div>
     </div>
   );
 }
@@ -1026,12 +1359,12 @@ async function ReferenceSection({ section }: { section: string }) {
 function MediaActionForms({ mediaId, returnTo }: { mediaId: string; returnTo?: string }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {(['APPROVED', 'REVIEW_REQUIRED', 'REJECTED'] as const).map((state) => (
+      {(['APPROVED', 'REVIEW_REQUIRED', 'PAUSED', 'REJECTED'] as const).map((state) => (
         <form key={state} action={updateIronSprueMediaApprovalAction}>
           <input type="hidden" name="mediaId" value={mediaId} />
           <input type="hidden" name="approvalState" value={state} />
           {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
-          <Button type="submit" size="sm" variant={state === 'APPROVED' ? 'primary' : 'outline'}>{state === 'APPROVED' ? 'Approve' : state === 'REJECTED' ? 'Reject' : 'Needs review'}</Button>
+          <Button type="submit" size="sm" variant={state === 'APPROVED' ? 'primary' : 'outline'}>{state === 'APPROVED' ? 'Approve / reinstate' : state === 'REJECTED' ? 'Remove / reject' : state === 'PAUSED' ? 'Pause media' : 'Needs review'}</Button>
         </form>
       ))}
     </div>
