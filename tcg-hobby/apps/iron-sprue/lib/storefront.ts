@@ -51,7 +51,7 @@ export const heroSlides = [
     alt: 'Blue and white architectural display model on warm workshop assembly paper',
     ctaHref: '/products/cubicfun-mc101h-burj-al-arab',
     ctaLabel: 'Shop now',
-    secondaryHref: '/shop?category=3d-puzzles',
+    secondaryHref: '/shop/3d-puzzles-and-builds',
     meta: ['Display Builds', 'Architectural Kits', 'Giftable Projects', 'Clean Assembly'],
   },
   {

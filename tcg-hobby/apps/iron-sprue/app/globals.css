@@ -7019,6 +7019,37 @@ body:has(.product-detail-page) .payment-trust-banner {
   text-transform: none;
 }
 
+.cookie-consent-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cookie-consent-actions button {
+  width: auto;
+  min-width: 118px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 6px;
+  font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+@media (min-width: 701px) {
+  .cookie-consent {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .cookie-consent-actions {
+    min-width: 0;
+  }
+}
+
 @media (max-width: 700px) {
   .cookie-consent {
     inset: auto 8px max(8px, env(safe-area-inset-bottom)) 8px;
@@ -7073,5 +7104,101 @@ body:has(.product-detail-page) .payment-trust-banner {
   .product-card-facts li {
     padding: 3px 6px;
     font-size: 10px;
+  }
+}
+
+/* Final pre-launch polish: keep the approved flowing hero, but reduce its footprint. */
+.hero,
+.hero-carousel {
+  min-height: min(608px, calc((100vh - 112px) * 0.8));
+}
+
+@media (max-width: 700px) {
+  .hero {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .hero-carousel {
+    min-height: clamp(340px, 88vw, 384px);
+  }
+
+  .hero-message {
+    top: 22px;
+    bottom: auto;
+  }
+
+  .hero-message h1 {
+    font-size: clamp(24px, 7.7vw, 32px);
+  }
+
+  .hero-message .script-line {
+    font-size: clamp(17px, 5.2vw, 22px);
+  }
+
+  .hero-message .lead {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .hero-shop-now {
+    min-height: 44px;
+    margin-top: 20px;
+  }
+
+  .hero-brand {
+    bottom: 34px;
+  }
+
+  .hero-dots {
+    bottom: 18px;
+  }
+
+  .cookie-consent {
+    max-height: min(34vh, 230px);
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .cookie-consent::after {
+    inset: 4px;
+  }
+
+  .cookie-consent h2 {
+    margin-bottom: 2px;
+    font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+  }
+
+  .cookie-consent p {
+    font-size: 10.25px;
+    line-height: 1.28;
+  }
+
+  .cookie-preference-panel {
+    max-height: 28vh;
+    overflow: auto;
+  }
+
+  .cookie-consent-actions {
+    display: flex;
+    grid-template-columns: none;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .cookie-consent-actions button {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 0;
+    min-height: 30px;
+    padding: 0 9px;
+    border-radius: 6px;
+    font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
+    font-size: 8.5px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
   }
 }

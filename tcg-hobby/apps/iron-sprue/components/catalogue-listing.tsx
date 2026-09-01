@@ -256,6 +256,7 @@ export async function CatalogueListing({
                 const isOutOfStock = availableQuantity <= 0;
                 const availabilityClass = productAvailabilityClass(product);
                 const cardFacts = productCardFacts(product);
+                const manufacturerReference = (product.manufacturerReference ?? product.supplierSku ?? '').trim();
                 return (
                   <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
                     <div className="product-card-surface">
@@ -284,7 +285,7 @@ export async function CatalogueListing({
                         ) : null}
                         <strong>{formatPrice(product)} inc VAT</strong>
                         <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
-                        <p className="meta">Manufacturer Reference {product.manufacturerReference ?? product.supplierSku}</p>
+                        {manufacturerReference ? <p className="meta">Manufacturer Reference {manufacturerReference}</p> : null}
                         <div className="product-actions">
                           <a href={`/products/${product.slug}`}>View details</a>
                           <AddToBasketButton

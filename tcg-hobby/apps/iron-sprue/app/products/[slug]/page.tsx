@@ -148,7 +148,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const availabilityClass = productAvailabilityClass(product);
   const addonProducts = productDetailAddons(storefrontProducts, product.sku, 6);
   const specifications = customerFacingSpecifications(product);
-  const customerFeatures = customerFacingFeatures(product, specifications);
+  const customerFeatures = specifications.length ? [] : customerFacingFeatures(product, specifications);
   const lead = conciseProductLead(product);
   const description = customerProductDescription(product);
   const manufacturerReference = (product.manufacturerReference ?? product.supplierSku ?? '').trim();

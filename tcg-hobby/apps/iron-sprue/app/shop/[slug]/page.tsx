@@ -78,7 +78,7 @@ async function categoryRouteForSlug(slug: string) {
   return {
     eyebrow: 'Iron Sprue category',
     fixedCategory: slug,
-    lead: `Browse ${category.toLowerCase()} from the current Iron Sprue launch catalogue.`,
+    lead: `Browse ${category.toLowerCase()} from the current Iron Sprue range.`,
     title: category,
   };
 }
