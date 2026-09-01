@@ -309,7 +309,11 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
           }
         }}
       >
-        {outOfStock ? 'Out of stock' : isAdding ? 'Checking stock...' : 'Add to basket'}
+        <svg className="basket-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 9h10l-1 10H8L7 9Z" />
+          <path d="M9 9a3 3 0 0 1 6 0" />
+        </svg>
+        <span>{outOfStock ? 'Out of stock' : isAdding ? 'Checking stock...' : 'Add to basket'}</span>
       </button>
       {message ? (
         <div className={`add-to-basket-feedback ${messageOk ? 'success' : 'error'}`} role="status">

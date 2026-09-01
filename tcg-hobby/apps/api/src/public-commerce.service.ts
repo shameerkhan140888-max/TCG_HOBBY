@@ -200,6 +200,7 @@ export class PublicCommerceService {
         categories: home.categories.map((category) => ({ id: category.id, name: category.name, value: category.slug, gameId: null })),
         homepagePlacements: home.homepagePlacements,
         brandPresentation: home.brandPresentation,
+        ironSprueHeroes: home.ironSprueHeroes,
       };
     }
 

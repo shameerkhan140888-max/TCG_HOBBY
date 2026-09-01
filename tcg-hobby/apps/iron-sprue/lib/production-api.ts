@@ -3,12 +3,14 @@ import type {
   PublicCatalogueResponse,
   PublicHomeResponse,
   PublicHomepagePlacement,
+  PublicIronSprueHero,
   PublicProductDetail,
   PublicProductImage,
   PublicProductSummary,
 } from '@capital-hobby/types';
 import type { IronSprueBrandRecord, IronSprueProduct } from './catalogue';
-import type { IronSprueHomepagePlacement } from './admin-storefront-controls';
+import type { IronSprueHeroSlide, IronSprueHomepagePlacement } from './admin-storefront-controls';
+import { brandLogoRegistry, heroSlides } from './storefront';
 
 export const IRON_SPRUE_PRODUCTION_API_BASE_URL = 'IRON_SPRUE_PRODUCTION_API_BASE_URL';
 const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
@@ -206,11 +208,12 @@ export async function getIronSprueProductionApiHomeSnapshot() {
   const response = await fetchProductionApiJson<PublicHomeResponse>('/v1/home');
   const products = await productsFromPublicHomeResponse(response);
   const homepagePlacements = (response.homepagePlacements ?? []).map(ironSprueHomepagePlacementFromPublic);
+  const heroSlides = publicIronSprueHeroesToSlides(response.ironSprueHeroes ?? []);
   const brandPresentation = (response.brandPresentation ?? [])
     .map(ironSprueBrandPresentationFromPublic)
     .filter((brand): brand is IronSprueBrandRecord => Boolean(brand));
 
-  return { products, homepagePlacements, brandPresentation };
+  return { products, homepagePlacements, heroSlides, brandPresentation };
 }
 
 export async function getIronSprueProductionApiHomeProducts() {
@@ -233,6 +236,52 @@ export function ironSprueHomepagePlacementFromPublic(placement: PublicHomepagePl
 export async function getIronSprueProductionApiHomepagePlacements() {
   const response = await fetchProductionApiJson<PublicHomeResponse>('/v1/home');
   return (response.homepagePlacements ?? []).map(ironSprueHomepagePlacementFromPublic);
+}
+
+export function publicIronSprueHeroesToSlides(rows: PublicIronSprueHero[]): IronSprueHeroSlide[] {
+  return rows.flatMap((row, index) => {
+    const image = storefrontMediaUrl(row.imageUrl);
+    if (!image || !row.ctaHref) return [];
+
+    const fallback = heroSlides[index % heroSlides.length] ?? heroSlides[0];
+    const linkedProductSlug = row.ctaHref.match(/\/products\/([^/?#]+)/)?.[1];
+    const linkedProduct = linkedProductSlug
+      ? fallback.sourceProductSlug === linkedProductSlug
+        ? { brand: fallback.brandName, slug: fallback.sourceProductSlug }
+        : null
+      : null;
+    const brandName = linkedProduct?.brand;
+    const brandLogo = brandName ? brandLogoRegistry[brandName] : undefined;
+    return [{
+      ...fallback,
+      id: row.id,
+      availabilityLabel: heroMerchandisingLabel(row.merchandisingBadge) ?? fallback.availabilityLabel,
+      title: row.headline,
+      script: row.strapline || fallback.script,
+      copy: '',
+      image,
+      sourceProductSlug: linkedProductSlug || fallback.sourceProductSlug,
+      ...(brandName ? { brandName } : {}),
+      ...(brandLogo ? { brandLogo } : {}),
+      alt: row.headline,
+      ctaHref: row.ctaHref,
+      ctaLabel: row.ctaLabel || fallback.ctaLabel || 'Shop now',
+    }];
+  });
+}
+
+function heroMerchandisingLabel(value: string | null | undefined) {
+  const labels: Record<string, string | null> = {
+    NONE: null,
+    IN_STOCK: 'In stock',
+    NEW: 'New',
+    SALE: 'Sale',
+    COMING_SOON: 'Coming soon',
+    PRE_ORDER: 'Pre-order',
+    FEATURED: 'Featured',
+    EXCLUSIVE: 'Exclusive',
+  };
+  return labels[value?.trim().toUpperCase() ?? 'NONE'] ?? null;
 }
 
 export function ironSprueBrandPresentationFromPublic(brand: PublicBrandPresentation): IronSprueBrandRecord | null {

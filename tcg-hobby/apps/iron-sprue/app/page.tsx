@@ -82,12 +82,13 @@ function ProductCard({ product }: { product: IronSprueProduct }) {
 
 export default async function HomePage() {
   const useProductionApi = shouldUseIronSprueProductionApi();
-  const [activeHeroSlides, productionHome, fallbackHomepagePlacements, fallbackStorefrontProducts] = await Promise.all([
-    getIronSprueHeroSlides(),
+  const [fallbackHeroSlides, productionHome, fallbackHomepagePlacements, fallbackStorefrontProducts] = await Promise.all([
+    useProductionApi ? Promise.resolve([]) : getIronSprueHeroSlides(),
     useProductionApi ? getIronSprueProductionApiHomeSnapshot() : Promise.resolve(null),
     useProductionApi ? Promise.resolve([]) : getIronSprueHomepagePlacements(),
     useProductionApi ? Promise.resolve([]) : getIronSprueStorefrontProducts(products),
   ]);
+  const activeHeroSlides = productionHome?.heroSlides.length ? productionHome.heroSlides : fallbackHeroSlides.length ? fallbackHeroSlides : heroSlides;
   const homepagePlacements = productionHome?.homepagePlacements ?? fallbackHomepagePlacements;
   const storefrontProducts = productionHome?.products ?? fallbackStorefrontProducts;
   const previewProducts = storefrontProducts.map((product) => ({ ...product, published: true }));
@@ -115,7 +116,7 @@ export default async function HomePage() {
               className="hero-slide"
               data-fit={heroFitMode(slide)}
               style={{ '--slide-index': index } as CSSProperties}
-              key={`${slide.id ?? slide.image}-${slide.title}`}
+              key={`${('id' in slide ? slide.id : slide.image) ?? slide.image}-${slide.title}`}
             >
               <a className="hero-art-link" href={slide.ctaHref} aria-label={`View ${slide.title}`}>
                 <img

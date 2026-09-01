@@ -7,6 +7,7 @@ import type {
   PaginationMeta,
   PublicBrandPresentation,
   PublicHomepagePlacement,
+  PublicIronSprueHero,
 } from '@capital-hobby/types';
 import type { Prisma } from '@prisma/client';
 import { getIronSprueAdminPrisma } from './client.js';
@@ -40,6 +41,7 @@ export type IronSprueCatalogueHomeData = {
   featuredProducts: CatalogueProduct[];
   homepagePlacements: PublicHomepagePlacement[];
   brandPresentation: PublicBrandPresentation[];
+  ironSprueHeroes: PublicIronSprueHero[];
 };
 
 const productInclude = {
@@ -617,7 +619,7 @@ export async function getIronSprueCatalogueProductBySlug(
 
 export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIronSprueAdminPrisma()): Promise<IronSprueCatalogueHomeData> {
   const now = new Date();
-  const [categories, homepagePlacements, brandRows] = await Promise.all([
+  const [categories, homepagePlacements, heroRows, brandRows] = await Promise.all([
     getIronSprueCatalogueCategories(db),
     db.ironSprueAdminHomepagePlacement.findMany({
       where: {
@@ -626,6 +628,16 @@ export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIron
         AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
       },
       orderBy: [{ active: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }],
+    }),
+    db.ironSprueAdminHero.findMany({
+      where: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        active: true,
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+        AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
+      },
+      orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }],
+      take: 5,
     }),
     db.ironSprueAdminBrand.findMany({
       where: {
@@ -673,6 +685,19 @@ export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIron
       imageUrl: placement.imageUrl,
       active: placement.active,
       sortOrder: placement.sortOrder,
+    })),
+    ironSprueHeroes: heroRows.map((hero) => ({
+      id: hero.id,
+      headline: hero.headline,
+      strapline: hero.strapline,
+      ctaLabel: hero.ctaLabel,
+      ctaHref: hero.ctaHref,
+      imageUrl: resolveIronSprueStorefrontMediaUrl(
+        resolveIronSpruePublicMediaUrl({ url: hero.imageUrl, storageKey: null }),
+        process.env.PUBLIC_STOREFRONT_URL ?? process.env.IRON_SPRUE_SITE_URL ?? process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL,
+      ),
+      merchandisingBadge: hero.merchandisingBadge,
+      sortOrder: hero.sortOrder,
     })),
     brandPresentation: brandRows
       .map((brand) => ({

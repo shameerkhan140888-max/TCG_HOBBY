@@ -525,6 +525,7 @@ describe('Iron Sprue production catalogue adapter', () => {
       },
       ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
       ironSprueAdminHomepagePlacement: { findMany: vi.fn().mockResolvedValue([]) },
+      ironSprueAdminHero: { findMany: vi.fn().mockResolvedValue([]) },
       ironSprueAdminBrand: { findMany: vi.fn().mockResolvedValue([]) },
     };
 
@@ -579,6 +580,20 @@ describe('Iron Sprue production catalogue adapter', () => {
           },
         ]),
       },
+      ironSprueAdminHero: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: 'hero-1',
+            headline: 'Fresh bench arrivals',
+            strapline: 'New kits and puzzle builds',
+            ctaLabel: 'Shop now',
+            ctaHref: '/shop',
+            imageUrl: 'r2://marketing/heroes/fresh-bench.webp',
+            merchandisingBadge: 'NEW',
+            sortOrder: 1,
+          },
+        ]),
+      },
       ironSprueAdminBrand: { findMany: vi.fn().mockResolvedValue([]) },
     };
 
@@ -588,6 +603,12 @@ describe('Iron Sprue production catalogue adapter', () => {
       expect.objectContaining({ placementKey: 'featured-products', title: '1:24 Scale Aoshima' }),
       expect.objectContaining({ placementKey: 'featured-product:second-kit' }),
       expect.objectContaining({ placementKey: 'featured-product:first-kit' }),
+    ]);
+    expect(home.ironSprueHeroes).toEqual([
+      expect.objectContaining({
+        headline: 'Fresh bench arrivals',
+        imageUrl: '/media/iron-sprue/marketing/heroes/fresh-bench.webp',
+      }),
     ]);
     expect(home.featuredProducts.map((product) => product.slug)).toEqual(['second-kit', 'first-kit']);
   });

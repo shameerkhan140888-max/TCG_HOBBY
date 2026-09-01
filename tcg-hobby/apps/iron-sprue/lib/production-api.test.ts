@@ -220,6 +220,44 @@ describe('Iron Sprue production API client', () => {
     ]);
   });
 
+  it('loads Admin-managed Iron Sprue hero slides from Railway /v1/home', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        featuredProducts: [],
+        latestProducts: [],
+        categories: [],
+        homepagePlacements: [],
+        ironSprueHeroes: [
+          {
+            id: 'hero-1',
+            headline: 'New workshop arrivals',
+            strapline: 'Fresh kits for the bench',
+            ctaLabel: 'Shop now',
+            ctaHref: '/shop',
+            imageUrl: 'https://media.ironsprue.co.uk/marketing/heroes/new-workshop.webp',
+            merchandisingBadge: 'NEW',
+            sortOrder: 1,
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getIronSprueProductionApiHomeSnapshot();
+
+    expect(result.heroSlides).toEqual([
+      expect.objectContaining({
+        id: 'hero-1',
+        availabilityLabel: 'New',
+        title: 'New workshop arrivals',
+        script: 'Fresh kits for the bench',
+        image: '/media/iron-sprue/marketing/heroes/new-workshop.webp',
+        ctaHref: '/shop',
+      }),
+    ]);
+  });
+
   it('loads approved brand carousel logos from Railway /v1/home', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

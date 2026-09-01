@@ -235,12 +235,24 @@ export type PublicBrandPresentation = {
   productCount: number;
 };
 
+export type PublicIronSprueHero = {
+  id: string;
+  headline: string;
+  strapline: string | null;
+  ctaLabel: string | null;
+  ctaHref: string | null;
+  imageUrl: string | null;
+  merchandisingBadge: string | null;
+  sortOrder: number;
+};
+
 export type PublicHomeResponse = {
   featuredProducts: PublicProductSummary[];
   latestProducts: PublicProductSummary[];
   categories: PublicCatalogueOption[];
   homepagePlacements?: PublicHomepagePlacement[];
   brandPresentation?: PublicBrandPresentation[];
+  ironSprueHeroes?: PublicIronSprueHero[];
 };
 
 export type PublicBasketInputItem = {
