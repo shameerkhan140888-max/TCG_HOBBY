@@ -1593,10 +1593,10 @@ p {
 }
 
 .payment-method-strip img[src*="american-express"] {
-  width: 32px;
-  height: 32px;
-  max-width: 32px;
-  max-height: 32px;
+  width: 38px;
+  height: 38px;
+  max-width: 38px;
+  max-height: 38px;
   object-fit: contain;
 }
 
@@ -1607,10 +1607,10 @@ p {
 }
 
 .payment-method-strip.compact img[src*="american-express"] {
-  width: 32px;
-  height: 32px;
-  max-width: 32px;
-  max-height: 32px;
+  width: 38px;
+  height: 38px;
+  max-width: 38px;
+  max-height: 38px;
   object-fit: contain;
 }
 
@@ -3861,7 +3861,8 @@ label {
 }
 
 .footer-company h2 span {
-  display: block;
+  display: inline;
+  margin-left: 4px;
   margin-top: 0;
   color: rgba(255, 250, 241, 0.7);
   font-size: 10px;
@@ -6451,6 +6452,11 @@ body::before {
 
   .homepage-board .category-strip {
     display: flex;
+    width: calc(100% + 32px);
+    margin-inline: -16px;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x proximity;
@@ -6487,9 +6493,11 @@ body::before {
   .homepage-board .promo-grid {
     display: grid;
     grid-template-columns: 1fr;
+    width: calc(100% + 32px);
+    margin-inline: -16px;
     gap: 0;
     overflow: hidden;
-    padding: 4px 4px 18px;
+    padding: 4px 0 18px;
   }
 
   .homepage-board .product-card {
@@ -6503,7 +6511,6 @@ body::before {
     width: 100%;
     min-height: clamp(300px, 78vw, 380px);
     opacity: 0;
-    pointer-events: none;
     animation: heroCarousel 15s infinite;
   }
 
@@ -7272,6 +7279,23 @@ body:has(.product-detail-page) .payment-trust-banner {
   color: #ee9a8f;
 }
 
+.stock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stock-badge::before {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+  content: "";
+}
+
 .basket-action-icon {
   display: none;
   width: 21px;
@@ -7294,7 +7318,7 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 
   .product-card .product-image {
-    aspect-ratio: 1 / 0.82;
+    aspect-ratio: 1 / 0.74;
   }
 
   .product-card .product-image img {
@@ -7304,7 +7328,7 @@ body:has(.product-detail-page) .payment-trust-banner {
   .product-card-body,
   .homepage-board .product-card-body {
     display: grid;
-    grid-template-rows: auto minmax(2.45em, auto) auto auto 42px;
+    grid-template-rows: auto minmax(2.45em, auto) auto auto auto 42px;
     min-height: 188px;
     padding: 11px 10px 10px;
     gap: 6px;
@@ -7326,28 +7350,50 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 
   .product-card-body > p:not(.product-brand):not(.meta),
-  .product-card-facts,
   .product-card .meta,
   .product-card .product-actions a {
     display: none;
   }
 
+  .product-card-facts {
+    order: 3;
+    display: flex;
+    gap: 4px;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .product-card-facts li {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: rgba(255, 250, 241, 0.64);
+    font-size: 10px;
+    line-height: 1.1;
+  }
+
+  .product-card-facts li:not(:last-child)::after {
+    margin-inline: 4px 0;
+    color: rgba(255, 250, 241, 0.34);
+    content: "/";
+  }
+
   .product-card strong,
   .homepage-board .product-card strong {
-    order: 4;
+    order: 5;
     font-size: 14px;
     line-height: 1.1;
   }
 
   .product-card .stock-badge {
-    order: 3;
+    order: 4;
     font-size: 10.5px;
     line-height: 1.1;
   }
 
   .product-card .product-actions,
   .homepage-board .product-card .product-actions {
-    order: 5;
+    order: 6;
     align-self: end;
     grid-template-columns: 1fr;
     gap: 0;

@@ -13,6 +13,7 @@ import type { Prisma } from '@prisma/client';
 import { getIronSprueAdminPrisma } from './client.js';
 import {
   IRON_SPRUE_STORE_CODE,
+  canUseSingleApprovedSourceImage,
   getIronSprueProductReadiness,
   ironSpruePublicProductWhere,
   isIronSprueDisplayableImageAsset,
@@ -352,6 +353,7 @@ function publicLongDescription(product: IronSprueCatalogueProductRow) {
 function preferredMedia(product: IronSprueCatalogueProductRow): { asset: IronSprueMediaAssetRow; url: string } | null {
   const canonicalPrimary = selectIronSpruePrimaryCatalogueMedia(product);
   if (canonicalPrimary) return canonicalPrimary;
+  if (!canUseSingleApprovedSourceImage(product)) return null;
   const roleScore = (role: string) => {
     const normalized = role.toLowerCase().replace(/_/g, '-');
     if (normalized === 'catalogue-primary') return 0;

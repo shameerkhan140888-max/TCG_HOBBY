@@ -538,6 +538,64 @@ describe('Iron Sprue production catalogue adapter', () => {
     expect(detail?.images[0]?.url).toBe('/media/iron-sprue/published/products/is-aos-05628/catalogue-primary.webp');
   });
 
+  it('does not use manufacturer-original media as listing imagery for image-led products', async () => {
+    const product = ironSprueProduct({
+      mediaAssets: [
+        {
+          id: 'manufacturer-reference',
+          role: 'manufacturer-original',
+          url: null,
+          storageKey: 'archive/products/is-cbf-mc133/original/drawer-set.jpg',
+          altText: 'Supplier reference image',
+          approvalState: 'APPROVED',
+          isPrimary: false,
+          mimeType: 'image/jpeg',
+          sortOrder: 0,
+        },
+      ],
+    });
+    const client = {
+      ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue([product]) },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    const result = await getIronSprueCatalogueProducts({ search: '', category: '', sort: 'featured', page: 1, pageSize: 20 }, client as never);
+
+    expect(result.products[0]?.imageUrl).toBeUndefined();
+  });
+
+  it('allows tool and accessory listings to use one approved product image', async () => {
+    const product = ironSprueProduct({
+      customerTitle: 'Reverse Tweezers',
+      slug: 'reverse-tweezers',
+      sku: 'IS-TOL-TW01',
+      brand: { id: 'brand-tool', name: 'Expo', slug: 'expo' },
+      category: { id: 'cat-tools', name: 'Tools', slug: 'tools', description: 'Tools', sortOrder: 30 },
+      buildType: 'Workshop tool',
+      mediaAssets: [
+        {
+          id: 'tool-source',
+          role: 'manufacturer-original',
+          url: null,
+          storageKey: 'archive/products/is-tol-tw01/original/reverse-tweezers.jpg',
+          altText: 'Reverse tweezers',
+          approvalState: 'APPROVED',
+          isPrimary: false,
+          mimeType: 'image/jpeg',
+          sortOrder: 0,
+        },
+      ],
+    });
+    const client = {
+      ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue([product]) },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    const result = await getIronSprueCatalogueProducts({ search: '', category: '', sort: 'featured', page: 1, pageSize: 20 }, client as never);
+
+    expect(result.products[0]?.imageUrl).toBe('/media/iron-sprue/archive/products/is-tol-tw01/original/reverse-tweezers.jpg');
+  });
+
   it('projects saved homepage product placements for the public homepage', async () => {
     const first = ironSprueProduct({ slug: 'first-kit', sku: 'FIRST', customerTitle: 'First Kit' });
     const second = ironSprueProduct({ slug: 'second-kit', sku: 'SECOND', customerTitle: 'Second Kit' });

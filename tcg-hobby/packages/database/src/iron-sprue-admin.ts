@@ -511,7 +511,7 @@ export function selectIronSpruePrimaryCatalogueMedia(product: Pick<ProductWithRe
     .sort((left, right) => left.asset.sortOrder - right.asset.sortOrder || left.asset.id.localeCompare(right.asset.id))[0] ?? null;
 }
 
-function canUseSingleApprovedSourceImage(product: Pick<ProductWithReadiness, 'category'>) {
+export function canUseSingleApprovedSourceImage(product: Pick<ProductWithReadiness, 'category'>) {
   const category = `${product.category?.name ?? ''} ${product.category?.slug ?? ''}`.toLowerCase();
   const singleImageCategorySlugs = new Set([
     'accessories',
