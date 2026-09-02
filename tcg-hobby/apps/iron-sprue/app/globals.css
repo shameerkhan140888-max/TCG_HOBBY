@@ -3086,14 +3086,18 @@ p {
   color: var(--green);
 }
 
-.aoshima-range-banner {
+.catalogue-page {
+  padding-top: 0;
+}
+
+.shop-range-banner {
   position: relative;
   display: grid;
   min-height: clamp(190px, 20vw, 280px);
-  margin: 0;
+  width: 100vw;
+  margin: 0 calc(50% - 50vw) clamp(32px, 4vw, 46px);
   overflow: hidden;
-  border: 1px solid rgba(199, 150, 67, 0.42);
-  border-radius: 8px;
+  border-block: 1px solid rgba(199, 150, 67, 0.42);
   background: #040504;
   box-shadow:
     inset 0 0 0 1px rgba(255, 250, 241, 0.06),
@@ -3102,7 +3106,7 @@ p {
     0 18px 42px rgba(0, 0, 0, 0.34);
 }
 
-.aoshima-range-banner::after {
+.shop-range-banner::after {
   position: absolute;
   inset: 0;
   background:
@@ -3111,26 +3115,43 @@ p {
   content: "";
 }
 
-.aoshima-range-art {
+.shop-range-banner.reverse::after {
+  background:
+    linear-gradient(270deg, rgba(2, 3, 2, 0.94), rgba(2, 3, 2, 0.72) 42%, rgba(2, 3, 2, 0.18) 78%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.24));
+}
+
+.shop-range-art {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: var(--shop-range-art-position, center);
 }
 
-.aoshima-range-copy {
+.shop-range-inner {
   position: relative;
   z-index: 1;
+  display: grid;
+  width: min(calc(100% - 40px), 1240px);
+  min-height: inherit;
+  margin: 0 auto;
+}
+
+.shop-range-banner.reverse .shop-range-inner {
+  justify-items: end;
+}
+
+.shop-range-copy {
   display: grid;
   width: min(500px, 62%);
   align-content: center;
   gap: 10px;
-  padding: clamp(24px, 3.8vw, 42px);
+  padding: clamp(24px, 3.8vw, 42px) 0;
 }
 
-.aoshima-range-copy h2 {
+.shop-range-copy h1 {
   max-width: 12ch;
   margin: 0;
   color: #fffaf1;
@@ -3143,7 +3164,7 @@ p {
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.78);
 }
 
-.aoshima-range-copy p:not(.eyebrow) {
+.shop-range-copy p:not(.eyebrow) {
   max-width: 520px;
   margin: 0;
   color: rgba(255, 250, 241, 0.82);
@@ -3153,15 +3174,15 @@ p {
   line-height: 1.38;
 }
 
-.aoshima-marque-row {
+.shop-range-chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 6px;
 }
 
-.aoshima-marque-logo,
-.aoshima-marque-text {
+.shop-range-logo-chip,
+.shop-range-text-chip {
   display: grid;
   min-width: 86px;
   height: 34px;
@@ -3173,14 +3194,14 @@ p {
   box-shadow: inset 0 0 0 1px rgba(255, 250, 241, 0.08);
 }
 
-.aoshima-marque-logo img {
+.shop-range-logo-chip img {
   max-width: 90px;
   max-height: 22px;
   filter: brightness(0) invert(1);
   object-fit: contain;
 }
 
-.aoshima-marque-text {
+.shop-range-text-chip {
   background: rgba(3, 4, 3, 0.72);
   color: rgba(255, 250, 241, 0.86);
   font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
@@ -7441,49 +7462,51 @@ body:has(.product-detail-page) .payment-trust-banner {
 }
 
 @media (max-width: 700px) {
-  .aoshima-range-banner {
-    width: 100vw;
+  .shop-range-banner {
     min-height: 238px;
-    margin-inline: calc(50% - 50vw);
-    border-right: 0;
-    border-left: 0;
-    border-radius: 0;
+    margin-bottom: 28px;
   }
 
-  .aoshima-range-banner::after {
+  .shop-range-banner::after,
+  .shop-range-banner.reverse::after {
     background:
       linear-gradient(180deg, rgba(2, 3, 2, 0.12), rgba(2, 3, 2, 0.58) 42%, rgba(2, 3, 2, 0.94)),
       linear-gradient(90deg, rgba(2, 3, 2, 0.74), rgba(2, 3, 2, 0.2) 68%);
   }
 
-  .aoshima-range-art {
+  .shop-range-art {
     object-position: center;
   }
 
-  .aoshima-range-copy {
+  .shop-range-inner,
+  .shop-range-banner.reverse .shop-range-inner {
+    justify-items: stretch;
+  }
+
+  .shop-range-copy {
     width: 100%;
     align-content: end;
     gap: 7px;
-    padding: 20px 18px 18px;
+    padding: 20px 0 18px;
   }
 
-  .aoshima-range-copy h2 {
+  .shop-range-copy h1 {
     max-width: 13ch;
     font-size: clamp(25px, 7.4vw, 32px);
   }
 
-  .aoshima-range-copy p:not(.eyebrow) {
+  .shop-range-copy p:not(.eyebrow) {
     max-width: 330px;
     font-size: 13px;
     line-height: 1.34;
   }
 
-  .aoshima-marque-row {
+  .shop-range-chip-row {
     gap: 6px;
   }
 
-  .aoshima-marque-logo,
-  .aoshima-marque-text {
+  .shop-range-logo-chip,
+  .shop-range-text-chip {
     min-width: 70px;
     height: 31px;
     padding: 4px 8px;

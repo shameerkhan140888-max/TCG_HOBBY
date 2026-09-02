@@ -1,4 +1,5 @@
 import launchProducts from '../data/launch-products.json';
+import type { CSSProperties } from 'react';
 import { buildTypeOptions, filterIronSprueProducts, isModelKitProduct, launchCatalogueStatus, pieceCountOptions, scaleOptions, structureOptions, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
 import { getIronSprueStorefrontProducts } from '../lib/admin-storefront-controls';
 import { AddToBasketButton } from './basket-client';
@@ -25,6 +26,93 @@ const aoshimaMarqueLogos = [
   { name: 'Lamborghini', src: '/assets/marque-logos/lamborghini.svg' },
 ] as const;
 
+type ShopBanner = {
+  artSrc: string;
+  artPosition?: string;
+  chips: string[];
+  eyebrow: string;
+  logoChips?: { name: string; src: string }[];
+  summary: string;
+  title: string;
+  variant?: 'default' | 'reverse';
+};
+
+const shopBanners: Record<string, ShopBanner> = {
+  shop: {
+    artSrc: '/assets/category-banners/prototypes/bench-ready-ranges-v1.webp',
+    chips: ['Model kits', '3D builds', 'Tools', 'Adhesives'],
+    eyebrow: 'Iron Sprue shop',
+    summary: 'Browse model kits, display builds, puzzle objects and workshop essentials selected for cleaner hobby time.',
+    title: 'Bench-ready ranges.',
+  },
+  aoshima: {
+    artSrc: '/assets/category-banners/aoshima-model-kits-parts-banner.png',
+    chips: ['Honda'],
+    eyebrow: 'Aoshima official range',
+    logoChips: [...aoshimaMarqueLogos],
+    summary: 'A focused range of Aoshima kits featuring licensed vehicle subjects, sharp box art and display-ready projects for the Iron Sprue bench.',
+    title: 'Licensed Aoshima builds.',
+    variant: 'reverse',
+  },
+  'model-kits': {
+    artSrc: '/assets/category-banners/aoshima-model-kits-parts-banner.png',
+    chips: ['Honda'],
+    eyebrow: 'Model kits',
+    logoChips: [...aoshimaMarqueLogos],
+    summary: 'A focused model-kit range led by Aoshima automotive subjects, official marque detail and display-led builds.',
+    title: 'Licensed scale subjects.',
+    variant: 'reverse',
+  },
+  '3d-puzzles-and-builds': {
+    artSrc: '/assets/category-banners/prototypes/landmarks-with-presence-v1.webp',
+    chips: ['Landmarks', 'Vases', 'Clocks', 'Lanterns'],
+    eyebrow: '3D puzzles & builds',
+    summary: 'Architectural kits, puzzle objects and decorative builds chosen for focused assembly and finished shelf presence.',
+    title: 'Built for display.',
+  },
+  cubicfun: {
+    artSrc: '/assets/category-banners/prototypes/cubicfun-builds-v1.webp',
+    chips: ['Architecture', 'Ships', 'Light builds'],
+    eyebrow: 'CubicFun showcase',
+    logoChips: [{ name: 'CubicFun', src: '/assets/brands/cubicfun.webp' }],
+    summary: 'CubicFun display builds turn recognisable architecture and ships into calm, shelf-ready projects.',
+    title: 'Landmarks with presence.',
+    variant: 'reverse',
+  },
+  pintoo: {
+    artSrc: '/assets/promo-pintoo-vase-workshop.png',
+    chips: ['Vases', 'Globes', 'Screens'],
+    eyebrow: 'Pintoo showcase',
+    logoChips: [{ name: 'Pintoo', src: '/assets/brands/pintoo.webp' }],
+    summary: 'Pintoo 3D puzzle objects reward patient building with decorative finished forms worth keeping on show.',
+    title: 'Puzzle objects made to stay out.',
+  },
+  offers: {
+    artSrc: '/assets/hero-campaigns/is-aos-06540-lamborghini-countach-lpi-800-4-red-hero.png',
+    chips: ['Limited runs', 'Range picks', 'Stocked lines'],
+    eyebrow: 'Current offers',
+    summary: 'Selected offers across kits, display builds and practical bench additions while stock is available.',
+    title: 'Bundle savings.',
+    variant: 'reverse',
+  },
+  tools: {
+    artSrc: '/assets/promo-tools.png',
+    chips: ['Knives', 'Tweezers', 'Sanding', 'Measuring'],
+    eyebrow: 'Tools & workshop essentials',
+    summary: 'Cutting, sanding, measuring and handling tools selected to support precise assembly and tidy finishing.',
+    title: 'Cleaner bench control.',
+  },
+  'adhesives-finishing': {
+    artSrc: '/assets/workshop-remaining-sources/is-dlm-ad22-source.jpg',
+    chips: ['Adhesives', 'Fillers', 'Grip', 'Finishing'],
+    eyebrow: 'Adhesives & finishing',
+    logoChips: [{ name: 'Deluxe Materials', src: '/assets/brands/deluxe-materials.svg' }],
+    summary: 'Specialist adhesive and finishing products selected for clean joins, repairs and reliable bench work.',
+    title: 'Hold, fill and finish.',
+    variant: 'reverse',
+  },
+};
+
 function single(params: Params, key: string) {
   const value = params[key];
   return typeof value === 'string' ? value : '';
@@ -36,28 +124,36 @@ function categoryMatches(product: IronSprueProduct, category: string) {
   return slugForCategory(product.category) === category;
 }
 
-function AoshimaModelKitBanner() {
+function ShopRangeBanner({ banner }: { banner: ShopBanner }) {
   return (
-    <section className="aoshima-range-banner" aria-label="Aoshima official licensed model kits">
+    <section
+      className={`shop-range-banner${banner.variant === 'reverse' ? ' reverse' : ''}`}
+      aria-label={`${banner.eyebrow} banner`}
+      style={banner.artPosition ? ({ '--shop-range-art-position': banner.artPosition } as CSSProperties) : undefined}
+    >
       <img
-        className="aoshima-range-art"
-        src="/assets/category-banners/aoshima-model-kits-parts-banner.png"
+        className="shop-range-art"
+        src={banner.artSrc}
         alt=""
         aria-hidden="true"
         loading="lazy"
         decoding="async"
       />
-      <div className="aoshima-range-copy">
-        <p className="eyebrow">Aoshima official range</p>
-        <h2>Licensed Aoshima builds.</h2>
-        <p>A focused range of Aoshima kits featuring licensed vehicle subjects, sharp box art and display-ready projects for the Iron Sprue bench.</p>
-        <div className="aoshima-marque-row" aria-label="Licensed marques represented in the Aoshima range">
-          {aoshimaMarqueLogos.map((logo) => (
-            <span className="aoshima-marque-logo" key={logo.name}>
+      <div className="shop-range-inner">
+        <div className="shop-range-copy">
+          <p className="eyebrow">{banner.eyebrow}</p>
+          <h1>{banner.title}</h1>
+          <p>{banner.summary}</p>
+          <div className="shop-range-chip-row" aria-label={`${banner.eyebrow} highlights`}>
+            {banner.logoChips?.map((logo) => (
+              <span className="shop-range-logo-chip" key={logo.name}>
               <img src={logo.src} alt={logo.name} loading="lazy" decoding="async" />
             </span>
-          ))}
-          <span className="aoshima-marque-text">Honda</span>
+            ))}
+            {banner.chips.map((chip) => (
+              <span className="shop-range-text-chip" key={chip}>{chip}</span>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -141,7 +237,16 @@ export async function CatalogueListing({
     selectedAvailability,
     selectedOffers,
   ].filter(Boolean).length;
-  const showAoshimaBanner = fixedBrand === 'Aoshima';
+  const bannerKey = selectedBrand === 'Aoshima'
+    ? 'aoshima'
+    : selectedBrand === 'CubicFun'
+      ? 'cubicfun'
+      : selectedBrand === 'Pintoo'
+        ? 'pintoo'
+        : selectedOffers
+          ? 'offers'
+          : selectedCategory || (fixedCategory ?? fixedBrand ? '' : 'shop');
+  const shopBanner = shopBanners[bannerKey];
   const filterControls = (idSuffix: string) => (
     <form action={formAction}>
       <label htmlFor={`brand-filter-${idSuffix}`}>Brand</label>
@@ -224,8 +329,8 @@ export async function CatalogueListing({
 
   return (
     <section className="section-block catalogue-page">
-      {showAoshimaBanner ? (
-        <AoshimaModelKitBanner />
+      {shopBanner ? (
+        <ShopRangeBanner banner={shopBanner} />
       ) : (
         <div className="catalogue-hero">
           <div>

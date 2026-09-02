@@ -42,7 +42,7 @@ const showcaseRoutes: Record<string, {
   },
   offers: {
     eyebrow: 'Special offers',
-    lead: 'Current Iron Sprue offers and opening-bench savings.',
+    lead: 'Current Iron Sprue offers and bundle savings.',
     title: 'Special offers',
   },
   pintoo: {
@@ -78,7 +78,7 @@ async function categoryRouteForSlug(slug: string) {
   return {
     eyebrow: 'Iron Sprue category',
     fixedCategory: slug,
-    lead: `Browse ${category.toLowerCase()} from the current Iron Sprue range.`,
+    lead: `Browse ${category.toLowerCase()} from the Iron Sprue range.`,
     title: category,
   };
 }
