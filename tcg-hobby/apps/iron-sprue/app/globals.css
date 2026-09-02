@@ -2347,8 +2347,8 @@ p {
   font-size: 12px;
 }
 
-.product-detail-page .addon-card span,
-.product-detail-page .addon-card-link span {
+.product-detail-page .addon-card > span,
+.product-detail-page .addon-card-link > span {
   color: var(--brass);
   font-weight: 900;
 }
@@ -2369,10 +2369,20 @@ p {
 
 .product-detail-page .addon-card .basket-action-stack button:not(:disabled) {
   width: 100%;
-  border-color: var(--brass);
-  background: var(--brass);
-  color: var(--ink);
-  box-shadow: inset 0 1px 0 rgba(255, 250, 241, 0.32);
+  border-color: rgba(199, 150, 67, 0.72);
+  background:
+    linear-gradient(180deg, rgba(52, 57, 49, 0.98), rgba(5, 7, 6, 1) 58%, #000),
+    linear-gradient(135deg, rgba(199, 150, 67, 0.34), rgba(255, 250, 241, 0.04));
+  color: var(--paper-soft);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 241, 0.24),
+    inset 0 -2px 0 rgba(199, 150, 67, 0.22),
+    0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+.product-detail-page .addon-card .basket-action-stack button span {
+  color: inherit;
+  font-weight: 900;
 }
 
 .brand-tile img {
@@ -3181,7 +3191,6 @@ p {
   margin-top: 6px;
 }
 
-.shop-range-logo-chip,
 .shop-range-text-chip {
   display: grid;
   min-width: 86px;
@@ -3192,13 +3201,6 @@ p {
   background: rgba(3, 4, 3, 0.72);
   padding: 5px 12px;
   box-shadow: inset 0 0 0 1px rgba(255, 250, 241, 0.08);
-}
-
-.shop-range-logo-chip img {
-  max-width: 90px;
-  max-height: 22px;
-  filter: brightness(0) invert(1);
-  object-fit: contain;
 }
 
 .shop-range-text-chip {
@@ -7505,20 +7507,10 @@ body:has(.product-detail-page) .payment-trust-banner {
     gap: 6px;
   }
 
-  .shop-range-logo-chip,
   .shop-range-text-chip {
     min-width: 70px;
     height: 31px;
     padding: 4px 8px;
-  }
-
-  .aoshima-marque-logo img {
-    max-width: 76px;
-    max-height: 20px;
-  }
-
-  .aoshima-marque-text {
-    font-size: 10px;
   }
 
   .catalogue-grid {

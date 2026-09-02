@@ -74,13 +74,13 @@ export const heroSlides = [
 
 export const promoPanels = [
   {
-    eyebrow: 'Tool essentials bundle',
-    title: 'Save 15%',
-    copy: 'Cut, trim, sand and finish with a compact starter bench set.',
-    href: '/shop?category=tools',
+    eyebrow: 'Bundle savings',
+    title: 'Save on sets',
+    copy: 'Group display builds and puzzle objects into better-value project bundles.',
+    href: '/shop/offers',
     cta: 'View bundle',
-    image: '/assets/promo-tools.png',
-    alt: 'Hobby tools arranged on a dark cutting mat',
+    image: '/assets/promo-bundle-savings.webp',
+    alt: 'Grouped 3D puzzle and display-build boxes arranged as a bundle offer',
   },
   {
     eyebrow: 'CubicFun display builds',

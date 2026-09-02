@@ -20,18 +20,11 @@ import {
 type Params = Record<string, string | string[] | undefined>;
 
 const importedProducts = launchProducts as IronSprueProduct[];
-const aoshimaMarqueLogos = [
-  { name: 'Toyota', src: '/assets/marque-logos/toyota.svg' },
-  { name: 'Nissan', src: '/assets/marque-logos/nissan.svg' },
-  { name: 'Lamborghini', src: '/assets/marque-logos/lamborghini.svg' },
-] as const;
-
 type ShopBanner = {
   artSrc: string;
   artPosition?: string;
   chips: string[];
   eyebrow: string;
-  logoChips?: { name: string; src: string }[];
   summary: string;
   title: string;
   variant?: 'default' | 'reverse';
@@ -47,18 +40,18 @@ const shopBanners: Record<string, ShopBanner> = {
   },
   aoshima: {
     artSrc: '/assets/category-banners/aoshima-model-kits-parts-banner.png',
-    chips: ['Honda'],
+    artPosition: 'center top',
+    chips: ['Official licensed subjects', 'Sharp box art', 'Display-led builds'],
     eyebrow: 'Aoshima official range',
-    logoChips: [...aoshimaMarqueLogos],
     summary: 'A focused range of Aoshima kits featuring licensed vehicle subjects, sharp box art and display-ready projects for the Iron Sprue bench.',
     title: 'Licensed Aoshima builds.',
     variant: 'reverse',
   },
   'model-kits': {
     artSrc: '/assets/category-banners/aoshima-model-kits-parts-banner.png',
-    chips: ['Honda'],
+    artPosition: 'center top',
+    chips: ['Official licensed subjects', '1:24 and 1:32 scale', 'Display-led builds'],
     eyebrow: 'Model kits',
-    logoChips: [...aoshimaMarqueLogos],
     summary: 'A focused model-kit range led by Aoshima automotive subjects, official marque detail and display-led builds.',
     title: 'Licensed scale subjects.',
     variant: 'reverse',
@@ -74,7 +67,6 @@ const shopBanners: Record<string, ShopBanner> = {
     artSrc: '/assets/category-banners/prototypes/cubicfun-builds-v1.webp',
     chips: ['Architecture', 'Ships', 'Light builds'],
     eyebrow: 'CubicFun showcase',
-    logoChips: [{ name: 'CubicFun', src: '/assets/brands/cubicfun.webp' }],
     summary: 'CubicFun display builds turn recognisable architecture and ships into calm, shelf-ready projects.',
     title: 'Landmarks with presence.',
     variant: 'reverse',
@@ -83,7 +75,6 @@ const shopBanners: Record<string, ShopBanner> = {
     artSrc: '/assets/promo-pintoo-vase-workshop.png',
     chips: ['Vases', 'Globes', 'Screens'],
     eyebrow: 'Pintoo showcase',
-    logoChips: [{ name: 'Pintoo', src: '/assets/brands/pintoo.webp' }],
     summary: 'Pintoo 3D puzzle objects reward patient building with decorative finished forms worth keeping on show.',
     title: 'Puzzle objects made to stay out.',
   },
@@ -106,7 +97,6 @@ const shopBanners: Record<string, ShopBanner> = {
     artSrc: '/assets/workshop-remaining-sources/is-dlm-ad22-source.jpg',
     chips: ['Adhesives', 'Fillers', 'Grip', 'Finishing'],
     eyebrow: 'Adhesives & finishing',
-    logoChips: [{ name: 'Deluxe Materials', src: '/assets/brands/deluxe-materials.svg' }],
     summary: 'Specialist adhesive and finishing products selected for clean joins, repairs and reliable bench work.',
     title: 'Hold, fill and finish.',
     variant: 'reverse',
@@ -145,11 +135,6 @@ function ShopRangeBanner({ banner }: { banner: ShopBanner }) {
           <h1>{banner.title}</h1>
           <p>{banner.summary}</p>
           <div className="shop-range-chip-row" aria-label={`${banner.eyebrow} highlights`}>
-            {banner.logoChips?.map((logo) => (
-              <span className="shop-range-logo-chip" key={logo.name}>
-              <img src={logo.src} alt={logo.name} loading="lazy" decoding="async" />
-            </span>
-            ))}
             {banner.chips.map((chip) => (
               <span className="shop-range-text-chip" key={chip}>{chip}</span>
             ))}
