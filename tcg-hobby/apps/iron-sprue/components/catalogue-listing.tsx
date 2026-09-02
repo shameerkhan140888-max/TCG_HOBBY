@@ -19,6 +19,11 @@ import {
 type Params = Record<string, string | string[] | undefined>;
 
 const importedProducts = launchProducts as IronSprueProduct[];
+const aoshimaMarqueLogos = [
+  { name: 'Toyota', src: '/assets/marque-logos/toyota.svg' },
+  { name: 'Nissan', src: '/assets/marque-logos/nissan.svg' },
+  { name: 'Lamborghini', src: '/assets/marque-logos/lamborghini.svg' },
+] as const;
 
 function single(params: Params, key: string) {
   const value = params[key];
@@ -29,6 +34,34 @@ function categoryMatches(product: IronSprueProduct, category: string) {
   if (category === '3d-puzzles-and-builds') return product.brand === 'CubicFun' || product.brand === 'Pintoo';
   if (category === 'model-kits') return isModelKitProduct(product);
   return slugForCategory(product.category) === category;
+}
+
+function AoshimaModelKitBanner() {
+  return (
+    <section className="aoshima-range-banner" aria-label="Aoshima official licensed model kits">
+      <img
+        className="aoshima-range-art"
+        src="/assets/category-banners/aoshima-model-kits-parts-banner.png"
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+      />
+      <div className="aoshima-range-copy">
+        <p className="eyebrow">Aoshima official range</p>
+        <h2>Licensed Aoshima builds.</h2>
+        <p>A focused range of Aoshima kits featuring licensed vehicle subjects, sharp box art and display-ready projects for the Iron Sprue bench.</p>
+        <div className="aoshima-marque-row" aria-label="Licensed marques represented in the Aoshima range">
+          {aoshimaMarqueLogos.map((logo) => (
+            <span className="aoshima-marque-logo" key={logo.name}>
+              <img src={logo.src} alt={logo.name} loading="lazy" decoding="async" />
+            </span>
+          ))}
+          <span className="aoshima-marque-text">Honda</span>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export async function CatalogueListing({
@@ -108,6 +141,7 @@ export async function CatalogueListing({
     selectedAvailability,
     selectedOffers,
   ].filter(Boolean).length;
+  const showAoshimaBanner = fixedBrand === 'Aoshima';
   const filterControls = (idSuffix: string) => (
     <form action={formAction}>
       <label htmlFor={`brand-filter-${idSuffix}`}>Brand</label>
@@ -190,18 +224,22 @@ export async function CatalogueListing({
 
   return (
     <section className="section-block catalogue-page">
-      <div className="catalogue-hero">
-        <div>
-          <p className="eyebrow">{eyebrow}</p>
-          <h1>{title}</h1>
-          <p className="lead">{lead ?? `${launchCatalogueStatus.genuineSkuCount} products are available to browse by brand, category, price and availability.`}</p>
+      {showAoshimaBanner ? (
+        <AoshimaModelKitBanner />
+      ) : (
+        <div className="catalogue-hero">
+          <div>
+              <p className="eyebrow">{eyebrow}</p>
+              <h1>{title}</h1>
+              <p className="lead">{lead ?? `${launchCatalogueStatus.genuineSkuCount} products are available to browse by brand, category, price and availability.`}</p>
+          </div>
+          <form className="catalogue-search" action={formAction}>
+            <label htmlFor="catalogue-search">Search catalogue</label>
+            <input id="catalogue-search" name="search" type="search" defaultValue={search} placeholder="Search kits, brands or tools" />
+            <button type="submit">Search</button>
+          </form>
         </div>
-        <form className="catalogue-search" action={formAction}>
-          <label htmlFor="catalogue-search">Search catalogue</label>
-          <input id="catalogue-search" name="search" type="search" defaultValue={search} placeholder="Search kits, brands or tools" />
-          <button type="submit">Search</button>
-        </form>
-      </div>
+      )}
 
       {fixedCategory === '3d-puzzles-and-builds' ? (
         <div className="brand-showcase-links" aria-label="3D puzzle brand showcases">

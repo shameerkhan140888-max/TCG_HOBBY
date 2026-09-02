@@ -187,10 +187,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <div className="footer-company">
               <h2><span className="footer-company-name">Iron Sprue</span><span>A trading name of</span></h2>
               <p>Capital Hobby Group Ltd</p>
-              <p>Company Number 17336948</p>
-              <p>VAT No. {ironSprueBrand.vatNumber}</p>
-              <p>Registered in England &amp; Wales</p>
-              <p><span>Registered Office:</span><br />4-6 Greatorex Street, London<br />United Kingdom, E1 5NF</p>
+              <p><span>Company Number:</span><br />17336948</p>
+              <p>VAT No. GB525204033</p>
+              <p>Registered in<br />England &amp; Wales</p>
+              <p><span>Registered Office:</span><br />4-6 Greatorex Street<br />London<br />United Kingdom<br />E1 5NF</p>
             </div>
           </div>
           <div className="footer-bottom">
