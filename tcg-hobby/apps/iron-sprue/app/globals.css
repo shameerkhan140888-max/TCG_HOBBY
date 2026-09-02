@@ -7508,12 +7508,21 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 
   .product-card .product-image {
-    aspect-ratio: 1 / 0.38;
-    padding: 7px;
+    position: relative;
+    aspect-ratio: 1 / 0.82;
+    display: block;
+    padding: 0;
   }
 
   .product-card .product-image img {
+    position: absolute;
+    inset: 9px;
+    width: calc(100% - 18px) !important;
+    height: calc(100% - 18px) !important;
+    max-width: none;
+    max-height: none;
     object-fit: contain;
+    object-position: center;
   }
 
   .product-card-body,
@@ -7690,5 +7699,25 @@ body:has(.product-detail-page) .payment-trust-banner {
   .homepage-board .product-card .basket-action-stack {
     height: 40px;
     min-height: 40px;
+  }
+
+  .homepage-board .product-card .product-image,
+  .catalogue-grid .product-card .product-image {
+    position: relative;
+    aspect-ratio: 1 / 0.82;
+    display: block;
+    padding: 0;
+  }
+
+  .homepage-board .product-card .product-image img,
+  .catalogue-grid .product-card .product-image img {
+    position: absolute;
+    inset: 9px;
+    width: calc(100% - 18px) !important;
+    height: calc(100% - 18px) !important;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    object-position: center;
   }
 }
