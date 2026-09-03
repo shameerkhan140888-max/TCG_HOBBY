@@ -292,8 +292,14 @@ export function sanitizePublicProductList(values: string[] | null | undefined) {
 function basePublicSpecifications(product: IronSprueCatalogueProductRow): Record<string, string> {
   const internalSpecificationKeys = new Set([
     'adminSourceReference',
+    'bundleComponents',
+    'bundleSavingMinor',
+    'bundleSavingPercent',
+    'componentSummary',
     'catalogueReference',
+    'individualTotalMinor',
     'manufacturerReference',
+    'publicationNote',
     'sourceReference',
     'supplierCode',
     'supplierReference',
@@ -580,6 +586,11 @@ function buildProductWhere(filters: IronSprueCatalogueFilters): Prisma.IronSprue
         { category: { is: { slug: category } } },
         { category: { is: { name: { contains: legacyLabel, mode: insensitive } } } },
         ...(category === 'model-kits' ? [{ buildType: { contains: 'model kit', mode: insensitive } }] : []),
+        ...(category === 'tools'
+          ? [
+              { category: { is: { slug: { in: ['knives-blades', 'magnification', 'measuring-tools', 'pin-vices-drills', 'sanding-files', 'tool-sets', 'tweezers-pliers'] } } } },
+            ]
+          : []),
       ],
     });
   }

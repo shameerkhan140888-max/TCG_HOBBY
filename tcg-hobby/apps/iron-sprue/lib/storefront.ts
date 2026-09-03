@@ -13,7 +13,7 @@ import {
 export const categoryNavigation = [
   { label: 'Model Kits', href: '/shop/model-kits' },
   { label: '3D Puzzles & Builds', href: '/shop/3d-puzzles-and-builds' },
-  { label: 'Tools', href: '/shop?category=tools' },
+  { label: 'Tools', href: '/shop/tools' },
   { label: 'Adhesives & Finishing', href: '/shop?category=adhesives-finishing' },
   { label: 'Brands', href: '/brands' },
   { label: 'New Arrivals', href: '/shop?sort=newest' },
@@ -105,7 +105,7 @@ export const promoPanels = [
 export const categoryTiles = [
   { title: 'Plastic Model Kits', href: '/shop/model-kits', description: 'Cars, character kits and display builds selected for clean assembly.', tone: 'large' },
   { title: '3D Puzzles & Builds', href: '/shop/3d-puzzles-and-builds', description: 'Architectural models, puzzle objects and giftable weekend projects.', tone: 'warm' },
-  { title: 'Tools', href: '/shop?category=tools', description: 'Cutting, sanding, measuring and useful bench support.', tone: 'steel' },
+  { title: 'Tools', href: '/shop/tools', description: 'Cutting, sanding, measuring and useful bench support.', tone: 'steel' },
   { title: 'Adhesives & Finishing', href: '/shop?category=adhesives-finishing', description: 'Glues, applicators, surface prep and finish helpers.', tone: 'brass' },
   { title: 'Workshop Essentials', href: '/shop?category=workshop-essentials', description: 'Reliable add-ons for cleaner first-pass builds.', tone: 'graphite' },
   { title: 'Brands', href: '/brands', description: 'Browse stocked makers and authorised product ranges as they go live.', tone: 'light' },
@@ -344,7 +344,7 @@ export function hrefForCategoryLabel(label: string) {
   const normalised = label.toLowerCase();
   if (normalised.includes('model') || normalised.includes('japanese')) return '/shop/model-kits';
   if (normalised.includes('puzzle') || normalised.includes('architecture') || normalised.includes('display build') || normalised.includes('giftable')) return '/shop/3d-puzzles-and-builds';
-  if (normalised.includes('tool')) return '/shop?category=tools';
+  if (normalised.includes('tool')) return '/shop/tools';
   if (normalised.includes('adhesive') || normalised.includes('finishing')) return '/shop?category=adhesives-finishing';
   if (normalised.includes('brand')) return '/brands';
   if (normalised.includes('new')) return '/shop?sort=newest';

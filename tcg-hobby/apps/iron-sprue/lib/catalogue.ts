@@ -200,6 +200,21 @@ export function isModelKitProduct(product: IronSprueProduct) {
   return productType.includes('model kit') || category === 'model kits';
 }
 
+const toolCategorySlugs = new Set([
+  'knives-blades',
+  'magnification',
+  'measuring-tools',
+  'pin-vices-drills',
+  'sanding-files',
+  'tool-sets',
+  'tweezers-pliers',
+]);
+
+export function isToolProduct(product: IronSprueProduct) {
+  const categorySlug = product.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return toolCategorySlugs.has(categorySlug);
+}
+
 function normalizedScale(value: string | null | undefined) {
   return value?.trim().toLowerCase().replace(/\s+/g, '').replace(/[/:]/g, '-') ?? '';
 }
@@ -276,6 +291,8 @@ export function filterIronSprueProducts(products: IronSprueProduct[], query: { a
       const productCategory = product.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       if (category === 'model-kits') {
         if (!isModelKitProduct(product)) return false;
+      } else if (category === 'tools') {
+        if (!isToolProduct(product)) return false;
       } else if (productCategory !== category) {
         return false;
       }

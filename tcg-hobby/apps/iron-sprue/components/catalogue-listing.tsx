@@ -112,6 +112,15 @@ function single(params: Params, key: string) {
 function categoryMatches(product: IronSprueProduct, category: string) {
   if (category === '3d-puzzles-and-builds') return product.brand === 'CubicFun' || product.brand === 'Pintoo';
   if (category === 'model-kits') return isModelKitProduct(product);
+  if (category === 'tools') return [
+    'knives-blades',
+    'magnification',
+    'measuring-tools',
+    'pin-vices-drills',
+    'sanding-files',
+    'tool-sets',
+    'tweezers-pliers',
+  ].includes(slugForCategory(product.category));
   return slugForCategory(product.category) === category;
 }
 

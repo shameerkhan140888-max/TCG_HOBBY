@@ -5,7 +5,6 @@ import {
 } from '../../../packages/database/src/index.ts';
 
 const STORE_CODE = 'IRON_SPRUE';
-const BUNDLE_MEDIA_URL = '/assets/promo-bundle-savings.webp';
 const STRIPE_ESTIMATE_FIXED_MINOR = 20;
 const STRIPE_ESTIMATE_RATE = 0.015;
 const EXPECTED_FREE_DELIVERY_COST_MINOR = 399;
@@ -16,6 +15,7 @@ const bundleDefinitions = [
   {
     sku: 'IS-BUN-CUB-LANDMARK-TRIO',
     slug: 'cubicfun-landmark-trio',
+    mediaUrl: '/assets/bundles/cubicfun-landmark-trio.webp',
     name: 'CubicFun Landmark Trio',
     shortDescription: 'Three architectural builds in one set, combining landmark models for a varied display collection.',
     fullDescription: 'The CubicFun Landmark Trio brings together Thomas Jefferson Memorial, Brandenburg Gate and St Peter’s Basilica as one display-focused bundle.',
@@ -26,6 +26,7 @@ const bundleDefinitions = [
   {
     sku: 'IS-BUN-CUB-VARIETY-TRIO',
     slug: 'cubicfun-variety-trio',
+    mediaUrl: '/assets/bundles/cubicfun-variety-trio.webp',
     name: 'CubicFun Variety Trio',
     shortDescription: 'A mixed set spanning architecture, maritime and display modelling.',
     fullDescription: 'The CubicFun Variety Trio combines Era of Navigation, Queen Anne’s Revenge and St Basil’s Cathedral for a varied 3D puzzle building selection.',
@@ -36,6 +37,7 @@ const bundleDefinitions = [
   {
     sku: 'IS-BUN-PIN-DECORATIVE-TRIO',
     slug: 'pintoo-decorative-trio',
+    mediaUrl: '/assets/bundles/pintoo-decorative-trio.webp',
     name: 'Pintoo Decorative Trio',
     shortDescription: 'Three decorative Pintoo builds designed for display as well as the puzzle experience.',
     fullDescription: 'The Pintoo Decorative Trio pairs Koi Carp & Lotus, Magpies on a Plum Tree and Classic Rose Clock in one display-led puzzle bundle.',
@@ -46,6 +48,7 @@ const bundleDefinitions = [
   {
     sku: 'IS-BUN-PIN-STARTER-VARIETY-TRIO',
     slug: 'pintoo-starter-variety-trio',
+    mediaUrl: '/assets/bundles/pintoo-starter-variety-trio.webp',
     name: 'Pintoo Starter Variety Trio',
     shortDescription: 'A compact introduction to Pintoo display puzzles with varied finished forms.',
     fullDescription: 'The Pintoo Starter Variety Trio combines the Koi Carp & Lotus vase with two Pintoo flowerpot builds for a varied decorative puzzle set.',
@@ -56,6 +59,7 @@ const bundleDefinitions = [
   {
     sku: 'IS-BUN-AOS-PAGANI-ESSENTIAL-BUILD',
     slug: 'pagani-essential-build-bundle',
+    mediaUrl: '/assets/bundles/pagani-essential-build-bundle.webp',
     name: 'Pagani Essential Build Bundle',
     shortDescription: 'Pagani Zonda F with two useful bench tools for a focused model-kit build.',
     fullDescription: 'The Pagani Essential Build Bundle combines the Aoshima Pagani Zonda F kit with Reverse Tweezers and an 11mm Hobby Knife.',
@@ -126,9 +130,6 @@ function buildSpecification(definition, components, totals) {
     bundleSavingMinor: totals.savingMinor,
     bundleSavingPercent: totals.savingPercent,
     componentSummary: components.map((component) => component.product.customerTitle).join('; '),
-    publicationNote: definition.publishWhenReady
-      ? 'Published when all bundle components are customer-visible and in stock.'
-      : 'Draft until all commercial and component publication checks are approved.',
   };
 }
 
@@ -278,7 +279,7 @@ async function applyBundlePlan(db, plan) {
     const mediaData = {
       productId: product.id,
       role: 'catalogue-primary',
-      url: BUNDLE_MEDIA_URL,
+      url: bundle.definition.mediaUrl,
       storageKey: null,
       altText: `${bundle.definition.name} bundle image`,
       mimeType: 'image/webp',

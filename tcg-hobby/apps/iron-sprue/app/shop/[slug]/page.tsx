@@ -45,6 +45,12 @@ const showcaseRoutes: Record<string, {
     lead: 'Current Iron Sprue offers and bundle savings.',
     title: 'Special offers',
   },
+  tools: {
+    eyebrow: 'Tools & workshop essentials',
+    fixedCategory: 'tools',
+    lead: 'Cutting, sanding, measuring and handling tools selected to support precise assembly and tidy finishing.',
+    title: 'Tools',
+  },
   pintoo: {
     eyebrow: 'Pintoo showcase',
     fixedBrand: 'Pintoo',

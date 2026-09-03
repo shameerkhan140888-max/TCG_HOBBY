@@ -37,8 +37,14 @@ const productSpecificationLabels: Record<string, string> = {
 
 const hiddenSpecificationKeys = new Set([
   'adminSourceReference',
+  'bundleComponents',
+  'bundleSavingMinor',
+  'bundleSavingPercent',
+  'componentSummary',
   'catalogueReference',
+  'individualTotalMinor',
   'manufacturerReference',
+  'publicationNote',
   'sourceReference',
   'supplierCode',
   'supplierReference',
