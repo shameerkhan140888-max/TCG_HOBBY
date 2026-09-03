@@ -15,6 +15,7 @@ import { brandLogoRegistry, heroSlides } from './storefront';
 export const IRON_SPRUE_PRODUCTION_API_BASE_URL = 'IRON_SPRUE_PRODUCTION_API_BASE_URL';
 const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
 const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
+const IRON_SPRUE_STAGING_HOSTS = new Set(['staging.ironsprue.co.uk']);
 const PUBLIC_API_CACHE_TTL_MS = 15_000;
 
 type CachedPublicApiResponse = {
@@ -102,6 +103,9 @@ export function storefrontMediaUrl(value: string | null | undefined) {
   try {
     const parsed = new URL(raw);
     if (parsed.pathname.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) return `${parsed.pathname}${parsed.search}`;
+    if (IRON_SPRUE_STAGING_HOSTS.has(parsed.hostname.toLowerCase()) && parsed.pathname.startsWith('/assets/')) {
+      return `${parsed.pathname}${parsed.search}`;
+    }
     if (parsed.hostname.toLowerCase() !== IRON_SPRUE_MEDIA_HOST) return raw;
     const key = parsed.pathname.replace(/^\/+/, '');
     return key ? `${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : undefined;

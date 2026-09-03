@@ -216,7 +216,6 @@ describe('Iron Sprue Admin storefront controls', () => {
       '/approved-image-2.png',
       '/approved-workshop.png',
       '/approved-original.jpg',
-      '/old-source.jpg',
     ]);
 
     vi.unstubAllEnvs();

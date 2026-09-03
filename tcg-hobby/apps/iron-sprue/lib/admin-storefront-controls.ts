@@ -669,11 +669,15 @@ export function promoPanelsFromPlacements(placements: IronSprueHomepagePlacement
     .map((placement) => {
       const image = publicIronSprueMediaUrl(placement.imageUrl) ?? null;
       if (!image) return null;
+      const placementText = `${placement.placementKey} ${placement.title}`.toLowerCase();
+      const href = placementText.includes('bundle-savings') || placementText.includes('bundle savings')
+        ? '/bundles'
+        : placement.ctaHref || '/shop';
       return {
         eyebrow: placement.placementKey.replace(/[-_:]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()),
         title: placement.title,
         copy: '',
-        href: placement.ctaHref || '/shop',
+        href,
         cta: placement.ctaLabel || 'Shop now',
         image,
         alt: placement.title,

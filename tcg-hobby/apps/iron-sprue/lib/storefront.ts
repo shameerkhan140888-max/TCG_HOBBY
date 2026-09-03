@@ -18,7 +18,7 @@ export const categoryNavigation = [
   { label: 'Brands', href: '/brands' },
   { label: 'New Arrivals', href: '/shop?sort=newest' },
   { label: 'Coming Soon', href: '/shop?availability=coming-soon' },
-  { label: 'Offers', href: '/shop?offers=true' },
+  { label: 'Offers', href: '/bundles' },
 ] as const;
 
 export const heroSlides = [
@@ -77,8 +77,8 @@ export const promoPanels = [
     eyebrow: 'Bundle savings',
     title: 'Save on sets',
     copy: 'Group display builds and puzzle objects into better-value project bundles.',
-    href: '/shop/offers',
-    cta: 'View bundle',
+    href: '/bundles',
+    cta: 'View bundles',
     image: '/assets/promo-bundle-savings.webp',
     alt: 'Grouped 3D puzzle and display-build boxes arranged as a bundle offer',
   },
