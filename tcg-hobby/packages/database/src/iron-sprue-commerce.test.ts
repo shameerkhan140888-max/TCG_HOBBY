@@ -463,6 +463,66 @@ describe('Iron Sprue Stripe commerce', () => {
     });
   });
 
+  it('resolves bundle cart availability from underlying component stock', async () => {
+    const bundleProduct = {
+      id: 'bundle-1',
+      sku: 'IS-BUN-CUB-LANDMARK-TRIO',
+      customerTitle: 'CubicFun Landmark Trio',
+      slug: 'cubicfun-landmark-trio',
+      grossPriceMinor: 3199,
+      specifications: {
+        bundleComponents: [
+          { sku: 'IS-CUB-C108H', quantity: 1 },
+          { sku: 'IS-CUB-C712H', quantity: 1 },
+          { sku: 'IS-CUB-MC092H', quantity: 1 },
+        ],
+      },
+      inventory: { availableStock: 99, reservedStock: 0 },
+      mediaAssets: [],
+    };
+    const components = [
+      { sku: 'IS-CUB-C108H', inventory: { availableStock: 5, reservedStock: 0 } },
+      { sku: 'IS-CUB-C712H', inventory: { availableStock: 3, reservedStock: 0 } },
+      { sku: 'IS-CUB-MC092H', inventory: { availableStock: 8, reservedStock: 0 } },
+    ];
+    const db = {
+      ironSprueOrder: { findMany: vi.fn().mockResolvedValue([]) },
+      ironSprueAdminInventory: {
+        findMany: vi.fn().mockResolvedValue([]),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      ironSprueAdminProduct: {
+        findMany: vi.fn(async (args) => {
+          const skuFilter = args.where.OR?.find((clause: any) => clause.sku)?.sku?.in ?? [];
+          if (skuFilter.includes('IS-BUN-CUB-LANDMARK-TRIO')) return [bundleProduct];
+          return components
+            .filter((component) => skuFilter.includes(component.sku))
+            .map((component, index) => ({
+              id: `component-${index + 1}`,
+              customerTitle: component.sku,
+              slug: component.sku.toLowerCase(),
+              grossPriceMinor: 749,
+              specifications: {},
+              mediaAssets: [],
+              ...component,
+            }));
+        }),
+      },
+    } as any;
+
+    const cart = await resolveIronSprueGuestCart([{ productId: 'IS-BUN-CUB-LANDMARK-TRIO', quantity: 2 }], db);
+
+    expect(cart.items[0]).toMatchObject({
+      productId: 'bundle-1',
+      productSlug: 'cubicfun-landmark-trio',
+      quantity: 2,
+      unitPriceMinor: 3199,
+      totalMinor: 6398,
+      availableQuantity: 3,
+      inStock: true,
+    });
+  });
+
   it('fails before order creation or Stripe session creation when dedicated Iron Sprue Stripe config is absent', async () => {
     delete process.env.IRON_SPRUE_STRIPE_ACCOUNT_ID;
     delete process.env.IRON_SPRUE_STRIPE_TEST_SECRET_KEY;

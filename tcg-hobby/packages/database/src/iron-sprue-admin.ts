@@ -556,9 +556,19 @@ function ironSprueDisplayableMediaWhere(role?: string, isPrimary?: boolean): Pri
           ],
         },
         {
-          NOT: [
-            { storageKey: { endsWith: '.json' } },
-            { url: { endsWith: '.json' } },
+          AND: [
+            {
+              OR: [
+                { storageKey: null },
+                { NOT: { storageKey: { endsWith: '.json' } } },
+              ],
+            },
+            {
+              OR: [
+                { url: null },
+                { NOT: { url: { endsWith: '.json' } } },
+              ],
+            },
           ],
         },
       ],

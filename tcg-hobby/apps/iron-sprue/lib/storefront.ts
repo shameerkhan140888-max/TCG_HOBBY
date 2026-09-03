@@ -262,6 +262,12 @@ export function productCardFacts(product: IronSprueProduct) {
   return Array.from(new Set(facts)).slice(0, 1);
 }
 
+export function productCardMobileFact(product: IronSprueProduct) {
+  const category = product.category?.trim();
+  const fact = productCardFacts(product)[0];
+  return [category, fact].filter(Boolean).join(' / ');
+}
+
 export function productSellableQuantity(product: IronSprueProduct) {
   return Math.max(0, product.availableQuantity ?? product.stockQuantity ?? 0);
 }

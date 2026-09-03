@@ -7222,6 +7222,14 @@ body:has(.product-detail-page) .payment-trust-banner {
   text-transform: none;
 }
 
+.product-card-facts .product-card-mobile-fact {
+  display: none;
+}
+
+.product-card-facts-mobile-only {
+  display: none;
+}
+
 .cookie-consent-actions {
   display: flex;
   flex-wrap: nowrap;
@@ -7581,6 +7589,10 @@ body:has(.product-detail-page) .payment-trust-banner {
     overflow: hidden;
   }
 
+  .product-card-facts-mobile-only {
+    display: flex;
+  }
+
   .product-card-facts li:nth-child(n + 2) {
     display: none;
   }
@@ -7593,6 +7605,10 @@ body:has(.product-detail-page) .payment-trust-banner {
     font-size: 10.5px;
     line-height: 1.1;
     white-space: nowrap;
+  }
+
+  .product-card-facts .product-card-mobile-fact {
+    display: list-item;
   }
 
   .product-card-facts li:not(:last-child)::after {

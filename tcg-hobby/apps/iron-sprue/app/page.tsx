@@ -12,7 +12,7 @@ import {
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
 import { getIronSprueProductionApiHomeSnapshot, shouldUseIronSprueProductionApi } from '../lib/production-api';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
-import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCardFacts, productCommerceId, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
+import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCardFacts, productCardMobileFact, productCommerceId, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { AddToBasketButton } from '../components/basket-client';
 
@@ -31,6 +31,7 @@ function ProductCard({ product }: { product: IronSprueProduct }) {
   const isOutOfStock = availableQuantity <= 0;
   const availabilityClass = productAvailabilityClass(product);
   const cardFacts = productCardFacts(product);
+  const mobileFact = productCardMobileFact(product);
 
   return (
     <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
@@ -53,8 +54,9 @@ function ProductCard({ product }: { product: IronSprueProduct }) {
           <p className="product-brand">{product.brand}</p>
           <h3>{product.name}</h3>
           <p className="product-card-category">{product.category}</p>
-          {cardFacts.length ? (
-            <ul className="product-card-facts" aria-label={`${product.name} product facts`}>
+          {mobileFact ? (
+            <ul className={`product-card-facts${cardFacts.length ? '' : ' product-card-facts-mobile-only'}`} aria-label={`${product.name} product facts`}>
+              <li className="product-card-mobile-fact">{mobileFact}</li>
               {cardFacts.map((fact) => <li key={fact}>{fact}</li>)}
             </ul>
           ) : null}

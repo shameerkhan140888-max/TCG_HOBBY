@@ -21,6 +21,7 @@ import {
   resolveIronSpruePublicMediaUrl,
   selectIronSpruePrimaryCatalogueMedia,
 } from './iron-sprue-admin.js';
+import { ironSprueBundleComponentsFromSpecifications } from './iron-sprue-bundles.js';
 import { resolveIronSprueStorefrontMediaUrl } from './iron-sprue-media.js';
 
 type DatabaseClient = ReturnType<typeof getIronSprueAdminPrisma>;
@@ -421,14 +422,48 @@ function reservedStock(product: IronSprueCatalogueProductRow) {
   return product.inventory?.reservedStock ?? 0;
 }
 
-function mapProduct(product: IronSprueCatalogueProductRow): CatalogueProduct {
+function bundleAvailability(product: IronSprueCatalogueProductRow, availabilityByProductId: Map<string, number>) {
+  const components = ironSprueBundleComponentsFromSpecifications(product.specifications);
+  if (!components.length) return null;
+  let availableBundles = Number.POSITIVE_INFINITY;
+  for (const component of components) {
+    const componentAvailability = availabilityByProductId.get(component.sku) ?? 0;
+    availableBundles = Math.min(availableBundles, Math.floor(componentAvailability / component.quantity));
+  }
+  return Number.isFinite(availableBundles) ? Math.max(availableBundles, 0) : 0;
+}
+
+async function buildBundleAvailabilityByProductId(products: IronSprueCatalogueProductRow[], db: DatabaseClient) {
+  const skuSet = new Set<string>();
+  for (const product of products) {
+    for (const component of ironSprueBundleComponentsFromSpecifications(product.specifications)) {
+      skuSet.add(component.sku);
+    }
+  }
+  if (!skuSet.size) return new Map<string, number>();
+
+  const components = await db.ironSprueAdminProduct.findMany({
+    where: { ...publicProductWhere, sku: { in: [...skuSet] } },
+    include: { inventory: true },
+  });
+  return new Map(components.map((product) => [
+    product.sku,
+    Math.max((product.inventory?.availableStock ?? 0) - (product.inventory?.reservedStock ?? 0), 0),
+  ]));
+}
+
+function mapProduct(
+  product: IronSprueCatalogueProductRow,
+  componentAvailabilityBySku: Map<string, number> = new Map(),
+): CatalogueProduct {
   const image = preferredMedia(product);
   const categoryName = product.category?.name ?? 'Iron Sprue Catalogue';
   const categorySlug = product.category?.slug ?? 'catalogue';
   const brandName = product.brand?.name ?? null;
   const productType = product.buildType ?? categoryName;
-  const availableStock = stockOnHand(product);
-  const reserved = reservedStock(product);
+  const resolvedBundleAvailability = bundleAvailability(product, componentAvailabilityBySku);
+  const availableStock = resolvedBundleAvailability ?? stockOnHand(product);
+  const reserved = resolvedBundleAvailability === null ? reservedStock(product) : 0;
   const specifications = publicSpecifications(product);
 
   return {
@@ -485,8 +520,11 @@ function mapProduct(product: IronSprueCatalogueProductRow): CatalogueProduct {
   };
 }
 
-function mapProductDetail(product: IronSprueCatalogueProductRow): CatalogueProductDetail {
-  const summary = mapProduct(product);
+function mapProductDetail(
+  product: IronSprueCatalogueProductRow,
+  componentAvailabilityBySku: Map<string, number> = new Map(),
+): CatalogueProductDetail {
+  const summary = mapProduct(product, componentAvailabilityBySku);
   const images = publicGalleryMedia(product)
     .map((asset) => mapImage(asset, product))
     .filter((image): image is CatalogueProductImage => image !== null);
@@ -617,7 +655,8 @@ export async function getIronSprueCatalogueProducts(
     orderBy: [{ featured: 'desc' }, { updatedAt: 'desc' }, { customerTitle: 'asc' }],
   });
   const visibleRows = rows.filter((product) => getIronSprueProductReadiness(product).isPubliclyVisible && rowMatchesRuntimeFilters(product, filters));
-  const allProducts = sortProducts(visibleRows.map(mapProduct), filters.sort);
+  const bundleComponentAvailability = await buildBundleAvailabilityByProductId(visibleRows, db);
+  const allProducts = sortProducts(visibleRows.map((product) => mapProduct(product, bundleComponentAvailability)), filters.sort);
   const totalItems = allProducts.length;
   const pagination = resolvePagination(totalItems, page, pageSize);
   const offset = (pagination.page - 1) * pageSize;
@@ -638,7 +677,9 @@ export async function getIronSprueCatalogueProductBySlug(
     where: { ...publicProductWhere, slug },
     include: productInclude,
   });
-  return product && getIronSprueProductReadiness(product).isPubliclyVisible ? mapProductDetail(product) : null;
+  if (!product || !getIronSprueProductReadiness(product).isPubliclyVisible) return null;
+  const bundleComponentAvailability = await buildBundleAvailabilityByProductId([product], db);
+  return mapProductDetail(product, bundleComponentAvailability);
 }
 
 export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIronSprueAdminPrisma()): Promise<IronSprueCatalogueHomeData> {
@@ -696,10 +737,11 @@ export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIron
     .filter((product) => getIronSprueProductReadiness(product).isPubliclyVisible)
     .sort((left, right) => (featuredOrder.get(left.slug) ?? 999) - (featuredOrder.get(right.slug) ?? 999))
     .slice(0, 4);
+  const bundleComponentAvailability = await buildBundleAvailabilityByProductId(visibleFeatured, db);
 
   return {
     categories,
-    featuredProducts: visibleFeatured.map(mapProduct),
+    featuredProducts: visibleFeatured.map((product) => mapProduct(product, bundleComponentAvailability)),
     homepagePlacements: homepagePlacements.map((placement) => ({
       id: placement.id,
       placementKey: placement.placementKey,

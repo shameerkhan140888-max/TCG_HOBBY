@@ -11,6 +11,7 @@ import {
   productAvailability,
   productAvailabilityClass,
   productCardFacts,
+  productCardMobileFact,
   productCommerceId,
   productImage,
   productSellableQuantity,
@@ -384,6 +385,7 @@ export async function CatalogueListing({
                 const isOutOfStock = availableQuantity <= 0;
                 const availabilityClass = productAvailabilityClass(product);
                 const cardFacts = productCardFacts(product);
+                const mobileFact = productCardMobileFact(product);
                 const manufacturerReference = (product.manufacturerReference ?? product.supplierSku ?? '').trim();
                 return (
                   <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
@@ -406,8 +408,9 @@ export async function CatalogueListing({
                         <p className="product-brand">{product.brand}</p>
                         <h2>{product.name}</h2>
                         <p className="product-card-category">{product.category}</p>
-                        {cardFacts.length ? (
-                          <ul className="product-card-facts" aria-label={`${product.name} product facts`}>
+                        {mobileFact ? (
+                          <ul className={`product-card-facts${cardFacts.length ? '' : ' product-card-facts-mobile-only'}`} aria-label={`${product.name} product facts`}>
+                            <li className="product-card-mobile-fact">{mobileFact}</li>
                             {cardFacts.map((fact) => <li key={fact}>{fact}</li>)}
                           </ul>
                         ) : null}

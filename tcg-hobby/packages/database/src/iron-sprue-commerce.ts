@@ -21,6 +21,7 @@ import {
   getShippingMethodsForCountry,
   validateQuantityAgainstAvailability,
 } from './commerce.js';
+import { ironSprueBundleComponentsFromSpecifications } from './iron-sprue-bundles.js';
 import { assertStripeEventMatchesStore, getStoreStripeConfig, type CommerceEnvironment } from './store-stripe-config.js';
 import { isIronSprueDisplayableImageAsset, isIronSprueOperationalMediaRole, resolveIronSpruePublicMediaUrl, resolveIronSprueStorefrontMediaUrl } from './iron-sprue-media.js';
 
@@ -298,10 +299,55 @@ function availableStock(product: IronSprueProductForCart) {
   return Math.max(inventory.availableStock - inventory.reservedStock, 0);
 }
 
-function toCartLine(product: IronSprueProductForCart, quantity: number): CartLineItem {
+async function bundleComponentAvailability(product: Pick<IronSprueProductForCart, 'specifications'>, db: DatabaseClient) {
+  const components = ironSprueBundleComponentsFromSpecifications(product.specifications);
+  if (!components.length) return null;
+  const rows = await db.ironSprueAdminProduct.findMany({
+    where: safeProductIdentifierWhere(components.map((component) => component.sku)),
+    include: { inventory: true, mediaAssets: true },
+  });
+  const availabilityBySku = new Map(rows.map((row) => [row.sku, availableStock(row as IronSprueProductForCart)]));
+  return components.reduce((availableBundles, component) => (
+    Math.min(availableBundles, Math.floor((availabilityBySku.get(component.sku) ?? 0) / component.quantity))
+  ), Number.POSITIVE_INFINITY);
+}
+
+async function availableStockForCart(product: IronSprueProductForCart, db: DatabaseClient) {
+  const bundleAvailability = await bundleComponentAvailability(product, db);
+  if (bundleAvailability !== null) return Number.isFinite(bundleAvailability) ? Math.max(bundleAvailability, 0) : 0;
+  return availableStock(product);
+}
+
+async function reservationLinesForOrderItem(
+  tx: Prisma.TransactionClient,
+  item: { productId: string; quantity: number },
+) {
+  const productReader = (tx as unknown as Record<string, any>).ironSprueAdminProduct;
+  if (!productReader?.findUnique) return [{ productId: item.productId, quantity: item.quantity }];
+  const product = await tx.ironSprueAdminProduct.findUnique({
+    where: { id: item.productId },
+    select: { id: true, storeCode: true, specifications: true },
+  });
+  if (!product || product.storeCode !== IRON_SPRUE_STORE_CODE) return [{ productId: item.productId, quantity: item.quantity }];
+  const components = ironSprueBundleComponentsFromSpecifications(product.specifications);
+  if (!components.length) return [{ productId: item.productId, quantity: item.quantity }];
+
+  const componentProducts = await tx.ironSprueAdminProduct.findMany({
+    where: { storeCode: IRON_SPRUE_STORE_CODE, archivedAt: null, sku: { in: components.map((component) => component.sku) } },
+    select: { id: true, sku: true },
+  });
+  const productIdBySku = new Map(componentProducts.map((component) => [component.sku, component.id]));
+  return components.map((component) => {
+    const productId = productIdBySku.get(component.sku);
+    if (!productId) throw new Error(`Bundle component ${component.sku} is not available.`);
+    return { productId, quantity: item.quantity * component.quantity };
+  });
+}
+
+async function toCartLine(product: IronSprueProductForCart, quantity: number, db: DatabaseClient): Promise<CartLineItem> {
   const unitPriceMinor = product.grossPriceMinor ?? 0;
   const image = resolveProductImage(product);
-  const availableQuantity = availableStock(product);
+  const availableQuantity = await availableStockForCart(product, db);
   return {
     id: product.id,
     productId: product.id,
@@ -341,7 +387,7 @@ export async function resolveIronSprueGuestCart(inputItems: Array<{ productId: s
     where: safeProductIdentifierWhere(productIdentifiers),
     include: { inventory: true, mediaAssets: true },
   });
-  const lines = products.map((product) => toCartLine(product, quantities.get(product.id) ?? quantities.get(product.sku) ?? quantities.get(product.slug) ?? 1));
+  const lines = await Promise.all(products.map((product) => toCartLine(product, quantities.get(product.id) ?? quantities.get(product.sku) ?? quantities.get(product.slug) ?? 1, db)));
   return { cartId: null, ...summarizeCart(lines) };
 }
 
@@ -365,7 +411,7 @@ export async function getIronSprueCustomerCartDetails(userId: string, db: Databa
     },
   });
   if (!cart) return { cartId: null, ...summarizeCart([]) };
-  const lines = cart.items.map((item) => toCartLine(item.product, item.quantity));
+  const lines = await Promise.all(cart.items.map((item) => toCartLine(item.product, item.quantity, db)));
   return { cartId: cart.id, ...summarizeCart(lines) };
 }
 
@@ -384,7 +430,8 @@ export async function addIronSprueProductToCart(userId: string, productId: strin
   });
   if (!product) throw new Error('Product is not available.');
   const nextQuantity = normalizeQuantity(quantity);
-  const check = validateQuantityAgainstAvailability(nextQuantity, availableStock(product));
+  const availableQuantity = await availableStockForCart(product, db);
+  const check = validateQuantityAgainstAvailability(nextQuantity, availableQuantity);
   if (!check.ok) throw new Error(check.message);
   const cart = await getOrCreateIronSprueCart(userId, db);
   const existing = await db.ironSprueCartItem.findUnique({
@@ -392,7 +439,7 @@ export async function addIronSprueProductToCart(userId: string, productId: strin
     select: { quantity: true },
   });
   const finalQuantity = (existing?.quantity ?? 0) + nextQuantity;
-  const finalCheck = validateQuantityAgainstAvailability(finalQuantity, availableStock(product));
+  const finalCheck = validateQuantityAgainstAvailability(finalQuantity, availableQuantity);
   if (!finalCheck.ok) throw new Error(finalCheck.message);
   await db.ironSprueCartItem.upsert({
     where: { cartId_productId: { cartId: cart.id, productId: product.id } },
@@ -410,7 +457,7 @@ export async function updateIronSprueCartItemQuantity(userId: string, productId:
     include: { product: { include: { inventory: true, mediaAssets: true } } },
   });
   if (!existing || existing.product.storeCode !== IRON_SPRUE_STORE_CODE) throw new Error('Product is not available.');
-  const check = validateQuantityAgainstAvailability(nextQuantity, availableStock(existing.product));
+  const check = validateQuantityAgainstAvailability(nextQuantity, await availableStockForCart(existing.product, db));
   if (!check.ok) throw new Error(check.message);
   await db.ironSprueCartItem.update({
     where: { cartId_productId: { cartId: cart.id, productId: canonicalProductId } },
@@ -814,14 +861,21 @@ async function createIronSpruePendingCheckoutOrder(input: CreateIronSprueCheckou
         where: { id: item.productId },
         include: { inventory: true },
       });
-      if (!product || product.storeCode !== IRON_SPRUE_STORE_CODE || !product.inventory) throw new Error('Product is not available.');
+      if (!product || product.storeCode !== IRON_SPRUE_STORE_CODE) throw new Error('Product is not available.');
       skuByProductId.set(product.id, product.sku);
-      const check = validateQuantityAgainstAvailability(item.quantity, Math.max(product.inventory.availableStock - product.inventory.reservedStock, 0));
-      if (!check.ok) throw new Error(check.message);
-      await tx.ironSprueAdminInventory.update({
-        where: { productId: item.productId },
-        data: { reservedStock: { increment: item.quantity } },
-      });
+      const reservationLines = await reservationLinesForOrderItem(tx, item);
+      for (const reservationLine of reservationLines) {
+        const inventory = reservationLine.productId === product.id
+          ? product.inventory
+          : await tx.ironSprueAdminInventory.findUnique({ where: { productId: reservationLine.productId } });
+        if (!inventory) throw new Error('Product is not available.');
+        const check = validateQuantityAgainstAvailability(reservationLine.quantity, Math.max(inventory.availableStock - inventory.reservedStock, 0));
+        if (!check.ok) throw new Error(check.message);
+        await tx.ironSprueAdminInventory.update({
+          where: { productId: reservationLine.productId },
+          data: { reservedStock: { increment: reservationLine.quantity } },
+        });
+      }
     }
     return tx.ironSprueOrder.create({
       data: {
@@ -1129,12 +1183,14 @@ export async function releaseIronSprueCheckoutOrderReservation(orderId: string, 
     const order = await tx.ironSprueOrder.findUnique({ where: { id: orderId }, include: { items: true } });
     if (!order || order.paymentStatus === 'SUCCEEDED' || order.cancelledAt) return null;
     for (const item of order.items) {
-      const inventory = await tx.ironSprueAdminInventory.findUnique({ where: { productId: item.productId } });
-      if (!inventory) continue;
-      await tx.ironSprueAdminInventory.update({
-        where: { productId: item.productId },
-        data: { reservedStock: Math.max(inventory.reservedStock - item.quantity, 0) },
-      });
+      for (const reservationLine of await reservationLinesForOrderItem(tx, item)) {
+        const inventory = await tx.ironSprueAdminInventory.findUnique({ where: { productId: reservationLine.productId } });
+        if (!inventory) continue;
+        await tx.ironSprueAdminInventory.update({
+          where: { productId: reservationLine.productId },
+          data: { reservedStock: Math.max(inventory.reservedStock - reservationLine.quantity, 0) },
+        });
+      }
     }
     await tx.ironSprueOrder.update({
       where: { id: orderId },
@@ -1304,30 +1360,32 @@ export async function cancelIronSprueOrderForMerchant(input: {
       if (isOrderAlreadyCancelledOrRefunded(current)) return current;
 
       for (const item of current.items) {
-        const inventory = await tx.ironSprueAdminInventory.findUnique({ where: { productId: item.productId } });
-        if (!inventory) continue;
-        const afterQuantity = inventory.availableStock + item.quantity;
-        await tx.ironSprueAdminInventory.update({
-          where: { productId: item.productId },
-          data: {
-            availableStock: afterQuantity,
-            reservedStock: Math.max(inventory.reservedStock - item.quantity, 0),
-          },
-        });
-        await tx.ironSprueAdminStockMovement.create({
-          data: {
-            storeCode: IRON_SPRUE_STORE_CODE,
-            productId: item.productId,
-            movementType: params.refunded ? 'REFUND_RESTOCK' : 'CANCEL_RESTOCK',
-            quantity: item.quantity,
-            beforeQuantity: inventory.availableStock,
-            afterQuantity,
-            reason: trimmedReason
-              ? `${params.reasonPrefix} ${current.orderNumber}: ${trimmedReason.slice(0, 160)}`
-              : `${params.reasonPrefix} ${current.orderNumber}`,
-            actorId: input.actorId ?? null,
-          },
-        });
+        for (const reservationLine of await reservationLinesForOrderItem(tx, item)) {
+          const inventory = await tx.ironSprueAdminInventory.findUnique({ where: { productId: reservationLine.productId } });
+          if (!inventory) continue;
+          const afterQuantity = inventory.availableStock + reservationLine.quantity;
+          await tx.ironSprueAdminInventory.update({
+            where: { productId: reservationLine.productId },
+            data: {
+              availableStock: afterQuantity,
+              reservedStock: Math.max(inventory.reservedStock - reservationLine.quantity, 0),
+            },
+          });
+          await tx.ironSprueAdminStockMovement.create({
+            data: {
+              storeCode: IRON_SPRUE_STORE_CODE,
+              productId: reservationLine.productId,
+              movementType: params.refunded ? 'REFUND_RESTOCK' : 'CANCEL_RESTOCK',
+              quantity: reservationLine.quantity,
+              beforeQuantity: inventory.availableStock,
+              afterQuantity,
+              reason: trimmedReason
+                ? `${params.reasonPrefix} ${current.orderNumber}: ${trimmedReason.slice(0, 160)}`
+                : `${params.reasonPrefix} ${current.orderNumber}`,
+              actorId: input.actorId ?? null,
+            },
+          });
+        }
       }
 
       return tx.ironSprueOrder.update({
@@ -1526,13 +1584,44 @@ export async function reconcileIronSprueReservedStock(db: DatabaseClient = getIr
     }),
   ]);
 
+  const productReader = (db as unknown as Record<string, any>).ironSprueAdminProduct;
+  const activeProductIds = Array.from(new Set(activeOrders.flatMap((order) => order.items.map((item) => item.productId))));
+  const activeProducts = activeProductIds.length && productReader?.findMany
+    ? await db.ironSprueAdminProduct.findMany({
+      where: { storeCode: IRON_SPRUE_STORE_CODE, id: { in: activeProductIds } },
+      select: { id: true, specifications: true },
+    })
+    : [];
+  const componentsByProductId = new Map(activeProducts.map((product) => [
+    product.id,
+    ironSprueBundleComponentsFromSpecifications(product.specifications),
+  ]));
+  const componentSkus = Array.from(new Set([...componentsByProductId.values()].flat().map((component) => component.sku)));
+  const componentProducts = componentSkus.length
+    ? await db.ironSprueAdminProduct.findMany({
+      where: { storeCode: IRON_SPRUE_STORE_CODE, archivedAt: null, sku: { in: componentSkus } },
+      select: { id: true, sku: true },
+    })
+    : [];
+  const componentProductIdBySku = new Map(componentProducts.map((product) => [product.sku, product.id]));
+
   const expectedReservedByProductId = new Map<string, number>();
   for (const order of activeOrders) {
     for (const item of order.items) {
-      expectedReservedByProductId.set(
-        item.productId,
-        (expectedReservedByProductId.get(item.productId) ?? 0) + item.quantity,
-      );
+      const components = componentsByProductId.get(item.productId) ?? [];
+      if (!components.length) {
+        expectedReservedByProductId.set(
+          item.productId,
+          (expectedReservedByProductId.get(item.productId) ?? 0) + item.quantity,
+        );
+        continue;
+      }
+      for (const component of components) {
+        const productId = componentProductIdBySku.get(component.sku);
+        if (!productId) continue;
+        const quantity = item.quantity * component.quantity;
+        expectedReservedByProductId.set(productId, (expectedReservedByProductId.get(productId) ?? 0) + quantity);
+      }
     }
   }
 
@@ -1571,26 +1660,28 @@ export async function finalizePaidIronSprueCheckoutOrder(input: { orderId: strin
       });
     }
     for (const item of current.items) {
-      const inventory = await tx.ironSprueAdminInventory.findUnique({ where: { productId: item.productId } });
-      if (!inventory) throw new Error('IRON_SPRUE_INVENTORY_NOT_FOUND');
-      await tx.ironSprueAdminInventory.update({
-        where: { productId: item.productId },
-        data: {
-          availableStock: Math.max(inventory.availableStock - item.quantity, 0),
-          reservedStock: Math.max(inventory.reservedStock - item.quantity, 0),
-        },
-      });
-      await tx.ironSprueAdminStockMovement.create({
-        data: {
-          storeCode: IRON_SPRUE_STORE_CODE,
-          productId: item.productId,
-          movementType: 'SALE',
-          quantity: -item.quantity,
-          beforeQuantity: inventory.availableStock,
-          afterQuantity: Math.max(inventory.availableStock - item.quantity, 0),
-          reason: `Stripe paid order ${current.orderNumber}`,
-        },
-      });
+      for (const reservationLine of await reservationLinesForOrderItem(tx, item)) {
+        const inventory = await tx.ironSprueAdminInventory.findUnique({ where: { productId: reservationLine.productId } });
+        if (!inventory) throw new Error('IRON_SPRUE_INVENTORY_NOT_FOUND');
+        await tx.ironSprueAdminInventory.update({
+          where: { productId: reservationLine.productId },
+          data: {
+            availableStock: Math.max(inventory.availableStock - reservationLine.quantity, 0),
+            reservedStock: Math.max(inventory.reservedStock - reservationLine.quantity, 0),
+          },
+        });
+        await tx.ironSprueAdminStockMovement.create({
+          data: {
+            storeCode: IRON_SPRUE_STORE_CODE,
+            productId: reservationLine.productId,
+            movementType: 'SALE',
+            quantity: -reservationLine.quantity,
+            beforeQuantity: inventory.availableStock,
+            afterQuantity: Math.max(inventory.availableStock - reservationLine.quantity, 0),
+            reason: `Stripe paid order ${current.orderNumber}`,
+          },
+        });
+      }
     }
     if (current.userId) {
       await tx.ironSprueCartItem.deleteMany({ where: { cart: { userId: current.userId } } });
