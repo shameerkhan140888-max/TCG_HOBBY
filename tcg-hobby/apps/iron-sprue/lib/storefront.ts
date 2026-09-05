@@ -88,8 +88,8 @@ export const promoPanels = [
     copy: 'Landmarks and shelf-ready 3D builds with real presence.',
     href: '/products/cubicfun-mc101h-burj-al-arab',
     cta: 'Shop now',
-    image: '/assets/promo-cubicfun-landmark-workshop.png',
-    alt: 'Architectural display model on workshop paper',
+    image: '/assets/promo-cubicfun-display-builds-v2.webp',
+    alt: 'Architectural display-build model assembled on a warm workshop bench',
   },
   {
     eyebrow: 'Pintoo puzzle objects',
@@ -97,8 +97,8 @@ export const promoPanels = [
     copy: 'Puzzle builds with decorative finished forms.',
     href: '/products/pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus',
     cta: 'Explore',
-    image: '/assets/promo-pintoo-vase-workshop.png',
-    alt: 'Decorative koi and lotus vase puzzle object on a workbench',
+    image: '/assets/promo-pintoo-display-object-v2.webp',
+    alt: 'Decorative puzzle object displayed on a warm workshop bench',
   },
 ] as const;
 
@@ -265,7 +265,7 @@ export function productCardFacts(product: IronSprueProduct) {
 export function productCardMobileFact(product: IronSprueProduct) {
   const category = product.category?.trim();
   const fact = productCardFacts(product)[0];
-  return [category, fact].filter(Boolean).join(' / ');
+  return { category: category || '', fact: fact || '' };
 }
 
 export function productSellableQuantity(product: IronSprueProduct) {

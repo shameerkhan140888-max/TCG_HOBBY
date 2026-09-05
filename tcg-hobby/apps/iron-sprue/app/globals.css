@@ -1593,10 +1593,10 @@ p {
 }
 
 .payment-method-strip img[src*="american-express"] {
-  width: 60px;
+  width: 66px;
   height: auto;
-  max-width: 60px;
-  max-height: 28px;
+  max-width: 66px;
+  max-height: 32px;
   object-fit: contain;
 }
 
@@ -1607,10 +1607,10 @@ p {
 }
 
 .payment-method-strip.compact img[src*="american-express"] {
-  width: 54px;
+  width: 62px;
   height: auto;
-  max-width: 54px;
-  max-height: 26px;
+  max-width: 62px;
+  max-height: 30px;
   object-fit: contain;
 }
 
@@ -3775,13 +3775,15 @@ label {
 }
 
 .info-page .detail-panels {
-  width: min(100%, 1040px);
+  width: min(100%, 980px);
   margin-right: auto;
   margin-left: auto;
   grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
 }
 
 .info-page .detail-panels article {
+  width: 100%;
   border-color: rgba(199, 153, 71, 0.28);
   background: var(--iron-board-surface);
   background-color: var(--iron-board-base);
@@ -3797,6 +3799,7 @@ label {
 .info-page .detail-panels article.legal-board {
   position: relative;
   overflow: hidden;
+  width: min(100%, 940px);
   border: 1px solid rgba(17, 18, 16, 0.95);
   border-radius: 8px;
   background: var(--iron-board-surface);
@@ -3874,7 +3877,9 @@ label {
 }
 
 .info-page .detail-panels article.legal-board p {
-  max-width: 860px;
+  max-width: 760px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .info-page .detail-panels article.legal-board p + p,
@@ -3901,7 +3906,7 @@ label {
 
 .footer-grid {
   display: grid;
-  grid-template-columns: minmax(250px, 1.1fr) repeat(2, minmax(118px, 0.38fr)) minmax(330px, 1.12fr);
+  grid-template-columns: minmax(230px, 1fr) repeat(2, minmax(118px, 0.36fr)) minmax(370px, 1.18fr);
   gap: 18px;
 }
 
@@ -4007,6 +4012,7 @@ label {
 
 .footer-company h2 span:not(.footer-company-name) {
   text-transform: none;
+  white-space: nowrap;
 }
 
 .footer-company-name {
@@ -5264,7 +5270,7 @@ body::before {
 }
 
 .homepage-board .brand-carousel h2 {
-  color: var(--paper-soft);
+  color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(24px, 2.8vw, 38px);
   font-style: italic;
@@ -5649,12 +5655,18 @@ body::before {
 .product-card .basket-action-stack button {
   min-width: 0;
   width: 100%;
-  height: 72px;
-  min-height: 72px;
-  max-height: 72px;
-  padding: 0 18px;
+  height: 58px;
+  min-height: 58px;
+  max-height: 58px;
+  padding: 0 14px;
   place-items: center;
   text-align: center;
+}
+
+.homepage-board .promo-card .button {
+  width: min(100%, 210px);
+  min-height: 54px;
+  padding-inline: 18px;
 }
 
 /* Batch 2 PDP rollout: approved board surface and restrained machined edges. */
@@ -6462,21 +6474,26 @@ body::before {
 /* Responsive rollout batch: mobile homepage refinement and compact Brands section. */
 .brand-carousel {
   display: grid;
-  gap: 12px;
-  width: min(calc(100% - 48px), 980px);
-  padding: 16px 0 14px;
+  gap: 10px;
+  width: 100%;
+  margin: 34px 0 0;
+  border-block: 1px solid rgba(12, 14, 12, 0.14);
+  background: #fffaf1;
+  color: var(--ink);
+  padding: 18px clamp(16px, 5vw, 72px) 16px;
 }
 
 .homepage-board .brand-carousel h2 {
   margin: 0;
-  color: var(--paper-soft);
-  font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
-  font-size: clamp(22px, 2vw, 30px);
-  font-style: normal;
-  font-weight: 850;
-  line-height: 1.04;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(24px, 2.8vw, 38px);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.1;
   text-transform: none;
   white-space: nowrap;
+  text-align: center;
 }
 
 .brand-stage {
@@ -6486,7 +6503,7 @@ body::before {
 
 .brand-stage button {
   min-height: 44px;
-  color: rgba(255, 250, 241, 0.72);
+  color: rgba(9, 10, 9, 0.58);
   font-size: 26px;
 }
 
@@ -6514,6 +6531,11 @@ body::before {
 .brand-feature img {
   width: min(280px, 58vw);
   max-height: 82px;
+}
+
+.homepage-board .brand-carousel {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
 }
 
 .basket-upsell-section h2,
@@ -6656,7 +6678,7 @@ body::before {
     margin-inline: calc(50% - 50vw);
     gap: 0;
     overflow: hidden;
-    padding: 4px 0 18px;
+    padding: 0;
   }
 
   .homepage-board .product-card {
@@ -6668,9 +6690,18 @@ body::before {
   .homepage-board .promo-card {
     grid-area: 1 / 1;
     width: 100%;
-    min-height: clamp(250px, 62vw, 320px);
+    min-height: clamp(248px, 62vw, 320px);
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
     opacity: 0;
     animation: heroCarousel 15s infinite;
+  }
+
+  .homepage-board .promo-card img,
+  .homepage-board .promo-card::before,
+  .homepage-board .promo-card::after {
+    border-radius: 0;
   }
 
   .homepage-board .promo-card:nth-child(1) {
@@ -6761,11 +6792,14 @@ body::before {
   .brand-carousel {
     width: 100%;
     margin-top: 18px;
-    padding: 14px 0 12px;
+    padding: 14px 16px 12px;
   }
 
   .homepage-board .brand-carousel h2 {
     font-size: clamp(20px, 6vw, 24px);
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    color: var(--ink);
   }
 
   .brand-stage {
@@ -7551,8 +7585,8 @@ body:has(.product-detail-page) .payment-trust-banner {
   .product-card-body,
   .homepage-board .product-card-body {
     display: grid;
-    grid-template-rows: auto minmax(2.35em, auto) 13px 15px 18px 40px;
-    min-height: 194px;
+    grid-template-rows: auto minmax(2.35em, auto) 28px 15px 18px 40px;
+    min-height: 204px;
     padding: 10px 9px 9px;
     gap: 4px;
   }
@@ -7583,14 +7617,13 @@ body:has(.product-detail-page) .payment-trust-banner {
   .product-card-facts {
     grid-row: 3;
     order: 3;
-    display: flex;
-    gap: 4px;
+    display: block;
     margin: 0;
     overflow: hidden;
   }
 
   .product-card-facts-mobile-only {
-    display: flex;
+    display: block;
   }
 
   .product-card-facts li:nth-child(n + 2) {
@@ -7603,18 +7636,28 @@ body:has(.product-detail-page) .payment-trust-banner {
     padding: 0;
     color: rgba(255, 250, 241, 0.64);
     font-size: 10.5px;
-    line-height: 1.1;
+    line-height: 1.22;
     white-space: nowrap;
   }
 
   .product-card-facts .product-card-mobile-fact {
-    display: list-item;
+    display: grid;
+    gap: 1px;
+  }
+
+  .product-card-facts .product-card-mobile-fact span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .product-card-facts .product-card-mobile-fact span:last-child {
+    color: rgba(231, 189, 105, 0.92);
+    font-weight: 850;
   }
 
   .product-card-facts li:not(:last-child)::after {
-    margin-inline: 4px 0;
-    color: rgba(255, 250, 241, 0.34);
-    content: "/";
+    content: "";
   }
 
   .product-card strong,
@@ -7687,8 +7730,8 @@ body:has(.product-detail-page) .payment-trust-banner {
       "stock"
       "price"
       "action";
-    grid-template-rows: auto minmax(2.35em, auto) 13px 15px 18px 40px;
-    min-height: 194px;
+    grid-template-rows: auto minmax(2.35em, auto) 28px 15px 18px 40px;
+    min-height: 204px;
   }
 
   .product-card .product-brand {

@@ -54,9 +54,12 @@ function ProductCard({ product }: { product: IronSprueProduct }) {
           <p className="product-brand">{product.brand}</p>
           <h3>{product.name}</h3>
           <p className="product-card-category">{product.category}</p>
-          {mobileFact ? (
+          {mobileFact.category || mobileFact.fact ? (
             <ul className={`product-card-facts${cardFacts.length ? '' : ' product-card-facts-mobile-only'}`} aria-label={`${product.name} product facts`}>
-              <li className="product-card-mobile-fact">{mobileFact}</li>
+              <li className="product-card-mobile-fact">
+                {mobileFact.category ? <span>{mobileFact.category}</span> : null}
+                {mobileFact.fact ? <span>{mobileFact.fact}</span> : null}
+              </li>
               {cardFacts.map((fact) => <li key={fact}>{fact}</li>)}
             </ul>
           ) : null}
@@ -163,42 +166,51 @@ export default async function HomePage() {
               <svg viewBox="0 0 32 32" aria-hidden="true">
                 {index === 0 ? (
                   <>
-                    <path
-                      d="M3.1 19.3c.7-1.4 1.7-2.5 2.9-3.2 2.4.1 4.6-.1 6.7-.7 1.5-.5 2.9-1.2 4.3-2.1 2.2-1.4 4.9-2.1 7.2-1.8 2.1.3 4.1 1.2 5.7 2.6-3.7-.9-7.2-.9-10.3.1-2 .7-3.9 1.7-5.7 3 3.5.7 7.8.8 12.7.5 2.2.1 3.8.8 4.7 2.2.6.9.9 2 .9 3.4-.7-1.6-1.8-2.7-3.2-3.3-1.2-.5-2.5-.6-3.7-.4-1.2.2-2.3.8-3.1 1.6-.8.8-1.3 1.8-1.5 3H11c-.2-1.3-.8-2.4-1.8-3.1s-2.1-1-3.3-.9c-1 .1-2 .4-2.8 1v-1.9Z"
-                      fill="currentColor"
-                      stroke="none"
-                    />
-                    <path d="M6.8 25.8a3.7 3.7 0 1 0 0-7.4 3.7 3.7 0 0 0 0 7.4Zm20.1 0a3.7 3.7 0 1 0 0-7.4 3.7 3.7 0 0 0 0 7.4Z" fill="currentColor" stroke="none" />
+                    <path d="M5 19h3l3-5h10l3 5h3" />
+                    <path d="M8 19h16l-1.4 4.8H9.4Z" />
+                    <path d="M12.6 14l1.7-3.8h4.4l1.7 3.8" />
+                    <circle cx="10.5" cy="24" r="2.1" />
+                    <circle cx="21.5" cy="24" r="2.1" />
+                    <path d="M13.6 19v-5" />
+                    <path d="M18.4 19v-5" />
                   </>
                 ) : null}
                 {index === 1 ? (
                   <>
-                    <path d="M10.5 5.5h8.2v4.1a2.9 2.9 0 1 0 5.2 0h2.6v8.2h-4.1a2.9 2.9 0 1 0 0 5.2v3.5H10.5V22a2.9 2.9 0 1 1 0-5.2V5.5Z" />
+                    <path d="M10.2 5.7h8.3v3.8a2.7 2.7 0 1 0 5.1 0h2.7v8.4h-3.9a2.7 2.7 0 1 0 0 5.1v3.3H10.2v-4.1a2.7 2.7 0 1 1 0-5.1Z" />
+                    <path d="M14.3 5.7v6.8" />
+                    <path d="M14.3 20.8v5.5" />
+                    <path d="M18.5 15.4h7.8" />
                   </>
                 ) : null}
                 {index === 2 ? (
                   <>
-                    <path d="M13.7 14.7 5.8 25.2c-.7 1-.5 2.3.5 3 .9.6 2.2.4 2.9-.5l7.5-10.8" />
-                    <path d="M18.3 14.7 26.2 25.2c.7 1 .5 2.3-.5 3-.9.6-2.2.4-2.9-.5l-7.5-10.8" />
-                    <path d="M15.9 15.6c1.4 0 2.5-1.1 2.5-2.5S17.3 10.6 15.9 10.6s-2.5 1.1-2.5 2.5 1.1 2.5 2.5 2.5Z" />
-                    <path d="M14.3 10.9 8.2 4.8c2.7-.2 5 .8 6.8 3l1 1.2 1-1.2c1.8-2.2 4.1-3.2 6.8-3l-6.1 6.1" />
+                    <path d="M9 6l6.4 6.4" />
+                    <path d="M6.7 8.4l6.4 6.4" />
+                    <path d="M5.4 5.4l4.9 4.9" />
+                    <path d="M19 5.4l7.6 7.6" />
+                    <path d="M26.6 5.4 19 13" />
+                    <path d="m13.2 15 2.4 2.4-7.2 7.2-3-3Z" />
+                    <path d="m18.9 12.9 2.2 2.2-7.5 7.5-2.2-2.2Z" />
                   </>
                 ) : null}
                 {index === 3 ? (
                   <>
-                    <path d="M13 4.8h6v4.9l4.2 4.6v13H8.8v-13L13 9.7V4.8Z" />
-                    <path d="M12.4 9.8h7.2" />
-                    <path d="M11.8 16.9h8.4v6.8h-8.4Z" />
-                    <path d="M14.2 7h3.6" />
-                    <path d="M14 20.3h4" />
+                    <path d="M13.2 4.8h5.6v5.1l4.1 4.5v12.8H9.1V14.4l4.1-4.5Z" />
+                    <path d="M12.4 9.9h7.2" />
+                    <path d="M12.3 17.4h7.4v6.1h-7.4Z" />
+                    <path d="M14.1 7h3.8" />
+                    <path d="M13.8 20.4h4.4" />
+                    <path d="M22.9 16.2h2.8" />
                   </>
                 ) : null}
                 {index === 4 ? (
                   <>
-                    <path d="M22.9 3.9c1.1-.2 2.3.9 2.1 2L14.7 18.7l-3.5-3.5L22.9 3.9Z" />
-                    <path d="m11.2 15.2 3.5 3.5-2.4 2.4-3.5-3.5 2.4-2.4Z" />
-                    <path d="M8.8 17.6c-1.7.8-3 2.3-3.8 4.3l-2 5.2 5.2-2c2-.8 3.5-2.1 4.1-4" />
-                    <path d="M5.2 25c1.4-.4 2.6-1.1 3.5-2.1" />
+                    <path d="M22.9 4.2c1.1-.3 2.2.8 1.9 1.9L14.8 18.6l-3.4-3.4Z" />
+                    <path d="m11.4 15.2 3.4 3.4-2.3 2.3-3.4-3.4Z" />
+                    <path d="M8.8 17.6c-1.8.8-3.1 2.3-3.9 4.4L3 27l5-1.9c2.1-.8 3.6-2.1 4.4-4" />
+                    <path d="M5.4 24.6c1.3-.4 2.4-1.1 3.3-2" />
+                    <path d="M20.8 7.2 22 8.4" />
                   </>
                 ) : null}
               </svg>
