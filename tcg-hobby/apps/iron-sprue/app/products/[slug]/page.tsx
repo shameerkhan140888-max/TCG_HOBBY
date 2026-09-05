@@ -2,6 +2,7 @@ import launchProducts from '../../../data/launch-products.json';
 import React from 'react';
 import type { Metadata } from 'next';
 import { ProductGallery } from '../../../components/product-gallery';
+import { PaymentMethodStrip } from '../../../components/payment-method-strip';
 import { ironSprueBrand } from '../../../lib/brand';
 import { AddToBasketButton } from '../../../components/basket-client';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
@@ -55,8 +56,13 @@ function customerFacingSpecifications(product: IronSprueProduct) {
   const raw = product.specifications && typeof product.specifications === 'object' && !Array.isArray(product.specifications)
     ? product.specifications
     : {};
-  return Object.entries(raw)
+  const entries = Object.entries(raw);
+  const buildType = String(raw.buildType ?? '').trim().toLowerCase();
+  const productType = String(raw.productType ?? '').trim().toLowerCase();
+
+  return entries
     .filter(([key, value]) => !hiddenSpecificationKeys.has(key) && value != null && String(value).trim().length > 0)
+    .filter(([key]) => !(key === 'productType' && productType.length > 0 && productType === buildType))
     .map(([key, value]) => ({
       key,
       label: productSpecificationLabels[key] ?? key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (letter) => letter.toUpperCase()),
@@ -236,9 +242,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
 
           <section className="service-summary product-reassurance" aria-label="Delivery returns and payment information">
-            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK standard delivery is £3.99 unless a promotion or basket threshold applies. Costs are confirmed before payment.</span></p>
-            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Unused items can be returned in line with the published returns policy.</span></p>
-            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Payments</strong> Secure card payments are handled by our payment partner at checkout. Digital wallets may appear where supported.</span></p>
+            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK standard delivery is £3.99, with free UK standard delivery over £30.00 qualifying spend.</span></p>
+            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Check the <a href="/returns">Returns page</a> for changed-mind returns, damaged items and refund guidance before sending anything back.</span></p>
+            <div className="reassurance-row reassurance-payment-row"><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Secure payments</strong> Card payments are handled securely at checkout.<PaymentMethodStrip compact /></span></div>
           </section>
         </section>
       </article>

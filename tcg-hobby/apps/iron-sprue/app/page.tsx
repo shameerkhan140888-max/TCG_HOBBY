@@ -225,7 +225,7 @@ export default async function HomePage() {
               <img
                 src={ironSprueDisplayMediaUrl(panel.image, 640)}
                 srcSet={ironSprueDisplayMediaSrcSet(panel.image, [480, 640, 960])}
-                sizes="(max-width: 700px) 72vw, 31vw"
+                sizes="(max-width: 700px) 100vw, 31vw"
                 alt={panel.alt}
                 width="900"
                 height="600"
@@ -275,33 +275,32 @@ export default async function HomePage() {
             </div>
           </section>
         ))}
-
-        <section className="brand-carousel" aria-label="Brands we stock">
-          <h2>{brandPlacement?.title || 'Brands we stock'}</h2>
-          <div className="brand-stage">
-            <button type="button" aria-label="Previous brand"><span aria-hidden="true">&lt;</span></button>
-            <div className="brand-viewport" aria-live="off">
-              {brandsWeStock.slice(0, 5).map((brand, index) => (
-              <a
-                className="brand-feature"
-                href={brand.href}
-                aria-label={`Shop ${brand.name} products`}
-                style={{ '--brand-index': index } as CSSProperties}
-                key={brand.slug}
-              >
-                <img src={brand.logoUrl} alt={brand.altText} width="340" height="130" />
-              </a>
-              ))}
-            </div>
-            <button type="button" aria-label="Next brand"><span aria-hidden="true">&gt;</span></button>
-          </div>
-          <ol className="carousel-dots" aria-label="Brand carousel position">
-            {brandsWeStock.slice(0, 5).map((brand, index) => (
-              <li key={brand.slug} aria-current={index === 0 ? 'true' : undefined} />
-            ))}
-          </ol>
-        </section>
       </div>
+      <section className="brand-carousel homepage-brand-carousel" aria-label="Brands we stock">
+        <h2>{brandPlacement?.title || 'Brands we stock'}</h2>
+        <div className="brand-stage">
+          <button type="button" aria-label="Previous brand"><span aria-hidden="true">&lt;</span></button>
+          <div className="brand-viewport" aria-live="off">
+            {brandsWeStock.slice(0, 5).map((brand, index) => (
+            <a
+              className="brand-feature"
+              href={brand.href}
+              aria-label={`Shop ${brand.name} products`}
+              style={{ '--brand-index': index } as CSSProperties}
+              key={brand.slug}
+            >
+              <img src={brand.logoUrl} alt={brand.altText} width="340" height="130" />
+            </a>
+            ))}
+          </div>
+          <button type="button" aria-label="Next brand"><span aria-hidden="true">&gt;</span></button>
+        </div>
+        <ol className="carousel-dots" aria-label="Brand carousel position">
+          {brandsWeStock.slice(0, 5).map((brand, index) => (
+            <li key={brand.slug} aria-current={index === 0 ? 'true' : undefined} />
+          ))}
+        </ol>
+      </section>
     </>
   );
 }

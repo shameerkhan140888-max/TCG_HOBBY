@@ -15,10 +15,14 @@ export const categoryNavigation = [
   { label: '3D Puzzles & Builds', href: '/shop/3d-puzzles-and-builds' },
   { label: 'Tools', href: '/shop/tools' },
   { label: 'Adhesives & Finishing', href: '/shop?category=adhesives-finishing' },
-  { label: 'Brands', href: '/brands' },
-  { label: 'New Arrivals', href: '/shop?sort=newest' },
-  { label: 'Coming Soon', href: '/shop?availability=coming-soon' },
-  { label: 'Offers', href: '/bundles' },
+  { label: 'Paints & Weathering', href: '/shop?category=paints-weathering' },
+] as const;
+
+export const featuredNavigation = [
+  { label: 'All products', href: '/shop' },
+  { label: 'New arrivals', href: '/shop?sort=newest' },
+  { label: 'Bundles', href: '/bundles' },
+  { label: 'Brands we stock', href: '/brands' },
 ] as const;
 
 export const heroSlides = [
@@ -86,7 +90,7 @@ export const promoPanels = [
     eyebrow: 'CubicFun display builds',
     title: 'From £16.99',
     copy: 'Landmarks and shelf-ready 3D builds with real presence.',
-    href: '/products/cubicfun-mc101h-burj-al-arab',
+    href: '/shop?brand=CubicFun',
     cta: 'Shop now',
     image: '/assets/promo-cubicfun-display-builds-v2.webp',
     alt: 'Architectural display-build model assembled on a warm workshop bench',
@@ -95,7 +99,7 @@ export const promoPanels = [
     eyebrow: 'Pintoo puzzle objects',
     title: 'Built to display',
     copy: 'Puzzle builds with decorative finished forms.',
-    href: '/products/pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus',
+    href: '/shop?brand=Pintoo',
     cta: 'Explore',
     image: '/assets/promo-pintoo-display-object-v2.webp',
     alt: 'Decorative puzzle object displayed on a warm workshop bench',

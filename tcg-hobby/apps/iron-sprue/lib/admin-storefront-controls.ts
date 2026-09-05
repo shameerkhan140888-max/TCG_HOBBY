@@ -670,9 +670,17 @@ export function promoPanelsFromPlacements(placements: IronSprueHomepagePlacement
       const image = publicIronSprueMediaUrl(placement.imageUrl) ?? null;
       if (!image) return null;
       const placementText = `${placement.placementKey} ${placement.title}`.toLowerCase();
-      const href = placementText.includes('bundle-savings') || placementText.includes('bundle savings')
+      const isBundleSavings =
+        placementText.includes('bundle-savings') ||
+        placementText.includes('bundle savings') ||
+        placementText.includes('save on sets');
+      const href = isBundleSavings
         ? '/bundles'
-        : placement.ctaHref || '/shop';
+        : placementText.includes('cubicfun')
+          ? '/shop?brand=CubicFun'
+          : placementText.includes('pintoo')
+            ? '/shop?brand=Pintoo'
+            : placement.ctaHref || '/shop';
       return {
         eyebrow: placement.placementKey.replace(/[-_:]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()),
         title: placement.title,
@@ -798,13 +806,7 @@ export async function getIronSprueCategoryNavigation() {
     return categoryNavigation.filter((item) => !/display\s*&?\s*accessories/i.test(item.label));
   }
 
-  return [
-    ...adminCategories,
-    { label: 'Brands', href: '/brands' },
-    { label: 'New Arrivals', href: '/shop?sort=newest' },
-    { label: 'Coming Soon', href: '/shop?availability=coming-soon' },
-    { label: 'Offers', href: '/shop?offers=true' },
-  ];
+  return adminCategories;
 }
 
 export function placementByKey(placements: IronSprueHomepagePlacement[], key: string) {

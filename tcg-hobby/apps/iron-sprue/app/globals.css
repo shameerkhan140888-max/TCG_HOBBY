@@ -769,6 +769,23 @@ p {
   }
 }
 
+@keyframes promoBannerCarousel {
+  0%, 32% {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  33.5%, 98.5% {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  99%, 100% {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
 .trust-strip,
 .section-block,
 .feature-band,
@@ -3574,7 +3591,8 @@ label {
   border-top-color: rgba(255, 250, 241, 0.16);
 }
 
-.service-summary p {
+.service-summary p,
+.service-summary .reassurance-row {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
   gap: 12px;
@@ -3589,6 +3607,15 @@ label {
 
 .product-buy-panel .service-summary strong {
   color: var(--paper-soft);
+}
+
+.product-reassurance a {
+  color: var(--brass);
+  font-weight: 800;
+}
+
+.product-reassurance .payment-method-strip {
+  margin-top: 8px;
 }
 
 .product-buy-panel .quantity-row label {
@@ -4231,10 +4258,13 @@ label {
   }
 
   .menu-panel {
-    left: 0;
-    right: auto;
+    left: auto;
+    right: 0;
     grid-template-columns: 1fr;
-    width: calc(100vw - 32px);
+    width: min(320px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    gap: 18px;
+    padding: 18px;
   }
 
   .payment-trust-banner .payment-method-strip,
@@ -5905,7 +5935,8 @@ body::before {
 .product-description-panel p,
 .product-specification-list,
 .product-key-details,
-.product-unified-panel .product-reassurance p {
+.product-unified-panel .product-reassurance p,
+.product-unified-panel .product-reassurance .reassurance-row {
   color: rgba(255, 250, 241, 0.78);
   font-family: "Segoe UI", Arial, sans-serif;
 }
@@ -6328,7 +6359,8 @@ body::before {
 
   .product-description-panel p,
   .product-key-details,
-  .product-unified-panel .product-reassurance p {
+  .product-unified-panel .product-reassurance p,
+  .product-unified-panel .product-reassurance .reassurance-row {
     font-size: 15px;
     line-height: 1.55;
   }
@@ -6358,7 +6390,8 @@ body::before {
     gap: 12px;
   }
 
-  .product-unified-panel .product-reassurance p {
+  .product-unified-panel .product-reassurance p,
+  .product-unified-panel .product-reassurance .reassurance-row {
     grid-template-columns: 34px minmax(0, 1fr);
   }
 
@@ -6483,7 +6516,7 @@ body::before {
   padding: 18px clamp(16px, 5vw, 72px) 16px;
 }
 
-.homepage-board .brand-carousel h2 {
+.brand-carousel h2 {
   margin: 0;
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
@@ -6533,9 +6566,14 @@ body::before {
   max-height: 82px;
 }
 
+.homepage-brand-carousel,
 .homepage-board .brand-carousel {
   width: 100vw;
   margin-inline: calc(50% - 50vw);
+}
+
+body:has(.homepage-brand-carousel) .trust-workshop-band {
+  margin-top: 0;
 }
 
 .basket-upsell-section h2,
@@ -6695,7 +6733,7 @@ body::before {
     border-left: 0;
     border-radius: 0;
     opacity: 0;
-    animation: heroCarousel 15s infinite;
+    animation: promoBannerCarousel 15s infinite;
   }
 
   .homepage-board .promo-card img,
@@ -6795,7 +6833,7 @@ body::before {
     padding: 14px 16px 12px;
   }
 
-  .homepage-board .brand-carousel h2 {
+  .brand-carousel h2 {
     font-size: clamp(20px, 6vw, 24px);
     font-family: Georgia, "Times New Roman", serif;
     font-style: italic;

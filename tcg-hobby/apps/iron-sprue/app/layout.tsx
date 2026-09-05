@@ -3,7 +3,6 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ironSprueBrand } from '../lib/brand';
 import {
-  getIronSprueCategoryNavigation,
   getIronSpruePromoStripItems,
   getIronSprueTypographySettings,
   ironSprueTypographyCustomProperties,
@@ -12,6 +11,7 @@ import { LaunchListForm } from '../components/launch-list-form';
 import { BasketLink } from '../components/basket-link';
 import { IronSprueAnalyticsProvider, IronSprueCookieConsentBanner, IronSprueCookiePreferenceLink } from '../components/analytics-consent';
 import { PaymentMethodStrip } from '../components/payment-method-strip';
+import { categoryNavigation, featuredNavigation } from '../lib/storefront';
 
 export const metadata: Metadata = {
   title: {
@@ -52,9 +52,8 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const [promoStripItems, categoryNavigation, typographySettings] = await Promise.all([
+  const [promoStripItems, typographySettings] = await Promise.all([
     getIronSpruePromoStripItems(),
-    getIronSprueCategoryNavigation(),
     getIronSprueTypographySettings(),
   ]);
   const ga4Id = process.env.NEXT_PUBLIC_IRON_SPRUE_GA4_MEASUREMENT_ID?.trim() || null;
@@ -110,10 +109,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                   </nav>
                   <nav aria-label="Featured shop navigation">
                     <h2>Featured</h2>
-                    <a href="/shop">All products</a>
-                    <a href="/shop?sort=newest">New arrivals</a>
-                    <a href="/bundles">Offers</a>
-                    <a href="/brands">Brands we stock</a>
+                    {featuredNavigation.map((item) => (
+                      <a key={item.href} href={item.href}>{item.label}</a>
+                    ))}
                   </nav>
                 </div>
               </details>
