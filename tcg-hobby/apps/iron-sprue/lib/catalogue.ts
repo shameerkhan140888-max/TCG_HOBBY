@@ -215,6 +215,13 @@ export function isToolProduct(product: IronSprueProduct) {
   return toolCategorySlugs.has(categorySlug);
 }
 
+export function isBundleProduct(product: IronSprueProduct) {
+  const searchable = `${product.sku} ${product.name} ${product.category} ${product.productType}`.toLowerCase();
+  return product.sku.toUpperCase().startsWith('IS-BUN-')
+    || /\bbundle\b/.test(searchable)
+    || /\btrio\b/.test(searchable);
+}
+
 function normalizedScale(value: string | null | undefined) {
   return value?.trim().toLowerCase().replace(/\s+/g, '').replace(/[/:]/g, '-') ?? '';
 }
@@ -273,10 +280,11 @@ export function buildTypeOptions(products: IronSprueProduct[]) {
   return Array.from(new Set(products.map(productBuildType).filter((value): value is string => Boolean(value?.trim())))).sort();
 }
 
-export function filterIronSprueProducts(products: IronSprueProduct[], query: { availability?: string | undefined; brand?: string | undefined; buildType?: string | undefined; category?: string | undefined; offers?: string | undefined; pieceCount?: string | undefined; scale?: string | undefined; search?: string | undefined; structure?: string | undefined; vehicleManufacturer?: string | undefined }) {
+export function filterIronSprueProducts(products: IronSprueProduct[], query: { availability?: string | undefined; brand?: string | undefined; buildType?: string | undefined; bundles?: string | undefined; category?: string | undefined; offers?: string | undefined; pieceCount?: string | undefined; scale?: string | undefined; search?: string | undefined; structure?: string | undefined; vehicleManufacturer?: string | undefined }) {
   const availability = query.availability?.trim().toLowerCase();
   const brand = query.brand?.trim().toLowerCase();
   const buildType = query.buildType?.trim().toLowerCase();
+  const bundles = query.bundles?.trim().toLowerCase();
   const category = query.category?.trim().toLowerCase();
   const offers = query.offers?.trim().toLowerCase();
   const pieceCount = query.pieceCount?.trim();
@@ -297,7 +305,8 @@ export function filterIronSprueProducts(products: IronSprueProduct[], query: { a
         return false;
       }
     }
-    if (['1', 'true', 'yes'].includes(offers ?? '') && !product.specialOffer) return false;
+    if (['1', 'true', 'yes'].includes(bundles ?? '') && !isBundleProduct(product)) return false;
+    if (['1', 'true', 'yes'].includes(offers ?? '') && !product.specialOffer && !isBundleProduct(product)) return false;
     if (availability === 'in-stock' && product.stockQuantity <= 0) return false;
     if (availability === 'low-stock' && !(product.stockQuantity > 0 && product.stockQuantity <= 2)) return false;
     if (availability === 'coming-soon' && product.publicationState !== 'COMING_SOON' && product.published !== false) return false;

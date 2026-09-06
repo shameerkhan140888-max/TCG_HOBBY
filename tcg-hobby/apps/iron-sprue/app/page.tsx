@@ -230,7 +230,6 @@ export default async function HomePage() {
       <section className="brand-carousel homepage-brand-carousel" aria-label="Brands we stock">
         <h2>{brandPlacement?.title || 'Brands we stock'}</h2>
         <div className="brand-stage">
-          <button type="button" aria-label="Previous brand"><span aria-hidden="true">&lt;</span></button>
           <div className="brand-viewport" aria-live="off">
             {brandsWeStock.slice(0, 5).map((brand, index) => (
             <a
@@ -244,7 +243,6 @@ export default async function HomePage() {
             </a>
             ))}
           </div>
-          <button type="button" aria-label="Next brand"><span aria-hidden="true">&gt;</span></button>
         </div>
         <ol className="carousel-dots" aria-label="Brand carousel position">
           {brandsWeStock.slice(0, 5).map((brand, index) => (

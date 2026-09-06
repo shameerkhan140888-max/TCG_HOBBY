@@ -1,6 +1,6 @@
 import launchProducts from '../data/launch-products.json';
 import type { CSSProperties } from 'react';
-import { buildTypeOptions, filterIronSprueProducts, isModelKitProduct, launchCatalogueStatus, pieceCountOptions, scaleOptions, structureOptions, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
+import { buildTypeOptions, filterIronSprueProducts, isBundleProduct, isModelKitProduct, launchCatalogueStatus, pieceCountOptions, scaleOptions, structureOptions, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
 import { getIronSprueStorefrontProducts } from '../lib/admin-storefront-controls';
 import { AddToBasketButton } from './basket-client';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
@@ -121,6 +121,7 @@ function categoryMatches(product: IronSprueProduct, category: string) {
     'tool-sets',
     'tweezers-pliers',
   ].includes(slugForCategory(product.category));
+  if (category === 'bundles') return isBundleProduct(product);
   return slugForCategory(product.category) === category;
 }
 
@@ -177,6 +178,7 @@ export async function CatalogueListing({
   const selectedPieceCount = single(searchParams, 'pieceCount');
   const selectedStructure = single(searchParams, 'structure');
   const selectedBuildType = single(searchParams, 'buildType');
+  const selectedBundles = single(searchParams, 'bundles');
   const selectedAvailability = single(searchParams, 'availability');
   const selectedOffers = single(searchParams, 'offers');
   const selectedSort = single(searchParams, 'sort') || 'featured';
@@ -194,6 +196,7 @@ export async function CatalogueListing({
     availability: selectedAvailability || undefined,
     brand: fixedBrand ? undefined : selectedBrand || undefined,
     buildType: selectedBuildType || undefined,
+    bundles: selectedBundles || undefined,
     category: fixedCategory ? undefined : selectedCategory || undefined,
     offers: selectedOffers || undefined,
     pieceCount: selectedPieceCount || undefined,
@@ -229,6 +232,7 @@ export async function CatalogueListing({
     selectedPieceCount,
     selectedStructure,
     selectedBuildType,
+    selectedBundles,
     selectedAvailability,
     selectedOffers,
   ].filter(Boolean).length;
@@ -315,6 +319,7 @@ export async function CatalogueListing({
         <option value="coming-soon">Coming soon</option>
       </select>
       {search ? <input type="hidden" name="search" value={search} /> : null}
+      {selectedBundles ? <input type="hidden" name="bundles" value={selectedBundles} /> : null}
       {selectedOffers ? <input type="hidden" name="offers" value={selectedOffers} /> : null}
       {selectedSort && selectedSort !== 'featured' ? <input type="hidden" name="sort" value={selectedSort} /> : null}
       <button type="submit">Apply filters</button>
@@ -374,6 +379,7 @@ export async function CatalogueListing({
               {selectedPieceCount ? <input type="hidden" name="pieceCount" value={selectedPieceCount} /> : null}
               {selectedStructure ? <input type="hidden" name="structure" value={selectedStructure} /> : null}
               {selectedBuildType ? <input type="hidden" name="buildType" value={selectedBuildType} /> : null}
+              {selectedBundles ? <input type="hidden" name="bundles" value={selectedBundles} /> : null}
               {selectedAvailability ? <input type="hidden" name="availability" value={selectedAvailability} /> : null}
               {selectedOffers ? <input type="hidden" name="offers" value={selectedOffers} /> : null}
               <select aria-label="Sort products" name="sort" defaultValue={selectedSort}>

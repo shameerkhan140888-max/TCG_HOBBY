@@ -11,7 +11,7 @@ export default async function BundlesPage({
     <CatalogueListing
       eyebrow="Bundle savings"
       lead="Current Iron Sprue bundle savings across kits, display builds and practical bench additions."
-      searchParams={{ ...(await searchParams), offers: 'true' }}
+      searchParams={{ ...(await searchParams), bundles: 'true' }}
       title="Bundle savings"
     />
   );

@@ -26,6 +26,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
   })), [slides, count]);
 
   if (!labelledSlides.length) return null;
+  const activeSlide = labelledSlides[activeIndex] ?? labelledSlides[0]!;
 
   return (
     <div
@@ -65,11 +66,11 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               <h1>{slide.title}</h1>
               <p className="script-line">{slide.script}</p>
               {slide.copy ? <p className="lead">{slide.copy}</p> : null}
-              <a className="hero-shop-now" href={slide.ctaHref} tabIndex={isActive ? 0 : -1}>{slide.ctaLabel ?? 'Shop now'}</a>
             </div>
           </article>
         );
       })}
+      <a className="hero-shop-now" href={activeSlide.ctaHref}>{activeSlide.ctaLabel ?? 'Shop now'}</a>
       <div className="hero-dots" aria-label="Hero carousel position">
         {labelledSlides.map((slide, index) => (
           <button

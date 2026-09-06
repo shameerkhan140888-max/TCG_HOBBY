@@ -809,17 +809,17 @@ p {
 }
 
 @keyframes promoBannerCarousel {
-  0%, 32% {
+  0%, 33.333% {
     opacity: 1;
     visibility: visible;
   }
 
-  33.5%, 98.5% {
+  33.334%, 99.998% {
     opacity: 0;
     visibility: hidden;
   }
 
-  99%, 100% {
+  99.999%, 100% {
     opacity: 1;
     visibility: visible;
   }
@@ -928,7 +928,7 @@ p {
 }
 
 .promo-card .button {
-  align-self: end;
+  align-self: flex-end;
   width: 100%;
   max-width: 230px;
 }
@@ -1295,6 +1295,38 @@ p {
 .product-card .form-status.error {
   border-left-color: rgba(174, 87, 64, 0.78);
   color: #f0c7b8;
+}
+
+.catalogue-grid .product-card,
+.homepage-board .product-card {
+  height: 100%;
+}
+
+.catalogue-grid .product-card-surface,
+.homepage-board .product-card-surface {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+}
+
+.catalogue-grid .product-card-body,
+.homepage-board .product-card-body {
+  display: grid;
+  grid-template-rows: auto minmax(2.45em, auto) auto auto auto 1fr auto;
+  align-content: start;
+}
+
+.catalogue-grid .product-card h2,
+.catalogue-grid .product-card h3,
+.homepage-board .product-card h2,
+.homepage-board .product-card h3 {
+  min-height: 2.35em;
+}
+
+.catalogue-grid .product-card .product-actions,
+.homepage-board .product-card .product-actions {
+  align-self: flex-end;
+  margin-top: 0;
 }
 
 .basket-layout {
@@ -5536,7 +5568,7 @@ body::before {
   display: flex;
   justify-content: space-between;
   gap: 24px;
-  align-items: end;
+  align-items: flex-end;
 }
 
 .typography-sample-head h2 {
@@ -6789,7 +6821,7 @@ body:has(.homepage-brand-carousel) .trust-workshop-band {
     border-left: 0;
     border-radius: 0;
     opacity: 0;
-    animation: promoBannerCarousel 15s infinite;
+    animation: promoBannerCarousel 15s steps(1, end) infinite;
   }
 
   .homepage-board .promo-card img,
@@ -6861,7 +6893,7 @@ body:has(.homepage-brand-carousel) .trust-workshop-band {
   }
 
   .homepage-board .product-card .product-actions {
-    align-self: end;
+    align-self: flex-end;
     grid-template-columns: 1fr;
     gap: 0;
     margin: 0;
@@ -7792,7 +7824,7 @@ body:has(.product-detail-page) .payment-trust-banner {
   .homepage-board .product-card .product-actions {
     grid-row: 6;
     order: 6;
-    align-self: end;
+    align-self: flex-end;
     grid-template-columns: 1fr;
     gap: 0;
     margin: 9px 0 0;
@@ -7904,5 +7936,275 @@ body:has(.product-detail-page) .payment-trust-banner {
     max-height: none;
     object-fit: contain;
     object-position: center;
+  }
+}
+
+/* Final launch corrections: keep hero controls stable and card/footer presentation consistent. */
+.hero-message {
+  top: 43%;
+  width: min(620px, 43vw);
+}
+
+.hero-message .lead {
+  max-width: 500px;
+}
+
+.hero-shop-now {
+  position: absolute;
+  left: clamp(22px, 5vw, 72px);
+  bottom: clamp(68px, 7vw, 98px);
+  margin-top: 0;
+  width: auto;
+  min-width: 170px;
+  z-index: 10;
+}
+
+.hero-brand {
+  z-index: 7;
+}
+
+.hero-brand img[src*="pintoo"] {
+  width: min(168px, 28vw);
+  max-height: 62px;
+}
+
+.catalogue-grid .product-card .product-image,
+.homepage-board .product-card .product-image {
+  display: grid;
+  aspect-ratio: 1 / 0.88;
+  min-height: 0;
+  place-items: center;
+  background: #fff;
+  padding: clamp(14px, 2vw, 24px);
+}
+
+.catalogue-grid .product-card .product-image img,
+.homepage-board .product-card .product-image img {
+  position: static !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.payment-trust-banner {
+  grid-template-columns: minmax(160px, 0.28fr) minmax(0, 1fr);
+}
+
+.payment-trust-banner .payment-method-strip.compact {
+  width: 100%;
+}
+
+.payment-trust-banner .payment-method-strip.compact ul {
+  width: min(100%, 620px);
+  justify-content: space-evenly;
+  gap: clamp(18px, 4vw, 54px);
+}
+
+.payment-method-strip.compact img[src*="american-express"] {
+  width: 76px;
+  max-width: 76px;
+  max-height: 36px;
+}
+
+.info-page {
+  width: min(calc(100% - 40px), 1120px);
+  margin-inline: auto;
+}
+
+.info-page .section-head {
+  text-align: center;
+}
+
+.info-page .section-head .lead {
+  margin-inline: auto;
+}
+
+.info-page .detail-panels {
+  justify-items: center;
+}
+
+.info-page .detail-panels article.legal-board {
+  width: min(100%, 920px);
+}
+
+.footer-grid {
+  grid-template-columns: minmax(260px, 1fr) repeat(2, minmax(132px, 0.34fr)) minmax(280px, 0.7fr);
+  align-items: start;
+}
+
+.site-footer nav[aria-label="Help links"] {
+  justify-self: center;
+  text-align: left;
+}
+
+.footer-company {
+  justify-self: end;
+  max-width: 220px;
+  justify-items: end;
+  text-align: right;
+}
+
+.footer-company p {
+  font-size: 11px;
+  line-height: 1.28;
+}
+
+.homepage-brand-carousel {
+  width: 100vw;
+  margin: 0 calc(50% - 50vw);
+  border-block: 0;
+  background: #fffaf1;
+  color: var(--ink);
+  padding: clamp(24px, 4vw, 42px) clamp(20px, 5vw, 72px);
+}
+
+.homepage-brand-carousel h2 {
+  color: var(--ink);
+  text-shadow: none;
+}
+
+.homepage-brand-carousel .brand-stage {
+  grid-template-columns: 1fr;
+}
+
+.homepage-brand-carousel .brand-stage > button {
+  display: none !important;
+}
+
+.homepage-brand-carousel button[aria-label*="brand"] {
+  display: none !important;
+}
+
+.homepage-brand-carousel .brand-feature {
+  background: transparent;
+  box-shadow: none;
+}
+
+.homepage-brand-carousel .carousel-dots li,
+.homepage-brand-carousel .carousel-dots button {
+  background: rgba(3, 4, 3, 0.28);
+}
+
+.homepage-brand-carousel .carousel-dots li[aria-current="true"],
+.homepage-brand-carousel .carousel-dots button.is-active {
+  background: var(--brass);
+}
+
+@media (max-width: 700px) {
+  .hero-message {
+    top: 26px;
+    left: 18px;
+    width: min(306px, 76vw);
+    transform: none;
+  }
+
+  .hero-message h1 {
+    font-size: clamp(24px, 7.4vw, 33px);
+    line-height: 1.02;
+  }
+
+  .hero-message .lead {
+    max-width: 286px;
+    font-size: 12.5px;
+    line-height: 1.32;
+  }
+
+  .hero-shop-now {
+    left: 18px;
+    bottom: 70px;
+    min-width: 148px;
+    min-height: 42px;
+    padding: 0 18px;
+  }
+
+  .hero-brand {
+    right: 16px;
+    bottom: 66px;
+  }
+
+  .hero-brand img,
+  .hero-brand img[src*="pintoo"] {
+    width: min(118px, 30vw);
+    max-height: 48px;
+  }
+
+  .hero-dots {
+    bottom: 20px;
+  }
+
+  .catalogue-grid .product-card .product-image,
+  .homepage-board .product-card .product-image {
+    aspect-ratio: 1 / 0.78;
+    padding: 8px;
+  }
+
+  .product-card-body,
+  .homepage-board .product-card-body {
+    grid-template-rows: auto minmax(2.35em, auto) 30px 15px 18px 42px;
+    min-height: 208px;
+  }
+
+  .product-card .product-actions,
+  .homepage-board .product-card .product-actions,
+  .product-card .basket-action-stack,
+  .homepage-board .product-card .basket-action-stack,
+  .product-card .basket-action-stack button,
+  .homepage-board .product-card .basket-action-stack button {
+    height: 42px;
+    min-height: 42px;
+    max-height: 42px;
+  }
+
+  .payment-trust-banner {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .payment-trust-banner .payment-method-strip,
+  .payment-method-strip {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .payment-trust-banner .payment-method-strip.compact ul {
+    justify-content: space-evenly;
+    gap: 16px;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .site-footer nav[aria-label="Legal links"],
+  .site-footer nav[aria-label="Help links"] {
+    justify-self: center;
+    text-align: center;
+  }
+
+  .footer-instagram {
+    justify-self: center;
+  }
+
+  .footer-company {
+    justify-self: end;
+    max-width: 220px;
+    justify-items: end;
+    text-align: right;
+  }
+
+  .info-page {
+    width: min(calc(100% - 24px), 920px);
+  }
+
+  .info-page .section-head {
+    text-align: center;
+  }
+
+  .homepage-brand-carousel {
+    padding-block: 22px;
   }
 }
