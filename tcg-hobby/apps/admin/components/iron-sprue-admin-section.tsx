@@ -2151,9 +2151,10 @@ function HeroForm({
       <div className="md:col-span-2">
         <h3 className="font-bold">{record ? `Hero: ${record.headline}` : 'Create hero'}</h3>
         <p className="mt-1 text-sm text-neutral-500">
-          Edit the exact storefront hero fields: image, wording, CTA wording, CTA link, badge, active state and order.
+          Edit the exact storefront hero fields: image, wording, CTA wording, CTA link, active state and order.
         </p>
       </div>
+      <input type="hidden" name="merchandisingBadge" value="NONE" />
       {previewUrl ? <img src={previewUrl} alt={record?.headline ?? 'Iron Sprue hero'} className="h-64 w-full rounded-md border border-surface-line object-cover md:col-span-2" /> : null}
       <Field label="Hero heading"><input name="headline" defaultValue={record?.headline ?? ''} required className={fieldClass} /></Field>
       <Field label="Hero supporting wording"><input name="strapline" defaultValue={record?.strapline ?? ''} className={fieldClass} /></Field>
@@ -2174,14 +2175,6 @@ function HeroForm({
       </Field>
       <Field label="Upload hero artwork">
         <input name="image" type="file" accept="image/png,image/jpeg,image/webp" className={fieldClass} />
-      </Field>
-      <Field label="Merchandising badge">
-        <select name="merchandisingBadge" defaultValue={record?.merchandisingBadge ?? 'NONE'} className={fieldClass}>
-          {heroBadgeOptions.map((badge) => (
-            <option key={badge} value={badge}>{heroBadgeLabels[badge]}</option>
-          ))}
-        </select>
-        <span className="text-xs text-neutral-500">Shown as a small retail-style stamp on the public hero.</span>
       </Field>
       <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={record?.sortOrder ?? 0} className={fieldClass} /></Field>
       <label className="flex items-center gap-2 text-sm"><input name="active" type="checkbox" defaultChecked={record?.active ?? false} /> Active</label>
@@ -2233,7 +2226,6 @@ function CurrentHeroOverview({
               const previewUrl = ironSprueAdminPreviewUrl(hero.imageUrl);
               const publicRenderable = canRenderOnPublicStorefront(hero.imageUrl);
               const validTarget = heroHasValidTarget(hero, products);
-              const badge = heroBadgeLabels[(hero.merchandisingBadge ?? 'NONE') as keyof typeof heroBadgeLabels] ?? 'In stock';
               return (
                 <div key={hero.id} className="rounded-md border border-surface-line bg-surface-ink p-3">
                   {previewUrl ? <img src={previewUrl} alt={hero.headline} className="h-32 w-full rounded-md border border-surface-line object-cover" /> : null}
@@ -2241,11 +2233,6 @@ function CurrentHeroOverview({
                     <h3 className="font-bold">{hero.headline}</h3>
                     <RecordMeta active={hero.active} sortOrder={hero.sortOrder} />
                   </div>
-                  {badge !== 'No badge' ? (
-                    <p className="mt-2 inline-flex h-20 w-20 rotate-[-8deg] items-center justify-center rounded-full bg-white p-2 text-center text-[11px] font-black uppercase leading-none tracking-wide text-red-700 shadow-[inset_0_0_0_4px_rgba(220,38,38,0.96),inset_0_0_0_10px_rgba(255,255,255,0.96),inset_0_0_0_13px_rgba(220,38,38,0.88),0_8px_18px_rgba(0,0,0,0.28)]">
-                      {badge}
-                    </p>
-                  ) : null}
                   {hero.active && (!publicRenderable || !validTarget) ? (
                     <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-xs font-semibold text-amber-200">
                       Not public-effective: {!validTarget ? 'CTA link must point to a currently published Iron Sprue product.' : isR2Reference(hero.imageUrl) ? 'R2 object key is not valid for Iron Sprue media delivery.' : 'Image URL is missing or invalid.'}

@@ -62,9 +62,6 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               </div>
             ) : null}
             <div className="hero-message">
-              <div className="hero-availability-sticker" aria-label={slide.availabilityLabel}>
-                <strong>{slide.availabilityLabel}</strong>
-              </div>
               <h1>{slide.title}</h1>
               <p className="script-line">{slide.script}</p>
               {slide.copy ? <p className="lead">{slide.copy}</p> : null}

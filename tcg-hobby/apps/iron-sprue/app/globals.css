@@ -5289,7 +5289,6 @@ body::before {
   box-shadow: none;
 }
 
-.hero-shop-now,
 .promo-card .button,
 .product-card .product-actions a,
 .product-card .basket-action-stack button {
@@ -5423,7 +5422,6 @@ body::before {
   border-left: 0;
 }
 
-.hero-shop-now,
 .promo-card .button,
 .product-card .product-actions a,
 .product-card .basket-action-stack button {
@@ -5445,6 +5443,19 @@ body::before {
     inset 0 -1px 0 rgba(166, 101, 28, 0.14);
   color: rgba(255, 250, 241, 0.94);
   text-decoration: none;
+}
+
+.hero-shop-now {
+  border: 1px solid rgba(79, 44, 9, 0.72);
+  background:
+    linear-gradient(180deg, #d9aa55, #c9943d 56%, #a36a22),
+    repeating-linear-gradient(0deg, rgba(255, 250, 241, 0.09) 0 1px, transparent 1px 7px);
+  background-color: var(--brass);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 1px rgba(255, 250, 241, 0.18) inset,
+    0 0 0 2px rgba(0, 0, 0, 0.76),
+    0 12px 28px rgba(0, 0, 0, 0.32);
 }
 
 .product-card {
@@ -6698,9 +6709,9 @@ body:has(.homepage-brand-carousel) .trust-workshop-band {
 
   .hero-brand {
     top: auto;
-    right: auto;
-    bottom: 62px;
-    left: 18px;
+    right: 18px;
+    bottom: 58px;
+    left: auto;
     opacity: 0.82;
     pointer-events: none;
   }
@@ -7484,7 +7495,9 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 
   .hero-brand {
-    bottom: 34px;
+    right: 18px;
+    bottom: 50px;
+    left: auto;
   }
 
   .hero-dots {
