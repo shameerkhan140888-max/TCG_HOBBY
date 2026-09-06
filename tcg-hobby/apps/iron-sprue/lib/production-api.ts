@@ -10,7 +10,7 @@ import type {
 } from '@capital-hobby/types';
 import type { IronSprueBrandRecord, IronSprueProduct } from './catalogue';
 import type { IronSprueHeroSlide, IronSprueHomepagePlacement } from './admin-storefront-controls';
-import { brandLogoRegistry, heroSlides } from './storefront';
+import { brandLogoRegistry, categoryNavigation } from './storefront';
 
 export const IRON_SPRUE_PRODUCTION_API_BASE_URL = 'IRON_SPRUE_PRODUCTION_API_BASE_URL';
 const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
@@ -244,23 +244,23 @@ export async function getIronSprueProductionApiHomepagePlacements() {
 
 export function publicIronSprueHeroesToSlides(rows: PublicIronSprueHero[], products: IronSprueProduct[] = []): IronSprueHeroSlide[] {
   const productBySlug = new Map(products.map((product) => [product.slug, product]));
-  return rows.flatMap((row, index) => {
+  return rows.flatMap((row) => {
     const image = storefrontMediaUrl(row.imageUrl);
     if (!image || !row.ctaHref) return [];
 
-    const fallback = heroSlides[index % heroSlides.length] ?? heroSlides[0];
     const linkedProductSlug = row.ctaHref.match(/\/products\/([^/?#]+)/)?.[1];
     if (!linkedProductSlug) return [];
 
     const linkedProduct = productBySlug.get(linkedProductSlug);
     const brandName = linkedProduct?.brand;
     const brandLogo = brandName ? brandLogoRegistry[brandName] : undefined;
+    const availabilityLabel = heroMerchandisingLabel(row.merchandisingBadge) ?? 'In stock';
     return [{
-      ...fallback,
       id: row.id,
-      availabilityLabel: heroMerchandisingLabel(row.merchandisingBadge) ?? 'In stock',
+      label: availabilityLabel,
+      availabilityLabel,
       title: row.headline,
-      script: row.strapline || fallback.script,
+      script: row.strapline ?? '',
       copy: '',
       image,
       sourceProductSlug: linkedProductSlug,
@@ -268,7 +268,9 @@ export function publicIronSprueHeroesToSlides(rows: PublicIronSprueHero[], produ
       ...(brandLogo ? { brandLogo } : {}),
       alt: row.headline,
       ctaHref: row.ctaHref,
-      ctaLabel: row.ctaLabel || fallback.ctaLabel || 'Shop now',
+      ctaLabel: row.ctaLabel || 'Shop now',
+      secondaryHref: brandName ? `/shop?brand=${encodeURIComponent(brandName)}` : '/shop',
+      meta: categoryNavigation.map((item) => item.label),
     }];
   });
 }

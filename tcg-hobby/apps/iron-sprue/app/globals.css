@@ -644,34 +644,62 @@ p {
 }
 
 .hero-availability-sticker {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 92px;
-  min-height: 92px;
+  width: 104px;
+  min-height: 104px;
   margin-bottom: 24px;
-  border: 5px solid rgba(202, 22, 22, 0.94);
+  border: 0;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at center, rgba(255, 250, 241, 0.96) 0 48%, transparent 49%),
-    rgba(255, 250, 241, 0.96);
+  background: rgba(255, 250, 241, 0.97);
   color: #c51212;
-  padding: 10px;
+  padding: 12px;
   box-shadow:
-    0 0 0 2px rgba(197, 18, 18, 0.74) inset,
-    0 0 0 7px rgba(255, 250, 241, 0.92) inset,
-    0 0 0 10px rgba(197, 18, 18, 0.78) inset,
+    0 0 0 4px rgba(202, 22, 22, 0.96) inset,
+    0 0 0 12px rgba(255, 250, 241, 0.97) inset,
+    0 0 0 16px rgba(202, 22, 22, 0.92) inset,
     0 6px 18px rgba(0, 0, 0, 0.35);
   transform: rotate(-8deg);
+  isolation: isolate;
+}
+
+.hero-availability-sticker::before,
+.hero-availability-sticker::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+.hero-availability-sticker::before {
+  inset: -6px;
+  z-index: -1;
+  background:
+    repeating-conic-gradient(
+      from 4deg,
+      rgba(202, 22, 22, 0.92) 0deg 7deg,
+      transparent 7deg 14deg
+    );
+  -webkit-mask: radial-gradient(circle, transparent 58%, #000 59%);
+  mask: radial-gradient(circle, transparent 58%, #000 59%);
+}
+
+.hero-availability-sticker::after {
+  inset: 24px;
+  border: 3px solid rgba(202, 22, 22, 0.82);
 }
 
 .hero-availability-sticker strong {
-  max-width: 58px;
+  position: relative;
+  z-index: 1;
+  max-width: 64px;
   color: #c51212;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 900;
-  letter-spacing: 0.06em;
-  line-height: 1;
+  letter-spacing: 0.04em;
+  line-height: 0.92;
   text-align: center;
   text-transform: uppercase;
   text-shadow: none;
@@ -719,35 +747,6 @@ p {
   object-fit: contain;
 }
 
-.hero-controls {
-  position: absolute;
-  right: clamp(20px, 5vw, 72px);
-  bottom: 28px;
-  z-index: 8;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.hero-controls button {
-  min-height: 38px;
-  border: 1px solid rgba(255, 250, 241, 0.2);
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.6);
-  color: var(--paper-soft);
-  padding: 8px 12px;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.hero-controls span {
-  color: rgba(255, 250, 241, 0.82);
-  font-size: 12px;
-  font-weight: 800;
-}
-
 .hero-dots,
 .carousel-dots {
   display: flex;
@@ -768,12 +767,20 @@ p {
 
 .hero-dots button,
 .carousel-dots button {
+  appearance: none;
+  display: block;
+  flex: 0 0 auto;
   width: 8px;
   height: 8px;
+  min-width: 8px;
+  min-height: 8px;
+  max-width: 8px;
+  max-height: 8px;
   border: 0;
-  border-radius: 999px;
+  border-radius: 50%;
   background: rgba(255, 250, 241, 0.38);
   padding: 0;
+  line-height: 0;
 }
 
 .hero-dots button.is-active,

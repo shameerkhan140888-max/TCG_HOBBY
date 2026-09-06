@@ -12,7 +12,7 @@ import {
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
 import { getIronSprueProductionApiHomeSnapshot, shouldUseIronSprueProductionApi } from '../lib/production-api';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
-import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCardFacts, productCardMobileFact, productCommerceId, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
+import { categoryNavigation, formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCardFacts, productCardMobileFact, productCommerceId, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { AddToBasketButton } from '../components/basket-client';
 import { HeroCarousel } from '../components/hero-carousel';
@@ -102,7 +102,7 @@ export default async function HomePage() {
   const homepagePromoPanels = promoPanelsFromPlacements(homepagePlacements, 3);
   const featuredPlacement = placementByKey(homepagePlacements, 'featured-products');
   const brandPlacement = placementByKey(homepagePlacements, 'brand-carousel');
-  const launchCategories = (activeHeroSlides[0]?.meta ?? heroSlides[0].meta).filter((item) => item !== 'Accessories');
+  const launchCategories = categoryNavigation.map((item) => item.label);
 
   return (
     <>

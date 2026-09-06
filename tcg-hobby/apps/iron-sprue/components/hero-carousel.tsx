@@ -73,13 +73,6 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           </article>
         );
       })}
-      {count > 1 ? (
-        <div className="hero-controls" aria-label="Hero carousel controls">
-          <button type="button" onClick={() => setActiveIndex((activeIndex + count - 1) % count)} aria-label="Previous hero">Previous</button>
-          <span>{labelledSlides[activeIndex]?.positionLabel}</span>
-          <button type="button" onClick={() => setActiveIndex((activeIndex + 1) % count)} aria-label="Next hero">Next</button>
-        </div>
-      ) : null}
       <div className="hero-dots" aria-label="Hero carousel position">
         {labelledSlides.map((slide, index) => (
           <button

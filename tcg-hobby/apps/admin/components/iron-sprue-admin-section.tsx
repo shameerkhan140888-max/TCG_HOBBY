@@ -2242,7 +2242,7 @@ function CurrentHeroOverview({
                     <RecordMeta active={hero.active} sortOrder={hero.sortOrder} />
                   </div>
                   {badge !== 'No badge' ? (
-                    <p className="mt-2 inline-flex rotate-[-3deg] rounded border-2 border-red-600 bg-white px-3 py-1 text-xs font-black uppercase tracking-wide text-red-700">
+                    <p className="mt-2 inline-flex h-20 w-20 rotate-[-8deg] items-center justify-center rounded-full bg-white p-2 text-center text-[11px] font-black uppercase leading-none tracking-wide text-red-700 shadow-[inset_0_0_0_4px_rgba(220,38,38,0.96),inset_0_0_0_10px_rgba(255,255,255,0.96),inset_0_0_0_13px_rgba(220,38,38,0.88),0_8px_18px_rgba(0,0,0,0.28)]">
                       {badge}
                     </p>
                   ) : null}

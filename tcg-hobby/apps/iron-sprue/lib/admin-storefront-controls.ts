@@ -340,14 +340,10 @@ export function publicIronSprueMediaUrl(value: string | null | undefined) {
 export function adminHeroRowsToSlides(rows: AdminHeroRow[]): IronSprueHeroSlide[] {
   const slides: IronSprueHeroSlide[] = [];
 
-  rows.forEach((row, index) => {
+  rows.forEach((row) => {
     const publicImageUrl = publicIronSprueMediaUrl(row.imageUrl);
     if (!publicImageUrl || !row.ctaHref) return;
 
-    const fallback = heroSlides[index % heroSlides.length] ?? heroSlides[0];
-    const { brandName, brandLogo: fallbackBrandLogo, ...fallbackWithoutBrand } = fallback;
-    void brandName;
-    void fallbackBrandLogo;
     const linkedProductSlug = row.ctaHref?.match(/\/products\/([^/?#]+)/)?.[1];
     const linkedProduct = linkedProductSlug
       ? launchCatalogue.find((product) => product.slug === linkedProductSlug)
@@ -357,19 +353,21 @@ export function adminHeroRowsToSlides(rows: AdminHeroRow[]): IronSprueHeroSlide[
     const brandLogo = linkedProduct?.brand ? brandLogoRegistry[linkedProduct.brand] : undefined;
     const merchandisingLabel = heroMerchandisingLabel(row.merchandisingBadge) ?? 'In stock';
     slides.push({
-      ...fallbackWithoutBrand,
       id: row.id,
+      label: merchandisingLabel,
       availabilityLabel: merchandisingLabel,
       title: row.headline,
-      script: row.strapline || fallback.script,
+      script: row.strapline ?? '',
       copy: '',
       image: publicImageUrl,
-      sourceProductSlug: linkedProduct?.slug || fallbackWithoutBrand.sourceProductSlug,
+      sourceProductSlug: linkedProduct?.slug || linkedProductSlug || '',
       ...(linkedProduct?.brand ? { brandName: linkedProduct.brand } : {}),
       ...(brandLogo ? { brandLogo } : {}),
       alt: linkedProduct ? `${linkedProduct.name} Iron Sprue hero artwork` : row.headline,
       ctaHref: row.ctaHref,
-      ctaLabel: row.ctaLabel || fallbackWithoutBrand.ctaLabel || 'Shop now',
+      ctaLabel: row.ctaLabel || 'Shop now',
+      secondaryHref: linkedProduct?.brand ? `/shop?brand=${encodeURIComponent(linkedProduct.brand)}` : '/shop',
+      meta: categoryNavigation.map((item) => item.label),
     });
   });
 
