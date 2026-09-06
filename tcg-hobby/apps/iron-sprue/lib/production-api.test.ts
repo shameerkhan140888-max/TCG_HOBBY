@@ -234,7 +234,7 @@ describe('Iron Sprue production API client', () => {
             headline: 'New workshop arrivals',
             strapline: 'Fresh kits for the bench',
             ctaLabel: 'Shop now',
-            ctaHref: '/shop',
+            ctaHref: '/products/aoshima-06347-lamborghini-aventador-red',
             imageUrl: 'https://media.ironsprue.co.uk/marketing/heroes/new-workshop.webp',
             merchandisingBadge: 'NEW',
             sortOrder: 1,
@@ -249,11 +249,11 @@ describe('Iron Sprue production API client', () => {
     expect(result.heroSlides).toEqual([
       expect.objectContaining({
         id: 'hero-1',
-        availabilityLabel: 'New',
+        availabilityLabel: 'In stock',
         title: 'New workshop arrivals',
         script: 'Fresh kits for the bench',
         image: '/media/iron-sprue/marketing/heroes/new-workshop.webp',
-        ctaHref: '/shop',
+        ctaHref: '/products/aoshima-06347-lamborghini-aventador-red',
       }),
     ]);
   });

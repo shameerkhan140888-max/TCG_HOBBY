@@ -20,11 +20,6 @@ const products = launchProducts as IronSprueProduct[];
 
 export const dynamic = 'force-dynamic';
 
-function heroFitMode(slide: Awaited<ReturnType<typeof getIronSprueHeroSlides>>[number]) {
-  const identity = `${slide.brandName ?? ''} ${slide.sourceProductSlug} ${slide.image}`.toLowerCase();
-  return identity.includes('aoshima') ? 'cover' : 'contain';
-}
-
 function ProductCard({ product }: { product: IronSprueProduct }) {
   const imageUrl = productImage(product);
   const availableQuantity = productSellableQuantity(product);
@@ -119,7 +114,7 @@ export default async function HomePage() {
           {activeHeroSlides.map((slide, index) => (
             <article
               className="hero-slide"
-              data-fit={heroFitMode(slide)}
+              data-fit="cover"
               style={{ '--slide-index': index } as CSSProperties}
               key={`${('id' in slide ? slide.id : slide.image) ?? slide.image}-${slide.title}`}
             >

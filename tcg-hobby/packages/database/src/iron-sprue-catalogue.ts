@@ -23,6 +23,7 @@ import {
 } from './iron-sprue-admin.js';
 import { ironSprueBundleComponentsFromSpecifications } from './iron-sprue-bundles.js';
 import { resolveIronSprueStorefrontMediaUrl } from './iron-sprue-media.js';
+import { buildStorefrontProductPath } from '@capital-hobby/utils';
 
 type DatabaseClient = ReturnType<typeof getIronSprueAdminPrisma>;
 
@@ -695,6 +696,12 @@ export async function getIronSprueCatalogueProductBySlug(
 
 export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIronSprueAdminPrisma()): Promise<IronSprueCatalogueHomeData> {
   const now = new Date();
+  const validProductHeroHrefs = (
+    await db.ironSprueAdminProduct.findMany({
+      where: publicProductWhere,
+      select: { slug: true },
+    })
+  ).map((product) => buildStorefrontProductPath(product.slug));
   const [categories, homepagePlacements, heroRows, brandRows] = await Promise.all([
     getIronSprueCatalogueCategories(db),
     db.ironSprueAdminHomepagePlacement.findMany({
@@ -709,8 +716,11 @@ export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIron
       where: {
         storeCode: IRON_SPRUE_STORE_CODE,
         active: true,
-        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
-        AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
+        AND: [
+          { ctaHref: { in: validProductHeroHrefs } },
+          { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+          { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+        ],
       },
       orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }],
       take: 5,

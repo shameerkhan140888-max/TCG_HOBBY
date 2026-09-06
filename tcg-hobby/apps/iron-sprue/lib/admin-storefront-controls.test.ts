@@ -83,7 +83,7 @@ describe('Iron Sprue Admin storefront controls', () => {
       ctaHref: '/products/aoshima-05628-toyota-2000gt-red',
       ctaLabel: 'View product',
       image: '/assets/hero-campaigns/is-aos-05628-toyota-2000gt-red-hero.png',
-      availabilityLabel: 'Sale',
+      availabilityLabel: 'Special offer',
       sourceProductSlug: 'aoshima-05628-toyota-2000gt-red',
       brandName: 'Aoshima',
     });

@@ -551,12 +551,6 @@ p {
   opacity: 1;
 }
 
-.hero-slide[data-fit="contain"] .hero-art {
-  object-fit: contain;
-  object-position: center right;
-  background: #050706;
-}
-
 .hero-art-link {
   position: absolute;
   inset: 0;
@@ -650,23 +644,25 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  min-height: 42px;
+  gap: 8px;
+  min-height: 40px;
   margin-bottom: 24px;
-  border: 2px solid rgba(255, 250, 241, 0.92);
-  border-radius: 999px;
-  background: rgba(241, 244, 235, 0.92);
-  color: #166b36;
-  padding: 8px 20px;
-  box-shadow: none;
-  transform: rotate(-2deg);
+  border: 2px solid rgba(202, 36, 36, 0.92);
+  border-radius: 4px;
+  background: rgba(255, 250, 241, 0.94);
+  color: #b51212;
+  padding: 8px 18px;
+  box-shadow:
+    0 0 0 1px rgba(255, 250, 241, 0.35) inset,
+    0 6px 18px rgba(0, 0, 0, 0.35);
+  transform: rotate(-3deg);
 }
 
 .hero-availability-sticker span {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 999px;
-  background: #166b36;
+  background: #b51212;
 }
 
 .hero-availability-sticker strong {
@@ -4607,7 +4603,7 @@ label {
 .hero-availability-sticker {
   min-height: 34px;
   margin-bottom: 16px;
-  padding: 6px 14px;
+  padding: 6px 13px;
 }
 
 .product-detail-page {

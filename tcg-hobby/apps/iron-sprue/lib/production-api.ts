@@ -249,6 +249,8 @@ export function publicIronSprueHeroesToSlides(rows: PublicIronSprueHero[]): Iron
 
     const fallback = heroSlides[index % heroSlides.length] ?? heroSlides[0];
     const linkedProductSlug = row.ctaHref.match(/\/products\/([^/?#]+)/)?.[1];
+    if (!linkedProductSlug) return [];
+
     const linkedProduct = linkedProductSlug
       ? fallback.sourceProductSlug === linkedProductSlug
         ? { brand: fallback.brandName, slug: fallback.sourceProductSlug }
@@ -259,12 +261,12 @@ export function publicIronSprueHeroesToSlides(rows: PublicIronSprueHero[]): Iron
     return [{
       ...fallback,
       id: row.id,
-      availabilityLabel: heroMerchandisingLabel(row.merchandisingBadge) ?? fallback.availabilityLabel,
+      availabilityLabel: heroMerchandisingLabel(row.merchandisingBadge) ?? 'In stock',
       title: row.headline,
       script: row.strapline || fallback.script,
       copy: '',
       image,
-      sourceProductSlug: linkedProductSlug || fallback.sourceProductSlug,
+      sourceProductSlug: linkedProductSlug,
       ...(brandName ? { brandName } : {}),
       ...(brandLogo ? { brandLogo } : {}),
       alt: row.headline,
@@ -278,9 +280,9 @@ function heroMerchandisingLabel(value: string | null | undefined) {
   const labels: Record<string, string | null> = {
     NONE: null,
     IN_STOCK: 'In stock',
-    NEW: 'New',
-    SALE: 'Sale',
-    COMING_SOON: 'Coming soon',
+    NEW: 'In stock',
+    SALE: 'Special offer',
+    COMING_SOON: 'In stock',
     PRE_ORDER: 'Pre-order',
     FEATURED: 'Featured',
     EXCLUSIVE: 'Exclusive',

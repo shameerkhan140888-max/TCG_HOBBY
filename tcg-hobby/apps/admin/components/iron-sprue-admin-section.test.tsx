@@ -291,6 +291,7 @@ describe('IronSprueAdminSection operational controls', () => {
           sku: 'IS-AOS-06348',
           slug: 'aoshima-06348-lamborghini-adventador-green',
           customerTitle: 'Lamborghini Aventador Green',
+          readinessState: 'PUBLISHED',
           mediaAssets: [],
         },
       ],
@@ -299,11 +300,11 @@ describe('IronSprueAdminSection operational controls', () => {
     const markup = await renderAsync(await IronSprueAdminSection({ section: 'heroes' }));
 
     expect(markup).toContain('Upload hero artwork');
-    expect(markup).toContain('Existing hero artwork');
+    expect(markup).toContain('Use existing hero image');
     expect(markup).toContain('Current hero carousel');
     expect(markup).toContain('Aventador energy');
     expect(markup).toContain('ORDER');
-    expect(markup).toContain('Hero product target');
+    expect(markup).toContain('Linked product');
     expect(markup).toContain('IS-AOS-06348');
     expect(markup).toContain('Lamborghini Aventador Green');
     expect(markup).toContain('Available hero artwork');

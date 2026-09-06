@@ -176,9 +176,9 @@ const defaultTypographySettings: IronSprueTypographySettings = {
 const heroBadgeLabels: Record<string, string | null> = {
   NONE: null,
   IN_STOCK: 'In stock',
-  NEW: 'New',
-  SALE: 'Sale',
-  COMING_SOON: 'Coming soon',
+  NEW: 'In stock',
+  SALE: 'Special offer',
+  COMING_SOON: 'In stock',
   PRE_ORDER: 'Pre-order',
   FEATURED: 'Featured',
   EXCLUSIVE: 'Exclusive',
@@ -355,11 +355,11 @@ export function adminHeroRowsToSlides(rows: AdminHeroRow[]): IronSprueHeroSlide[
     if (linkedProductSlug && !linkedProduct) return;
 
     const brandLogo = linkedProduct?.brand ? brandLogoRegistry[linkedProduct.brand] : undefined;
-    const merchandisingLabel = heroMerchandisingLabel(row.merchandisingBadge);
+    const merchandisingLabel = heroMerchandisingLabel(row.merchandisingBadge) ?? 'In stock';
     slides.push({
       ...fallbackWithoutBrand,
       id: row.id,
-      availabilityLabel: merchandisingLabel ?? fallbackWithoutBrand.availabilityLabel,
+      availabilityLabel: merchandisingLabel,
       title: row.headline,
       script: row.strapline || fallback.script,
       copy: '',

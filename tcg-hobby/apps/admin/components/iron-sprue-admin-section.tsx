@@ -2035,13 +2035,14 @@ const promoStripIconOptions = ['DELIVERY', 'PARCEL', 'ANNOUNCEMENT', 'OFFER', 'I
 const heroBadgeLabels: Record<typeof IRON_SPRUE_HERO_MERCHANDISING_BADGES[number], string> = {
   NONE: 'No badge',
   IN_STOCK: 'In stock',
-  NEW: 'New',
-  SALE: 'Sale',
-  COMING_SOON: 'Coming soon',
+  NEW: 'In stock',
+  SALE: 'Special offer',
+  COMING_SOON: 'In stock',
   PRE_ORDER: 'Pre-order',
   FEATURED: 'Featured',
   EXCLUSIVE: 'Exclusive',
 };
+const heroBadgeOptions = IRON_SPRUE_HERO_MERCHANDISING_BADGES.filter((badge) => !['NEW', 'COMING_SOON'].includes(badge));
 
 const typographyLabels: Record<string, string> = {
   IMPACT_CONDENSED: 'Iron Sprue condensed display',
@@ -2148,24 +2149,24 @@ function HeroForm({
     <form action={saveIronSprueHeroAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-2">
       <input type="hidden" name="id" value={record?.id ?? ''} />
       <div className="md:col-span-2">
-        <h3 className="font-bold">{record ? `Edit hero: ${record.headline}` : 'Create a new hero'}</h3>
+        <h3 className="font-bold">{record ? `Hero: ${record.headline}` : 'Create hero'}</h3>
         <p className="mt-1 text-sm text-neutral-500">
-          {record ? 'This form edits an existing carousel record, including active state and display order.' : 'Create a new hero only after selecting approved artwork from the library or uploading a new approved asset.'}
+          Edit the exact storefront hero fields: image, wording, CTA wording, CTA link, badge, active state and order.
         </p>
       </div>
       {previewUrl ? <img src={previewUrl} alt={record?.headline ?? 'Iron Sprue hero'} className="h-64 w-full rounded-md border border-surface-line object-cover md:col-span-2" /> : null}
-      <Field label="Headline"><input name="headline" defaultValue={record?.headline ?? ''} required className={fieldClass} /></Field>
-      <Field label="Strapline"><input name="strapline" defaultValue={record?.strapline ?? ''} className={fieldClass} /></Field>
-      <Field label="CTA label"><input name="ctaLabel" defaultValue={record?.ctaLabel ?? ''} className={fieldClass} /></Field>
-      <Field label="Hero product target">
+      <Field label="Hero heading"><input name="headline" defaultValue={record?.headline ?? ''} required className={fieldClass} /></Field>
+      <Field label="Hero supporting wording"><input name="strapline" defaultValue={record?.strapline ?? ''} className={fieldClass} /></Field>
+      <Field label="CTA wording"><input name="ctaLabel" defaultValue={record?.ctaLabel ?? ''} className={fieldClass} /></Field>
+      <Field label="Linked product">
         <select name="productSlug" defaultValue={linkedProductSlug} className={fieldClass}>
-          <option value="">Use CTA href below</option>
+          <option value="">Choose a product or use CTA link below</option>
           {products.map((product) => <option key={product.id} value={product.slug}>{product.sku} - {product.customerTitle}</option>)}
         </select>
       </Field>
-      <Field label="CTA href"><input name="ctaHref" defaultValue={record?.ctaHref ?? ''} className={fieldClass} /></Field>
-      <Field label="Image URL"><input name="imageUrl" defaultValue={record?.imageUrl ?? ''} className={fieldClass} placeholder="Optional public URL or r2:// key" /></Field>
-      <Field label="Existing hero artwork">
+      <Field label="CTA link"><input name="ctaHref" defaultValue={record?.ctaHref ?? ''} className={fieldClass} /></Field>
+      <Field label="Hero image"><input name="imageUrl" defaultValue={record?.imageUrl ?? ''} className={fieldClass} placeholder="Public URL or r2:// key" /></Field>
+      <Field label="Use existing hero image">
         <select name="existingR2Key" defaultValue="" className={fieldClass}>
           <option value="">Keep current image URL</option>
           {heroLibrary.map((asset) => <option key={asset.key} value={asset.key}>{asset.key.replace('marketing/heroes/', '')}</option>)}
@@ -2176,11 +2177,11 @@ function HeroForm({
       </Field>
       <Field label="Merchandising badge">
         <select name="merchandisingBadge" defaultValue={record?.merchandisingBadge ?? 'NONE'} className={fieldClass}>
-          {IRON_SPRUE_HERO_MERCHANDISING_BADGES.map((badge) => (
+          {heroBadgeOptions.map((badge) => (
             <option key={badge} value={badge}>{heroBadgeLabels[badge]}</option>
           ))}
         </select>
-        <span className="text-xs text-neutral-500">Applies only to promotional hero merchandising labels, not product stock badges.</span>
+        <span className="text-xs text-neutral-500">Shown as a small retail-style stamp on the public hero.</span>
       </Field>
       <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={record?.sortOrder ?? 0} className={fieldClass} /></Field>
       <label className="flex items-center gap-2 text-sm"><input name="active" type="checkbox" defaultChecked={record?.active ?? false} /> Active</label>
@@ -2195,8 +2196,8 @@ function heroProductSlug(hero: HeroRecord) {
 
 function heroHasValidTarget(hero: HeroRecord, products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products']) {
   const slug = heroProductSlug(hero);
-  if (!slug) return Boolean(hero.ctaHref);
-  return products.some((product) => product.slug === slug);
+  if (!slug) return false;
+  return products.some((product) => product.slug === slug && product.readinessState === 'PUBLISHED');
 }
 
 function CurrentHeroOverview({
@@ -2232,6 +2233,7 @@ function CurrentHeroOverview({
               const previewUrl = ironSprueAdminPreviewUrl(hero.imageUrl);
               const publicRenderable = canRenderOnPublicStorefront(hero.imageUrl);
               const validTarget = heroHasValidTarget(hero, products);
+              const badge = heroBadgeLabels[(hero.merchandisingBadge ?? 'NONE') as keyof typeof heroBadgeLabels] ?? 'In stock';
               return (
                 <div key={hero.id} className="rounded-md border border-surface-line bg-surface-ink p-3">
                   {previewUrl ? <img src={previewUrl} alt={hero.headline} className="h-32 w-full rounded-md border border-surface-line object-cover" /> : null}
@@ -2239,13 +2241,34 @@ function CurrentHeroOverview({
                     <h3 className="font-bold">{hero.headline}</h3>
                     <RecordMeta active={hero.active} sortOrder={hero.sortOrder} />
                   </div>
-                  {hero.active && (!publicRenderable || !validTarget) ? (
-                    <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-xs font-semibold text-amber-200">
-                      Not public-effective: {!validTarget ? 'CTA product target is missing from the Iron Sprue catalogue.' : isR2Reference(hero.imageUrl) ? 'R2 object key is not valid for Iron Sprue media delivery.' : 'Image URL is missing or invalid.'}
+                  {badge !== 'No badge' ? (
+                    <p className="mt-2 inline-flex rotate-[-3deg] rounded border-2 border-red-600 bg-white px-3 py-1 text-xs font-black uppercase tracking-wide text-red-700">
+                      {badge}
                     </p>
                   ) : null}
-                  <p className="mt-2 text-sm text-neutral-400">{hero.strapline || 'No strapline set.'}</p>
-                  <p className="mt-2 text-xs text-neutral-500">CTA: {hero.ctaLabel || 'No CTA label'} {hero.ctaHref ? `-> ${hero.ctaHref}` : ''}</p>
+                  {hero.active && (!publicRenderable || !validTarget) ? (
+                    <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-xs font-semibold text-amber-200">
+                      Not public-effective: {!validTarget ? 'CTA link must point to a currently published Iron Sprue product.' : isR2Reference(hero.imageUrl) ? 'R2 object key is not valid for Iron Sprue media delivery.' : 'Image URL is missing or invalid.'}
+                    </p>
+                  ) : null}
+                  <dl className="mt-3 grid gap-2 text-sm">
+                    <div><dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Wording</dt><dd className="text-neutral-300">{hero.strapline || 'No supporting wording set.'}</dd></div>
+                    <div><dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">CTA wording</dt><dd className="text-neutral-300">{hero.ctaLabel || 'No CTA wording set.'}</dd></div>
+                    <div><dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">CTA link</dt><dd className="break-all text-neutral-300">{hero.ctaHref || 'No CTA link set.'}</dd></div>
+                  </dl>
+                  {hero.active && (!publicRenderable || !validTarget) ? (
+                    <form action={saveIronSprueHeroAction} className="mt-3">
+                      <input type="hidden" name="id" value={hero.id} />
+                      <input type="hidden" name="headline" value={hero.headline} />
+                      <input type="hidden" name="strapline" value={hero.strapline ?? ''} />
+                      <input type="hidden" name="ctaLabel" value={hero.ctaLabel ?? ''} />
+                      <input type="hidden" name="ctaHref" value={hero.ctaHref ?? ''} />
+                      <input type="hidden" name="imageUrl" value={hero.imageUrl ?? ''} />
+                      <input type="hidden" name="merchandisingBadge" value={hero.merchandisingBadge ?? 'NONE'} />
+                      <input type="hidden" name="sortOrder" value={hero.sortOrder ?? 0} />
+                      <Button type="submit" size="sm" variant="outline">Archive hero</Button>
+                    </form>
+                  ) : null}
                 </div>
               );
             })}
@@ -2708,7 +2731,7 @@ function TypographySettingsForm({ settings }: { settings: TypographySettingsReco
 async function StorefrontSection({ section }: { section: string }) {
   const { homepagePlacements, heroes, specialOffers, discountCodes, typographySettings, auditLog } = await getIronSprueAdminStorefrontControls();
   const { brands } = await getIronSprueAdminReferenceData();
-  const productOptions = ['homepage', 'heroes', 'special-offers'].includes(section) ? (await listIronSprueAdminProducts({ pageSize: 100 })).products : [];
+  const productOptions = ['homepage', 'heroes', 'special-offers'].includes(section) ? (await listIronSprueAdminProducts({ pageSize: 500 })).products : [];
   const heroLibrary = section === 'heroes'
     ? await listIronSprueR2Objects('marketing/heroes/', 80).catch(() => [] as HeroLibraryItem[])
     : [];
