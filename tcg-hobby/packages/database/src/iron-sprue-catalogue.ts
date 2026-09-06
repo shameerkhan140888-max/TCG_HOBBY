@@ -23,7 +23,6 @@ import {
 } from './iron-sprue-admin.js';
 import { ironSprueBundleComponentsFromSpecifications } from './iron-sprue-bundles.js';
 import { resolveIronSprueStorefrontMediaUrl } from './iron-sprue-media.js';
-import { buildStorefrontProductPath } from '@capital-hobby/utils';
 
 type DatabaseClient = ReturnType<typeof getIronSprueAdminPrisma>;
 
@@ -701,7 +700,7 @@ export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIron
       where: publicProductWhere,
       select: { slug: true },
     })
-  ).map((product) => buildStorefrontProductPath(product.slug));
+  ).map((product) => `/products/${product.slug}`);
   const [categories, homepagePlacements, heroRows, brandRows] = await Promise.all([
     getIronSprueCatalogueCategories(db),
     db.ironSprueAdminHomepagePlacement.findMany({

@@ -212,7 +212,7 @@ export async function getIronSprueProductionApiHomeSnapshot() {
   const response = await fetchProductionApiJson<PublicHomeResponse>('/v1/home');
   const products = await productsFromPublicHomeResponse(response);
   const homepagePlacements = (response.homepagePlacements ?? []).map(ironSprueHomepagePlacementFromPublic);
-  const heroSlides = publicIronSprueHeroesToSlides(response.ironSprueHeroes ?? []);
+  const heroSlides = publicIronSprueHeroesToSlides(response.ironSprueHeroes ?? [], products);
   const brandPresentation = (response.brandPresentation ?? [])
     .map(ironSprueBrandPresentationFromPublic)
     .filter((brand): brand is IronSprueBrandRecord => Boolean(brand));
@@ -242,7 +242,8 @@ export async function getIronSprueProductionApiHomepagePlacements() {
   return (response.homepagePlacements ?? []).map(ironSprueHomepagePlacementFromPublic);
 }
 
-export function publicIronSprueHeroesToSlides(rows: PublicIronSprueHero[]): IronSprueHeroSlide[] {
+export function publicIronSprueHeroesToSlides(rows: PublicIronSprueHero[], products: IronSprueProduct[] = []): IronSprueHeroSlide[] {
+  const productBySlug = new Map(products.map((product) => [product.slug, product]));
   return rows.flatMap((row, index) => {
     const image = storefrontMediaUrl(row.imageUrl);
     if (!image || !row.ctaHref) return [];
@@ -251,11 +252,7 @@ export function publicIronSprueHeroesToSlides(rows: PublicIronSprueHero[]): Iron
     const linkedProductSlug = row.ctaHref.match(/\/products\/([^/?#]+)/)?.[1];
     if (!linkedProductSlug) return [];
 
-    const linkedProduct = linkedProductSlug
-      ? fallback.sourceProductSlug === linkedProductSlug
-        ? { brand: fallback.brandName, slug: fallback.sourceProductSlug }
-        : null
-      : null;
+    const linkedProduct = productBySlug.get(linkedProductSlug);
     const brandName = linkedProduct?.brand;
     const brandLogo = brandName ? brandLogoRegistry[brandName] : undefined;
     return [{

@@ -15,6 +15,7 @@ import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/re
 import { formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCardFacts, productCardMobileFact, productCommerceId, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { AddToBasketButton } from '../components/basket-client';
+import { HeroCarousel } from '../components/hero-carousel';
 
 const products = launchProducts as IronSprueProduct[];
 
@@ -106,52 +107,7 @@ export default async function HomePage() {
   return (
     <>
       <section className="hero">
-        <div
-          className="hero-carousel"
-          aria-label="Featured Iron Sprue hero products"
-          style={{ '--hero-count': Math.max(1, activeHeroSlides.length) } as CSSProperties}
-        >
-          {activeHeroSlides.map((slide, index) => (
-            <article
-              className="hero-slide"
-              data-fit="cover"
-              style={{ '--slide-index': index } as CSSProperties}
-              key={`${('id' in slide ? slide.id : slide.image) ?? slide.image}-${slide.title}`}
-            >
-              <a className="hero-art-link" href={slide.ctaHref} aria-label={`View ${slide.title}`}>
-                <img
-                  className="hero-art"
-                  src={ironSprueDisplayMediaUrl(slide.image, 1400)}
-                  srcSet={ironSprueDisplayMediaSrcSet(slide.image, [640, 960, 1400])}
-                  sizes="100vw"
-                  alt={slide.alt}
-                  width="1536"
-                  height="864"
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                  decoding={index === 0 ? 'sync' : 'async'}
-                />
-              </a>
-              {slide.brandLogo ? (
-                <div className="hero-brand">
-                  <img src={slide.brandLogo} alt={`${slide.brandName ?? 'Brand'} logo`} width="180" height="70" />
-                </div>
-              ) : null}
-              <div className="hero-message">
-                <div className="hero-availability-sticker" aria-label={slide.availabilityLabel}>
-                  <span aria-hidden="true" />
-                  <strong>{slide.availabilityLabel}</strong>
-                </div>
-                <h1>{slide.title}</h1>
-                <p className="script-line">{slide.script}</p>
-                {slide.copy ? <p className="lead">{slide.copy}</p> : null}
-                <a className="hero-shop-now" href={slide.ctaHref}>{slide.ctaLabel ?? 'Shop now'}</a>
-              </div>
-              <ul className="hero-dots" aria-hidden="true">
-                {activeHeroSlides.map((dot) => <li key={dot.title} />)}
-              </ul>
-            </article>
-          ))}
-        </div>
+        <HeroCarousel slides={activeHeroSlides} />
       </section>
 
       <div className="homepage-board">

@@ -645,7 +645,7 @@ describe('Iron Sprue production catalogue adapter', () => {
             headline: 'Fresh bench arrivals',
             strapline: 'New kits and puzzle builds',
             ctaLabel: 'Shop now',
-            ctaHref: '/shop',
+            ctaHref: '/products/first-kit',
             imageUrl: 'r2://marketing/heroes/fresh-bench.webp',
             merchandisingBadge: 'NEW',
             sortOrder: 1,

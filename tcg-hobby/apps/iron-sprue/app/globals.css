@@ -532,10 +532,13 @@ p {
   padding: 0;
   opacity: 0;
   transform: translateX(0);
-  animation: heroCarousel calc(var(--hero-count, 3) * 6s) infinite;
-  animation-delay: calc(var(--slide-index) * -6s);
-  animation-timing-function: linear;
   visibility: hidden;
+  transition: opacity 420ms ease;
+}
+
+.hero-slide.is-active {
+  opacity: 1;
+  visibility: visible;
 }
 
 .hero-art {
@@ -644,31 +647,32 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 40px;
+  width: 92px;
+  min-height: 92px;
   margin-bottom: 24px;
-  border: 2px solid rgba(202, 36, 36, 0.92);
-  border-radius: 4px;
-  background: rgba(255, 250, 241, 0.94);
-  color: #b51212;
-  padding: 8px 18px;
+  border: 5px solid rgba(202, 22, 22, 0.94);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, rgba(255, 250, 241, 0.96) 0 48%, transparent 49%),
+    rgba(255, 250, 241, 0.96);
+  color: #c51212;
+  padding: 10px;
   box-shadow:
-    0 0 0 1px rgba(255, 250, 241, 0.35) inset,
+    0 0 0 2px rgba(197, 18, 18, 0.74) inset,
+    0 0 0 7px rgba(255, 250, 241, 0.92) inset,
+    0 0 0 10px rgba(197, 18, 18, 0.78) inset,
     0 6px 18px rgba(0, 0, 0, 0.35);
-  transform: rotate(-3deg);
-}
-
-.hero-availability-sticker span {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: #b51212;
+  transform: rotate(-8deg);
 }
 
 .hero-availability-sticker strong {
-  font-size: 13px;
+  max-width: 58px;
+  color: #c51212;
+  font-size: 14px;
   font-weight: 900;
   letter-spacing: 0.06em;
+  line-height: 1;
+  text-align: center;
   text-transform: uppercase;
   text-shadow: none;
 }
@@ -715,6 +719,35 @@ p {
   object-fit: contain;
 }
 
+.hero-controls {
+  position: absolute;
+  right: clamp(20px, 5vw, 72px);
+  bottom: 28px;
+  z-index: 8;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-controls button {
+  min-height: 38px;
+  border: 1px solid rgba(255, 250, 241, 0.2);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--paper-soft);
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hero-controls span {
+  color: rgba(255, 250, 241, 0.82);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .hero-dots,
 .carousel-dots {
   display: flex;
@@ -733,16 +766,19 @@ p {
   transform: translateX(-50%);
 }
 
-.hero-dots li,
-.carousel-dots li {
+.hero-dots button,
+.carousel-dots button {
   width: 8px;
   height: 8px;
+  border: 0;
   border-radius: 999px;
   background: rgba(255, 250, 241, 0.38);
+  padding: 0;
 }
 
-.hero-dots li:first-child,
-.carousel-dots li[aria-current="true"] {
+.hero-dots button.is-active,
+.carousel-dots button[aria-current="true"],
+.carousel-dots button.is-active {
   background: var(--brass);
 }
 
@@ -4601,9 +4637,15 @@ label {
 }
 
 .hero-availability-sticker {
-  min-height: 34px;
+  width: 78px;
+  min-height: 78px;
   margin-bottom: 16px;
-  padding: 6px 13px;
+  padding: 8px;
+}
+
+.hero-availability-sticker strong {
+  max-width: 50px;
+  font-size: 12px;
 }
 
 .product-detail-page {
@@ -7274,6 +7316,21 @@ body:has(.product-detail-page) .payment-trust-banner {
   margin: -2px 0 0;
   padding: 0;
   list-style: none;
+}
+
+.hero-dots button,
+.carousel-dots button {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 250, 241, 0.5);
+  padding: 0;
+}
+
+.hero-dots button.is-active,
+.carousel-dots button.is-active {
+  background: var(--brass);
 }
 
 .product-card-facts li {
