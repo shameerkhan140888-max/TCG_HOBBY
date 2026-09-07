@@ -66,7 +66,7 @@ export const heroSlides = [
     image: '/assets/promo-pintoo-vase-workshop.png',
     sourceProductSlug: 'pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus',
     brandName: 'Pintoo',
-    brandLogo: '/assets/brands/pintoo.svg',
+    brandLogo: '/assets/brands/pintoo.webp',
     alt: 'Koi carp and lotus vase puzzle object on warm workshop paper',
     ctaHref: '/products/pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus',
     ctaLabel: 'Shop now',
@@ -120,7 +120,7 @@ export const brandLogoRegistry: Record<string, string> = {
   'Deluxe Materials': '/assets/brands/deluxe-materials.svg',
   'Expo Tools': '/assets/brands/expo-tools.svg',
   'OcCre Creations': '/assets/brands/occre-creations.svg',
-  Pintoo: '/assets/brands/pintoo.svg',
+  Pintoo: '/assets/brands/pintoo.webp',
 };
 
 export function withOfficialBrandLogos(brands: IronSprueBrandRecord[]) {

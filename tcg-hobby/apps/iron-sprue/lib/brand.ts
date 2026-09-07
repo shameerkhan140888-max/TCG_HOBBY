@@ -6,7 +6,7 @@ export const ironSprueBrand = {
   registeredOffice: ['4-6 Greatorex Street', 'London', 'United Kingdom', 'E1 5NF'],
   instagramHandle: '@iron.sprue',
   instagramUrl: 'https://www.instagram.com/iron.sprue/',
-  logoPath: '/brand/iron-sprue-horizontal.svg',
+  logoPath: '/brand/iron-sprue-horizontal-email.png',
   contactEmail: 'info@ironsprue.co.uk',
   siteUrl: process.env.IRON_SPRUE_SITE_URL ?? process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL ?? 'https://www.ironsprue.co.uk',
 } as const;
