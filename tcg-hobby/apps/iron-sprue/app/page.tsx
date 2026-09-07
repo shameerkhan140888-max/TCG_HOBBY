@@ -6,13 +6,12 @@ import {
   getIronSprueStorefrontProducts,
   placementByKey,
   productSectionsFromPlacements,
-  promoPanelsFromPlacements,
   productsFromFeaturedPlacements,
 } from '../lib/admin-storefront-controls';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
 import { getIronSprueProductionApiHomeSnapshot, shouldUseIronSprueProductionApi } from '../lib/production-api';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
-import { categoryNavigation, formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCardFacts, productCardMobileFact, productCommerceId, productImage, productSellableQuantity, withOfficialBrandLogos } from '../lib/storefront';
+import { categoryNavigation, formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCardFacts, productCardMobileFact, productCommerceId, productImage, productSellableQuantity, promoPanels, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { AddToBasketButton } from '../components/basket-client';
 import { HeroCarousel } from '../components/hero-carousel';
@@ -99,7 +98,7 @@ export default async function HomePage() {
       .then((brands) => brands.length ? brands : withOfficialBrandLogos(deriveBrandsWeStock(previewProducts)));
   const newArrivals = productsFromFeaturedPlacements(storefrontProducts, homepagePlacements, 4);
   const productSections = productSectionsFromPlacements(storefrontProducts, homepagePlacements);
-  const homepagePromoPanels = promoPanelsFromPlacements(homepagePlacements, 3);
+  const homepagePromoPanels = promoPanels.slice(0, 3);
   const featuredPlacement = placementByKey(homepagePlacements, 'featured-products');
   const brandPlacement = placementByKey(homepagePlacements, 'brand-carousel');
   const launchCategories = categoryNavigation.map((item) => item.label);
