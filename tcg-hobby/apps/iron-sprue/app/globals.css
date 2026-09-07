@@ -8193,7 +8193,7 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 
   .footer-instagram {
-    justify-self: start;
+    justify-self: center;
   }
 
   .footer-company {

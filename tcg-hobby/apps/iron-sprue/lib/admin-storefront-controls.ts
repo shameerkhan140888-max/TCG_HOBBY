@@ -661,32 +661,35 @@ export function productSectionsFromPlacements(products: IronSprueProduct[], plac
 }
 
 export function promoPanelsFromPlacements(placements: IronSprueHomepagePlacement[], count = 3): IronSpruePromoPanel[] {
+  const fallbackPanelForPlacement = (placement: IronSprueHomepagePlacement) => {
+    const placementText = `${placement.placementKey} ${placement.title}`.toLowerCase();
+    if (
+      placementText.includes('bundle-savings') ||
+      placementText.includes('bundle savings') ||
+      placementText.includes('save on sets') ||
+      placementText.includes('bundle')
+    ) return promoPanels[0];
+    if (placementText.includes('cubicfun') || placementText.includes('cubic')) return promoPanels[1];
+    if (placementText.includes('pintoo')) return promoPanels[2];
+    return null;
+  };
+
   const panels = placements
-    .filter((placement) => placement.active && /promo-panel|offer-panel|homepage-card/i.test(placement.placementKey))
+    .filter((placement) => placement.active && /promo-panel|offer-panel|homepage-card|showcase-card|showcase/i.test(placement.placementKey))
     .sort((left, right) => left.sortOrder - right.sortOrder)
     .map((placement) => {
-      const image = publicIronSprueMediaUrl(placement.imageUrl) ?? null;
+      const fallback = fallbackPanelForPlacement(placement);
+      const image = publicIronSprueMediaUrl(placement.imageUrl) ?? fallback?.image ?? null;
       if (!image) return null;
-      const placementText = `${placement.placementKey} ${placement.title}`.toLowerCase();
-      const isBundleSavings =
-        placementText.includes('bundle-savings') ||
-        placementText.includes('bundle savings') ||
-        placementText.includes('save on sets');
-      const href = isBundleSavings
-        ? '/bundles'
-        : placementText.includes('cubicfun')
-          ? '/shop?brand=CubicFun'
-          : placementText.includes('pintoo')
-            ? '/shop?brand=Pintoo'
-            : placement.ctaHref || '/shop';
+      const href = placement.ctaHref || fallback?.href || '/shop';
       return {
-        eyebrow: placement.placementKey.replace(/[-_:]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()),
-        title: placement.title,
+        eyebrow: fallback?.eyebrow || placement.placementKey.replace(/[-_:]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()),
+        title: placement.title || fallback?.title || 'Shop Iron Sprue',
         copy: '',
         href,
-        cta: placement.ctaLabel || 'Shop now',
+        cta: placement.ctaLabel || fallback?.cta || 'Shop now',
         image,
-        alt: placement.title,
+        alt: placement.title || fallback?.alt || 'Iron Sprue showcase card',
       };
     })
     .filter((panel): panel is IronSpruePromoPanel => Boolean(panel));

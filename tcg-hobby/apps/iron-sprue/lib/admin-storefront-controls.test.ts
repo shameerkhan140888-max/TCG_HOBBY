@@ -405,6 +405,48 @@ describe('Iron Sprue Admin storefront controls', () => {
     });
   });
 
+  it('preserves amended Admin showcase destinations when using semantic fallback imagery', () => {
+    const panels = promoPanelsFromPlacements([
+      {
+        id: 'bundle',
+        placementKey: 'showcase-card:bundle-savings',
+        title: 'Bundle savings',
+        ctaLabel: 'View bundles',
+        ctaHref: '/bundles',
+        imageUrl: null,
+        active: true,
+        sortOrder: 0,
+      },
+      {
+        id: 'cubic',
+        placementKey: 'showcase-card:cubicfun-display-builds',
+        title: 'CubicFun display builds',
+        ctaLabel: 'Shop now',
+        ctaHref: '/products/cubicfun-mc133h-burj-khalifa',
+        imageUrl: null,
+        active: true,
+        sortOrder: 1,
+      },
+      {
+        id: 'pintoo',
+        placementKey: 'showcase-card:pintoo-puzzle-objects',
+        title: 'Pintoo puzzle objects',
+        ctaLabel: 'Explore',
+        ctaHref: '/shop?brand=Pintoo',
+        imageUrl: null,
+        active: true,
+        sortOrder: 2,
+      },
+    ]);
+
+    expect(panels.map((panel) => panel.href)).toEqual([
+      '/bundles',
+      '/products/cubicfun-mc133h-burj-khalifa',
+      '/shop?brand=Pintoo',
+    ]);
+    expect(panels.every((panel) => panel.image)).toBe(true);
+  });
+
   it('falls back to static promo copy when Admin promo records are inactive', async () => {
     vi.stubEnv('IRON_SPRUE_DATABASE_URL', '');
     vi.stubEnv('IRON_SPRUE_WORKER_READ_DATABASE_URL', '');
