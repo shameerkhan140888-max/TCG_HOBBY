@@ -812,16 +812,19 @@ p {
   0%, 33.333% {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
   }
 
   33.334%, 99.998% {
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
   }
 
   99.999%, 100% {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
   }
 }
 
@@ -6821,6 +6824,8 @@ body:has(.homepage-brand-carousel) .trust-workshop-band {
     border-left: 0;
     border-radius: 0;
     opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
     animation: promoBannerCarousel 15s steps(1, end) infinite;
   }
 
