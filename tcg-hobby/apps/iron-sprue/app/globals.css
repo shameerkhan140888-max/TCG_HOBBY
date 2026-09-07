@@ -7870,11 +7870,12 @@ body:has(.product-detail-page) .payment-trust-banner {
       "brand"
       "name"
       "fact"
+      "spacer"
       "stock"
       "price"
       "action";
-    grid-template-rows: auto minmax(2.35em, auto) 28px 15px 18px 40px;
-    min-height: 204px;
+    grid-template-rows: auto minmax(2.35em, auto) 28px 10px 15px 18px 40px;
+    min-height: 214px;
   }
 
   .product-card .product-brand {
@@ -7894,22 +7895,22 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 
   .product-card .stock-badge {
-    grid-row: 4 !important;
+    grid-row: 5 !important;
     grid-column: 1 !important;
   }
 
   .product-card strong {
-    grid-row: 5 !important;
+    grid-row: 6 !important;
     grid-column: 1 !important;
   }
 
   .product-card .product-actions,
   .homepage-board .product-card .product-actions {
-    grid-row: 6 !important;
+    grid-row: 7 !important;
     grid-column: 1 !important;
     height: 40px;
     min-height: 40px;
-    margin-top: 9px;
+    margin-top: 0 !important;
   }
 
   .product-card .basket-action-stack,
@@ -8176,22 +8177,28 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 
   .footer-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px 12px;
+    align-items: start;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
   }
 
   .site-footer nav[aria-label="Legal links"],
   .site-footer nav[aria-label="Help links"] {
-    justify-self: center;
+    justify-self: stretch;
     text-align: center;
   }
 
   .footer-instagram {
-    justify-self: center;
+    justify-self: start;
   }
 
   .footer-company {
-    justify-self: end;
-    max-width: 220px;
+    justify-self: stretch;
+    max-width: none;
     justify-items: end;
     text-align: right;
   }
