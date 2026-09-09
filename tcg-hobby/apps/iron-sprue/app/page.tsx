@@ -9,7 +9,7 @@ import {
   productsFromFeaturedPlacements,
 } from '../lib/admin-storefront-controls';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
-import { getIronSprueProductionApiHomeSnapshot, shouldUseIronSprueProductionApi } from '../lib/production-api';
+import { DEFAULT_HOMEPAGE_PRODUCT_SECTION_SLUGS, getIronSprueProductionApiHomeSnapshot, shouldUseIronSprueProductionApi } from '../lib/production-api';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 import { categoryNavigation, formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCardFacts, productCardMobileFact, productCommerceId, productImage, productSellableQuantity, promoPanels, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
@@ -84,7 +84,7 @@ export default async function HomePage() {
   const useProductionApi = shouldUseIronSprueProductionApi();
   const [fallbackHeroSlides, productionHome, fallbackHomepagePlacements, fallbackStorefrontProducts] = await Promise.all([
     useProductionApi ? Promise.resolve([]) : getIronSprueHeroSlides(),
-    useProductionApi ? getIronSprueProductionApiHomeSnapshot() : Promise.resolve(null),
+    useProductionApi ? getIronSprueProductionApiHomeSnapshot({ extraProductSlugs: DEFAULT_HOMEPAGE_PRODUCT_SECTION_SLUGS }) : Promise.resolve(null),
     useProductionApi ? Promise.resolve([]) : getIronSprueHomepagePlacements(),
     useProductionApi ? Promise.resolve([]) : getIronSprueStorefrontProducts(products),
   ]);

@@ -62,6 +62,18 @@ import { IronSprueBulkApprovalControls } from './iron-sprue-bulk-approval-contro
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
+const IRON_SPRUE_DISPLAY_SECTION_SUGGESTION = {
+  sectionKey: 'display-lights-and-screens',
+  heading: 'Night boxes and display screens.',
+  ctaLabel: 'Shop display builds',
+  ctaHref: '/shop/3d-puzzles-and-builds',
+  productSlugs: [
+    'cubicfun-om3603-magic-box-underwater-world',
+    'cubicfun-om3606-magic-box-london-at-night',
+    'pintoo-q1035-jigsaw-screen-famous-architectures',
+  ],
+};
+
 function money(value: number | null | undefined, currency = 'GBP') {
   if (value == null) return 'Not set';
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(value / 100);
@@ -2546,34 +2558,40 @@ function HomepageProductSectionsManager({
     return records.find((record) => record.placement.title?.trim())?.placement.title?.trim() ?? 'Untitled product row';
   }
 
-  function renderSectionForm(record?: { placement: HomepagePlacementRecord; sectionKey: string; productSlug: string }) {
+  function renderSectionForm(
+    record?: { placement: HomepagePlacementRecord; sectionKey: string; productSlug: string },
+    defaults?: Partial<typeof IRON_SPRUE_DISPLAY_SECTION_SUGGESTION>,
+  ) {
     const product = record ? productBySlug.get(record.productSlug) : null;
-    const isNewRecord = !record;
+    const defaultProductSlugs = defaults?.productSlugs?.length ? defaults.productSlugs : [''];
     const previewAsset = product?.mediaAssets.find((asset) => asset.approvalState === 'APPROVED' && asset.role === 'catalogue-primary') ?? product?.mediaAssets.find((asset) => asset.role === 'catalogue-primary');
     const previewUrl = previewAsset ? ironSprueMediaPreviewUrl(previewAsset) : ironSprueAdminPreviewUrl(record?.placement.imageUrl);
 
     return (
-      <form key={record?.placement.id ?? 'new-section-product'} action={saveIronSprueHomepageProductSectionAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-3 md:grid-cols-2">
+      <form key={record?.placement.id ?? `new-section-product-${defaults?.sectionKey ?? 'blank'}`} action={saveIronSprueHomepageProductSectionAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-3 md:grid-cols-2">
         <input type="hidden" name="id" value={record?.placement.id ?? ''} />
         <div className="md:col-span-2">
-          <h3 className="font-bold">{record ? `Edit product in ${record.placement.title || record.sectionKey}` : 'Add products to a homepage row'}</h3>
-          <p className="mt-1 text-xs text-neutral-500">These rows appear after the opening bench picks row.</p>
+          <h3 className="font-bold">{record ? `Edit ${product?.customerTitle ?? record.productSlug}` : 'Add a homepage product section'}</h3>
+          <p className="mt-1 text-xs text-neutral-500">The storefront shows the saved heading, selected products and CTA from these records.</p>
         </div>
         {previewUrl ? <img src={previewUrl} alt={product?.customerTitle ?? record?.placement.title ?? 'Section product'} className="h-32 w-full rounded-md border border-surface-line bg-white object-contain p-2 md:col-span-2" /> : null}
-        <Field label="Row key"><input name="sectionKey" list="homepage-section-keys" defaultValue={record?.sectionKey ?? ''} placeholder="our-aoshima-picks" required className={fieldClass} /></Field>
-        <Field label="Homepage heading"><input name="sectionHeading" defaultValue={record?.placement.title ?? ''} placeholder="Our favourite Aoshima kits" required className={fieldClass} /></Field>
-        <Field label="Product">
-          <select name="productSlug" defaultValue={record?.productSlug ?? ''} required className={fieldClass}>
-            <option value="">Select a product</option>
-            {products.map((candidate) => <option key={candidate.id} value={candidate.slug}>{candidate.sku} - {candidate.customerTitle}</option>)}
-          </select>
-        </Field>
+        <Field label="Section key"><input name="sectionKey" list="homepage-section-keys" defaultValue={record?.sectionKey ?? defaults?.sectionKey ?? ''} placeholder="display-lights-and-screens" required className={fieldClass} /></Field>
+        <Field label="Section heading / wording"><input name="sectionHeading" defaultValue={record?.placement.title ?? defaults?.heading ?? ''} placeholder="Night boxes and display screens." required className={fieldClass} /></Field>
+        <div className="md:col-span-2 grid gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Products selected</p>
+          {(record ? [record.productSlug] : defaultProductSlugs).map((slug, index) => (
+            <select key={`${slug || 'product'}-${index}`} name="productSlug" defaultValue={slug} required={index === 0} className={fieldClass}>
+              <option value="">Select a product</option>
+              {products.map((candidate) => <option key={candidate.id} value={candidate.slug}>{candidate.sku} - {candidate.customerTitle}</option>)}
+            </select>
+          ))}
+        </div>
         <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={record?.placement.sortOrder ?? 0} className={fieldClass} /></Field>
-        <Field label="Section CTA label"><input name="ctaLabel" defaultValue={record?.placement.ctaLabel ?? ''} className={fieldClass} /></Field>
-        <Field label="Section CTA href"><input name="ctaHref" defaultValue={record?.placement.ctaHref ?? ''} className={fieldClass} /></Field>
+        <Field label="Section CTA label"><input name="ctaLabel" defaultValue={record?.placement.ctaLabel ?? defaults?.ctaLabel ?? ''} className={fieldClass} /></Field>
+        <Field label="Section CTA href"><input name="ctaHref" defaultValue={record?.placement.ctaHref ?? defaults?.ctaHref ?? ''} className={fieldClass} /></Field>
         <input type="hidden" name="imageUrl" value={record?.placement.imageUrl ?? ''} />
         <label className="flex items-end gap-2 pb-2 text-sm"><input name="active" type="checkbox" defaultChecked={record?.placement.active ?? true} /> Active on homepage</label>
-        <Button type="submit" size="sm" variant={record ? 'outline' : 'primary'}>{record ? 'Save section product' : 'Add product to row'}</Button>
+        <Button type="submit" size="sm" variant={record ? 'outline' : 'primary'}>{record ? 'Save / reinstate section product' : 'Add section'}</Button>
       </form>
     );
   }
@@ -2595,22 +2613,31 @@ function HomepageProductSectionsManager({
         {sectionGroups.length ? (
           <div className="space-y-3">
             {sectionGroups.map((group) => (
-              <details key={group.sectionKey} className="rounded-md border border-surface-line bg-surface-ink p-3" open>
+              <details key={group.sectionKey} className="rounded-md border border-surface-line bg-surface-ink p-3">
                 <summary className="cursor-pointer text-sm font-bold text-accent">
-                  {sectionHeading(group.records)} <span className="text-neutral-500">({group.records.length})</span>
+                  {sectionHeading(group.records)} <span className="text-neutral-500">({group.records.filter((record) => record.placement.active).length}/{group.records.length} active)</span>
                 </summary>
                 <div className="mt-3 rounded-md border border-surface-line bg-black/30 p-3">
-                  <p className="text-xs uppercase tracking-wide text-neutral-500">Current products</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {group.records.some((record) => record.placement.active)
-                      ? group.records.filter((record) => record.placement.active).map((record) => (
-                        <StatusBadge key={record.placement.id} tone="neutral">
-                          {productBySlug.get(record.productSlug)?.customerTitle ?? record.productSlug}
-                        </StatusBadge>
-                      ))
-                      : <span className="text-sm text-neutral-500">No active products in this row.</span>}
+                  <div className="grid gap-2 md:grid-cols-3">
+                    <p><span className="block text-xs uppercase tracking-wide text-neutral-500">Section key</span>{group.sectionKey}</p>
+                    <p><span className="block text-xs uppercase tracking-wide text-neutral-500">CTA label</span>{group.records.find((record) => record.placement.ctaLabel)?.placement.ctaLabel ?? 'Not set'}</p>
+                    <p><span className="block text-xs uppercase tracking-wide text-neutral-500">CTA link</span>{group.records.find((record) => record.placement.ctaHref)?.placement.ctaHref ?? 'Not set'}</p>
                   </div>
-                  <p className="mt-2 text-xs text-neutral-500">Row key: {group.sectionKey}</p>
+                  <p className="mt-3 text-xs uppercase tracking-wide text-neutral-500">Products selected</p>
+                  <div className="mt-2 grid gap-2 md:grid-cols-3">
+                    {group.records.map((record) => {
+                      const rowProduct = productBySlug.get(record.productSlug);
+                      const rowPreviewAsset = rowProduct?.mediaAssets.find((asset) => asset.approvalState === 'APPROVED' && asset.role === 'catalogue-primary') ?? rowProduct?.mediaAssets.find((asset) => asset.role === 'catalogue-primary');
+                      const rowPreviewUrl = rowPreviewAsset ? ironSprueMediaPreviewUrl(rowPreviewAsset) : ironSprueAdminPreviewUrl(record.placement.imageUrl);
+                      return (
+                        <div key={record.placement.id} className="rounded-md border border-surface-line bg-black/30 p-2">
+                          {rowPreviewUrl ? <img src={rowPreviewUrl} alt={rowProduct?.customerTitle ?? record.productSlug} className="h-20 w-full rounded bg-white object-contain p-1" /> : null}
+                          <p className="mt-2 text-sm font-semibold">{rowProduct?.customerTitle ?? record.productSlug}</p>
+                          <RecordMeta active={record.placement.active} sortOrder={record.placement.sortOrder} />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="mt-3 grid gap-3 lg:grid-cols-2">
                   {group.records.map((record) => renderSectionForm(record))}
@@ -2619,6 +2646,13 @@ function HomepageProductSectionsManager({
             ))}
           </div>
         ) : <EmptyNote>No additional product rows exist yet. Use the form below when the homepage needs a second curated row.</EmptyNote>}
+        {!sectionKeys.includes(IRON_SPRUE_DISPLAY_SECTION_SUGGESTION.sectionKey) ? (
+          <details className="rounded-md border border-dashed border-accent bg-black/30 p-3" open>
+            <summary className="cursor-pointer text-sm font-bold text-accent">Suggested section: night boxes and display screens</summary>
+            <p className="mt-2 text-sm text-neutral-400">Adds the two night boxes and a jigsaw screen beneath the architecture row. Saving this makes the section fully admin-managed.</p>
+            <div className="mt-3">{renderSectionForm(undefined, IRON_SPRUE_DISPLAY_SECTION_SUGGESTION)}</div>
+          </details>
+        ) : null}
         {renderSectionForm()}
       </CardContent>
     </Card>

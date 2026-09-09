@@ -390,6 +390,51 @@ describe('Iron Sprue Admin storefront controls', () => {
     expect(sections[0]?.products.map((product) => product.slug)).toEqual(['toyota-red', 'toyota-white']);
   });
 
+  it('adds the display lights and screens homepage row until Admin records take over', () => {
+    const products = [
+      { slug: 'cubicfun-om3603-magic-box-underwater-world', sku: 'OM3603', storeCode: 'IRON_SPRUE', published: true },
+      { slug: 'cubicfun-om3606-magic-box-london-at-night', sku: 'OM3606', storeCode: 'IRON_SPRUE', published: true },
+      { slug: 'pintoo-q1035-jigsaw-screen-famous-architectures', sku: 'Q1035', storeCode: 'IRON_SPRUE', published: true },
+    ] as any[];
+
+    const sections = productSectionsFromPlacements(products, []);
+
+    expect(sections).toHaveLength(1);
+    expect(sections[0]).toMatchObject({
+      sectionKey: 'display-lights-and-screens',
+      heading: 'Night boxes and display screens.',
+      ctaLabel: 'Shop display builds',
+      ctaHref: '/shop/3d-puzzles-and-builds',
+    });
+    expect(sections[0]?.products.map((product) => product.slug)).toEqual([
+      'cubicfun-om3603-magic-box-underwater-world',
+      'cubicfun-om3606-magic-box-london-at-night',
+      'pintoo-q1035-jigsaw-screen-famous-architectures',
+    ]);
+  });
+
+  it('does not resurrect the default display section after Admin archives it', () => {
+    const products = [
+      { slug: 'cubicfun-om3603-magic-box-underwater-world', sku: 'OM3603', storeCode: 'IRON_SPRUE', published: true },
+      { slug: 'cubicfun-om3606-magic-box-london-at-night', sku: 'OM3606', storeCode: 'IRON_SPRUE', published: true },
+    ] as any[];
+
+    const sections = productSectionsFromPlacements(products, [
+      {
+        id: 'archived',
+        placementKey: 'product-section:display-lights-and-screens:cubicfun-om3603-magic-box-underwater-world',
+        title: 'Night boxes and display screens.',
+        ctaLabel: 'Shop display builds',
+        ctaHref: '/shop/3d-puzzles-and-builds',
+        imageUrl: null,
+        active: false,
+        sortOrder: 0,
+      },
+    ]);
+
+    expect(sections).toHaveLength(0);
+  });
+
   it('uses active Admin promo panel placements before static homepage cards', () => {
     const panels = promoPanelsFromPlacements([
       { id: 'inactive', placementKey: 'promo-panel:inactive', title: 'Hidden card', ctaLabel: 'Hidden', ctaHref: '/hidden', imageUrl: '/hidden.png', active: false, sortOrder: 0 },

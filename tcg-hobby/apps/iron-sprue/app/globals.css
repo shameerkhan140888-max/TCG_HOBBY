@@ -1968,11 +1968,16 @@ p {
     0 18px 35px rgba(0, 0, 0, 0.22);
 }
 
-.checkout-reassurance-icons p {
+.checkout-reassurance-icons p,
+.checkout-reassurance-icons .reassurance-row {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
   gap: 12px;
   align-items: flex-start;
+}
+
+.checkout-reassurance-icons .reassurance-row .payment-method-strip {
+  grid-column: 2;
 }
 
 .checkout-reassurance-icons strong {
@@ -1997,7 +2002,8 @@ p {
   fill: currentColor;
 }
 
-.checkout-reassurance p {
+.checkout-reassurance p,
+.checkout-reassurance .reassurance-row {
   margin: 0;
   color: rgba(255, 250, 241, 0.72);
   font-size: 13px;
@@ -7983,6 +7989,16 @@ body:has(.product-detail-page) .payment-trust-banner {
   object-position: center;
 }
 
+.catalogue-grid .product-card-body,
+.homepage-board .product-card-body {
+  min-height: 244px;
+  padding-bottom: 12px;
+}
+
+.product-card-facts .product-card-mobile-fact {
+  display: none;
+}
+
 .payment-trust-banner {
   grid-template-columns: minmax(160px, 0.28fr) minmax(0, 1fr);
 }
@@ -8137,8 +8153,29 @@ body:has(.product-detail-page) .payment-trust-banner {
 
   .product-card-body,
   .homepage-board .product-card-body {
-    grid-template-rows: auto minmax(2.35em, auto) 30px 15px 18px 42px;
-    min-height: 208px;
+    grid-template-rows: auto minmax(2.35em, auto) 31px 8px 15px 18px 42px;
+    min-height: 218px;
+  }
+
+  .product-card-facts {
+    grid-row: 3 !important;
+  }
+
+  .product-card-facts .product-card-mobile-fact {
+    display: grid;
+  }
+
+  .product-card .stock-badge {
+    grid-row: 5 !important;
+  }
+
+  .product-card strong {
+    grid-row: 6 !important;
+  }
+
+  .product-card .product-actions,
+  .homepage-board .product-card .product-actions {
+    grid-row: 7 !important;
   }
 
   .product-card .product-actions,

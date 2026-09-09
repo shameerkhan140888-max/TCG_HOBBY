@@ -17,6 +17,11 @@ const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
 const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
 const IRON_SPRUE_STAGING_HOSTS = new Set(['staging.ironsprue.co.uk']);
 const PUBLIC_API_CACHE_TTL_MS = 15_000;
+export const DEFAULT_HOMEPAGE_PRODUCT_SECTION_SLUGS = [
+  'cubicfun-om3603-magic-box-underwater-world',
+  'cubicfun-om3606-magic-box-london-at-night',
+  'pintoo-q1035-jigsaw-screen-famous-architectures',
+];
 
 type CachedPublicApiResponse = {
   expiresAt: number;
@@ -187,7 +192,7 @@ export async function getIronSprueProductionApiProduct(slug: string) {
   }
 }
 
-async function productsFromPublicHomeResponse(response: PublicHomeResponse) {
+async function productsFromPublicHomeResponse(response: PublicHomeResponse, extraProductSlugs: string[] = []) {
   const placementSlugs = (response.homepagePlacements ?? [])
     .filter((placement) => placement.active)
     .map((placement) => {
@@ -198,19 +203,24 @@ async function productsFromPublicHomeResponse(response: PublicHomeResponse) {
       return sectionProduct ?? '';
     })
     .filter(Boolean);
+  const existingHomeProductSlugs = new Set([...response.featuredProducts, ...response.latestProducts].map((product) => product.slug));
+  const homeProductSlugs = [...new Set([...placementSlugs, ...extraProductSlugs])]
+    .filter((slug) => !existingHomeProductSlugs.has(slug));
   let placementProducts: PublicProductSummary[] = [];
-  if (placementSlugs.length) {
+  if (homeProductSlugs.length) {
     const catalogue = await fetchProductionApiJson<PublicCatalogueResponse>('/v1/catalogue?pageSize=100');
-    const placementSlugSet = new Set(placementSlugs);
-    placementProducts = catalogue.products.filter((product) => placementSlugSet.has(product.slug));
+    const placementSlugSet = new Set(homeProductSlugs);
+    placementProducts = Array.isArray(catalogue.products)
+      ? catalogue.products.filter((product) => placementSlugSet.has(product.slug))
+      : [];
   }
   const products = [...response.featuredProducts, ...response.latestProducts, ...placementProducts];
   return Array.from(new Map(products.map((product) => [product.slug, ironSprueProductFromPublicSummary(product)])).values());
 }
 
-export async function getIronSprueProductionApiHomeSnapshot() {
+export async function getIronSprueProductionApiHomeSnapshot(options: { extraProductSlugs?: string[] } = {}) {
   const response = await fetchProductionApiJson<PublicHomeResponse>('/v1/home');
-  const products = await productsFromPublicHomeResponse(response);
+  const products = await productsFromPublicHomeResponse(response, options.extraProductSlugs);
   const homepagePlacements = (response.homepagePlacements ?? []).map(ironSprueHomepagePlacementFromPublic);
   const heroSlides = publicIronSprueHeroesToSlides(response.ironSprueHeroes ?? [], products);
   const brandPresentation = (response.brandPresentation ?? [])

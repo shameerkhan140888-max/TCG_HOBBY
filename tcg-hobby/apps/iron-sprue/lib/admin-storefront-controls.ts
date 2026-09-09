@@ -619,8 +619,28 @@ function productSectionEyebrow(sectionKey: string) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+const defaultHomepageProductSections = [
+  {
+    sectionKey: 'display-lights-and-screens',
+    heading: 'Night boxes and display screens.',
+    eyebrow: 'Display builds',
+    ctaLabel: 'Shop display builds',
+    ctaHref: '/shop/3d-puzzles-and-builds',
+    productSlugs: [
+      'cubicfun-om3603-magic-box-underwater-world',
+      'cubicfun-om3606-magic-box-london-at-night',
+      'pintoo-q1035-jigsaw-screen-famous-architectures',
+    ],
+  },
+];
+
 export function productSectionsFromPlacements(products: IronSprueProduct[], placements: IronSprueHomepagePlacement[]): IronSprueHomepageProductSection[] {
   const bySlug = new Map(products.map((product) => [product.slug, product]));
+  const placementSectionKeys = new Set(
+    placements
+      .map((placement) => productSectionPlacementParts(placement.placementKey)?.sectionKey)
+      .filter((sectionKey): sectionKey is string => Boolean(sectionKey)),
+  );
   const sections = new Map<string, {
     heading: string;
     eyebrow: string;
@@ -646,6 +666,21 @@ export function productSectionsFromPlacements(products: IronSprueProduct[], plac
     if (!existing.ctaHref && placement.ctaHref) existing.ctaHref = placement.ctaHref;
     existing.rows.push({ sortOrder: placement.sortOrder, product });
     sections.set(parts.sectionKey, existing);
+  }
+
+  for (const defaultSection of defaultHomepageProductSections) {
+    if (placementSectionKeys.has(defaultSection.sectionKey)) continue;
+    const defaultProducts = defaultSection.productSlugs
+      .map((slug) => bySlug.get(slug))
+      .filter((product): product is IronSprueProduct => Boolean(product));
+    if (!defaultProducts.length) continue;
+    sections.set(defaultSection.sectionKey, {
+      heading: defaultSection.heading,
+      eyebrow: defaultSection.eyebrow,
+      ctaLabel: defaultSection.ctaLabel,
+      ctaHref: defaultSection.ctaHref,
+      rows: defaultProducts.map((product, sortOrder) => ({ sortOrder, product })),
+    });
   }
 
   return [...sections.entries()].map(([sectionKey, section]) => ({

@@ -732,7 +732,8 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Lamborghini Aventador Blue');
     expect(markup).toContain('Additional homepage product rows');
     expect(markup).toContain('Our favourite Aoshima kits');
-    expect(markup).toContain('Row key:');
+    expect(markup).toContain('Section key');
+    expect(markup).toContain('Products selected');
     expect(markup).toContain('our-aoshima-picks');
     expect(markup).toContain('Add product to opening row');
     expect(markup).toContain('Product in this slot');
@@ -796,6 +797,7 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Convert fallback row into editable picks');
     expect(markup).toContain('name="productSlug" value="aoshima-05627-toyota-2000gt-white"');
     expect(markup).toContain('name="productSlug" value="aoshima-05628-toyota-2000gt-red"');
-    expect(markup).toContain('Add product to row');
+    expect(markup).toContain('Suggested section: night boxes and display screens');
+    expect(markup).toContain('Add section');
   });
 });
