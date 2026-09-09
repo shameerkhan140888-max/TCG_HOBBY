@@ -28,6 +28,46 @@ function isPaymentFinal(status: string | undefined) {
   return ironSprueCheckoutResultState(status) !== 'processing';
 }
 
+const checkoutSuccessCachePrefix = 'iron-sprue:checkout-success:';
+
+function checkoutSuccessCacheKey(referenceType: 'session' | 'payment-intent', checkoutReference: string) {
+  return `${checkoutSuccessCachePrefix}${referenceType}:${checkoutReference}`;
+}
+
+function isConfirmedOrder(order: PublicOrderDetail | null | undefined): order is PublicOrderDetail {
+  return order?.paymentStatus === 'SUCCEEDED';
+}
+
+function readCachedConfirmedOrder(referenceType: 'session' | 'payment-intent', checkoutReference: string) {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(checkoutSuccessCacheKey(referenceType, checkoutReference));
+    if (!raw) return null;
+    const cached = JSON.parse(raw) as PublicOrderDetail;
+    return isConfirmedOrder(cached) ? cached : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedConfirmedOrder(referenceType: 'session' | 'payment-intent', checkoutReference: string, order: PublicOrderDetail) {
+  if (typeof window === 'undefined' || !isConfirmedOrder(order)) return;
+  try {
+    window.sessionStorage.setItem(checkoutSuccessCacheKey(referenceType, checkoutReference), JSON.stringify(order));
+  } catch {
+    // Confirmation must remain usable even if private browsing blocks storage.
+  }
+}
+
+function initialCheckoutOrder(
+  initialOrder: PublicOrderDetail | null,
+  referenceType: 'session' | 'payment-intent',
+  checkoutReference: string,
+) {
+  if (isConfirmedOrder(initialOrder)) return initialOrder;
+  return readCachedConfirmedOrder(referenceType, checkoutReference) ?? initialOrder;
+}
+
 export function CheckoutSuccessClient({
   initialOrder,
   checkoutReference,
@@ -37,7 +77,7 @@ export function CheckoutSuccessClient({
   checkoutReference: string;
   referenceType?: 'session' | 'payment-intent';
 }) {
-  const [order, setOrder] = useState<PublicOrderDetail | null>(initialOrder);
+  const [order, setOrder] = useState<PublicOrderDetail | null>(() => initialCheckoutOrder(initialOrder, referenceType, checkoutReference));
   const [hasClearedBasket, setHasClearedBasket] = useState(false);
   const [hasTrackedPurchase, setHasTrackedPurchase] = useState(false);
   const resultState = ironSprueCheckoutResultState(order?.paymentStatus);
@@ -54,7 +94,13 @@ export function CheckoutSuccessClient({
         const response = await fetch(path, { cache: 'no-store' });
         if (response.ok) {
           const nextOrder = await response.json() as PublicOrderDetail;
-          if (!cancelled) setOrder(nextOrder);
+          if (isConfirmedOrder(nextOrder)) writeCachedConfirmedOrder(referenceType, checkoutReference, nextOrder);
+          if (!cancelled) {
+            setOrder((currentOrder) => {
+              if (isConfirmedOrder(currentOrder) && !isConfirmedOrder(nextOrder)) return currentOrder;
+              return nextOrder;
+            });
+          }
           if (isPaymentFinal(nextOrder.paymentStatus)) return;
         }
       } catch {
@@ -84,10 +130,11 @@ export function CheckoutSuccessClient({
 
   useEffect(() => {
     if (order?.paymentStatus === 'SUCCEEDED' && !hasClearedBasket) {
+      writeCachedConfirmedOrder(referenceType, checkoutReference, order);
       void clearIronSprueBasketAfterPaidCheckout();
       setHasClearedBasket(true);
     }
-  }, [hasClearedBasket, order?.paymentStatus]);
+  }, [checkoutReference, hasClearedBasket, order, referenceType]);
 
   useEffect(() => {
     if (!order || order.paymentStatus !== 'SUCCEEDED' || hasTrackedPurchase) return;

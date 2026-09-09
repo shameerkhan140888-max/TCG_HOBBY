@@ -3014,7 +3014,7 @@ p {
 }
 
 .product-card .add-to-basket-feedback {
-  top: 50%;
+  top: 42%;
   bottom: auto;
   transform: translateY(-50%);
   color: #122016;
@@ -7891,8 +7891,9 @@ body:has(.product-detail-page) .payment-trust-banner {
       "stock"
       "price"
       "action";
-    grid-template-rows: auto minmax(2.35em, auto) 28px 10px 15px 18px 40px;
-    min-height: 214px;
+    grid-template-rows: auto minmax(2.35em, auto) 28px 8px 15px 18px 40px;
+    min-height: 204px;
+    padding-bottom: 7px;
   }
 
   .product-card .product-brand {
@@ -8172,9 +8173,9 @@ body:has(.product-detail-page) .payment-trust-banner {
 
   .product-card-body,
   .homepage-board .product-card-body {
-    grid-template-rows: auto minmax(2.35em, auto) 30px 8px 15px 18px 40px;
-    min-height: 205px;
-    padding-bottom: 8px;
+    grid-template-rows: auto minmax(2.35em, auto) 30px 7px 15px 18px 40px;
+    min-height: 199px;
+    padding-bottom: 6px;
   }
 
   .product-card-facts {
