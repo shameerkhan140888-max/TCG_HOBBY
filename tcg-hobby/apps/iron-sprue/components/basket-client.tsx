@@ -283,8 +283,16 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
     messageTimer.current = setTimeout(() => setMessage(''), 3200);
   }
 
+  const buttonLabel = outOfStock
+    ? 'Out of stock'
+    : isAdding
+      ? 'Adding...'
+      : messageOk && message === 'Added to basket'
+        ? 'Added'
+        : 'Add to basket';
+
   return (
-    <div className="basket-action-stack">
+    <div className={`basket-action-stack ${isAdding ? 'is-adding' : ''} ${messageOk && message === 'Added to basket' ? 'is-added' : ''}`}>
       <button
         type="button"
         disabled={outOfStock || isAdding}
@@ -314,11 +322,11 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
           <path d="M4.8 9.5h14.4l-1.4 9.8H6.2L4.8 9.5Z" />
           <path d="M8.4 12.4h7.2" />
         </svg>
-        <span>{outOfStock ? 'Out of stock' : isAdding ? 'Checking stock...' : 'Add to basket'}</span>
+        <span>{buttonLabel}</span>
       </button>
       {message ? (
         <div className={`add-to-basket-feedback ${messageOk ? 'success' : 'error'}`} role="status">
-          <span>{messageOk && message === 'Added to basket' ? '✓ Added to basket' : message}</span>
+          <span>{messageOk && message === 'Added to basket' ? 'Added to basket' : message}</span>
         </div>
       ) : null}
     </div>

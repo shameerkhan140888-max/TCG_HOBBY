@@ -1,0 +1,48 @@
+{
+  "generatedAt": "2026-09-09T15:20:36.049Z",
+  "applied": true,
+  "changedProducts": 81,
+  "quality": {
+    "totalProducts": 81,
+    "emptyDescriptions": [],
+    "duplicateDescriptions": [],
+    "speculativeClaims": []
+  },
+  "dbApply": {
+    "attempted": true,
+    "updated": 81,
+    "error": null
+  },
+  "samples": [
+    {
+      "sku": "IS-AOS-05627",
+      "name": "Toyota 2000GT White",
+      "shortDescription": "Toyota 2000GT White is a 1:32 Aoshima model kit focused on the Toyota 2000GT in White, with the real vehicle's character brought into a compact display build.",
+      "description": "Toyota 2000GT White keeps the current Aoshima display-kit positioning, but gives the page more useful context around the subject. The Toyota 2000GT is one of Japan's landmark sports cars, remembered for its long-bonnet coupe profile, Yamaha-linked engineering story and rare 1960s grand-touring character.\n\nThe canonical scale is 1:32. This listing is the White variant. It suits builders who want a recognisable automotive or screen-vehicle subject without the product page relying on unverified kit-part claims."
+    },
+    {
+      "sku": "IS-AOS-05628",
+      "name": "Toyota 2000GT Red",
+      "shortDescription": "Toyota 2000GT Red is a 1:32 Aoshima model kit focused on the Toyota 2000GT in Red, with the real vehicle's character brought into a compact display build.",
+      "description": "Toyota 2000GT Red keeps the current Aoshima display-kit positioning, but gives the page more useful context around the subject. The Toyota 2000GT is one of Japan's landmark sports cars, remembered for its long-bonnet coupe profile, Yamaha-linked engineering story and rare 1960s grand-touring character.\n\nThe canonical scale is 1:32. This listing is the Red variant. It suits builders who want a recognisable automotive or screen-vehicle subject without the product page relying on unverified kit-part claims."
+    },
+    {
+      "sku": "IS-AOS-05629",
+      "name": "Toyota 2000GT Silver",
+      "shortDescription": "Toyota 2000GT Silver is a 1:32 Aoshima model kit focused on the Toyota 2000GT in Silver, with the real vehicle's character brought into a compact display build.",
+      "description": "Toyota 2000GT Silver keeps the current Aoshima display-kit positioning, but gives the page more useful context around the subject. The Toyota 2000GT is one of Japan's landmark sports cars, remembered for its long-bonnet coupe profile, Yamaha-linked engineering story and rare 1960s grand-touring character.\n\nThe canonical scale is 1:32. This listing is the Silver variant. It suits builders who want a recognisable automotive or screen-vehicle subject without the product page relying on unverified kit-part claims."
+    },
+    {
+      "sku": "IS-AOS-05778",
+      "name": "Suzuki Jimny Blue",
+      "shortDescription": "Suzuki Jimny Blue is a 1:32 Aoshima model kit focused on the Suzuki Jimny in Blue, with the real vehicle's character brought into a compact display build.",
+      "description": "Suzuki Jimny Blue keeps the current Aoshima display-kit positioning, but gives the page more useful context around the subject. The Suzuki Jimny is a compact off-road icon, known for its upright stance, short wheelbase and practical little-4x4 personality.\n\nThe canonical scale is 1:32. This listing is the Blue variant. It suits builders who want a recognisable automotive or screen-vehicle subject without the product page relying on unverified kit-part claims."
+    },
+    {
+      "sku": "IS-AOS-06258",
+      "name": "Nissan Fairlady Z Silver",
+      "shortDescription": "Nissan Fairlady Z Silver is a 1:32 Aoshima model kit focused on the Nissan Fairlady Z in Silver, with the real vehicle's character brought into a compact display build.",
+      "description": "Nissan Fairlady Z Silver keeps the current Aoshima display-kit positioning, but gives the page more useful context around the subject. The Fairlady Z name is tied to Nissan's classic sports-car lineage, with the S30 shape especially loved for its low nose, fastback roofline and clean long-bonnet proportions.\n\nThe canonical scale is 1:32. This listing is the Silver variant. It suits builders who want a recognisable automotive or screen-vehicle subject without the product page relying on unverified kit-part claims."
+    }
+  ]
+}

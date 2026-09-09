@@ -2992,11 +2992,13 @@ p {
 
 .add-to-basket-feedback {
   position: absolute;
-  top: calc(100% + 8px);
+  right: 0;
+  bottom: calc(100% + 5px);
   left: 0;
   z-index: 2;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   margin-top: 0;
   min-height: 20px;
@@ -3007,6 +3009,23 @@ p {
   font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.01em;
+  text-align: center;
+  pointer-events: none;
+}
+
+.product-card .add-to-basket-feedback {
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+  color: #122016;
+  font-size: 11px;
+}
+
+.basket-action-stack.is-added button:not(:disabled),
+.product-card .basket-action-stack.is-added button:not(:disabled) {
+  border-color: #6fc38c;
+  background: #6fc38c;
+  color: #122016;
 }
 
 .checkout-confirmation-note {
@@ -8153,8 +8172,9 @@ body:has(.product-detail-page) .payment-trust-banner {
 
   .product-card-body,
   .homepage-board .product-card-body {
-    grid-template-rows: auto minmax(2.35em, auto) 31px 8px 15px 18px 42px;
-    min-height: 218px;
+    grid-template-rows: auto minmax(2.35em, auto) 30px 8px 15px 18px 40px;
+    min-height: 205px;
+    padding-bottom: 8px;
   }
 
   .product-card-facts {
@@ -8184,9 +8204,9 @@ body:has(.product-detail-page) .payment-trust-banner {
   .homepage-board .product-card .basket-action-stack,
   .product-card .basket-action-stack button,
   .homepage-board .product-card .basket-action-stack button {
-    height: 42px;
-    min-height: 42px;
-    max-height: 42px;
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
   }
 
   .payment-trust-banner {

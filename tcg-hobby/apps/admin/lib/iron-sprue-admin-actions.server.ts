@@ -64,6 +64,16 @@ function optionalTextFromForm(value: FormDataEntryValue | null) {
   return raw || null;
 }
 
+function ironSprueAdminCommerceEnvironment() {
+  const configured = (
+    process.env.IRON_SPRUE_COMMERCE_ENVIRONMENT
+    ?? process.env.COMMERCE_ENVIRONMENT
+    ?? process.env.IRON_SPRUE_ENVIRONMENT
+    ?? ''
+  ).trim().toLowerCase();
+  return configured === 'live' || configured === 'production' ? 'live' : 'test';
+}
+
 function listFromLines(value: FormDataEntryValue | null) {
   return stringFromForm(value)
     .split(/\r?\n|,/)
@@ -846,7 +856,7 @@ export async function cancelIronSprueOrderAction(formData: FormData) {
       orderId,
       actorId: actor.email ?? actor.id ?? 'iron-sprue-admin',
       reason: reason || 'Merchant cancellation',
-      environment: process.env.NODE_ENV === 'production' ? 'live' : 'test',
+      environment: ironSprueAdminCommerceEnvironment(),
     });
     const emailResult = await sendIronSprueCancellationEmail(orderId);
     if (emailResult.outcome === 'provider_unconfigured' || emailResult.outcome === 'failed') {
@@ -963,7 +973,7 @@ export async function processIronSprueReturnAction(formData: FormData) {
         condition: stringFromForm(formData.get('condition')),
         refundAmountMinor: refundAmountMinor ?? null,
         lines,
-        environment: process.env.NODE_ENV === 'production' ? 'live' : 'test',
+        environment: ironSprueAdminCommerceEnvironment(),
       },
       actor,
     );
