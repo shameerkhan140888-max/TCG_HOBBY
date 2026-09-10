@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-09T15:20:36.049Z",
+  "generatedAt": "2026-09-10T16:03:42.415Z",
   "applied": true,
   "changedProducts": 81,
   "quality": {
@@ -9,40 +9,609 @@
     "speculativeClaims": []
   },
   "dbApply": {
-    "attempted": true,
-    "updated": 81,
-    "error": null
+    "attempted": false,
+    "updated": 0,
+    "error": "Skipped by --skip-db."
   },
+  "reviewedProducts": [
+    {
+      "sku": "IS-AOS-05627",
+      "brand": "Aoshima",
+      "name": "Toyota 2000GT White",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-05628",
+      "brand": "Aoshima",
+      "name": "Toyota 2000GT Red",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-05629",
+      "brand": "Aoshima",
+      "name": "Toyota 2000GT Silver",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-05778",
+      "brand": "Aoshima",
+      "name": "Suzuki Jimny Blue",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06258",
+      "brand": "Aoshima",
+      "name": "Nissan Fairlady Z Silver",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06259",
+      "brand": "Aoshima",
+      "name": "Nissan Fairlady Z Blue",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06345",
+      "brand": "Aoshima",
+      "name": "Lamborghini Aventador White",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06347",
+      "brand": "Aoshima",
+      "name": "Lamborghini Aventador Red",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06349",
+      "brand": "Aoshima",
+      "name": "Lamborghini Aventador Blue",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06357",
+      "brand": "Aoshima",
+      "name": "Skyline GTR Red Pearl",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06459",
+      "brand": "Aoshima",
+      "name": "Toyota GR86 Spark Red",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06460",
+      "brand": "Aoshima",
+      "name": "Toyota GR86 White Pearl",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06474",
+      "brand": "Aoshima",
+      "name": "Nissan S30 Fairlady Z Red Custom Wheels",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06475",
+      "brand": "Aoshima",
+      "name": "Nissan S30 Fairlady Z Blue Custom Wheels",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06477",
+      "brand": "Aoshima",
+      "name": "Nissan S30 Fairlady Z Brown Custom Wheels",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06539",
+      "brand": "Aoshima",
+      "name": "Lamborghini Countach LPI 800-4 White",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06540",
+      "brand": "Aoshima",
+      "name": "Lamborghini Countach LPI 800-4 Red",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-05603",
+      "brand": "Aoshima",
+      "name": "Pagani Zonda F",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06290",
+      "brand": "Aoshima",
+      "name": "Honda Motocompo",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06437",
+      "brand": "Aoshima",
+      "name": "Back to the Future Part II",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-AOS-06438",
+      "brand": "Aoshima",
+      "name": "Back to the Future Part III",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AC9",
+      "brand": "Deluxe Materials",
+      "name": "Micro Tips & Tube",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AC20",
+      "brand": "Deluxe Materials",
+      "name": "Roket Glue Tips (6)",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AD10",
+      "brand": "Deluxe Materials",
+      "name": "Speedbond",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AD21",
+      "brand": "Deluxe Materials",
+      "name": "Super Phatic",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AD22",
+      "brand": "Deluxe Materials",
+      "name": "Citrus Grip",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AD43",
+      "brand": "Deluxe Materials",
+      "name": "Roket Hot Cyano 20g",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AD44",
+      "brand": "Deluxe Materials",
+      "name": "Roket Rapid Medium 20g",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AD46",
+      "brand": "Deluxe Materials",
+      "name": "Roket Odourless Cyano 20g",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AD48",
+      "brand": "Deluxe Materials",
+      "name": "Glue Buster",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AD55",
+      "brand": "Deluxe Materials",
+      "name": "Glue N Glaze",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AD67",
+      "brand": "Deluxe Materials",
+      "name": "Speed Epoxy II 4 minutes 28g",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AD73",
+      "brand": "Deluxe Materials",
+      "name": "Speed Epoxy II Syringe 28g (4mins)",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-AD78",
+      "brand": "Deluxe Materials",
+      "name": "Fix N Flex 40g",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-BD84",
+      "brand": "Deluxe Materials",
+      "name": "Masking Magic Opaque 40g",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-DLM-BD85",
+      "brand": "Deluxe Materials",
+      "name": "Masking Magic Clear Tint 40g",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-TAS-HD01",
+      "brand": "Tasma",
+      "name": "HSS Mini Drill Bit Set (30 pcs)",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-TAS-MG04",
+      "brand": "Tasma",
+      "name": "Head Loupe with Lights (10x)",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-TAS-PV05",
+      "brand": "Tasma",
+      "name": "Pin Vice with 6 Attachments & Diamond Burr",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-TAS-TW01",
+      "brand": "Tasma",
+      "name": "Reverse Tweezers",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-TAS-JP0102",
+      "brand": "Tasma",
+      "name": "Long Nose Pliers with Teeth",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-TAS-JP0106",
+      "brand": "Tasma",
+      "name": "Bent Nose Pliers",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-TAS-11MMHOBBYKNIFE",
+      "brand": "Tasma",
+      "name": "11mm Hobby Knife",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-TAS-CARTON24SNAPKNIFE",
+      "brand": "Tasma",
+      "name": "Snap-Off Hobby Knife (sold individually)",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-TAS-RETRACTABLEHOBBYKNIFE",
+      "brand": "Tasma",
+      "name": "Retractable Hobby Knife",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-TAS-RETRACTABLEBLADES5",
+      "brand": "Tasma",
+      "name": "Retractable Hobby Knife Blades (5)",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-OCC-19103",
+      "brand": "OcCre Creations",
+      "name": "Basic Tool Case",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-OCC-19114",
+      "brand": "OcCre Creations",
+      "name": "Short Sander - New",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-OCC-19115",
+      "brand": "OcCre Creations",
+      "name": "Rigid Sander - New",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-OCC-19116",
+      "brand": "OcCre Creations",
+      "name": "Flexible Sander - New",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-OCC-19124",
+      "brand": "OcCre Creations",
+      "name": "Mini Calliper",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-EXP-70240",
+      "brand": "Expo Tools",
+      "name": "Modelmakers Flexible File Set",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-S1009",
+      "brand": "Pintoo",
+      "name": "3D Jigsaw Vase - Children",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-S1024",
+      "brand": "Pintoo",
+      "name": "3D Jigsaw Vase - Koi Carp and Lotus",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-S1025",
+      "brand": "Pintoo",
+      "name": "3D Jigsaw Vase - Magpies on a Plum Tree",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-KC1005",
+      "brand": "Pintoo",
+      "name": "Jigsaw Clock - Classic Rose",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-KC1007",
+      "brand": "Pintoo",
+      "name": "Jigsaw Clock - Into the Woods",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-KC1046",
+      "brand": "Pintoo",
+      "name": "Jigsaw Clock - Singing Birds and Fragrant Flowers",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-K1001",
+      "brand": "Pintoo",
+      "name": "Jigsaw Flowerpot - Red Carpet of Life",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-K1002",
+      "brand": "Pintoo",
+      "name": "Jigsaw Flowerpot - Slow Down",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-K1006",
+      "brand": "Pintoo",
+      "name": "Jigsaw Flowerpot - Singing Birds & Flowers",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-Q1037",
+      "brand": "Pintoo",
+      "name": "Jigsaw Lantern - Famous Architecture",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-Q1038",
+      "brand": "Pintoo",
+      "name": "Jigsaw Lantern - Floral",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-Q1040",
+      "brand": "Pintoo",
+      "name": "Jigsaw Lantern - Derjen Dancing Girls",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-C007H",
+      "brand": "CubicFun",
+      "name": "Era of Navigation",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-T4008H",
+      "brand": "CubicFun",
+      "name": "Santa Maria",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-MC106H",
+      "brand": "CubicFun",
+      "name": "Queen Anne's Revenge",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-C119H",
+      "brand": "CubicFun",
+      "name": "Two Masted Schooner",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-MC133H",
+      "brand": "CubicFun",
+      "name": "Burj Khalifa",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-C712H",
+      "brand": "CubicFun",
+      "name": "Brandenburg Gate",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-MC092H",
+      "brand": "CubicFun",
+      "name": "St Peter's Basilica",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-MC093H",
+      "brand": "CubicFun",
+      "name": "St Basil's Cathedral",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-MC139H",
+      "brand": "CubicFun",
+      "name": "Chateau de Chenonceau",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-C108H",
+      "brand": "CubicFun",
+      "name": "Thomas Jefferson Memorial",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-C114H",
+      "brand": "CubicFun",
+      "name": "St Patrick's Cathedral",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-C112H",
+      "brand": "CubicFun",
+      "name": "Basilica of the National Shrine",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-OM3603",
+      "brand": "CubicFun",
+      "name": "Magic Box  Underwater World",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-CUB-OM3606",
+      "brand": "CubicFun",
+      "name": "Magic Box  London at Night",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-BLUEMARBLE",
+      "brand": "Pintoo",
+      "name": "Jigsaw Globe - The Blue Marble",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-Q1035",
+      "brand": "Pintoo",
+      "name": "Jigsaw Screen - Famous Architectures",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "sku": "IS-PIN-Q1061",
+      "brand": "Pintoo",
+      "name": "Jigsaw Screen - Le Papillon et la Fleur",
+      "status": "PASS",
+      "issues": []
+    }
+  ],
   "samples": [
     {
       "sku": "IS-AOS-05627",
       "name": "Toyota 2000GT White",
-      "shortDescription": "Toyota 2000GT White is a 1:32 Aoshima model kit focused on the Toyota 2000GT in White, with the real vehicle's character brought into a compact display build.",
-      "description": "Toyota 2000GT White keeps the current Aoshima display-kit positioning, but gives the page more useful context around the subject. The Toyota 2000GT is one of Japan's landmark sports cars, remembered for its long-bonnet coupe profile, Yamaha-linked engineering story and rare 1960s grand-touring character.\n\nThe canonical scale is 1:32. This listing is the White variant. It suits builders who want a recognisable automotive or screen-vehicle subject without the product page relying on unverified kit-part claims."
+      "shortDescription": "Toyota 2000GT White is a 1:32 Aoshima Toyota 2000GT grand-touring in White, suited to a classic Japanese sports-car line-up.",
+      "description": "The Toyota 2000GT is one of Japan's landmark sports cars, remembered for its long-bonnet coupe profile, Yamaha-linked engineering story and rare 1960s grand-touring character.\n\nPresented in 1:32 scale, it is a compact choice for a classic Japanese sports-car line-up. Choose this White version if that finish best suits your collection. Aoshima reference 05627."
     },
     {
       "sku": "IS-AOS-05628",
       "name": "Toyota 2000GT Red",
-      "shortDescription": "Toyota 2000GT Red is a 1:32 Aoshima model kit focused on the Toyota 2000GT in Red, with the real vehicle's character brought into a compact display build.",
-      "description": "Toyota 2000GT Red keeps the current Aoshima display-kit positioning, but gives the page more useful context around the subject. The Toyota 2000GT is one of Japan's landmark sports cars, remembered for its long-bonnet coupe profile, Yamaha-linked engineering story and rare 1960s grand-touring character.\n\nThe canonical scale is 1:32. This listing is the Red variant. It suits builders who want a recognisable automotive or screen-vehicle subject without the product page relying on unverified kit-part claims."
+      "shortDescription": "Toyota 2000GT Red is a 1:32 Aoshima Toyota 2000GT grand-touring in Red, suited to a classic Japanese sports-car line-up.",
+      "description": "The Toyota 2000GT is one of Japan's landmark sports cars, remembered for its long-bonnet coupe profile, Yamaha-linked engineering story and rare 1960s grand-touring character.\n\nPresented in 1:32 scale, it is a compact choice for a classic Japanese sports-car line-up. Choose this Red version if that finish best suits your collection. Aoshima reference 05628."
     },
     {
       "sku": "IS-AOS-05629",
       "name": "Toyota 2000GT Silver",
-      "shortDescription": "Toyota 2000GT Silver is a 1:32 Aoshima model kit focused on the Toyota 2000GT in Silver, with the real vehicle's character brought into a compact display build.",
-      "description": "Toyota 2000GT Silver keeps the current Aoshima display-kit positioning, but gives the page more useful context around the subject. The Toyota 2000GT is one of Japan's landmark sports cars, remembered for its long-bonnet coupe profile, Yamaha-linked engineering story and rare 1960s grand-touring character.\n\nThe canonical scale is 1:32. This listing is the Silver variant. It suits builders who want a recognisable automotive or screen-vehicle subject without the product page relying on unverified kit-part claims."
+      "shortDescription": "Toyota 2000GT Silver is a 1:32 Aoshima Toyota 2000GT grand-touring in Silver, suited to a classic Japanese sports-car line-up.",
+      "description": "The Toyota 2000GT is one of Japan's landmark sports cars, remembered for its long-bonnet coupe profile, Yamaha-linked engineering story and rare 1960s grand-touring character.\n\nPresented in 1:32 scale, it is a compact choice for a classic Japanese sports-car line-up. Choose this Silver version if that finish best suits your collection. Aoshima reference 05629."
     },
     {
       "sku": "IS-AOS-05778",
       "name": "Suzuki Jimny Blue",
-      "shortDescription": "Suzuki Jimny Blue is a 1:32 Aoshima model kit focused on the Suzuki Jimny in Blue, with the real vehicle's character brought into a compact display build.",
-      "description": "Suzuki Jimny Blue keeps the current Aoshima display-kit positioning, but gives the page more useful context around the subject. The Suzuki Jimny is a compact off-road icon, known for its upright stance, short wheelbase and practical little-4x4 personality.\n\nThe canonical scale is 1:32. This listing is the Blue variant. It suits builders who want a recognisable automotive or screen-vehicle subject without the product page relying on unverified kit-part claims."
+      "shortDescription": "Suzuki Jimny Blue is a 1:32 Aoshima Suzuki Jimny compact off-road in Blue, suited to an off-road or compact-vehicle shelf.",
+      "description": "The Suzuki Jimny is a compact off-road icon, known for its upright stance, short wheelbase and practical little-4x4 personality.\n\nPresented in 1:32 scale, it is a compact choice for an off-road or compact-vehicle shelf. Choose this Blue version if that finish best suits your collection. Aoshima reference 05778."
     },
     {
       "sku": "IS-AOS-06258",
       "name": "Nissan Fairlady Z Silver",
-      "shortDescription": "Nissan Fairlady Z Silver is a 1:32 Aoshima model kit focused on the Nissan Fairlady Z in Silver, with the real vehicle's character brought into a compact display build.",
-      "description": "Nissan Fairlady Z Silver keeps the current Aoshima display-kit positioning, but gives the page more useful context around the subject. The Fairlady Z name is tied to Nissan's classic sports-car lineage, with the S30 shape especially loved for its low nose, fastback roofline and clean long-bonnet proportions.\n\nThe canonical scale is 1:32. This listing is the Silver variant. It suits builders who want a recognisable automotive or screen-vehicle subject without the product page relying on unverified kit-part claims."
+      "shortDescription": "Nissan Fairlady Z Silver is a 1:32 Aoshima Nissan Fairlady Z sports-car in Silver, suited to a Japanese performance-car collection.",
+      "description": "The Fairlady Z name is tied to Nissan's classic sports-car lineage, with the S30 shape especially loved for its low nose, fastback roofline and clean long-bonnet proportions.\n\nPresented in 1:32 scale, it is a compact choice for a Japanese performance-car collection. Choose this Silver version if that finish best suits your collection. Aoshima reference 06258."
     }
   ]
 }
