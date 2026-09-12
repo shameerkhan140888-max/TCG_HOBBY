@@ -8441,3 +8441,187 @@ body:has(.product-detail-page) .payment-trust-banner {
     color: #f0c7b8;
   }
 }
+
+/* Approved product-card stack: brand, title, gap, type, scale/pieces, gap, stock, price, gap, CTA, status. */
+.product-card .product-card-body,
+.homepage-board .product-card-body,
+.catalogue-grid .product-card-body,
+.product-grid .product-card-body {
+  display: grid;
+  grid-template-rows:
+    auto
+    minmax(3.54em, auto)
+    10px
+    auto
+    auto
+    10px
+    auto
+    auto
+    10px
+    auto
+    minmax(15px, auto);
+  min-height: 300px;
+  height: 100%;
+  gap: 4px;
+  align-content: start;
+}
+
+.product-card .product-brand {
+  grid-row: 1 !important;
+  grid-column: 1 !important;
+  min-height: 0;
+}
+
+.product-card h2,
+.product-card h3 {
+  grid-row: 2 !important;
+  grid-column: 1 !important;
+  display: -webkit-box;
+  min-height: 3.54em;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.product-card .product-card-category {
+  grid-row: 4 !important;
+  grid-column: 1 !important;
+  display: block !important;
+  overflow: hidden;
+  margin: 0;
+  color: rgba(255, 250, 241, 0.68);
+  font-weight: 800;
+  line-height: 1.22;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-card .product-card-facts {
+  grid-row: 5 !important;
+  grid-column: 1 !important;
+  display: block !important;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.product-card .product-card-facts .product-card-fact-type {
+  display: none !important;
+}
+
+.product-card .product-card-facts .product-card-fact-spec {
+  display: block !important;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: rgba(231, 189, 105, 0.96);
+  font-weight: 850;
+  line-height: 1.22;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-card .stock-badge {
+  grid-row: 7 !important;
+  grid-column: 1 !important;
+  align-self: start;
+}
+
+.product-card strong,
+.homepage-board .product-card strong {
+  grid-row: 8 !important;
+  grid-column: 1 !important;
+  align-self: start;
+}
+
+.product-card .product-actions,
+.homepage-board .product-card .product-actions,
+.catalogue-grid .product-card .product-actions,
+.product-grid .product-card .product-actions {
+  grid-row: 10 / span 2 !important;
+  grid-column: 1 !important;
+  display: block;
+  align-self: end;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  margin: 0 !important;
+  padding: 0;
+}
+
+.product-card .product-actions > a {
+  display: none !important;
+}
+
+.product-card .basket-action-stack,
+.homepage-board .product-card .basket-action-stack,
+.catalogue-grid .product-card .basket-action-stack,
+.product-grid .product-card .basket-action-stack {
+  display: grid;
+  grid-template-rows: 42px minmax(15px, auto);
+  gap: 3px;
+  width: 100%;
+  height: auto;
+  min-height: 60px;
+  max-height: none;
+}
+
+.product-card .basket-action-stack button,
+.homepage-board .product-card .basket-action-stack button,
+.catalogue-grid .product-card .basket-action-stack button,
+.product-grid .product-card .basket-action-stack button {
+  display: grid;
+  width: 100%;
+  height: 42px;
+  min-height: 42px;
+  max-height: 42px;
+  padding: 0 12px;
+  place-items: center;
+}
+
+.product-card .basket-action-stack button span {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
+}
+
+.product-card .basket-action-icon {
+  display: none !important;
+}
+
+.product-card .basket-action-stack .form-status {
+  min-height: 15px;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  padding: 0 1px;
+  font-size: 9.5px;
+  line-height: 1.12;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .product-card .product-card-body,
+  .homepage-board .product-card-body,
+  .catalogue-grid .product-card-body,
+  .product-grid .product-card-body {
+    min-height: 272px;
+    padding: 14px 12px 8px;
+  }
+
+  .product-card .product-card-category,
+  .product-card .product-card-facts .product-card-fact-spec,
+  .product-card .stock-badge {
+    font-size: 12px;
+  }
+
+  .product-card strong,
+  .homepage-board .product-card strong {
+    font-size: 17px;
+  }
+}
