@@ -283,16 +283,12 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
     messageTimer.current = setTimeout(() => setMessage(''), 3200);
   }
 
-  const isShowingFeedback = isAdding || Boolean(message);
   const buttonLabel = outOfStock
     ? 'Out of stock'
     : isAdding
       ? 'Adding...'
-      : message
-        ? messageOk && message === 'Added to basket'
-          ? 'Added to basket'
-          : message
-        : 'Add to basket';
+      : 'Add to basket';
+  const feedbackMessage = isAdding ? 'Adding...' : message;
 
   return (
     <div className={`basket-action-stack ${isAdding ? 'is-adding' : ''} ${messageOk && message ? 'is-added' : ''}`}>
@@ -320,15 +316,16 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
           }
         }}
       >
-        {!isShowingFeedback ? (
-          <svg className="basket-action-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M7.2 9.5c.6-3.4 2.2-5.1 4.8-5.1s4.2 1.7 4.8 5.1" />
-            <path d="M4.8 9.5h14.4l-1.4 9.8H6.2L4.8 9.5Z" />
-            <path d="M8.4 12.4h7.2" />
-          </svg>
-        ) : null}
+        <svg className="basket-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7.2 9.5c.6-3.4 2.2-5.1 4.8-5.1s4.2 1.7 4.8 5.1" />
+          <path d="M4.8 9.5h14.4l-1.4 9.8H6.2L4.8 9.5Z" />
+          <path d="M8.4 12.4h7.2" />
+        </svg>
         <span aria-live="polite">{buttonLabel}</span>
       </button>
+      {feedbackMessage ? (
+        <p className={`form-status ${messageOk ? 'success' : 'error'}`} role="status">{feedbackMessage}</p>
+      ) : null}
     </div>
   );
 }

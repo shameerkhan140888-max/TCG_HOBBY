@@ -28,8 +28,12 @@ const prohibitedPublicPhrases = [
   'information unavailable',
   'data not provided',
   'display-kit positioning',
+  'display-build positioning',
+  'puzzle-object positioning',
   'unverified kit-part claims',
   'product page relying on',
+  'omitted uncertain specifications',
+  'keeps the current',
 ] as const;
 
 function publicText(product: IronSprueProduct) {
@@ -82,6 +86,28 @@ describe('Iron Sprue public catalogue copy', () => {
     expect(description).toContain('captures the DeLorean time machine');
     expect(description).not.toContain('display-kit positioning');
     expect(description).not.toContain('unverified kit-part claims');
+  });
+
+  it('strips stale Pintoo and CubicFun source-positioning sentences before rendering customer copy', () => {
+    const description = customerProductDescription({
+      name: 'Koi Carp and Lotus',
+      brand: 'Pintoo',
+      category: 'Vases',
+      sku: 'IS-PIN-S1024',
+      slug: 'pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus',
+      description: [
+        'Koi Carp and Lotus builds into a decorative vase with a calm floral finish.',
+        'Koi Carp and Lotus keeps the current Pintoo puzzle-object positioning while avoiding omitted uncertain specifications.',
+        'Use manufacturer and authorised distributor information as factual source material only.',
+        'It is a display puzzle for builders who want a finished object for the shelf.',
+      ].join(' '),
+    } as IronSprueProduct);
+
+    expect(description).toContain('decorative vase');
+    expect(description).toContain('finished object');
+    expect(description).not.toContain('puzzle-object positioning');
+    expect(description).not.toContain('omitted uncertain specifications');
+    expect(description).not.toContain('factual source material');
   });
 
   it('uses plain customer-facing scale wording in rendered PDP copy', () => {

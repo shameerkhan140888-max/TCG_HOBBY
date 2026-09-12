@@ -11,70 +11,14 @@ import {
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
 import { DEFAULT_HOMEPAGE_PRODUCT_SECTION_SLUGS, getIronSprueProductionApiHomeSnapshot, shouldUseIronSprueProductionApi } from '../lib/production-api';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
-import { categoryNavigation, formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCardMobileFact, productCommerceId, productImage, productSellableQuantity, promoPanels, withOfficialBrandLogos } from '../lib/storefront';
+import { categoryNavigation, heroSlides, hrefForCategoryLabel, promoPanels, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
-import { AddToBasketButton } from '../components/basket-client';
 import { HeroCarousel } from '../components/hero-carousel';
+import { ProductCard } from '../components/product-card';
 
 const products = launchProducts as IronSprueProduct[];
 
 export const dynamic = 'force-dynamic';
-
-function ProductCard({ product }: { product: IronSprueProduct }) {
-  const imageUrl = productImage(product);
-  const availableQuantity = productSellableQuantity(product);
-  const isOutOfStock = availableQuantity <= 0;
-  const availabilityClass = productAvailabilityClass(product);
-  const mobileFact = productCardMobileFact(product);
-
-  return (
-    <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
-      <div className="product-card-surface">
-        <a className="product-image" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
-          {imageUrl ? (
-            <img
-              src={ironSprueDisplayMediaUrl(imageUrl, 480)}
-              srcSet={ironSprueDisplayMediaSrcSet(imageUrl, [320, 480, 640])}
-              sizes="(max-width: 720px) 46vw, (max-width: 1100px) 30vw, 320px"
-              alt={product.name}
-              width="1000"
-              height="1000"
-              loading="lazy"
-              decoding="async"
-            />
-          ) : <span>{product.brand}</span>}
-        </a>
-        <div className="product-card-body">
-          <p className="product-brand">{product.brand}</p>
-          <h3>{product.name}</h3>
-          <p className="product-card-category">{product.category}</p>
-          {mobileFact.category || mobileFact.fact ? (
-            <ul className="product-card-facts" aria-label={`${product.name} product facts`}>
-              {mobileFact.category ? <li className="product-card-fact-type">{mobileFact.category}</li> : null}
-              {mobileFact.fact ? <li className="product-card-fact-spec">{mobileFact.fact}</li> : null}
-            </ul>
-          ) : null}
-          <strong>{formatPrice(product)} inc VAT</strong>
-          <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
-          <div className="product-actions">
-            <a href={`/products/${product.slug}`}>Details</a>
-            <AddToBasketButton
-              item={{
-                productId: productCommerceId(product),
-                productName: product.name,
-                productSlug: product.slug,
-                unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,
-                availableQuantity,
-                imageUrl,
-                imageAlt: product.name,
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
 
 export default async function HomePage() {
   const useProductionApi = shouldUseIronSprueProductionApi();

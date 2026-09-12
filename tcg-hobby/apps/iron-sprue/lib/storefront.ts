@@ -222,8 +222,9 @@ function publicCopySimilarity(a: string, b: string) {
 function stripInternalProductCopy(value: string) {
   const prohibitedSentencePatterns = [
     /\b(?:todo|tbc|needs review|media pending|admin source|source reference|verified by|import row|launch import|scraped|scrape artefact|archive\/products)\b/i,
-    /\b(?:display-kit positioning|unverified kit-part claims|product page relying on|current Aoshima display-kit positioning)\b/i,
+    /\b(?:display-kit positioning|display-build positioning|puzzle-object positioning|product positioning|range positioning|unverified kit-part claims|product page relying on|current\s+[A-Za-z0-9&' -]+\s+(?:display-kit|display-build|puzzle-object|product|range)\s+positioning)\b/i,
     /\b(?:launch catalogue|launch range|source data|supplier data|review flag|review metadata|public copy|admin-only|catalogue-primary|image\s*2)\b/i,
+    /\b(?:factual source material|source material|source information|available source|verified source|omitted uncertain specifications|source confidence|available product facts|keeps the current)\b/i,
     /\b(?:final box-specific details|manufacturer specifications required|requires human review)\b/i,
   ];
 
