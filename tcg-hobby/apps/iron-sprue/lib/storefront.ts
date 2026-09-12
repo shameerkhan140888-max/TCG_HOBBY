@@ -219,8 +219,22 @@ function publicCopySimilarity(a: string, b: string) {
 }
 
 function stripInternalProductCopy(value: string) {
+  const prohibitedSentencePatterns = [
+    /\b(?:todo|tbc|needs review|media pending|admin source|source reference|verified by|import row|launch import|scraped|scrape artefact|archive\/products)\b/i,
+    /\b(?:display-kit positioning|unverified kit-part claims|product page relying on|current Aoshima display-kit positioning)\b/i,
+    /\b(?:launch catalogue|launch range|source data|supplier data|review flag|review metadata|public copy|admin-only|catalogue-primary|image\s*2)\b/i,
+    /\b(?:final box-specific details|manufacturer specifications required|requires human review)\b/i,
+  ];
+
   return value
-    .replace(/\b(?:todo|tbc|needs review|media pending|admin source|source reference|verified by|import row|launch import|scraped|scrape artefact|archive\/products)\b[^\n.]*/gi, '')
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph
+      .split(/(?<=[.!?])\s+/)
+      .map((sentence) => sentence.trim())
+      .filter((sentence) => sentence && !prohibitedSentencePatterns.some((pattern) => pattern.test(sentence)))
+      .join(' '))
+    .filter(Boolean)
+    .join('\n\n')
     .replace(/\s+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();

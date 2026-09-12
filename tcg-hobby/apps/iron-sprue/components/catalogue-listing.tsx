@@ -10,7 +10,6 @@ import {
   formatPrice,
   productAvailability,
   productAvailabilityClass,
-  productCardFacts,
   productCardMobileFact,
   productCommerceId,
   productImage,
@@ -399,9 +398,7 @@ export async function CatalogueListing({
                 const availableQuantity = productSellableQuantity(product);
                 const isOutOfStock = availableQuantity <= 0;
                 const availabilityClass = productAvailabilityClass(product);
-                const cardFacts = productCardFacts(product);
                 const mobileFact = productCardMobileFact(product);
-                const manufacturerReference = (product.manufacturerReference ?? product.supplierSku ?? '').trim();
                 return (
                   <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`} key={product.sku}>
                     <div className="product-card-surface">
@@ -424,17 +421,13 @@ export async function CatalogueListing({
                         <h2>{product.name}</h2>
                         <p className="product-card-category">{product.category}</p>
                         {mobileFact.category || mobileFact.fact ? (
-                          <ul className={`product-card-facts${cardFacts.length ? '' : ' product-card-facts-mobile-only'}`} aria-label={`${product.name} product facts`}>
-                            <li className="product-card-mobile-fact">
-                              {mobileFact.category ? <span>{mobileFact.category}</span> : null}
-                              {mobileFact.fact ? <span>{mobileFact.fact}</span> : null}
-                            </li>
-                            {cardFacts.map((fact) => <li key={fact}>{fact}</li>)}
+                          <ul className="product-card-facts" aria-label={`${product.name} product facts`}>
+                            {mobileFact.category ? <li className="product-card-fact-type">{mobileFact.category}</li> : null}
+                            {mobileFact.fact ? <li className="product-card-fact-spec">{mobileFact.fact}</li> : null}
                           </ul>
                         ) : null}
                         <strong>{formatPrice(product)} inc VAT</strong>
                         <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
-                        {manufacturerReference ? <p className="meta">Manufacturer Reference {manufacturerReference}</p> : null}
                         <div className="product-actions">
                           <a href={`/products/${product.slug}`}>View details</a>
                           <AddToBasketButton

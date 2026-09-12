@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import launchProducts from '../data/launch-products.json';
 import type { IronSprueProduct } from './catalogue';
+import { customerProductDescription } from './storefront';
 
 const products = launchProducts as IronSprueProduct[];
 
@@ -26,6 +27,9 @@ const prohibitedPublicPhrases = [
   'missing data',
   'information unavailable',
   'data not provided',
+  'display-kit positioning',
+  'unverified kit-part claims',
+  'product page relying on',
 ] as const;
 
 function publicText(product: IronSprueProduct) {
@@ -59,5 +63,24 @@ describe('Iron Sprue public catalogue copy', () => {
 
     expect(publicTextBlob).not.toContain('supplier code');
     expect(publicTextBlob).toContain('manufacturer reference');
+  });
+
+  it('strips stale internal PDP positioning language before rendering customer copy', () => {
+    const description = customerProductDescription({
+      name: 'Back to the Future Part II',
+      brand: 'Aoshima',
+      category: 'Film & Television Vehicles',
+      sku: 'IS-AOS-06437',
+      slug: 'aoshima-06437-back-to-the-future-part-ii',
+      description: [
+        'Back to the Future Part II captures the DeLorean time machine in its Part II form.',
+        'Back to the Future Part II keeps the current Aoshima display-kit positioning, but gives the page more useful context around the subject.',
+        'It suits builders who want a recognisable automotive or screen-vehicle subject without the product page relying on unverified kit-part claims.',
+      ].join(' '),
+    } as IronSprueProduct);
+
+    expect(description).toContain('captures the DeLorean time machine');
+    expect(description).not.toContain('display-kit positioning');
+    expect(description).not.toContain('unverified kit-part claims');
   });
 });

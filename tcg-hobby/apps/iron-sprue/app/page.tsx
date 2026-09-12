@@ -11,7 +11,7 @@ import {
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
 import { DEFAULT_HOMEPAGE_PRODUCT_SECTION_SLUGS, getIronSprueProductionApiHomeSnapshot, shouldUseIronSprueProductionApi } from '../lib/production-api';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
-import { categoryNavigation, formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCardFacts, productCardMobileFact, productCommerceId, productImage, productSellableQuantity, promoPanels, withOfficialBrandLogos } from '../lib/storefront';
+import { categoryNavigation, formatPrice, heroSlides, hrefForCategoryLabel, productAvailability, productAvailabilityClass, productCardMobileFact, productCommerceId, productImage, productSellableQuantity, promoPanels, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { AddToBasketButton } from '../components/basket-client';
 import { HeroCarousel } from '../components/hero-carousel';
@@ -25,7 +25,6 @@ function ProductCard({ product }: { product: IronSprueProduct }) {
   const availableQuantity = productSellableQuantity(product);
   const isOutOfStock = availableQuantity <= 0;
   const availabilityClass = productAvailabilityClass(product);
-  const cardFacts = productCardFacts(product);
   const mobileFact = productCardMobileFact(product);
 
   return (
@@ -50,12 +49,9 @@ function ProductCard({ product }: { product: IronSprueProduct }) {
           <h3>{product.name}</h3>
           <p className="product-card-category">{product.category}</p>
           {mobileFact.category || mobileFact.fact ? (
-            <ul className={`product-card-facts${cardFacts.length ? '' : ' product-card-facts-mobile-only'}`} aria-label={`${product.name} product facts`}>
-              <li className="product-card-mobile-fact">
-                {mobileFact.category ? <span>{mobileFact.category}</span> : null}
-                {mobileFact.fact ? <span>{mobileFact.fact}</span> : null}
-              </li>
-              {cardFacts.map((fact) => <li key={fact}>{fact}</li>)}
+            <ul className="product-card-facts" aria-label={`${product.name} product facts`}>
+              {mobileFact.category ? <li className="product-card-fact-type">{mobileFact.category}</li> : null}
+              {mobileFact.fact ? <li className="product-card-fact-spec">{mobileFact.fact}</li> : null}
             </ul>
           ) : null}
           <strong>{formatPrice(product)} inc VAT</strong>

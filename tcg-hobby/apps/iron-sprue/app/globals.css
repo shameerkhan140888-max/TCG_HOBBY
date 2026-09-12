@@ -2990,37 +2990,6 @@ p {
   position: relative;
 }
 
-.add-to-basket-feedback {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 5px);
-  left: 0;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 0;
-  min-height: 20px;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  color: #94d3a3;
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0.01em;
-  text-align: center;
-  pointer-events: none;
-}
-
-.product-card .add-to-basket-feedback {
-  top: 42%;
-  bottom: auto;
-  transform: translateY(-50%);
-  color: #122016;
-  font-size: 11px;
-}
-
 .basket-action-stack.is-added button:not(:disabled),
 .product-card .basket-action-stack.is-added button:not(:disabled) {
   border-color: #6fc38c;
@@ -3033,14 +3002,6 @@ p {
   background: rgba(255, 250, 241, 0.08);
   color: rgba(255, 250, 241, 0.88);
   padding: 14px 16px;
-}
-
-.add-to-basket-feedback.success span::before {
-  content: none;
-}
-
-.add-to-basket-feedback.error {
-  color: #f0b3aa;
 }
 
 .checkout-panel .form-status.error,
@@ -7414,12 +7375,9 @@ body:has(.product-detail-page) .payment-trust-banner {
   text-transform: none;
 }
 
-.product-card-facts .product-card-mobile-fact {
-  display: none;
-}
-
-.product-card-facts-mobile-only {
-  display: none;
+.product-card-facts .product-card-fact-type,
+.product-card-facts .product-card-fact-spec {
+  display: inline-flex;
 }
 
 .cookie-consent-actions {
@@ -7777,17 +7735,11 @@ body:has(.product-detail-page) .payment-trust-banner {
   .product-card-facts {
     grid-row: 3;
     order: 3;
-    display: block;
+    display: grid;
+    grid-template-rows: repeat(2, minmax(12px, auto));
+    gap: 1px;
     margin: 0;
     overflow: hidden;
-  }
-
-  .product-card-facts-mobile-only {
-    display: block;
-  }
-
-  .product-card-facts li:nth-child(n + 2) {
-    display: none;
   }
 
   .product-card-facts li {
@@ -7800,18 +7752,14 @@ body:has(.product-detail-page) .payment-trust-banner {
     white-space: nowrap;
   }
 
-  .product-card-facts .product-card-mobile-fact {
-    display: grid;
-    gap: 1px;
-  }
-
-  .product-card-facts .product-card-mobile-fact span {
+  .product-card-facts .product-card-fact-type,
+  .product-card-facts .product-card-fact-spec {
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .product-card-facts .product-card-mobile-fact span:last-child {
+  .product-card-facts .product-card-fact-spec {
     color: rgba(231, 189, 105, 0.92);
     font-weight: 850;
   }
@@ -8015,10 +7963,6 @@ body:has(.product-detail-page) .payment-trust-banner {
   padding-bottom: 12px;
 }
 
-.product-card-facts .product-card-mobile-fact {
-  display: none;
-}
-
 .payment-trust-banner {
   grid-template-columns: minmax(160px, 0.28fr) minmax(0, 1fr);
 }
@@ -8173,8 +8117,8 @@ body:has(.product-detail-page) .payment-trust-banner {
 
   .product-card-body,
   .homepage-board .product-card-body {
-    grid-template-rows: auto minmax(2.35em, auto) 30px 7px 15px 18px 40px;
-    min-height: 199px;
+    grid-template-rows: auto minmax(2.35em, auto) 29px 7px 15px 18px 40px;
+    min-height: 194px;
     padding-bottom: 6px;
   }
 
@@ -8182,7 +8126,8 @@ body:has(.product-detail-page) .payment-trust-banner {
     grid-row: 3 !important;
   }
 
-  .product-card-facts .product-card-mobile-fact {
+  .product-card-facts .product-card-fact-type,
+  .product-card-facts .product-card-fact-spec {
     display: grid;
   }
 
