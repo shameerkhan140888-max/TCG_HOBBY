@@ -3,12 +3,12 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { ProductGallery } from '../../../components/product-gallery';
 import { PaymentMethodStrip } from '../../../components/payment-method-strip';
+import { ProductCard } from '../../../components/product-card';
 import { ironSprueBrand } from '../../../lib/brand';
 import { AddToBasketButton } from '../../../components/basket-client';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
 import { type IronSprueProduct } from '../../../lib/catalogue';
 import { getIronSprueProductionApiProduct, shouldUseIronSprueProductionApi } from '../../../lib/production-api';
-import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../../../lib/responsive-media';
 import { conciseProductLead, customerProductDescription, formatPrice, productAvailability, productAvailabilityClass, productCommerceId, productDetailAddons, productGalleryImages, productImage, productSellableQuantity } from '../../../lib/storefront';
 import { addIronSprueWishlistItemAction } from '../../../lib/wishlist-actions';
 
@@ -259,41 +259,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
             <a className="text-link" href="/shop?category=workshop-essentials">View add-ons</a>
           </div>
-          <div className="addon-grid" aria-label="Recommended add-on products">
-            {addonProducts.map((item) => {
-              const addonImage = productImage(item);
-              const addonAvailableQuantity = productSellableQuantity(item);
-              return (
-                <article className="addon-card" key={item.sku}>
-                  <a className="addon-card-link" href={`/products/${item.slug}`}>
-                    {addonImage ? (
-                      <img
-                        src={ironSprueDisplayMediaUrl(addonImage, 320)}
-                        srcSet={ironSprueDisplayMediaSrcSet(addonImage, [320, 480])}
-                        sizes="(max-width: 700px) 46vw, 220px"
-                        alt={item.name}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : null}
-                    <span>{item.brand}</span>
-                    <strong>{item.name}</strong>
-                    <small>{formatPrice(item)} inc VAT</small>
-                  </a>
-                  <AddToBasketButton
-                    item={{
-                      productId: productCommerceId(item),
-                      productName: item.name,
-                      productSlug: item.slug,
-                      unitPriceMinor: item.priceMinor ?? item.retailPriceMinor ?? 0,
-                      availableQuantity: addonAvailableQuantity,
-                      imageUrl: addonImage ?? null,
-                      imageAlt: item.name,
-                    }}
-                  />
-                </article>
-              );
-            })}
+          <div className="product-grid pdp-product-grid" aria-label="Recommended add-on products">
+            {addonProducts.map((item) => (
+              <ProductCard detailsLabel="View details" headingLevel={3} key={item.sku} product={item} />
+            ))}
           </div>
         </section>
       ) : null}

@@ -6223,6 +6223,10 @@ body::before {
     inset 0 0 0 1px rgba(184, 112, 31, 0.1);
 }
 
+.product-detail-page .pdp-product-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 @media (max-width: 920px) {
   .product-unified-grid,
   .product-specification-zone,
@@ -6259,6 +6263,10 @@ body::before {
   .product-detail-page .pdp-addon-panel .addon-card {
     flex-basis: clamp(204px, 62vw, 250px);
     min-width: clamp(204px, 62vw, 250px);
+  }
+
+  .product-detail-page .pdp-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -8261,8 +8269,8 @@ body:has(.product-detail-page) .payment-trust-banner {
   .catalogue-grid .product-card-body,
   .product-grid .product-card-body {
     display: grid;
-    grid-template-rows: auto minmax(2.35em, auto) 29px 16px 19px 40px minmax(17px, auto);
-    min-height: 221px;
+    grid-template-rows: auto minmax(3.54em, auto) 29px 16px 19px 40px minmax(17px, auto);
+    min-height: 239px;
     height: 100%;
     gap: 4px;
     padding: 10px 9px 7px;
@@ -8282,12 +8290,12 @@ body:has(.product-detail-page) .payment-trust-banner {
     grid-row: 2 !important;
     grid-column: 1 !important;
     display: -webkit-box;
-    min-height: 2.35em;
+    min-height: 3.54em;
     overflow: hidden;
     font-size: 13px;
     line-height: 1.18;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
   }
 
   .product-card .product-card-category,
