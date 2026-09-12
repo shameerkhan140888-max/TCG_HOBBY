@@ -30,6 +30,7 @@ const productSpecificationLabels: Record<string, string> = {
   pieceCount: 'Piece count',
   productType: 'Product type',
   scale: 'Scale',
+  size: 'Finished size',
   structure: 'Structure',
   subject: 'Subject',
   theme: 'Theme',

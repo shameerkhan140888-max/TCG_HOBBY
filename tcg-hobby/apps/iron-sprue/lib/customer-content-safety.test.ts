@@ -83,4 +83,18 @@ describe('Iron Sprue public catalogue copy', () => {
     expect(description).not.toContain('display-kit positioning');
     expect(description).not.toContain('unverified kit-part claims');
   });
+
+  it('uses plain customer-facing scale wording in rendered PDP copy', () => {
+    const description = customerProductDescription({
+      name: 'Pagani Zonda F',
+      brand: 'Aoshima',
+      category: 'Model Kits',
+      sku: 'IS-AOS-05603',
+      slug: 'aoshima-05603-pagani-zonda-f-05',
+      description: 'Pagani Zonda F is a 1:24 Aoshima model kit. The canonical scale is 1:24.',
+    } as IronSprueProduct);
+
+    expect(description).toContain('Scale: 1:24.');
+    expect(description.toLowerCase()).not.toContain('canonical scale');
+  });
 });

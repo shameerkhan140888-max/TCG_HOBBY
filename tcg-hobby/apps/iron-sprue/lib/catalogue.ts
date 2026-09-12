@@ -226,12 +226,21 @@ function normalizedScale(value: string | null | undefined) {
   return value?.trim().toLowerCase().replace(/\s+/g, '').replace(/[/:]/g, '-') ?? '';
 }
 
+function normaliseSpecificationKey(key: string) {
+  return key.toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
 function specificationText(product: IronSprueProduct, keys: string[]) {
   const specifications = product.specifications && typeof product.specifications === 'object' && !Array.isArray(product.specifications)
     ? product.specifications
     : {};
   for (const key of keys) {
     const value = specifications[key];
+    if (value != null && String(value).trim()) return String(value).trim();
+  }
+  const normalisedKeys = new Set(keys.map(normaliseSpecificationKey));
+  for (const [key, value] of Object.entries(specifications)) {
+    if (!normalisedKeys.has(normaliseSpecificationKey(key))) continue;
     if (value != null && String(value).trim()) return String(value).trim();
   }
   return '';
@@ -242,9 +251,17 @@ export function productScale(product: IronSprueProduct) {
 }
 
 export function productPieceCount(product: IronSprueProduct) {
-  const value = specificationText(product, ['pieces', 'pieceCount']);
+  const explicitValue = (product as IronSprueProduct & { pieces?: unknown; pieceCount?: unknown }).pieces
+    ?? (product as IronSprueProduct & { pieces?: unknown; pieceCount?: unknown }).pieceCount;
+  const value = explicitValue != null && String(explicitValue).trim()
+    ? String(explicitValue).trim()
+    : specificationText(product, ['pieces', 'pieceCount', 'piece count', 'numberOfPieces', 'number of pieces']);
   const parsed = value.match(/\d+/)?.[0];
   return parsed ? Number(parsed) : null;
+}
+
+export function productSize(product: IronSprueProduct) {
+  return specificationText(product, ['dimensions', 'size', 'finishedSize', 'finished size']);
 }
 
 export function productStructure(product: IronSprueProduct) {
@@ -327,6 +344,7 @@ export function filterIronSprueProducts(products: IronSprueProduct[], query: { a
         productScale(product),
         productBuildType(product),
         productPieceCount(product) ? `${productPieceCount(product)} pieces` : '',
+        productSize(product),
         productStructure(product),
         vehicleManufacturerForProduct(product),
         product.skillLevel,

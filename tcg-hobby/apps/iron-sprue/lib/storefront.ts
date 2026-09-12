@@ -4,6 +4,7 @@ import {
   productPieceCount,
   productPriceMinor,
   productScale,
+  productSize,
   productStructure,
   vehicleManufacturerForProduct,
   type IronSprueBrandRecord,
@@ -231,6 +232,9 @@ function stripInternalProductCopy(value: string) {
     .map((paragraph) => paragraph
       .split(/(?<=[.!?])\s+/)
       .map((sentence) => sentence.trim())
+      .map((sentence) => sentence
+        .replace(/\bThe canonical scale is\s+([^.\n]+)\./gi, 'Scale: $1.')
+        .replace(/\bThe canonical size is\s+([^.\n]+)\./gi, 'Size: $1.'))
       .filter((sentence) => sentence && !prohibitedSentencePatterns.some((pattern) => pattern.test(sentence)))
       .join(' '))
     .filter(Boolean)
@@ -274,6 +278,7 @@ export function productCardFacts(product: IronSprueProduct) {
   const facts = [
     productScale(product),
     productPieceCount(product) ? `${productPieceCount(product)} pieces` : '',
+    productSize(product),
   ].filter((value): value is string => Boolean(String(value ?? '').trim()));
 
   return Array.from(new Set(facts)).slice(0, 1);
