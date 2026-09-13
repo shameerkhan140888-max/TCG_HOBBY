@@ -291,7 +291,7 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
   const feedbackMessage = isAdding ? 'Adding...' : message;
 
   return (
-    <div className={`basket-action-stack ${isAdding ? 'is-adding' : ''} ${messageOk && message ? 'is-added' : ''}`}>
+    <div className={`basket-action-stack ${isAdding ? 'is-adding' : ''} ${feedbackMessage ? 'has-feedback' : ''} ${messageOk && message ? 'is-added' : ''}`}>
       <button
         type="button"
         disabled={outOfStock || isAdding}

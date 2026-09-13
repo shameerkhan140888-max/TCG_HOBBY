@@ -8642,10 +8642,10 @@ body:has(.product-detail-page) .payment-trust-banner {
     min-height: 42px;
   }
 
-  .product-card .basket-action-stack:has(.form-status),
-  .homepage-board .product-card .basket-action-stack:has(.form-status),
-  .catalogue-grid .product-card .basket-action-stack:has(.form-status),
-  .product-grid .product-card .basket-action-stack:has(.form-status) {
+  .product-card .basket-action-stack.has-feedback,
+  .homepage-board .product-card .basket-action-stack.has-feedback,
+  .catalogue-grid .product-card .basket-action-stack.has-feedback,
+  .product-grid .product-card .basket-action-stack.has-feedback {
     grid-template-rows: 42px auto;
     gap: 2px;
   }
