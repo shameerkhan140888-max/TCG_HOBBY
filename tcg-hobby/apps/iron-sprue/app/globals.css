@@ -8458,8 +8458,7 @@ body:has(.product-detail-page) .payment-trust-banner {
     auto
     auto
     10px
-    auto
-    minmax(15px, auto);
+    auto;
   min-height: 290px;
   height: 100%;
   gap: 4px;
@@ -8538,7 +8537,7 @@ body:has(.product-detail-page) .payment-trust-banner {
 .homepage-board .product-card .product-actions,
 .catalogue-grid .product-card .product-actions,
 .product-grid .product-card .product-actions {
-  grid-row: 10 / span 2 !important;
+  grid-row: 10 !important;
   grid-column: 1 !important;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -8570,13 +8569,22 @@ body:has(.product-detail-page) .payment-trust-banner {
 .catalogue-grid .product-card .basket-action-stack,
 .product-grid .product-card .basket-action-stack {
   display: grid;
-  grid-template-rows: 42px minmax(15px, auto);
-  gap: 3px;
+  grid-template-rows: 42px 0;
+  gap: 0;
   width: 100%;
   height: auto;
-  min-height: 60px;
+  min-height: 42px;
   max-height: none;
   align-self: start;
+}
+
+.product-card .basket-action-stack.has-feedback,
+.homepage-board .product-card .basket-action-stack.has-feedback,
+.catalogue-grid .product-card .basket-action-stack.has-feedback,
+.product-grid .product-card .basket-action-stack.has-feedback {
+  grid-template-rows: 42px auto;
+  gap: 3px;
+  min-height: 60px;
 }
 
 .product-card .basket-action-stack button,

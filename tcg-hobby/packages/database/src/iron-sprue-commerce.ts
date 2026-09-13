@@ -1443,16 +1443,25 @@ function isUnresolvedRefundablePaymentError(error: unknown) {
 }
 
 function configuredIronSprueStripeConfigs(preferredEnvironment?: CommerceEnvironment) {
-  const primaryEnvironment = preferredEnvironment ?? getStoreStripeConfig({ store: IRON_SPRUE_STORE_CODE }).environment;
+  let primaryEnvironment = preferredEnvironment ?? 'test';
+  if (!preferredEnvironment) {
+    try {
+      primaryEnvironment = getStoreStripeConfig({ store: IRON_SPRUE_STORE_CODE }).environment;
+    } catch {
+      primaryEnvironment = 'test';
+    }
+  }
   const environments: CommerceEnvironment[] = [primaryEnvironment, alternateCommerceEnvironment(primaryEnvironment)];
   const configs: ReturnType<typeof getStoreStripeConfig>[] = [];
+  let primaryConfigError: unknown;
   for (const environment of environments) {
     try {
       configs.push(getStoreStripeConfig({ store: IRON_SPRUE_STORE_CODE, environment }));
     } catch (error) {
-      if (environment === primaryEnvironment) throw error;
+      if (environment === primaryEnvironment) primaryConfigError = error;
     }
   }
+  if (!configs.length && primaryConfigError) throw primaryConfigError;
   return configs;
 }
 

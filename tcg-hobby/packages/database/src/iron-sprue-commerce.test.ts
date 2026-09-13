@@ -1282,6 +1282,94 @@ describe('Iron Sprue Stripe commerce', () => {
     fetchSpy.mockRestore();
   });
 
+  it('falls back to configured test Stripe keys when admin live mode is missing live Stripe config', async () => {
+    const paidOrder = {
+      id: 'order-1',
+      storeCode: 'IRON_SPRUE',
+      orderNumber: 'IS-20260812-ABC123',
+      userId: null,
+      status: 'FULFILLED',
+      paymentStatus: 'SUCCEEDED',
+      fulfilmentStatus: 'SHIPPED',
+      paymentProvider: 'STRIPE',
+      checkoutAttemptId: 'attempt-iron-1',
+      paymentIntentId: 'pi_iron_1',
+      stripeCheckoutSessionId: null,
+      stripeCheckoutUrl: null,
+      subtotalMinor: 1999,
+      shippingMinor: 299,
+      taxMinor: 333,
+      totalMinor: 2298,
+      currency: 'GBP',
+      shippingMethodCode: 'UK_STANDARD',
+      shippingMethodName: 'Standard delivery',
+      shippingMethodAmountMinor: 299,
+      shippingFullName: 'Test Customer',
+      shippingEmail: 'test@example.com',
+      shippingLine1: '1 Test Street',
+      shippingLine2: null,
+      shippingCity: 'London',
+      shippingRegion: null,
+      shippingPostalCode: 'E1 5NF',
+      shippingCountry: 'GB',
+      reservationExpiresAt: null,
+      paidAt: new Date('2026-08-12T12:00:00Z'),
+      fulfilledAt: new Date('2026-08-12T12:10:00Z'),
+      cancelledAt: null,
+      createdAt: new Date('2026-08-12T12:00:00Z'),
+      updatedAt: new Date('2026-08-12T12:10:00Z'),
+      items: [{ id: 'item-1', productId: 'product-1', productName: 'Toyota 2000GT Red', productSlug: 'aoshima-05628-toyota-2000gt-red', productSku: 'IS-AOS-05628', quantity: 1, unitPriceMinor: 1999, totalMinor: 1999 }],
+    };
+    const tx = {
+      ironSprueOrder: {
+        findUnique: vi.fn().mockResolvedValue(paidOrder),
+        update: vi.fn().mockResolvedValue({ ...paidOrder, status: 'REFUNDED', paymentStatus: 'REFUNDED', fulfilmentStatus: 'CANCELLED', cancelledAt: new Date('2026-08-12T12:15:00Z') }),
+      },
+      ironSprueAdminInventory: {
+        findUnique: vi.fn().mockResolvedValue({ productId: 'product-1', availableStock: 0, reservedStock: 0 }),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      ironSprueAdminStockMovement: {
+        create: vi.fn().mockResolvedValue({}),
+      },
+    };
+    const db = {
+      ironSprueOrder: {
+        findUnique: vi.fn().mockResolvedValue(paidOrder),
+      },
+      $transaction: vi.fn(async (callback) => callback(tx)),
+    } as any;
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const requestUrl = String(url);
+      if (requestUrl.endsWith('/payment_intents/pi_iron_1')) {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'pi_iron_1',
+            amount: 2298,
+            currency: 'gbp',
+            status: 'succeeded',
+            metadata: { store: 'IRON_SPRUE', orderId: 'order-1', orderNumber: 'IS-20260812-ABC123', checkoutAttemptId: 'attempt-iron-1' },
+          }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        json: async () => ({ id: 're_iron_1', object: 'refund', status: 'succeeded' }),
+      } as Response;
+    });
+
+    const result = await cancelIronSprueOrderForMerchant({ orderId: 'order-1', reason: 'Customer return', environment: 'live' }, db);
+
+    expect(result?.paymentStatus).toBe('REFUNDED');
+    expect(fetchSpy).toHaveBeenCalledWith('https://api.stripe.com/v1/refunds', expect.objectContaining({
+      headers: expect.objectContaining({
+        Authorization: 'Bearer sk_test_iron',
+      }),
+    }));
+    fetchSpy.mockRestore();
+  });
+
   it('does not mark an order refunded or restock inventory when Stripe refund fails', async () => {
     const paidOrder = {
       id: 'order-1',
