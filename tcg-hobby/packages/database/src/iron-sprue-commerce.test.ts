@@ -31,6 +31,8 @@ function setStripeEnv() {
   process.env.IRON_SPRUE_STRIPE_ACCOUNT_ID = 'acct_iron';
   process.env.IRON_SPRUE_STRIPE_TEST_SECRET_KEY = 'sk_test_iron';
   process.env.IRON_SPRUE_STRIPE_TEST_WEBHOOK_SECRET = 'whsec_iron';
+  delete process.env.IRON_SPRUE_STRIPE_LIVE_SECRET_KEY;
+  delete process.env.IRON_SPRUE_STRIPE_LIVE_WEBHOOK_SECRET;
   process.env.IRON_SPRUE_STRIPE_STATEMENT_DESCRIPTOR = 'IRON SPRUE';
   process.env.IRON_SPRUE_STRIPE_PUBLIC_BUSINESS_NAME = 'Iron Sprue';
   process.env.IRON_SPRUE_CHECKOUT_SUCCESS_URL = 'https://iron-sprue.example/checkout/success';
@@ -1138,6 +1140,144 @@ describe('Iron Sprue Stripe commerce', () => {
         fulfilmentStatus: 'CANCELLED',
       }),
       include: { items: true },
+    });
+    fetchSpy.mockRestore();
+  });
+
+  it('refunds and restocks a fulfilled order when admin is pointed at the alternate Stripe mode', async () => {
+    process.env.IRON_SPRUE_STRIPE_LIVE_SECRET_KEY = 'sk_live_iron';
+    process.env.IRON_SPRUE_STRIPE_LIVE_WEBHOOK_SECRET = 'whsec_live_iron';
+    const paidOrder = {
+      id: 'order-1',
+      storeCode: 'IRON_SPRUE',
+      orderNumber: 'IS-20260812-ABC123',
+      userId: null,
+      status: 'FULFILLED',
+      paymentStatus: 'SUCCEEDED',
+      fulfilmentStatus: 'SHIPPED',
+      paymentProvider: 'STRIPE',
+      checkoutAttemptId: 'attempt-iron-1',
+      paymentIntentId: 'pi_iron_1',
+      stripeCheckoutSessionId: null,
+      stripeCheckoutUrl: null,
+      subtotalMinor: 1999,
+      shippingMinor: 299,
+      taxMinor: 333,
+      totalMinor: 2298,
+      currency: 'GBP',
+      shippingMethodCode: 'UK_STANDARD',
+      shippingMethodName: 'Standard delivery',
+      shippingMethodAmountMinor: 299,
+      shippingFullName: 'Test Customer',
+      shippingEmail: 'test@example.com',
+      shippingLine1: '1 Test Street',
+      shippingLine2: null,
+      shippingCity: 'London',
+      shippingRegion: null,
+      shippingPostalCode: 'E1 5NF',
+      shippingCountry: 'GB',
+      reservationExpiresAt: null,
+      paidAt: new Date('2026-08-12T12:00:00Z'),
+      fulfilledAt: new Date('2026-08-12T12:10:00Z'),
+      cancelledAt: null,
+      createdAt: new Date('2026-08-12T12:00:00Z'),
+      updatedAt: new Date('2026-08-12T12:10:00Z'),
+      items: [{
+        id: 'item-1',
+        productId: 'product-1',
+        productName: 'Toyota 2000GT Red',
+        productSlug: 'aoshima-05628-toyota-2000gt-red',
+        productSku: 'IS-AOS-05628',
+        quantity: 1,
+        unitPriceMinor: 1999,
+        totalMinor: 1999,
+        imageUrl: null,
+        imageAlt: null,
+        imageStorageKey: null,
+      }],
+    };
+    const refundedOrder = {
+      ...paidOrder,
+      status: 'REFUNDED',
+      paymentStatus: 'REFUNDED',
+      fulfilmentStatus: 'CANCELLED',
+      cancelledAt: new Date('2026-08-12T12:15:00Z'),
+    };
+    const tx = {
+      ironSprueOrder: {
+        findUnique: vi.fn().mockResolvedValue(paidOrder),
+        update: vi.fn().mockResolvedValue(refundedOrder),
+      },
+      ironSprueAdminInventory: {
+        findUnique: vi.fn().mockResolvedValue({ productId: 'product-1', availableStock: 0, reservedStock: 0 }),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      ironSprueAdminStockMovement: {
+        create: vi.fn().mockResolvedValue({}),
+      },
+    };
+    const db = {
+      ironSprueOrder: {
+        findUnique: vi.fn().mockResolvedValue(paidOrder),
+      },
+      $transaction: vi.fn(async (callback) => callback(tx)),
+    } as any;
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      const requestUrl = String(url);
+      const authorization = (init?.headers as Record<string, string> | undefined)?.Authorization ?? '';
+      if (requestUrl.endsWith('/payment_intents/pi_iron_1') && authorization === 'Bearer sk_live_iron') {
+        return {
+          ok: false,
+          json: async () => ({
+            error: {
+              message: "No such payment_intent: 'pi_iron_1'",
+              code: 'resource_missing',
+              param: 'payment_intent',
+            },
+          }),
+        } as Response;
+      }
+      if (requestUrl.includes('/payment_intents/search?') && authorization === 'Bearer sk_live_iron') {
+        return {
+          ok: true,
+          json: async () => ({ data: [] }),
+        } as Response;
+      }
+      if (requestUrl.endsWith('/payment_intents/pi_iron_1') && authorization === 'Bearer sk_test_iron') {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'pi_iron_1',
+            amount: 2298,
+            currency: 'gbp',
+            status: 'succeeded',
+            metadata: {
+              store: 'IRON_SPRUE',
+              orderId: 'order-1',
+              orderNumber: 'IS-20260812-ABC123',
+              checkoutAttemptId: 'attempt-iron-1',
+            },
+          }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        json: async () => ({ id: 're_iron_1', object: 'refund', status: 'succeeded' }),
+      } as Response;
+    });
+
+    const result = await cancelIronSprueOrderForMerchant({ orderId: 'order-1', reason: 'Customer return', environment: 'live' }, db);
+
+    expect(result?.paymentStatus).toBe('REFUNDED');
+    expect(fetchSpy).toHaveBeenCalledWith('https://api.stripe.com/v1/refunds', expect.objectContaining({
+      method: 'POST',
+      headers: expect.objectContaining({
+        Authorization: 'Bearer sk_test_iron',
+      }),
+    }));
+    expect(tx.ironSprueAdminInventory.update).toHaveBeenCalledWith({
+      where: { productId: 'product-1' },
+      data: { availableStock: 1, reservedStock: 0 },
     });
     fetchSpy.mockRestore();
   });

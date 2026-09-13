@@ -1433,6 +1433,48 @@ async function resolveRefundableIronSpruePaymentIntentId(
   throw new Error(`No refundable Stripe payment was found for Iron Sprue order ${order.orderNumber}.`);
 }
 
+function alternateCommerceEnvironment(environment: CommerceEnvironment): CommerceEnvironment {
+  return environment === 'live' ? 'test' : 'live';
+}
+
+function isUnresolvedRefundablePaymentError(error: unknown) {
+  if (isMissingStripePaymentResourceError(error)) return true;
+  return error instanceof Error && /^No refundable Stripe payment was found for Iron Sprue order /.test(error.message);
+}
+
+function configuredIronSprueStripeConfigs(preferredEnvironment?: CommerceEnvironment) {
+  const primaryEnvironment = preferredEnvironment ?? getStoreStripeConfig({ store: IRON_SPRUE_STORE_CODE }).environment;
+  const environments: CommerceEnvironment[] = [primaryEnvironment, alternateCommerceEnvironment(primaryEnvironment)];
+  const configs: ReturnType<typeof getStoreStripeConfig>[] = [];
+  for (const environment of environments) {
+    try {
+      configs.push(getStoreStripeConfig({ store: IRON_SPRUE_STORE_CODE, environment }));
+    } catch (error) {
+      if (environment === primaryEnvironment) throw error;
+    }
+  }
+  return configs;
+}
+
+async function resolveRefundableIronSpruePaymentIntent(
+  order: IronSprueOrderRecord,
+  preferredEnvironment: CommerceEnvironment | undefined,
+  db: DatabaseClient,
+) {
+  let lastError: unknown;
+  for (const config of configuredIronSprueStripeConfigs(preferredEnvironment)) {
+    try {
+      const paymentIntentId = await resolveRefundableIronSpruePaymentIntentId(order, config, db);
+      return { config, paymentIntentId };
+    } catch (error) {
+      if (!isUnresolvedRefundablePaymentError(error)) throw error;
+      lastError = error;
+    }
+  }
+  if (lastError) throw lastError;
+  throw new Error(`No refundable Stripe payment was found for Iron Sprue order ${order.orderNumber}.`);
+}
+
 export async function cancelIronSprueOrderForMerchant(input: {
   orderId: string;
   reason?: string | null;
@@ -1527,11 +1569,7 @@ export async function cancelIronSprueOrderForMerchant(input: {
   if (!order) throw new Error('Iron Sprue order was not found.');
 
   if (order.paymentStatus === 'SUCCEEDED') {
-    const config = getStoreStripeConfig({
-      store: IRON_SPRUE_STORE_CODE,
-      ...(input.environment ? { environment: input.environment } : {}),
-    });
-    const refundablePaymentIntentId = await resolveRefundableIronSpruePaymentIntentId(order, config, db);
+    const { config, paymentIntentId: refundablePaymentIntentId } = await resolveRefundableIronSpruePaymentIntent(order, input.environment, db);
     const refundBody = new URLSearchParams();
     refundBody.set('payment_intent', refundablePaymentIntentId);
     refundBody.set('amount', String(order.totalMinor));
@@ -1580,11 +1618,7 @@ export async function refundIronSprueOrderForMerchant(input: {
   const refundableMinor = Math.max(order.totalMinor - alreadyRefunded, 0);
   if (amountMinor > refundableMinor) throw new Error('Refund amount exceeds the remaining refundable total.');
 
-  const config = getStoreStripeConfig({
-    store: IRON_SPRUE_STORE_CODE,
-    ...(input.environment ? { environment: input.environment } : {}),
-  });
-  const refundablePaymentIntentId = await resolveRefundableIronSpruePaymentIntentId(order, config, db);
+  const { config, paymentIntentId: refundablePaymentIntentId } = await resolveRefundableIronSpruePaymentIntent(order, input.environment, db);
 
   const refundBody = new URLSearchParams();
   refundBody.set('payment_intent', refundablePaymentIntentId);
