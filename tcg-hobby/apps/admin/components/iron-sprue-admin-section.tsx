@@ -2255,6 +2255,20 @@ function CurrentHeroOverview({
                     <div><dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">CTA wording</dt><dd className="text-neutral-300">{hero.ctaLabel || 'No CTA wording set.'}</dd></div>
                     <div><dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">CTA link</dt><dd className="break-all text-neutral-300">{hero.ctaHref || 'No CTA link set.'}</dd></div>
                   </dl>
+                  <form action={saveIronSprueHeroAction} className="mt-3 flex flex-wrap gap-2">
+                    <input type="hidden" name="id" value={hero.id} />
+                    <input type="hidden" name="headline" value={hero.headline} />
+                    <input type="hidden" name="strapline" value={hero.strapline ?? ''} />
+                    <input type="hidden" name="ctaLabel" value={hero.ctaLabel ?? ''} />
+                    <input type="hidden" name="ctaHref" value={hero.ctaHref ?? ''} />
+                    <input type="hidden" name="imageUrl" value={hero.imageUrl ?? ''} />
+                    <input type="hidden" name="merchandisingBadge" value={hero.merchandisingBadge ?? 'NONE'} />
+                    <input type="hidden" name="sortOrder" value={hero.sortOrder ?? 0} />
+                    <input type="hidden" name="active" value={hero.active ? 'false' : 'true'} />
+                    <Button type="submit" size="sm" variant={hero.active ? 'outline' : 'primary'}>
+                      {hero.active ? 'Deactivate hero' : 'Activate hero'}
+                    </Button>
+                  </form>
                   {hero.active && (!publicRenderable || !validTarget) ? (
                     <form action={saveIronSprueHeroAction} className="mt-3">
                       <input type="hidden" name="id" value={hero.id} />

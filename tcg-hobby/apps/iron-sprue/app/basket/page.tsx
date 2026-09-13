@@ -41,9 +41,8 @@ export default async function BasketPage() {
   return (
     <section className="section-block commerce-flow-page basket-route">
       <div className="section-head">
-        <p className="eyebrow">Basket</p>
         <h1>Your basket</h1>
-        <p className="lead">Review your models, puzzles and workshop essentials before moving to secure checkout.</p>
+        <p className="lead">Review your order before proceeding to checkout</p>
       </div>
       <BasketClient mode="basket" upsellProducts={upsellProducts} />
     </section>

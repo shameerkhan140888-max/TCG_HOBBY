@@ -301,7 +301,7 @@ export function AddToBasketButton({ item, quantityInputId }: { item: Omit<Stored
           setIsAdding(true);
           try {
             const result = await addIronSprueBasketItemWithLiveStock({ ...item, quantity });
-            showTemporaryMessage(result.message, result.ok);
+            showTemporaryMessage(result.message, result.ok && !/quantity capped/i.test(result.message));
             if (result.ok) {
               trackIronSprueEcommerceEvent('add_to_cart', {
                 currency: 'GBP',
@@ -781,8 +781,6 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
           {basketLines}
           <aside className="checkout-panel basket-review-panel">
             <p className="eyebrow">Order summary</p>
-            <h2>Review your order</h2>
-            <p className="basket-summary-copy">Review your order before proceeding to secure checkout.</p>
             <div className="basket-summary-items" aria-label="Basket items summary">
               {basketLineItems.map((item) => (
                 <div key={item.productId}>
