@@ -95,6 +95,10 @@ type StripePaymentIntentSnapshot = {
   client_secret?: string | null;
 };
 
+type StripePaymentIntentSearchResult = {
+  data: StripePaymentIntentSnapshot[];
+};
+
 export type IronSprueOrderWithItems = {
   id: string;
   orderNumber: string;
@@ -569,6 +573,14 @@ async function retrieveIronSprueStripeCheckoutSession(secretKey: string, session
 
 async function retrieveIronSprueStripePaymentIntent(secretKey: string, paymentIntentId: string) {
   return stripeRequest<StripePaymentIntentSnapshot>(secretKey, `payment_intents/${encodeURIComponent(paymentIntentId)}`);
+}
+
+async function searchIronSprueStripePaymentIntents(secretKey: string, query: string) {
+  const params = new URLSearchParams({
+    query,
+    limit: '10',
+  });
+  return stripeRequest<StripePaymentIntentSearchResult>(secretKey, `payment_intents/search?${params.toString()}`);
 }
 
 async function createIronSprueStripeCoupon(secretKey: string, params: { code: string; discountMinor: number; orderNumber: string }) {
@@ -1099,6 +1111,10 @@ function readStripeMetadataValue(metadata: Stripe.Metadata | null | undefined, k
   return typeof value === 'string' && value.trim() ? value.trim() : null;
 }
 
+function stripeSearchLiteral(value: string) {
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 function assertIronSprueStripeMetadata(metadata: Stripe.Metadata | null | undefined) {
   const store = readStripeMetadataValue(metadata, 'store') ?? readStripeMetadataValue(metadata, 'commerceStore');
   if (store !== IRON_SPRUE_STORE_CODE) throw new Error('STRIPE_STORE_METADATA_MISMATCH');
@@ -1305,8 +1321,6 @@ type StripeRefundResponse = {
   payment_intent: string | null;
 };
 
-const merchantCancellationLockedFulfilmentStates = new Set(['SHIPPED', 'DISPATCHED', 'DELIVERED', 'COMPLETED']);
-
 function isOrderAlreadyCancelledOrRefunded(order: IronSprueOrderRecord) {
   return Boolean(order.cancelledAt)
     || order.status === 'CANCELLED'
@@ -1337,6 +1351,88 @@ function isMissingStripePaymentResourceError(error: unknown) {
   return /no such payment_intent|no such payment intent|payment intent is missing|payment_intent.*missing|no such checkout\.session|checkout session.*missing|resource_missing/i.test(fingerprint);
 }
 
+function isStripePaymentIntentRefundableForOrder(intent: StripePaymentIntentSnapshot, order: IronSprueOrderRecord) {
+  const store = readStripeMetadataValue(intent.metadata, 'store') ?? readStripeMetadataValue(intent.metadata, 'commerceStore');
+  const metadataOrderId = readStripeMetadataValue(intent.metadata, 'orderId');
+  const metadataOrderNumber = readStripeMetadataValue(intent.metadata, 'orderNumber');
+  const metadataAttemptId = readStripeMetadataValue(intent.metadata, 'checkoutAttemptId');
+  const matchesOrder = metadataOrderId === order.id
+    || metadataOrderNumber === order.orderNumber
+    || metadataAttemptId === order.checkoutAttemptId;
+
+  return store === IRON_SPRUE_STORE_CODE
+    && matchesOrder
+    && intent.status === 'succeeded'
+    && intent.currency.toUpperCase() === order.currency.toUpperCase()
+    && intent.amount === order.totalMinor;
+}
+
+async function persistIronSprueOrderPaymentIntentId(
+  db: DatabaseClient,
+  order: IronSprueOrderRecord,
+  paymentIntentIdToPersist: string,
+) {
+  if (order.paymentIntentId === paymentIntentIdToPersist) return;
+  await db.ironSprueOrder.update({
+    where: { id: order.id },
+    data: { paymentIntentId: paymentIntentIdToPersist },
+  });
+  order.paymentIntentId = paymentIntentIdToPersist;
+}
+
+async function resolveRefundableIronSpruePaymentIntentId(
+  order: IronSprueOrderRecord,
+  config: ReturnType<typeof getStoreStripeConfig>,
+  db: DatabaseClient,
+) {
+  if (order.paymentIntentId) {
+    try {
+      const intent = await retrieveIronSprueStripePaymentIntent(config.secretKey, order.paymentIntentId);
+      if (isStripePaymentIntentRefundableForOrder(intent, order)) return intent.id;
+      throw new Error(`Stored Stripe payment intent ${order.paymentIntentId} does not match Iron Sprue order ${order.orderNumber}.`);
+    } catch (error) {
+      if (!isMissingStripePaymentResourceError(error)) throw error;
+    }
+  }
+
+  if (order.stripeCheckoutSessionId) {
+    try {
+      const session = await retrieveIronSprueStripeCheckoutSession(config.secretKey, order.stripeCheckoutSessionId);
+      const sessionPaymentIntentId = paymentIntentId(session.payment_intent);
+      if (sessionPaymentIntentId) {
+        const intent = await retrieveIronSprueStripePaymentIntent(config.secretKey, sessionPaymentIntentId);
+        if (isStripePaymentIntentRefundableForOrder(intent, order)) {
+          await persistIronSprueOrderPaymentIntentId(db, order, intent.id);
+          return intent.id;
+        }
+        throw new Error(`Stripe Checkout Session ${order.stripeCheckoutSessionId} points to a payment intent that does not match Iron Sprue order ${order.orderNumber}.`);
+      }
+    } catch (error) {
+      if (!isMissingStripePaymentResourceError(error)) throw error;
+    }
+  }
+
+  const searchClauses = [
+    `metadata['store']:'${stripeSearchLiteral(IRON_SPRUE_STORE_CODE)}' AND metadata['orderId']:'${stripeSearchLiteral(order.id)}'`,
+    `metadata['commerceStore']:'${stripeSearchLiteral(IRON_SPRUE_STORE_CODE)}' AND metadata['orderId']:'${stripeSearchLiteral(order.id)}'`,
+    `metadata['store']:'${stripeSearchLiteral(IRON_SPRUE_STORE_CODE)}' AND metadata['orderNumber']:'${stripeSearchLiteral(order.orderNumber)}'`,
+    `metadata['commerceStore']:'${stripeSearchLiteral(IRON_SPRUE_STORE_CODE)}' AND metadata['orderNumber']:'${stripeSearchLiteral(order.orderNumber)}'`,
+    `metadata['store']:'${stripeSearchLiteral(IRON_SPRUE_STORE_CODE)}' AND metadata['checkoutAttemptId']:'${stripeSearchLiteral(order.checkoutAttemptId)}'`,
+    `metadata['commerceStore']:'${stripeSearchLiteral(IRON_SPRUE_STORE_CODE)}' AND metadata['checkoutAttemptId']:'${stripeSearchLiteral(order.checkoutAttemptId)}'`,
+  ];
+
+  for (const query of searchClauses) {
+    const result = await searchIronSprueStripePaymentIntents(config.secretKey, query);
+    const matchingIntent = result.data.find((intent) => isStripePaymentIntentRefundableForOrder(intent, order));
+    if (matchingIntent) {
+      await persistIronSprueOrderPaymentIntentId(db, order, matchingIntent.id);
+      return matchingIntent.id;
+    }
+  }
+
+  throw new Error(`No refundable Stripe payment was found for Iron Sprue order ${order.orderNumber}.`);
+}
+
 export async function cancelIronSprueOrderForMerchant(input: {
   orderId: string;
   reason?: string | null;
@@ -1348,9 +1444,6 @@ export async function cancelIronSprueOrderForMerchant(input: {
   let order = await db.ironSprueOrder.findUnique({ where: { id: orderId }, include: { items: true } });
   if (!order || order.storeCode !== IRON_SPRUE_STORE_CODE) throw new Error('Iron Sprue order was not found.');
   if (isOrderAlreadyCancelledOrRefunded(order)) return mapOrderRecord(order);
-  if (merchantCancellationLockedFulfilmentStates.has(order.fulfilmentStatus)) {
-    throw new Error('This order has progressed beyond automatic cancellation.');
-  }
 
   const cancelAndRestock = async (params: { refunded: boolean; reasonPrefix: string }) => {
     const trimmedReason = input.reason?.trim();
@@ -1438,24 +1531,7 @@ export async function cancelIronSprueOrderForMerchant(input: {
       store: IRON_SPRUE_STORE_CODE,
       ...(input.environment ? { environment: input.environment } : {}),
     });
-    let refundablePaymentIntentId = order.paymentIntentId;
-    if (!refundablePaymentIntentId && order.stripeCheckoutSessionId) {
-      try {
-        const session = await retrieveIronSprueStripeCheckoutSession(config.secretKey, order.stripeCheckoutSessionId);
-        refundablePaymentIntentId = paymentIntentId(session.payment_intent);
-        if (refundablePaymentIntentId) {
-          await db.ironSprueOrder.update({
-            where: { id: order.id },
-            data: { paymentIntentId: refundablePaymentIntentId },
-          });
-        }
-      } catch (error) {
-        if (!isMissingStripePaymentResourceError(error)) throw error;
-      }
-    }
-    if (!refundablePaymentIntentId) {
-      return cancelAndRestock({ refunded: false, reasonPrefix: 'Cancelled order without refundable Stripe payment' });
-    }
+    const refundablePaymentIntentId = await resolveRefundableIronSpruePaymentIntentId(order, config, db);
     const refundBody = new URLSearchParams();
     refundBody.set('payment_intent', refundablePaymentIntentId);
     refundBody.set('amount', String(order.totalMinor));
@@ -1472,7 +1548,7 @@ export async function cancelIronSprueOrderForMerchant(input: {
     });
     } catch (error) {
       if (!isMissingStripePaymentResourceError(error)) throw error;
-      return cancelAndRestock({ refunded: false, reasonPrefix: 'Cancelled order without refundable Stripe payment' });
+      throw new Error(`Stripe refund failed because payment intent ${refundablePaymentIntentId} is no longer available for Iron Sprue order ${order.orderNumber}.`);
     }
 
     return cancelAndRestock({ refunded: true, reasonPrefix: 'Refunded order' });
@@ -1508,22 +1584,7 @@ export async function refundIronSprueOrderForMerchant(input: {
     store: IRON_SPRUE_STORE_CODE,
     ...(input.environment ? { environment: input.environment } : {}),
   });
-  let refundablePaymentIntentId = order.paymentIntentId;
-  if (!refundablePaymentIntentId && order.stripeCheckoutSessionId) {
-    try {
-      const session = await retrieveIronSprueStripeCheckoutSession(config.secretKey, order.stripeCheckoutSessionId);
-      refundablePaymentIntentId = paymentIntentId(session.payment_intent);
-      if (refundablePaymentIntentId) {
-        await db.ironSprueOrder.update({
-          where: { id: order.id },
-          data: { paymentIntentId: refundablePaymentIntentId },
-        });
-      }
-    } catch (error) {
-      if (!isMissingStripePaymentResourceError(error)) throw error;
-    }
-  }
-  if (!refundablePaymentIntentId) throw new Error('No refundable Stripe payment was found for this order.');
+  const refundablePaymentIntentId = await resolveRefundableIronSpruePaymentIntentId(order, config, db);
 
   const refundBody = new URLSearchParams();
   refundBody.set('payment_intent', refundablePaymentIntentId);

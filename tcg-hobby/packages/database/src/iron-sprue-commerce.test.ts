@@ -871,7 +871,7 @@ describe('Iron Sprue Stripe commerce', () => {
     expect(tx.ironSprueOrder.update).not.toHaveBeenCalled();
   });
 
-  it('refunds a paid order through Iron Sprue Stripe config and restores stock exactly once', async () => {
+  it('refunds a fulfilled paid order through Iron Sprue Stripe config and restores stock exactly once', async () => {
     const paidOrder = {
       id: 'order-1',
       storeCode: 'IRON_SPRUE',
@@ -879,8 +879,9 @@ describe('Iron Sprue Stripe commerce', () => {
       userId: null,
       status: 'PAID',
       paymentStatus: 'SUCCEEDED',
-      fulfilmentStatus: 'PENDING',
+      fulfilmentStatus: 'COMPLETED',
       paymentProvider: 'STRIPE',
+      checkoutAttemptId: 'attempt-iron-1',
       paymentIntentId: 'pi_iron_1',
       stripeCheckoutSessionId: 'cs_iron_1',
       stripeCheckoutUrl: 'https://checkout.stripe.com/c/pay/cs_iron_1',
@@ -902,7 +903,7 @@ describe('Iron Sprue Stripe commerce', () => {
       shippingCountry: 'GB',
       reservationExpiresAt: null,
       paidAt: new Date('2026-08-12T12:00:00Z'),
-      fulfilledAt: null,
+      fulfilledAt: new Date('2026-08-12T12:03:00Z'),
       cancelledAt: null,
       createdAt: new Date('2026-08-12T12:00:00Z'),
       updatedAt: new Date('2026-08-12T12:00:00Z'),
@@ -946,10 +947,30 @@ describe('Iron Sprue Stripe commerce', () => {
       },
       $transaction: vi.fn(async (callback) => callback(tx)),
     } as any;
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async () => ({ id: 're_iron_1', object: 'refund', status: 'succeeded' }),
-    } as Response);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const requestUrl = String(url);
+      if (requestUrl.endsWith('/payment_intents/pi_iron_1')) {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'pi_iron_1',
+            amount: 2298,
+            currency: 'gbp',
+            status: 'succeeded',
+            metadata: {
+              store: 'IRON_SPRUE',
+              orderId: 'order-1',
+              orderNumber: 'IS-20260812-ABC123',
+              checkoutAttemptId: 'attempt-iron-1',
+            },
+          }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        json: async () => ({ id: 're_iron_1', object: 'refund', status: 'succeeded' }),
+      } as Response;
+    });
 
     const result = await cancelIronSprueOrderForMerchant({ orderId: 'order-1', reason: 'Stock discrepancy', environment: 'test' }, db);
 
@@ -977,7 +998,7 @@ describe('Iron Sprue Stripe commerce', () => {
     fetchSpy.mockRestore();
   });
 
-  it('cancels and restores stock without refunding when Stripe no longer has the payment intent', async () => {
+  it('repairs a stale payment intent link from Stripe metadata before refunding and restocking', async () => {
     const paidOrder = {
       id: 'order-1',
       storeCode: 'IRON_SPRUE',
@@ -987,8 +1008,9 @@ describe('Iron Sprue Stripe commerce', () => {
       paymentStatus: 'SUCCEEDED',
       fulfilmentStatus: 'PENDING',
       paymentProvider: 'STRIPE',
+      checkoutAttemptId: 'attempt-iron-1',
       paymentIntentId: 'pi_missing_iron',
-      stripeCheckoutSessionId: 'cs_iron_1',
+      stripeCheckoutSessionId: null,
       stripeCheckoutUrl: 'https://checkout.stripe.com/c/pay/cs_iron_1',
       subtotalMinor: 1999,
       shippingMinor: 299,
@@ -1026,17 +1048,18 @@ describe('Iron Sprue Stripe commerce', () => {
         imageStorageKey: null,
       }],
     };
-    const cancelledOrder = {
+    const refundedOrder = {
       ...paidOrder,
-      status: 'CANCELLED',
-      paymentStatus: 'CANCELED',
+      paymentIntentId: 'pi_recovered_iron',
+      status: 'REFUNDED',
+      paymentStatus: 'REFUNDED',
       fulfilmentStatus: 'CANCELLED',
       cancelledAt: new Date('2026-08-12T12:05:00Z'),
     };
     const tx = {
       ironSprueOrder: {
         findUnique: vi.fn().mockResolvedValue(paidOrder),
-        update: vi.fn().mockResolvedValue(cancelledOrder),
+        update: vi.fn().mockResolvedValue(refundedOrder),
       },
       ironSprueAdminInventory: {
         findUnique: vi.fn().mockResolvedValue({ productId: 'product-1', availableStock: 0, reservedStock: 0 }),
@@ -1049,23 +1072,60 @@ describe('Iron Sprue Stripe commerce', () => {
     const db = {
       ironSprueOrder: {
         findUnique: vi.fn().mockResolvedValue(paidOrder),
+        update: vi.fn().mockResolvedValue({ ...paidOrder, paymentIntentId: 'pi_recovered_iron' }),
       },
       $transaction: vi.fn(async (callback) => callback(tx)),
     } as any;
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: false,
-      json: async () => ({
-        error: {
-          message: "No such payment_intent: 'pi_missing_iron'",
-          code: 'resource_missing',
-          param: 'payment_intent',
-        },
-      }),
-    } as Response);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const requestUrl = String(url);
+      if (requestUrl.endsWith('/payment_intents/pi_missing_iron')) {
+        return {
+          ok: false,
+          json: async () => ({
+            error: {
+              message: "No such payment_intent: 'pi_missing_iron'",
+              code: 'resource_missing',
+              param: 'payment_intent',
+            },
+          }),
+        } as Response;
+      }
+      if (requestUrl.includes('/payment_intents/search?')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: [{
+              id: 'pi_recovered_iron',
+              amount: 2298,
+              currency: 'gbp',
+              status: 'succeeded',
+              metadata: {
+                store: 'IRON_SPRUE',
+                orderId: 'order-1',
+                orderNumber: 'IS-20260812-ABC123',
+                checkoutAttemptId: 'attempt-iron-1',
+              },
+            }],
+          }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        json: async () => ({ id: 're_recovered_iron_1', object: 'refund', status: 'succeeded' }),
+      } as Response;
+    });
 
     const result = await cancelIronSprueOrderForMerchant({ orderId: 'order-1', reason: 'Manual stock reallocation', environment: 'test' }, db);
 
-    expect(result?.paymentStatus).toBe('CANCELED');
+    expect(result?.paymentStatus).toBe('REFUNDED');
+    expect(db.ironSprueOrder.update).toHaveBeenCalledWith({
+      where: { id: 'order-1' },
+      data: { paymentIntentId: 'pi_recovered_iron' },
+    });
+    expect(fetchSpy).toHaveBeenCalledWith('https://api.stripe.com/v1/refunds', expect.objectContaining({
+      method: 'POST',
+      body: expect.any(URLSearchParams),
+    }));
     expect(tx.ironSprueAdminInventory.update).toHaveBeenCalledWith({
       where: { productId: 'product-1' },
       data: { availableStock: 1, reservedStock: 0 },
@@ -1073,8 +1133,8 @@ describe('Iron Sprue Stripe commerce', () => {
     expect(tx.ironSprueOrder.update).toHaveBeenCalledWith({
       where: { id: 'order-1' },
       data: expect.objectContaining({
-        status: 'CANCELLED',
-        paymentStatus: 'CANCELED',
+        status: 'REFUNDED',
+        paymentStatus: 'REFUNDED',
         fulfilmentStatus: 'CANCELLED',
       }),
       include: { items: true },
@@ -1090,8 +1150,10 @@ describe('Iron Sprue Stripe commerce', () => {
       status: 'PAID',
       paymentStatus: 'SUCCEEDED',
       fulfilmentStatus: 'PENDING',
+      checkoutAttemptId: 'attempt-iron-1',
       paymentIntentId: 'pi_iron_1',
       totalMinor: 2298,
+      currency: 'GBP',
       cancelledAt: null,
       items: [{ productId: 'product-1', quantity: 1 }],
     };
@@ -1101,10 +1163,25 @@ describe('Iron Sprue Stripe commerce', () => {
       },
       $transaction: vi.fn(),
     } as any;
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: false,
-      json: async () => ({ error: { message: 'Refund failed.' } }),
-    } as Response);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const requestUrl = String(url);
+      if (requestUrl.endsWith('/payment_intents/pi_iron_1')) {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'pi_iron_1',
+            amount: 2298,
+            currency: 'gbp',
+            status: 'succeeded',
+            metadata: { store: 'IRON_SPRUE', orderId: 'order-1', orderNumber: 'IS-20260812-ABC123', checkoutAttemptId: 'attempt-iron-1' },
+          }),
+        } as Response;
+      }
+      return {
+        ok: false,
+        json: async () => ({ error: { message: 'Refund failed.' } }),
+      } as Response;
+    });
 
     await expect(cancelIronSprueOrderForMerchant({ orderId: 'order-1', environment: 'test' }, db)).rejects.toThrow('Refund failed.');
 
@@ -1120,6 +1197,7 @@ describe('Iron Sprue Stripe commerce', () => {
       status: 'PAID',
       paymentStatus: 'SUCCEEDED',
       fulfilmentStatus: 'SHIPPED',
+      checkoutAttemptId: 'attempt-iron-1',
       paymentIntentId: 'pi_iron_1',
       stripeCheckoutSessionId: null,
       totalMinor: 2298,
@@ -1140,10 +1218,25 @@ describe('Iron Sprue Stripe commerce', () => {
         create: vi.fn(),
       },
     } as any;
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async () => ({ id: 're_partial_iron_1', object: 'refund', status: 'succeeded' }),
-    } as Response);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const requestUrl = String(url);
+      if (requestUrl.endsWith('/payment_intents/pi_iron_1')) {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'pi_iron_1',
+            amount: 2298,
+            currency: 'gbp',
+            status: 'succeeded',
+            metadata: { store: 'IRON_SPRUE', orderId: 'order-1', orderNumber: 'IS-20260812-ABC123', checkoutAttemptId: 'attempt-iron-1' },
+          }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        json: async () => ({ id: 're_partial_iron_1', object: 'refund', status: 'succeeded' }),
+      } as Response;
+    });
 
     await expect(refundIronSprueOrderForMerchant({
       orderId: 'order-1',

@@ -8608,7 +8608,7 @@ body:has(.product-detail-page) .payment-trust-banner {
   .catalogue-grid .product-card-body,
   .product-grid .product-card-body {
     min-height: 262px;
-    padding: 14px 12px 8px;
+    padding: 14px 12px 5px;
   }
 
   .product-card .product-actions,
@@ -8631,5 +8631,27 @@ body:has(.product-detail-page) .payment-trust-banner {
   .product-card strong,
   .homepage-board .product-card strong {
     font-size: 17px;
+  }
+
+  .product-card .basket-action-stack,
+  .homepage-board .product-card .basket-action-stack,
+  .catalogue-grid .product-card .basket-action-stack,
+  .product-grid .product-card .basket-action-stack {
+    grid-template-rows: 42px;
+    gap: 0;
+    min-height: 42px;
+  }
+
+  .product-card .basket-action-stack:has(.form-status),
+  .homepage-board .product-card .basket-action-stack:has(.form-status),
+  .catalogue-grid .product-card .basket-action-stack:has(.form-status),
+  .product-grid .product-card .basket-action-stack:has(.form-status) {
+    grid-template-rows: 42px auto;
+    gap: 2px;
+  }
+
+  .product-card .basket-action-stack .form-status {
+    min-height: 0;
+    line-height: 1.05;
   }
 }

@@ -2923,7 +2923,6 @@ function canCancelOrder(order: IronSprueAdminOrder) {
   if (['CANCELLED', 'CANCELED', 'REFUNDED'].includes(order.status)) return false;
   if (['CANCELED', 'REFUNDED'].includes(order.paymentStatus)) return false;
   if (order.fulfilmentStatus === 'CANCELLED') return false;
-  if (['SHIPPED', 'DISPATCHED', 'DELIVERED', 'COMPLETED'].includes(order.fulfilmentStatus)) return false;
   return true;
 }
 
