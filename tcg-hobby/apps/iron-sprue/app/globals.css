@@ -8551,6 +8551,20 @@ body:has(.product-detail-page) .payment-trust-banner {
   padding: 0;
 }
 
+.product-card .product-actions > a,
+.homepage-board .product-card .product-actions > a,
+.catalogue-grid .product-card .product-actions > a,
+.product-grid .product-card .product-actions > a {
+  display: grid;
+  width: 100%;
+  height: 42px;
+  min-height: 42px;
+  max-height: 42px;
+  padding: 0 12px;
+  place-items: center;
+  align-self: start;
+}
+
 .product-card .basket-action-stack,
 .homepage-board .product-card .basket-action-stack,
 .catalogue-grid .product-card .basket-action-stack,
@@ -8562,6 +8576,7 @@ body:has(.product-detail-page) .payment-trust-banner {
   height: auto;
   min-height: 60px;
   max-height: none;
+  align-self: start;
 }
 
 .product-card .basket-action-stack button,
