@@ -8630,8 +8630,8 @@ body:has(.product-detail-page) .payment-trust-banner {
   .homepage-board .product-card-body,
   .catalogue-grid .product-card-body,
   .product-grid .product-card-body {
-    min-height: 262px;
-    padding: 14px 12px 5px;
+    min-height: 252px;
+    padding: 14px 12px 0;
   }
 
   .product-card .product-actions,
@@ -8671,6 +8671,7 @@ body:has(.product-detail-page) .payment-trust-banner {
   .product-grid .product-card .basket-action-stack.has-feedback {
     grid-template-rows: 42px auto;
     gap: 2px;
+    min-height: 0;
   }
 
   .product-card .basket-action-stack .form-status {
