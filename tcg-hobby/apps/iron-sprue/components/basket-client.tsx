@@ -217,7 +217,7 @@ export function addIronSprueBasketItem(item: StoredBasketItem) {
   }
   writeBasket(items);
   if (requestedTotal > limit) {
-    return { ok: true, message: `Only ${limit} available. Basket quantity has been capped.` };
+    return { ok: true, message: `Only ${limit} available. Quantity capped.` };
   }
   return { ok: true, message: 'Added to basket' };
 }

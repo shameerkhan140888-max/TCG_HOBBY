@@ -174,7 +174,7 @@ describe('Iron Sprue basket persistence', () => {
 
     const result = await addIronSprueBasketItemWithLiveStock({ ...toyota, quantity: 3, availableQuantity: 9 });
 
-    expect(result).toEqual({ ok: true, message: 'Only 1 available. Basket quantity has been capped.' });
+    expect(result).toEqual({ ok: true, message: 'Only 1 available. Quantity capped.' });
     expect(readIronSprueBasketCount()).toBe(1);
     expect(JSON.parse(window.localStorage.getItem(IRON_SPRUE_BASKET_STORAGE_KEY) ?? '[]')).toEqual([{ ...toyota, quantity: 1, availableQuantity: 1, imageAlt: toyota.productName, imageUrl: null }]);
   });
@@ -185,7 +185,7 @@ describe('Iron Sprue basket persistence', () => {
     expect(addIronSprueBasketItem(limitedToyota).ok).toBe(true);
     const secondAdd = addIronSprueBasketItem(limitedToyota);
 
-    expect(secondAdd).toEqual({ ok: true, message: 'Only 1 available. Basket quantity has been capped.' });
+    expect(secondAdd).toEqual({ ok: true, message: 'Only 1 available. Quantity capped.' });
     expect(readIronSprueBasketCount()).toBe(1);
     expect(JSON.parse(window.localStorage.getItem(IRON_SPRUE_BASKET_STORAGE_KEY) ?? '[]')).toEqual([{ ...limitedToyota, quantity: 1 }]);
   });
