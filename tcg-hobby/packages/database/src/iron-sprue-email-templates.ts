@@ -81,6 +81,7 @@ const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
 const IRON_SPRUE_STAGING_HOST = 'staging.ironsprue.co.uk';
 const IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL = 'https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev';
 const IRON_SPRUE_PUBLIC_EMAIL_ASSET_BASE_URL = IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL;
+const IRON_SPRUE_EMAIL_AVATAR_URL = `https://${IRON_SPRUE_MEDIA_HOST}/brand/iron-sprue-email-avatar.png`;
 
 function money(minor: number, currency = 'GBP') {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(minor / 100);
@@ -111,8 +112,8 @@ function isLocalUrl(value: string) {
   return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(value);
 }
 
-export function defaultIronSprueEmailLogoUrl(siteUrl: string) {
-  return `${publicEmailUrlBase(normaliseSiteUrl(siteUrl))}/brand/iron-sprue-email-avatar.png`;
+export function defaultIronSprueEmailLogoUrl(_siteUrl: string) {
+  return IRON_SPRUE_EMAIL_AVATAR_URL;
 }
 
 function assetBaseUrl(config: IronSprueEmailTemplateConfig) {

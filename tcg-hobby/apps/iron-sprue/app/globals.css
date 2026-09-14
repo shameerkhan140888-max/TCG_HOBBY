@@ -6098,10 +6098,43 @@ body::before {
 }
 
 .product-unified-panel .basket-action-stack button:not(:disabled) {
+  border-color: rgba(79, 44, 9, 0.8);
   background:
-    linear-gradient(180deg, rgba(66, 72, 64, 0.92), rgba(8, 10, 8, 0.98) 48%, #010101),
-    linear-gradient(135deg, rgba(255, 250, 241, 0.08), transparent 38%, rgba(184, 112, 31, 0.24));
-  color: var(--paper-soft);
+    linear-gradient(180deg, #d7a64f, #b98228 56%, #7a4715),
+    linear-gradient(135deg, rgba(255, 250, 241, 0.14), transparent 42%, rgba(76, 40, 7, 0.24));
+  color: var(--ink);
+}
+
+.product-unified-panel .basket-action-stack,
+.product-unified-panel .basket-action-stack.has-feedback {
+  grid-template-rows: 54px 13px;
+  gap: 4px;
+  min-height: 71px;
+  max-height: 71px;
+}
+
+.product-unified-panel .basket-action-stack .form-status {
+  min-height: 13px;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  padding: 0 1px;
+  color: rgba(255, 250, 241, 0.8);
+  font-size: 10px;
+  font-weight: 850;
+  line-height: 13px;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-unified-panel .basket-action-stack .form-status.success {
+  color: rgba(111, 195, 140, 0.98);
+}
+
+.product-unified-panel .basket-action-stack .form-status.error {
+  color: #f0c7b8;
 }
 
 .product-unified-panel .product-buy-panel h1 {

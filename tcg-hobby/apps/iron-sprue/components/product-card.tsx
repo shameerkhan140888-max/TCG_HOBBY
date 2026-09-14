@@ -1,3 +1,4 @@
+import React from 'react';
 import type { IronSprueProduct } from '../lib/catalogue';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 import {
