@@ -60,8 +60,7 @@ function emailConfig(): IronSprueEmailTemplateConfig & { apiKey: string | null; 
     ?? clean(process.env.IRON_SPRUE_R2_PUBLIC_BASE_URL)
   )?.replace(/\/$/, '');
   const assetBaseUrl = explicitAssetBaseUrl
-    ?? (/^https:\/\/ironsprue\.co\.uk\/?$/i.test(resolvedSiteUrl) ? 'https://www.ironsprue.co.uk' : null)
-    ?? (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(resolvedSiteUrl) ? 'https://www.ironsprue.co.uk' : resolvedSiteUrl);
+    ?? (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(resolvedSiteUrl) ? 'https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev' : resolvedSiteUrl);
   return {
     apiKey: clean(process.env.IRON_SPRUE_RESEND_API_KEY),
     from: clean(process.env.IRON_SPRUE_EMAIL_FROM),

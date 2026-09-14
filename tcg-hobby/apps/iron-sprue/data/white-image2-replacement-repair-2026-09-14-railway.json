@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-09-14T14:57:09.855Z",
+  "mode": "applied",
+  "target": "railway",
+  "includeRejected": false,
+  "repairs": [
+    {
+      "sku": "IS-CUB-MC133H",
+      "product": "Burj Khalifa",
+      "oldKey": "products/is-cub-mc133h/organized-2026-09-14/image-2/generated-image-2-replacement-a9e40fd4cb97.png",
+      "sourceKey": "archive/products/is-cub-mc133h/replaced-2026-09-14/image-2/iron-sprue-image-2-37d0a60e4ffb.png",
+      "newKey": "products/is-cub-mc133h/organized-2026-09-14/image-2/white-image-2-replacement-9e2fd08129ca.webp",
+      "width": 1100,
+      "height": 1100,
+      "byteSize": 30974,
+      "approved": true
+    },
+    {
+      "sku": "IS-PIN-S1025",
+      "product": "3D Jigsaw Vase - Magpies on a Plum Tree",
+      "oldKey": "products/is-pin-s1025/organized-2026-09-14/image-2/generated-image-2-replacement-b677bfc7b1e2.png",
+      "sourceKey": "archive/products/is-pin-s1025/replaced-2026-09-14/image-2/iron-sprue-image-2-092f90b8fcbd.png",
+      "newKey": "products/is-pin-s1025/organized-2026-09-14/image-2/white-image-2-replacement-bf675104ebce.webp",
+      "width": 1100,
+      "height": 1100,
+      "byteSize": 82154,
+      "approved": true
+    }
+  ],
+  "errors": []
+}

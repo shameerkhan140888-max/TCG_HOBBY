@@ -80,6 +80,7 @@ const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
 const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
 const IRON_SPRUE_STAGING_HOST = 'staging.ironsprue.co.uk';
 const IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL = 'https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev';
+const IRON_SPRUE_PUBLIC_EMAIL_ASSET_BASE_URL = IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL;
 
 function money(minor: number, currency = 'GBP') {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(minor / 100);
@@ -111,7 +112,7 @@ function isLocalUrl(value: string) {
 }
 
 export function defaultIronSprueEmailLogoUrl(siteUrl: string) {
-  return `${normaliseSiteUrl(siteUrl)}/brand/iron-sprue-horizontal-email.png`;
+  return `${publicEmailUrlBase(normaliseSiteUrl(siteUrl))}/brand/iron-sprue-email-avatar.png`;
 }
 
 function assetBaseUrl(config: IronSprueEmailTemplateConfig) {
@@ -136,7 +137,10 @@ function publicEmailUrlBase(value: string) {
       const suffix = parsed.pathname === '/' && !parsed.search ? '' : `${parsed.pathname}${parsed.search}`;
       return `${IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL}${suffix}`;
     }
-    if (hostname === 'ironsprue.co.uk') return value.replace(/^https:\/\/ironsprue\.co\.uk(?=\/|$)/i, 'https://www.ironsprue.co.uk');
+    if (hostname === 'ironsprue.co.uk' || hostname === 'www.ironsprue.co.uk') {
+      const suffix = parsed.pathname === '/' && !parsed.search ? '' : `${parsed.pathname}${parsed.search}`;
+      return `${IRON_SPRUE_PUBLIC_EMAIL_ASSET_BASE_URL}${suffix}`;
+    }
     return value;
   } catch {
     return value;
