@@ -35,7 +35,7 @@
     "IRON_SPRUE_SITE_URL": "https://staging.ironsprue.co.uk",
     "NEXT_PUBLIC_IRON_SPRUE_SITE_URL": "https://staging.ironsprue.co.uk",
     "IRON_SPRUE_EMAIL_ASSET_BASE_URL": "https://staging.ironsprue.co.uk",
-    "IRON_SPRUE_EMAIL_LOGO_URL": "https://staging.ironsprue.co.uk/brand/iron-sprue-horizontal-email.png",
+    "IRON_SPRUE_EMAIL_LOGO_URL": "https://staging.ironsprue.co.uk/brand/iron-sprue-email-avatar.png",
     "IRON_SPRUE_R2_BUCKET_NAME": "iron-sprue-product-media",
     "IRON_SPRUE_R2_ENDPOINT": "https://7fcfe114b04378b1c574a51123a55f2c.r2.cloudflarestorage.com",
     "IRON_SPRUE_R2_REGION": "auto",
