@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaNeon } from '@prisma/adapter-neon';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +12,7 @@ const reportsDir = path.join(appRoot, 'reports');
 const dataDir = path.join(appRoot, 'data');
 const STORE_CODE = 'IRON_SPRUE';
 const RUN_ID = '2026-09-14';
+const RAILWAY_PRODUCTION = process.argv.includes('--railway-production');
 
 function parseEnvFile(text) {
   const values = {};
@@ -32,20 +34,39 @@ function row(cells) {
 }
 
 const env = parseEnvFile(await readFile(envPath, 'utf8'));
-if (!env.IRON_SPRUE_DATABASE_URL) throw new Error('IRON_SPRUE_DATABASE_URL is required.');
+if (RAILWAY_PRODUCTION) {
+  if (!env.IRON_SPRUE_ADMIN_DATABASE_URL) throw new Error('IRON_SPRUE_ADMIN_DATABASE_URL is required for --railway-production.');
+  const url = new URL(env.IRON_SPRUE_ADMIN_DATABASE_URL);
+  const railwayHost = /(^|\.)railway\.internal$|(^|\.)proxy\.rlwy\.net$|(^|\.)railway\.app$/i.test(url.hostname);
+  const railwayTunnel = /^(127\.0\.0\.1|localhost)$/i.test(url.hostname) && url.pathname.replace(/^\//, '') === 'railway';
+  if (!railwayHost && !railwayTunnel) {
+    throw new Error('--railway-production requires an Iron Sprue Railway database host.');
+  }
+} else if (!env.IRON_SPRUE_DATABASE_URL) {
+  throw new Error('IRON_SPRUE_DATABASE_URL is required.');
+}
 
 await mkdir(reportsDir, { recursive: true });
 await mkdir(dataDir, { recursive: true });
 
-const prisma = new PrismaClient({
-  adapter: new PrismaNeon({
-    connectionString: env.IRON_SPRUE_DATABASE_URL,
-    allowExitOnIdle: true,
-    connectionTimeoutMillis: 10_000,
-    idleTimeoutMillis: 5_000,
-    max: 5,
-  }),
-});
+const prisma = RAILWAY_PRODUCTION
+  ? new PrismaClient({
+    adapter: new PrismaPg({
+      connectionString: env.IRON_SPRUE_ADMIN_DATABASE_URL,
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 5_000,
+      max: 5,
+    }),
+  })
+  : new PrismaClient({
+    adapter: new PrismaNeon({
+      connectionString: env.IRON_SPRUE_DATABASE_URL,
+      allowExitOnIdle: true,
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 5_000,
+      max: 5,
+    }),
+  });
 
 try {
   const products = await prisma.ironSprueAdminProduct.findMany({

@@ -1,6 +1,7 @@
 import { CopyObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
 import { PrismaNeon } from '@prisma/adapter-neon';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -19,6 +20,7 @@ const STORE_CODE = 'IRON_SPRUE';
 const BUCKET = 'iron-sprue-product-media';
 const ACTOR = 'iron-sprue-verified-media-organization';
 const APPLY = process.argv.includes('--apply');
+const RAILWAY_PRODUCTION = process.argv.includes('--railway-production');
 const IMAGE2_COVERAGE_THRESHOLD = 0.7;
 const IMAGE2_CANVAS_SIZE = 1100;
 
@@ -41,11 +43,37 @@ function parseEnvFile(text) {
 }
 
 function assertEnv(env) {
-  if (!env.IRON_SPRUE_DATABASE_URL) throw new Error('IRON_SPRUE_DATABASE_URL is required.');
+  if (RAILWAY_PRODUCTION) {
+    if (!env.IRON_SPRUE_ADMIN_DATABASE_URL) throw new Error('IRON_SPRUE_ADMIN_DATABASE_URL is required for --railway-production.');
+    const url = new URL(env.IRON_SPRUE_ADMIN_DATABASE_URL);
+    const railwayHost = /(^|\.)railway\.internal$|(^|\.)proxy\.rlwy\.net$|(^|\.)railway\.app$/i.test(url.hostname);
+    const railwayTunnel = /^(127\.0\.0\.1|localhost)$/i.test(url.hostname) && url.pathname.replace(/^\//, '') === 'railway';
+    if (!railwayHost && !railwayTunnel) {
+      throw new Error('--railway-production requires an Iron Sprue Railway database host.');
+    }
+  } else if (!env.IRON_SPRUE_DATABASE_URL) {
+    throw new Error('IRON_SPRUE_DATABASE_URL is required.');
+  }
   if (env.IRON_SPRUE_R2_BUCKET_NAME !== BUCKET) throw new Error(`IRON_SPRUE_R2_BUCKET_NAME must be ${BUCKET}.`);
   if (!env.IRON_SPRUE_R2_ENDPOINT || !env.IRON_SPRUE_R2_ACCESS_KEY_ID || !env.IRON_SPRUE_R2_SECRET_ACCESS_KEY) {
     throw new Error('R2 endpoint and credentials are required.');
   }
+}
+
+function createPrismaClient(env) {
+  if (RAILWAY_PRODUCTION) {
+    return new PrismaClient({
+      adapter: new PrismaPg({
+        connectionString: env.IRON_SPRUE_ADMIN_DATABASE_URL,
+        connectionTimeoutMillis: 10_000,
+        idleTimeoutMillis: 5_000,
+        max: 5,
+      }),
+    });
+  }
+  return new PrismaClient({
+    adapter: new PrismaNeon({ connectionString: env.IRON_SPRUE_DATABASE_URL, allowExitOnIdle: true, connectionTimeoutMillis: 10_000, idleTimeoutMillis: 5_000, max: 5 }),
+  });
 }
 
 function publicUrl(env, key) {
@@ -227,22 +255,29 @@ function roleFolder(role) {
 async function archiveAsset({ tx, s3, env, product, asset, reason }) {
   if (!asset?.storageKey || String(asset.storageKey).includes(`/replaced-${RUN_ID}/`)) return null;
   const targetKey = archiveKey(product.sku, roleFolder(asset.role), asset.storageKey);
-  await copyObject(s3, asset.storageKey, targetKey, asset.mimeType);
+  let copied = false;
+  let copyError = null;
+  try {
+    await copyObject(s3, asset.storageKey, targetKey, asset.mimeType);
+    copied = true;
+  } catch (error) {
+    copyError = error instanceof Error ? error.message : String(error);
+  }
   if (APPLY) {
     await tx.ironSprueAdminMediaAsset.update({
       where: { id: asset.id },
       data: {
-        url: publicUrl(env, targetKey),
-        storageKey: targetKey,
+        url: copyError ? asset.url : publicUrl(env, targetKey),
+        storageKey: copyError ? asset.storageKey : targetKey,
         approvalState: 'REJECTED',
         isPrimary: false,
         sortOrder: Math.max(asset.sortOrder ?? 0, 900),
         uploadedById: ACTOR,
-        lastError: reason,
+        lastError: copyError ? `${reason} Source object copy failed during archive: ${copyError}` : reason,
       },
     });
   }
-  return { id: asset.id, from: asset.storageKey, to: targetKey, role: asset.role, reason };
+  return { id: asset.id, from: asset.storageKey, to: targetKey, role: asset.role, reason, copied, copyError };
 }
 
 async function upsertMedia({ tx, env, product, role, key, altText, mimeType, byteSize, width, height, sortOrder, isPrimary, note }) {
@@ -305,9 +340,7 @@ const s3 = new S3Client({
   endpoint: env.IRON_SPRUE_R2_ENDPOINT,
   credentials: { accessKeyId: env.IRON_SPRUE_R2_ACCESS_KEY_ID, secretAccessKey: env.IRON_SPRUE_R2_SECRET_ACCESS_KEY },
 });
-const prisma = new PrismaClient({
-  adapter: new PrismaNeon({ connectionString: env.IRON_SPRUE_DATABASE_URL, allowExitOnIdle: true, connectionTimeoutMillis: 10_000, idleTimeoutMillis: 5_000, max: 5 }),
-});
+const prisma = createPrismaClient(env);
 
 const actions = [];
 const image2Audit = [];
