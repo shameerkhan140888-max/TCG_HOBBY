@@ -10,7 +10,7 @@ import type {
 } from '@capital-hobby/types';
 import type { IronSprueBrandRecord, IronSprueProduct } from './catalogue';
 import type { IronSprueHeroSlide, IronSprueHomepagePlacement } from './admin-storefront-controls';
-import { brandLogoRegistry, categoryNavigation } from './storefront';
+import { brandLogoRegistry, categoryNavigation, heroSlides } from './storefront';
 
 export const IRON_SPRUE_PRODUCTION_API_BASE_URL = 'IRON_SPRUE_PRODUCTION_API_BASE_URL';
 const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
@@ -258,12 +258,12 @@ export function publicIronSprueHeroesToSlides(rows: PublicIronSprueHero[], produ
     const image = storefrontMediaUrl(row.imageUrl);
     if (!image || !row.ctaHref) return [];
 
-    const linkedProductSlug = row.ctaHref.match(/\/products\/([^/?#]+)/)?.[1];
-    if (!linkedProductSlug) return [];
+    const linkedProductSlug = row.ctaHref.match(/\/products\/([^/?#]+)/)?.[1] ?? '';
 
     const linkedProduct = productBySlug.get(linkedProductSlug);
-    const brandName = linkedProduct?.brand;
-    const brandLogo = brandName ? brandLogoRegistry[brandName] : undefined;
+    const fallbackHero = fallbackHeroForPublicRow(row, linkedProductSlug);
+    const brandName = linkedProduct?.brand ?? fallbackHero?.brandName;
+    const brandLogo = brandName ? brandLogoRegistry[brandName] ?? fallbackHero?.brandLogo : fallbackHero?.brandLogo;
     const availabilityLabel = heroMerchandisingLabel(row.merchandisingBadge) ?? 'In stock';
     return [{
       id: row.id,
@@ -271,18 +271,27 @@ export function publicIronSprueHeroesToSlides(rows: PublicIronSprueHero[], produ
       availabilityLabel,
       title: row.headline,
       script: row.strapline ?? '',
-      copy: '',
+      copy: fallbackHero?.copy ?? '',
       image,
-      sourceProductSlug: linkedProductSlug,
+      sourceProductSlug: linkedProductSlug || fallbackHero?.sourceProductSlug || '',
       ...(brandName ? { brandName } : {}),
       ...(brandLogo ? { brandLogo } : {}),
-      alt: row.headline,
+      alt: linkedProduct ? `${linkedProduct.name} Iron Sprue hero artwork` : fallbackHero?.alt ?? row.headline,
       ctaHref: row.ctaHref,
       ctaLabel: row.ctaLabel || 'Shop now',
-      secondaryHref: brandName ? `/shop?brand=${encodeURIComponent(brandName)}` : '/shop',
-      meta: categoryNavigation.map((item) => item.label),
+      secondaryHref: brandName ? `/shop?brand=${encodeURIComponent(brandName)}` : fallbackHero?.secondaryHref ?? '/shop',
+      meta: fallbackHero?.meta ?? categoryNavigation.map((item) => item.label),
     }];
   });
+}
+
+function fallbackHeroForPublicRow(row: PublicIronSprueHero, linkedProductSlug: string) {
+  const normalizedHeadline = row.headline.trim().toLowerCase();
+  return (heroSlides as readonly IronSprueHeroSlide[]).find((slide) => (
+    slide.sourceProductSlug === linkedProductSlug
+    || slide.ctaHref === row.ctaHref
+    || slide.title.trim().toLowerCase() === normalizedHeadline
+  ));
 }
 
 function heroMerchandisingLabel(value: string | null | undefined) {

@@ -108,21 +108,46 @@ describe('Iron Sprue Admin storefront controls', () => {
     expect(slides[0]!.brandLogo).toBeUndefined();
   });
 
-  it('does not render Admin product heroes with dead product targets', () => {
+  it('keeps active Admin product heroes even when the product is newer than the static launch catalogue', () => {
     const slides = adminHeroRowsToSlides([
       {
-        id: 'hero_dead',
-        headline: 'Dead product target',
-        strapline: 'Should not render.',
+        id: 'hero_new',
+        headline: 'Fresh admin campaign',
+        strapline: 'Ready from the saved hero record.',
         ctaLabel: 'Shop now',
-        ctaHref: '/products/not-a-real-iron-sprue-product',
-        imageUrl: '/assets/hero-campaigns/not-real.png',
+        ctaHref: '/products/newly-published-admin-product',
+        imageUrl: '/assets/hero-campaigns/new-admin-product.png',
         merchandisingBadge: 'NEW',
         sortOrder: 0,
       },
     ]);
 
-    expect(slides).toEqual([]);
+    expect(slides).toHaveLength(1);
+    expect(slides[0]).toMatchObject({
+      sourceProductSlug: 'newly-published-admin-product',
+      ctaHref: '/products/newly-published-admin-product',
+      image: '/assets/hero-campaigns/new-admin-product.png',
+    });
+  });
+
+  it('hydrates matching Admin heroes with approved fallback copy and metadata', () => {
+    const slides = adminHeroRowsToSlides([
+      {
+        id: 'hero_bundle',
+        headline: 'Bundle savings for display builds.',
+        strapline: 'Three-piece sets, better value.',
+        ctaLabel: 'View bundles',
+        ctaHref: '/products/cubicfun-landmark-trio',
+        imageUrl: '/assets/promo-bundle-savings.webp',
+        merchandisingBadge: 'NONE',
+        sortOrder: 1,
+      },
+    ]);
+
+    expect(slides[0]).toMatchObject({
+      copy: 'Selected Iron Sprue bundles group display builds and bench additions into better-value projects.',
+      meta: ['Bundles', '3D Puzzles & Builds', 'Display Builds', 'Special Offers'],
+    });
   });
 
   it('maps persisted typography settings to constrained storefront CSS variables', () => {

@@ -106,7 +106,14 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
             <button ref={closeButtonRef} className="product-image-lightbox__close" type="button" onClick={() => setEnlarged(false)}>
               Close image
             </button>
-            <img src={activeImage} alt={productName} width="1600" height="1600" />
+            <img
+              src={ironSprueDisplayMediaUrl(activeImage, 1400)}
+              srcSet={ironSprueDisplayMediaSrcSet(activeImage, [960, 1400])}
+              sizes="(max-width: 700px) 94vw, (max-width: 1100px) 92vw, 1120px"
+              alt={productName}
+              width="1600"
+              height="1600"
+            />
           </div>
         </div>
       ) : null}

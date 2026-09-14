@@ -8,6 +8,37 @@ type HeroCarouselProps = {
   slides: readonly IronSprueHeroSlide[];
 };
 
+export function heroStyleForSlide(slide: IronSprueHeroSlide) {
+  const source = [
+    slide.title,
+    slide.script,
+    slide.copy,
+    slide.image,
+    slide.brandName,
+    slide.sourceProductSlug,
+    ...slide.meta,
+  ].join(' ').toLowerCase();
+
+  if (source.includes('delorean') || source.includes('future')) return 'time-machine';
+  if (source.includes('bundle') || source.includes('savings') || source.includes('bench') || source.includes('workshop')) return 'workshop-bundle';
+  if (source.includes('aventador') || source.includes('countach') || source.includes('lamborghini')) return 'supercar';
+  if (source.includes('skyline') || source.includes('gtr')) return 'street-racer';
+  if (source.includes('toyota 2000gt')) return 'classic-coupe';
+  if (source.includes('jimny')) return 'trail-compact';
+  if (source.includes('khalifa') || source.includes('tower')) return 'skyline-architecture';
+  if (source.includes('brandenburg') || source.includes('gate')) return 'monument';
+  if (source.includes('santa maria') || source.includes('ship')) return 'nautical';
+  if (source.includes('london at night') || source.includes('magic box')) return 'night-box';
+  if (source.includes('blue marble') || source.includes('globe')) return 'planet-puzzle';
+  if (source.includes('classic rose') || source.includes('clock')) return 'rose-clock';
+  if (source.includes('lantern') || source.includes('floral')) return 'lantern-glow';
+  if (source.includes('pintoo') || source.includes('puzzle') || source.includes('vase') || source.includes('lotus') || source.includes('koi')) return 'puzzle-object';
+  if (source.includes('cubicfun') || source.includes('architecture') || source.includes('landmark')) return 'architecture';
+  if (source.includes('aoshima') || source.includes('model kit') || source.includes('scale')) return 'precision-model';
+
+  return 'display-build';
+}
+
 export function HeroCarousel({ slides }: HeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const count = slides.length;
@@ -40,6 +71,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           <article
             className={`hero-slide${isActive ? ' is-active' : ''}`}
             data-fit="cover"
+            data-hero-style={heroStyleForSlide(slide)}
             style={{ '--slide-index': index } as CSSProperties}
             key={`${slide.id ?? slide.image}-${slide.title}`}
             aria-hidden={isActive ? undefined : true}

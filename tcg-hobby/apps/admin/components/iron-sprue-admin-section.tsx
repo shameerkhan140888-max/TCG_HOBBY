@@ -2199,10 +2199,20 @@ function heroProductSlug(hero: HeroRecord) {
   return hero.ctaHref?.match(/\/products\/([^/?#]+)/)?.[1] ?? null;
 }
 
-function heroHasValidTarget(hero: HeroRecord, products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products']) {
+function heroHasStorefrontTarget(hero: HeroRecord, products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products']) {
+  const href = hero.ctaHref?.trim();
+  if (!href) return false;
+  if (/^\/(?:shop|bundles)(?:[/?#]|$)/.test(href)) return true;
+
   const slug = heroProductSlug(hero);
   if (!slug) return false;
-  return products.some((product) => product.slug === slug && product.readinessState === 'PUBLISHED');
+  return products.length
+    ? products.some((product) => product.slug === slug && product.readinessState === 'PUBLISHED')
+    : true;
+}
+
+function heroHasValidTarget(hero: HeroRecord, products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products']) {
+  return heroHasStorefrontTarget(hero, products);
 }
 
 function CurrentHeroOverview({
@@ -2222,7 +2232,7 @@ function CurrentHeroOverview({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="font-bold">Current hero carousel</h2>
-            <p className="text-sm text-neutral-400">Active heroes render first only when their image URL is public-renderable. Edit the cards below to change copy, CTA, image source or active state.</p>
+            <p className="text-sm text-neutral-400">Active heroes render first when their image URL is public-renderable and their CTA points to a storefront product, shop route or bundle route. Edit the cards below to change copy, CTA, image source or active state.</p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <StatusBadge tone={activeHeroes.length ? 'success' : 'warning'}>{activeHeroes.length} DATABASE ACTIVE</StatusBadge>
@@ -2247,7 +2257,7 @@ function CurrentHeroOverview({
                   </div>
                   {hero.active && (!publicRenderable || !validTarget) ? (
                     <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-xs font-semibold text-amber-200">
-                      Not public-effective: {!validTarget ? 'CTA link must point to a currently published Iron Sprue product.' : isR2Reference(hero.imageUrl) ? 'R2 object key is not valid for Iron Sprue media delivery.' : 'Image URL is missing or invalid.'}
+                      Not public-effective: {!validTarget ? 'CTA link must point to a storefront product, shop route or bundle route.' : isR2Reference(hero.imageUrl) ? 'R2 object key is not valid for Iron Sprue media delivery.' : 'Image URL is missing or invalid.'}
                     </p>
                   ) : null}
                   <dl className="mt-3 grid gap-2 text-sm">
@@ -2294,7 +2304,15 @@ function CurrentHeroOverview({
   );
 }
 
-function HeroLibrary({ items }: { items: HeroLibraryItem[] }) {
+function HeroLibrary({
+  items,
+  heroes,
+  products,
+}: {
+  items: HeroLibraryItem[];
+  heroes: HeroRecord[];
+  products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'];
+}) {
   if (!items.length) {
     return <EmptyNote>No existing hero artwork was found under marketing/heroes/. Upload a hero artwork above or check the R2 hero upload pipeline.</EmptyNote>;
   }
@@ -2307,13 +2325,37 @@ function HeroLibrary({ items }: { items: HeroLibraryItem[] }) {
           <p className="text-sm text-neutral-400">R2-backed hero masters can be selected in the hero form above. These are not product-media review assets.</p>
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {items.map((item) => (
-            <div key={item.key} className="rounded-md border border-surface-line bg-surface-ink p-3">
-              <img src={item.previewUrl} alt={item.key} className="h-36 w-full rounded-md bg-black object-cover" />
-              <p className="mt-2 break-all text-xs text-neutral-400">{item.key}</p>
-              <p className="mt-1 text-xs text-neutral-500">{Math.round(item.size / 1024)} KB</p>
-            </div>
-          ))}
+          {items.map((item) => {
+            const hero = heroes.find((record) => record.imageUrl === `r2://${item.key}`);
+            const validTarget = hero ? heroHasValidTarget(hero, products) : false;
+            return (
+              <div key={item.key} className="rounded-md border border-surface-line bg-surface-ink p-3">
+                <img src={item.previewUrl} alt={item.key} className="h-36 w-full rounded-md bg-black object-cover" />
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {hero ? <RecordMeta active={hero.active} sortOrder={hero.sortOrder} /> : <StatusBadge tone="warning">NO HERO RECORD</StatusBadge>}
+                  {hero && !validTarget ? <StatusBadge tone="warning">NOT PUBLIC TARGET</StatusBadge> : null}
+                </div>
+                {hero ? (
+                  <form action={saveIronSprueHeroAction} className="mt-3 flex flex-wrap gap-2">
+                    <input type="hidden" name="id" value={hero.id} />
+                    <input type="hidden" name="headline" value={hero.headline} />
+                    <input type="hidden" name="strapline" value={hero.strapline ?? ''} />
+                    <input type="hidden" name="ctaLabel" value={hero.ctaLabel ?? ''} />
+                    <input type="hidden" name="ctaHref" value={hero.ctaHref ?? ''} />
+                    <input type="hidden" name="imageUrl" value={hero.imageUrl ?? ''} />
+                    <input type="hidden" name="merchandisingBadge" value={hero.merchandisingBadge ?? 'NONE'} />
+                    <input type="hidden" name="sortOrder" value={hero.sortOrder ?? 0} />
+                    <input type="hidden" name="active" value={hero.active ? 'false' : 'true'} />
+                    <Button type="submit" size="sm" variant={hero.active ? 'outline' : 'primary'}>
+                      {hero.active ? 'Deactivate hero' : 'Activate hero'}
+                    </Button>
+                  </form>
+                ) : null}
+                <p className="mt-2 break-all text-xs text-neutral-400">{item.key}</p>
+                <p className="mt-1 text-xs text-neutral-500">{Math.round(item.size / 1024)} KB</p>
+              </div>
+            );
+          })}
         </div>
       </CardContent>
     </Card>
@@ -2811,7 +2853,7 @@ async function StorefrontSection({ section }: { section: string }) {
           </div>
         </AdminDisclosure>
         <AdminDisclosure summary={<span>Available hero artwork <span className="text-neutral-500">({heroLibrary.length})</span></span>}>
-          <HeroLibrary items={heroLibrary} />
+          <HeroLibrary items={heroLibrary} heroes={heroes} products={productOptions} />
         </AdminDisclosure>
         <AdminDisclosure summary="Create a new hero">
           <HeroForm heroLibrary={heroLibrary} products={productOptions} />

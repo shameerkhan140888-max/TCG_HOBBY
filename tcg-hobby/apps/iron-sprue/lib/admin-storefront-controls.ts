@@ -348,9 +348,10 @@ export function adminHeroRowsToSlides(rows: AdminHeroRow[]): IronSprueHeroSlide[
     const linkedProduct = linkedProductSlug
       ? launchCatalogue.find((product) => product.slug === linkedProductSlug)
       : null;
-    if (linkedProductSlug && !linkedProduct) return;
 
-    const brandLogo = linkedProduct?.brand ? brandLogoRegistry[linkedProduct.brand] : undefined;
+    const fallbackHero = fallbackHeroForAdminRow(row, linkedProductSlug ?? '');
+    const brandName = linkedProduct?.brand ?? fallbackHero?.brandName;
+    const brandLogo = brandName ? brandLogoRegistry[brandName] ?? fallbackHero?.brandLogo : fallbackHero?.brandLogo;
     const merchandisingLabel = heroMerchandisingLabel(row.merchandisingBadge) ?? 'In stock';
     slides.push({
       id: row.id,
@@ -358,20 +359,29 @@ export function adminHeroRowsToSlides(rows: AdminHeroRow[]): IronSprueHeroSlide[
       availabilityLabel: merchandisingLabel,
       title: row.headline,
       script: row.strapline ?? '',
-      copy: '',
+      copy: fallbackHero?.copy ?? '',
       image: publicImageUrl,
       sourceProductSlug: linkedProduct?.slug || linkedProductSlug || '',
-      ...(linkedProduct?.brand ? { brandName: linkedProduct.brand } : {}),
+      ...(brandName ? { brandName } : {}),
       ...(brandLogo ? { brandLogo } : {}),
-      alt: linkedProduct ? `${linkedProduct.name} Iron Sprue hero artwork` : row.headline,
+      alt: linkedProduct ? `${linkedProduct.name} Iron Sprue hero artwork` : fallbackHero?.alt ?? row.headline,
       ctaHref: row.ctaHref,
       ctaLabel: row.ctaLabel || 'Shop now',
-      secondaryHref: linkedProduct?.brand ? `/shop?brand=${encodeURIComponent(linkedProduct.brand)}` : '/shop',
-      meta: categoryNavigation.map((item) => item.label),
+      secondaryHref: brandName ? `/shop?brand=${encodeURIComponent(brandName)}` : fallbackHero?.secondaryHref ?? '/shop',
+      meta: fallbackHero?.meta ?? categoryNavigation.map((item) => item.label),
     });
   });
 
   return slides;
+}
+
+function fallbackHeroForAdminRow(row: AdminHeroRow, linkedProductSlug: string) {
+  const normalizedHeadline = row.headline.trim().toLowerCase();
+  return (heroSlides as readonly IronSprueHeroSlide[]).find((slide) => (
+    slide.sourceProductSlug === linkedProductSlug
+    || slide.ctaHref === row.ctaHref
+    || slide.title.trim().toLowerCase() === normalizedHeadline
+  ));
 }
 
 function fallbackHeroSlides() {

@@ -650,6 +650,16 @@ describe('Iron Sprue production catalogue adapter', () => {
             merchandisingBadge: 'NEW',
             sortOrder: 1,
           },
+          {
+            id: 'hero-bundle',
+            headline: 'Bundle savings for display builds.',
+            strapline: 'Three-piece sets, better value.',
+            ctaLabel: 'View bundles',
+            ctaHref: '/bundles',
+            imageUrl: '/assets/promo-bundle-savings.webp',
+            merchandisingBadge: 'NONE',
+            sortOrder: 2,
+          },
         ]),
       },
       ironSprueAdminBrand: { findMany: vi.fn().mockResolvedValue([]) },
@@ -667,7 +677,24 @@ describe('Iron Sprue production catalogue adapter', () => {
         headline: 'Fresh bench arrivals',
         imageUrl: '/media/iron-sprue/marketing/heroes/fresh-bench.webp',
       }),
+      expect.objectContaining({
+        headline: 'Bundle savings for display builds.',
+        ctaHref: '/bundles',
+        imageUrl: '/assets/promo-bundle-savings.webp',
+      }),
     ]);
+    expect(client.ironSprueAdminHero.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        AND: expect.arrayContaining([
+          expect.objectContaining({
+            OR: expect.arrayContaining([
+              { ctaHref: { startsWith: '/shop' } },
+              { ctaHref: { startsWith: '/bundles' } },
+            ]),
+          }),
+        ]),
+      }),
+    }));
     expect(home.featuredProducts.map((product) => product.slug)).toEqual(['second-kit', 'first-kit']);
   });
 

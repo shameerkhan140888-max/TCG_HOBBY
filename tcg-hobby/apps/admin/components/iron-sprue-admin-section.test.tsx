@@ -311,6 +311,50 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('aoshima-pagani.webp');
   });
 
+  it('treats saved bundle campaign heroes as public-effective when activated', async () => {
+    mocks.getIronSprueAdminWorkspaceCards.mockReturnValue(cards);
+    mocks.getIronSprueAdminReferenceData.mockResolvedValue({ brands: [], categories: [], suppliers: [] });
+    mocks.getIronSprueAdminStorefrontControls.mockResolvedValue({
+      homepagePlacements: [],
+      heroes: [{
+        id: 'hero-bundle',
+        headline: 'Bundle savings for display builds.',
+        strapline: 'Three-piece sets, better value.',
+        ctaLabel: 'View bundles',
+        ctaHref: '/bundles',
+        imageUrl: '/assets/promo-bundle-savings.webp',
+        active: true,
+        merchandisingBadge: 'NONE',
+        sortOrder: 1,
+        storeCode: 'IRON_SPRUE',
+        createdAt: new Date('2026-08-11T00:00:00.000Z'),
+        updatedAt: new Date('2026-08-11T00:00:00.000Z'),
+      }],
+      specialOffers: [],
+      discountCodes: [],
+      typographySettings: {
+        id: null,
+        storeCode: 'IRON_SPRUE',
+        headingFamily: 'IMPACT_CONDENSED',
+        bodyFamily: 'SYSTEM_SANS',
+        headingWeight: 'BLACK',
+        bodyWeight: 'REGULAR',
+        headingScale: 'STANDARD',
+        bodyScale: 'STANDARD',
+        createdAt: null,
+        updatedAt: null,
+      },
+      auditLog: [],
+    });
+    mocks.listIronSprueR2Objects.mockResolvedValue([]);
+    mocks.listIronSprueAdminProducts.mockResolvedValue({ products: [] });
+
+    const markup = await renderAsync(await IronSprueAdminSection({ section: 'heroes' }));
+
+    expect(markup).toMatch(/1<!-- --> PUBLIC EFFECTIVE|1 PUBLIC EFFECTIVE/);
+    expect(markup).not.toContain('CTA link must point to a currently published Iron Sprue product.');
+  });
+
   it('renders Admin save feedback from action redirects', async () => {
     mocks.getIronSprueAdminWorkspaceCards.mockReturnValue(cards);
     mocks.listIronSprueAdminMediaAssets.mockResolvedValue([]);

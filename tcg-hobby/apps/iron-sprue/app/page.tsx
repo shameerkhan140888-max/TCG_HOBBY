@@ -20,6 +20,14 @@ const products = launchProducts as IronSprueProduct[];
 
 export const dynamic = 'force-dynamic';
 
+const categoryIconByLabel: Record<string, string> = {
+  'Model Kits': '/assets/category-icons/model-kits.png',
+  '3D Puzzles & Builds': '/assets/category-icons/puzzles-builds.png',
+  Tools: '/assets/category-icons/tools.png',
+  'Adhesives & Finishing': '/assets/category-icons/adhesives-finishing.png',
+  'Paints & Weathering': '/assets/category-icons/paints-weathering.png',
+};
+
 export default async function HomePage() {
   const useProductionApi = shouldUseIronSprueProductionApi();
   const [fallbackHeroSlides, productionHome, fallbackHomepagePlacements, fallbackStorefrontProducts] = await Promise.all([
@@ -51,59 +59,17 @@ export default async function HomePage() {
 
       <div className="homepage-board">
         <section className="category-strip" aria-label="Shop categories">
-          {launchCategories.map((item, index) => (
+          {launchCategories.map((item) => (
             <a href={hrefForCategoryLabel(item)} key={item}>
-              <svg viewBox="0 0 32 32" aria-hidden="true">
-                {index === 0 ? (
-                  <>
-                    <path d="M5 19h3l3-5h10l3 5h3" />
-                    <path d="M8 19h16l-1.4 4.8H9.4Z" />
-                    <path d="M12.6 14l1.7-3.8h4.4l1.7 3.8" />
-                    <circle cx="10.5" cy="24" r="2.1" />
-                    <circle cx="21.5" cy="24" r="2.1" />
-                    <path d="M13.6 19v-5" />
-                    <path d="M18.4 19v-5" />
-                  </>
-                ) : null}
-                {index === 1 ? (
-                  <>
-                    <path d="M10.2 5.7h8.3v3.8a2.7 2.7 0 1 0 5.1 0h2.7v8.4h-3.9a2.7 2.7 0 1 0 0 5.1v3.3H10.2v-4.1a2.7 2.7 0 1 1 0-5.1Z" />
-                    <path d="M14.3 5.7v6.8" />
-                    <path d="M14.3 20.8v5.5" />
-                    <path d="M18.5 15.4h7.8" />
-                  </>
-                ) : null}
-                {index === 2 ? (
-                  <>
-                    <path d="M9 6l6.4 6.4" />
-                    <path d="M6.7 8.4l6.4 6.4" />
-                    <path d="M5.4 5.4l4.9 4.9" />
-                    <path d="M19 5.4l7.6 7.6" />
-                    <path d="M26.6 5.4 19 13" />
-                    <path d="m13.2 15 2.4 2.4-7.2 7.2-3-3Z" />
-                    <path d="m18.9 12.9 2.2 2.2-7.5 7.5-2.2-2.2Z" />
-                  </>
-                ) : null}
-                {index === 3 ? (
-                  <>
-                    <path d="M13.2 4.8h5.6v5.1l4.1 4.5v12.8H9.1V14.4l4.1-4.5Z" />
-                    <path d="M12.4 9.9h7.2" />
-                    <path d="M12.3 17.4h7.4v6.1h-7.4Z" />
-                    <path d="M14.1 7h3.8" />
-                    <path d="M13.8 20.4h4.4" />
-                    <path d="M22.9 16.2h2.8" />
-                  </>
-                ) : null}
-                {index === 4 ? (
-                  <>
-                    <path d="M22.9 4.2c1.1-.3 2.2.8 1.9 1.9L14.8 18.6l-3.4-3.4Z" />
-                    <path d="m11.4 15.2 3.4 3.4-2.3 2.3-3.4-3.4Z" />
-                    <path d="M8.8 17.6c-1.8.8-3.1 2.3-3.9 4.4L3 27l5-1.9c2.1-.8 3.6-2.1 4.4-4" />
-                    <path d="M5.4 24.6c1.3-.4 2.4-1.1 3.3-2" />
-                    <path d="M20.8 7.2 22 8.4" />
-                  </>
-                ) : null}
-              </svg>
+              <img
+                src={categoryIconByLabel[item]}
+                alt=""
+                width="320"
+                height="180"
+                loading="eager"
+                decoding="async"
+                aria-hidden="true"
+              />
               {item}
             </a>
           ))}

@@ -284,6 +284,73 @@ describe('Iron Sprue production API client', () => {
     ]);
   });
 
+  it('hydrates live Admin heroes with approved fallback hero copy when records match', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        featuredProducts: [],
+        latestProducts: [],
+        categories: [],
+        homepagePlacements: [],
+        ironSprueHeroes: [
+          {
+            id: 'hero-bundle',
+            headline: 'Bundle savings for display builds.',
+            strapline: 'Three-piece sets, better value.',
+            ctaLabel: 'View bundles',
+            ctaHref: '/products/cubicfun-landmark-trio',
+            imageUrl: '/assets/promo-bundle-savings.webp',
+            merchandisingBadge: 'NONE',
+            sortOrder: 1,
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getIronSprueProductionApiHomeSnapshot();
+
+    expect(result.heroSlides[0]).toMatchObject({
+      copy: 'Selected Iron Sprue bundles group display builds and bench additions into better-value projects.',
+      meta: ['Bundles', '3D Puzzles & Builds', 'Display Builds', 'Special Offers'],
+    });
+  });
+
+  it('keeps active Admin campaign heroes that link to bundles rather than a PDP', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        featuredProducts: [],
+        latestProducts: [],
+        categories: [],
+        homepagePlacements: [],
+        ironSprueHeroes: [
+          {
+            id: 'hero-bundle-route',
+            headline: 'Bundle savings for display builds.',
+            strapline: 'Three-piece sets, better value.',
+            ctaLabel: 'View bundles',
+            ctaHref: '/bundles',
+            imageUrl: '/assets/promo-bundle-savings.webp',
+            merchandisingBadge: 'NONE',
+            sortOrder: 1,
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getIronSprueProductionApiHomeSnapshot();
+
+    expect(result.heroSlides).toEqual([
+      expect.objectContaining({
+        ctaHref: '/bundles',
+        sourceProductSlug: 'cubicfun-landmark-trio',
+        copy: 'Selected Iron Sprue bundles group display builds and bench additions into better-value projects.',
+      }),
+    ]);
+  });
+
   it('loads approved brand carousel logos from Railway /v1/home', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

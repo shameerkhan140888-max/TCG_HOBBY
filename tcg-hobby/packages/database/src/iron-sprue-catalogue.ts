@@ -716,7 +716,13 @@ export async function getIronSprueCatalogueHomeData(db: DatabaseClient = getIron
         storeCode: IRON_SPRUE_STORE_CODE,
         active: true,
         AND: [
-          { ctaHref: { in: validProductHeroHrefs } },
+          {
+            OR: [
+              { ctaHref: { in: validProductHeroHrefs } },
+              { ctaHref: { startsWith: '/shop' } },
+              { ctaHref: { startsWith: '/bundles' } },
+            ],
+          },
           { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
           { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
         ],
