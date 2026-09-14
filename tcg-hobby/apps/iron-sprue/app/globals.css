@@ -8820,13 +8820,13 @@ body:has(.product-detail-page) .payment-trust-banner {
 
 .hero-slide[data-hero-style="time-machine"] .hero-message h1 {
   max-width: 800px;
-  margin: 0 0 12px;
+  margin: 0 0 22px;
   color: #fffaf1;
   font-family: Impact, "Arial Narrow", "Franklin Gothic Condensed", Arial, sans-serif;
   font-size: 5.35rem;
   font-weight: 900;
-  letter-spacing: 0;
-  line-height: 0.82;
+  letter-spacing: 0.014em;
+  line-height: 0.86;
   paint-order: stroke fill;
   text-shadow:
     7px 6px 0 #071f52,
@@ -8841,13 +8841,13 @@ body:has(.product-detail-page) .payment-trust-banner {
 
 .hero-slide[data-hero-style="time-machine"] .hero-message .script-line {
   display: inline-block;
-  margin: 4px 0 0 8px;
+  margin: 8px 0 0 8px;
   color: #7ec7ff;
   font-family: Impact, "Arial Narrow", "Franklin Gothic Condensed", Arial, sans-serif;
   font-size: 1.52rem;
   font-style: normal;
   font-weight: 900;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   line-height: 0.98;
   text-shadow:
     2px 2px 0 rgba(8, 31, 82, 0.95),
@@ -8859,24 +8859,24 @@ body:has(.product-detail-page) .payment-trust-banner {
 
 .hero-slide[data-hero-style="time-machine"] .hero-message .lead {
   max-width: 560px;
-  margin-top: 18px;
+  margin-top: 26px;
   color: rgba(255, 250, 241, 0.88);
   font-size: 1rem;
   line-height: 1.45;
 }
 
 .hero-slide[data-hero-style="workshop-bundle"] .hero-message {
-  top: clamp(150px, 25vh, 220px);
-  width: min(650px, calc(100% - 112px));
+  top: clamp(110px, 19vh, 172px);
+  width: min(610px, calc(100% - 112px));
   transform: none;
 }
 
 .hero-slide[data-hero-style="workshop-bundle"] .hero-message h1 {
-  max-width: 620px;
+  max-width: 590px;
   color: #f7efe0;
   font-family: "Arial Black", Impact, Haettenschweiler, sans-serif;
-  font-size: clamp(2.8rem, 4.65vw, 4.85rem);
-  line-height: 0.9;
+  font-size: clamp(2.55rem, 4.25vw, 4.45rem);
+  line-height: 0.88;
   text-transform: uppercase;
   text-shadow:
     0 4px 0 #111,
@@ -8908,6 +8908,12 @@ body:has(.product-detail-page) .payment-trust-banner {
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.hero-slide[data-hero-style="workshop-bundle"] .hero-message .lead {
+  max-width: 470px;
+  font-size: 0.96rem;
+  line-height: 1.35;
 }
 
 .hero-slide[data-hero-style="puzzle-object"] .hero-message {
@@ -9026,6 +9032,7 @@ body:has(.product-detail-page) .payment-trust-banner {
 
 .hero-slide[data-hero-style="street-racer"] .hero-message h1 {
   max-width: 650px;
+  margin-bottom: 22px;
   color: #fff8f3;
   font-family: "Arial Black", Impact, Arial, sans-serif;
   font-size: clamp(3rem, 5.6vw, 6.15rem);
@@ -9040,6 +9047,8 @@ body:has(.product-detail-page) .payment-trust-banner {
 }
 
 .hero-slide[data-hero-style="street-racer"] .hero-message .script-line {
+  display: inline-block;
+  margin-top: 8px;
   color: #8cc7ff;
   font-family: "Arial Narrow", Arial, sans-serif;
   font-size: clamp(1rem, 1.6vw, 1.32rem);
@@ -9047,6 +9056,11 @@ body:has(.product-detail-page) .payment-trust-banner {
   font-weight: 900;
   letter-spacing: 0.11em;
   text-transform: uppercase;
+}
+
+.hero-slide[data-hero-style="street-racer"] .hero-message .lead {
+  margin-top: 24px;
+  line-height: 1.5;
 }
 
 .hero-slide[data-hero-style="classic-coupe"] .hero-message {
@@ -9316,6 +9330,16 @@ body:has(.product-detail-page) .payment-trust-banner {
 }
 
 @media (max-width: 700px) {
+  .hero-slide[data-hero-style]::after {
+    background:
+      linear-gradient(90deg, rgba(0, 0, 0, 0.78) 0 40%, rgba(0, 0, 0, 0.24) 68%, rgba(0, 0, 0, 0.02)),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 44%, rgba(0, 0, 0, 0.12));
+  }
+
+  .hero-slide[data-hero-style="time-machine"] .hero-art {
+    object-position: 63% center;
+  }
+
   .hero-slide[data-hero-style] .hero-message {
     top: 28px;
     left: 18px;
@@ -9326,14 +9350,33 @@ body:has(.product-detail-page) .payment-trust-banner {
   .hero-slide[data-hero-style] .hero-message h1 {
     max-width: 322px;
     font-size: 2rem;
-    line-height: 0.86;
+    line-height: 0.9;
   }
 
   .hero-slide[data-hero-style="time-machine"] .hero-message h1 {
+    max-width: 334px;
+    font-size: 1.9rem;
+    letter-spacing: 0.012em;
     -webkit-text-stroke-width: 1px;
     text-shadow:
       4px 4px 0 #071f52,
       8px 8px 18px rgba(0, 0, 0, 0.98);
+  }
+
+  .hero-slide[data-hero-style="workshop-bundle"] .hero-message h1 {
+    max-width: 300px;
+    font-size: 1.82rem;
+  }
+
+  .hero-slide[data-hero-style="workshop-bundle"] .hero-message .script-line {
+    max-width: 300px;
+    font-size: 0.78rem;
+    line-height: 1.08;
+  }
+
+  .hero-slide[data-hero-style="puzzle-object"] .hero-message h1 {
+    max-width: 306px;
+    font-size: 1.9rem;
   }
 
   .hero-slide[data-hero-style] .hero-message .script-line {
@@ -9348,7 +9391,25 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 
   .hero-slide[data-hero-style] .hero-message .lead {
-    display: none;
+    display: block;
+    max-width: 302px;
+    margin-top: 10px;
+    color: rgba(255, 250, 241, 0.92);
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1.28;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.95);
+  }
+
+  .hero-slide[data-hero-style="workshop-bundle"] .hero-message .lead {
+    max-width: 284px;
+    margin-top: 8px;
+    font-size: 0.7rem;
+    line-height: 1.18;
+  }
+
+  .hero-carousel:has(.hero-slide.is-active[data-hero-style="workshop-bundle"]) .hero-shop-now {
+    bottom: 54px;
   }
 
   .hero-shop-now {
