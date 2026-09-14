@@ -1,0 +1,274 @@
+{
+  "generatedAt": "2026-09-14T13:19:13.664Z",
+  "runId": "2026-09-14",
+  "launchProducts": 81,
+  "organizedRows": 183,
+  "organizedByRole": {
+    "manufacturer-original": 81,
+    "catalogue-primary": 55,
+    "workshop-photography": 47
+  },
+  "archivedRows": 217,
+  "archivedByRole": {
+    "manufacturer-original": 117,
+    "workshop-photography": 50,
+    "catalogue-primary": 50
+  },
+  "badManufacturerDerivedImage2Rows": [
+    {
+      "sku": "IS-AOS-05778",
+      "product": "Suzuki Jimny Blue",
+      "id": "cmu19dwiq000ajgvzlwh4aqip",
+      "storageKey": "products/is-aos-05778/organized-2026-09-14/image-2/tasma-image-2-fix-17feafc7191e.jpg",
+      "approvalState": "REJECTED",
+      "isPrimary": false,
+      "sortOrder": 950
+    },
+    {
+      "sku": "IS-AOS-06347",
+      "product": "Lamborghini Aventador Red",
+      "id": "cmu19eehm000kjgvz1nx05lrx",
+      "storageKey": "products/is-aos-06347/organized-2026-09-14/image-2/tasma-image-2-fix-f6b89d83d540.jpg",
+      "approvalState": "REJECTED",
+      "isPrimary": false,
+      "sortOrder": 950
+    },
+    {
+      "sku": "IS-AOS-06349",
+      "product": "Lamborghini Aventador Blue",
+      "id": "cmu19egnh000njgvz0oygojj0",
+      "storageKey": "products/is-aos-06349/organized-2026-09-14/image-2/tasma-image-2-fix-e33701c05fdb.jpg",
+      "approvalState": "REJECTED",
+      "isPrimary": false,
+      "sortOrder": 950
+    },
+    {
+      "sku": "IS-AOS-06459",
+      "product": "Toyota GR86 Spark Red",
+      "id": "cmu19el0u000tjgvzhato576a",
+      "storageKey": "products/is-aos-06459/organized-2026-09-14/image-2/tasma-image-2-fix-de4351f05a01.jpg",
+      "approvalState": "REJECTED",
+      "isPrimary": false,
+      "sortOrder": 950
+    },
+    {
+      "sku": "IS-AOS-06460",
+      "product": "Toyota GR86 White Pearl",
+      "id": "cmu19en6g000wjgvzsi1uias8",
+      "storageKey": "products/is-aos-06460/organized-2026-09-14/image-2/tasma-image-2-fix-7172eb5cc6dc.jpg",
+      "approvalState": "REJECTED",
+      "isPrimary": false,
+      "sortOrder": 950
+    },
+    {
+      "sku": "IS-AOS-06474",
+      "product": "Nissan S30 Fairlady Z Red Custom Wheels",
+      "id": "cmu19ep8h000zjgvzmgzvc6s4",
+      "storageKey": "products/is-aos-06474/organized-2026-09-14/image-2/tasma-image-2-fix-cf2999f03899.jpg",
+      "approvalState": "REJECTED",
+      "isPrimary": false,
+      "sortOrder": 950
+    },
+    {
+      "sku": "IS-AOS-06477",
+      "product": "Nissan S30 Fairlady Z Brown Custom Wheels",
+      "id": "cmu19es110013jgvzxycybx5t",
+      "storageKey": "products/is-aos-06477/organized-2026-09-14/image-2/tasma-image-2-fix-170e32638154.jpg",
+      "approvalState": "REJECTED",
+      "isPrimary": false,
+      "sortOrder": 950
+    },
+    {
+      "sku": "IS-AOS-06540",
+      "product": "Lamborghini Countach LPI 800-4 Red",
+      "id": "cmu19ewin0019jgvzduf2zxs7",
+      "storageKey": "products/is-aos-06540/organized-2026-09-14/image-2/tasma-image-2-fix-d65f5443fa44.jpg",
+      "approvalState": "REJECTED",
+      "isPrimary": false,
+      "sortOrder": 950
+    }
+  ],
+  "approvedBadManufacturerDerivedImage2Rows": [],
+  "generatedReplacementImage2Rows": [
+    {
+      "sku": "IS-AOS-05778",
+      "product": "Suzuki Jimny Blue",
+      "id": "cmu19laou000038vzg7fxuuvu",
+      "storageKey": "products/is-aos-05778/organized-2026-09-14/image-2/generated-image-2-replacement-9976b4154995.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-AOS-06290",
+      "product": "Honda Motocompo",
+      "id": "cmu19mm16001fc0vz8in87zy7",
+      "storageKey": "products/is-aos-06290/organized-2026-09-14/image-2/generated-image-2-replacement-5780e8b03fe3.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-AOS-06347",
+      "product": "Lamborghini Aventador Red",
+      "id": "cmu19lbkb000138vziq3f2cs9",
+      "storageKey": "products/is-aos-06347/organized-2026-09-14/image-2/generated-image-2-replacement-8a8a4dd093f9.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-AOS-06349",
+      "product": "Lamborghini Aventador Blue",
+      "id": "cmu19lcf2000238vzg22bkko8",
+      "storageKey": "products/is-aos-06349/organized-2026-09-14/image-2/generated-image-2-replacement-a6f9743d7466.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-AOS-06437",
+      "product": "Back to the Future Part II",
+      "id": "cmu19morl001ic0vzo2w6jzhq",
+      "storageKey": "products/is-aos-06437/organized-2026-09-14/image-2/generated-image-2-replacement-aad68771c96d.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-AOS-06438",
+      "product": "Back to the Future Part III",
+      "id": "cmu19mrrw001lc0vzctihg2ow",
+      "storageKey": "products/is-aos-06438/organized-2026-09-14/image-2/generated-image-2-replacement-b7c6d75d786d.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-AOS-06459",
+      "product": "Toyota GR86 Spark Red",
+      "id": "cmu19ldan000338vz69jb1n29",
+      "storageKey": "products/is-aos-06459/organized-2026-09-14/image-2/generated-image-2-replacement-c618c2cb32e0.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-AOS-06460",
+      "product": "Toyota GR86 White Pearl",
+      "id": "cmu19le29000438vzky85wwci",
+      "storageKey": "products/is-aos-06460/organized-2026-09-14/image-2/generated-image-2-replacement-0f5f08dab4f5.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-AOS-06474",
+      "product": "Nissan S30 Fairlady Z Red Custom Wheels",
+      "id": "cmu19leya000538vzo4ejl0og",
+      "storageKey": "products/is-aos-06474/organized-2026-09-14/image-2/generated-image-2-replacement-03b41ee6dd3c.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-AOS-06477",
+      "product": "Nissan S30 Fairlady Z Brown Custom Wheels",
+      "id": "cmu19lfru000638vz4dvs2bxi",
+      "storageKey": "products/is-aos-06477/organized-2026-09-14/image-2/generated-image-2-replacement-523da2825f87.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-AOS-06540",
+      "product": "Lamborghini Countach LPI 800-4 Red",
+      "id": "cmu19lgnu000738vziatr8qon",
+      "storageKey": "products/is-aos-06540/organized-2026-09-14/image-2/generated-image-2-replacement-bac78361379c.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-CUB-C114H",
+      "product": "St Patrick's Cathedral",
+      "id": "cmu19pwwq004dc0vzmf1a3v3z",
+      "storageKey": "products/is-cub-c114h/organized-2026-09-14/image-2/generated-image-2-replacement-58b6ce5f3349.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-CUB-MC092H",
+      "product": "St Peter's Basilica",
+      "id": "cmu19pis40041c0vzxoqa0og4",
+      "storageKey": "products/is-cub-mc092h/organized-2026-09-14/image-2/generated-image-2-replacement-3d289c030c5c.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-CUB-MC133H",
+      "product": "Burj Khalifa",
+      "id": "cmu19pbgw003vc0vzj7s9l9pu",
+      "storageKey": "products/is-cub-mc133h/organized-2026-09-14/image-2/generated-image-2-replacement-a9e40fd4cb97.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-CUB-MC139H",
+      "product": "Chateau de Chenonceau",
+      "id": "cmu19ppv80047c0vz5568efsm",
+      "storageKey": "products/is-cub-mc139h/organized-2026-09-14/image-2/generated-image-2-replacement-4ec087c96a8a.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-CUB-OM3603",
+      "product": "Magic Box  Underwater World",
+      "id": "cmu19q67a004jc0vzgr18a2uz",
+      "storageKey": "products/is-cub-om3603/organized-2026-09-14/image-2/generated-image-2-replacement-927a0ef23bc3.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-PIN-Q1035",
+      "product": "Jigsaw Screen - Famous Architectures",
+      "id": "cmu19qjl3004qc0vzryoayjse",
+      "storageKey": "products/is-pin-q1035/organized-2026-09-14/image-2/generated-image-2-replacement-8455ce457a06.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-PIN-Q1037",
+      "product": "Jigsaw Lantern - Famous Architecture",
+      "id": "cmu19oo95003ac0vz24ugbwos",
+      "storageKey": "products/is-pin-q1037/organized-2026-09-14/image-2/generated-image-2-replacement-884eacd0bebb.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-PIN-Q1061",
+      "product": "Jigsaw Screen - Le Papillon et la Fleur",
+      "id": "cmu19qox9004tc0vzs7fca53f",
+      "storageKey": "products/is-pin-q1061/organized-2026-09-14/image-2/generated-image-2-replacement-e86d7af36aa2.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    },
+    {
+      "sku": "IS-PIN-S1009",
+      "product": "3D Jigsaw Vase - Children",
+      "id": "cmu19ntsf002jc0vzu2bsd474",
+      "storageKey": "products/is-pin-s1009/organized-2026-09-14/image-2/generated-image-2-replacement-609b8c33b116.png",
+      "approvalState": "APPROVED",
+      "isPrimary": true,
+      "sortOrder": 0
+    }
+  ]
+}

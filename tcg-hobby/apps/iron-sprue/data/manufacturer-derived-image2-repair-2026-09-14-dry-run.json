@@ -1,0 +1,95 @@
+{
+  "generatedAt": "2026-09-14T13:14:01.474Z",
+  "mode": "dry-run",
+  "repairs": [
+    {
+      "sku": "IS-AOS-05778",
+      "product": "Suzuki Jimny Blue",
+      "archivedSource": "archive/products/is-aos-05778/replaced-2026-09-14/image-2/iron-sprue-image-2-5def2b2b40fa.png",
+      "rejectedRows": [
+        "products/is-aos-05778/organized-2026-09-14/image-2/tasma-image-2-fix-17feafc7191e.jpg"
+      ],
+      "replacementKey": "products/is-aos-05778/organized-2026-09-14/image-2/generated-image-2-replacement-9976b4154995.png",
+      "width": 1100,
+      "height": 1100
+    },
+    {
+      "sku": "IS-AOS-06347",
+      "product": "Lamborghini Aventador Red",
+      "archivedSource": "archive/products/is-aos-06347/replaced-2026-09-14/image-2/iron-sprue-image-2-454108e1a24f.png",
+      "rejectedRows": [
+        "products/is-aos-06347/organized-2026-09-14/image-2/tasma-image-2-fix-f6b89d83d540.jpg"
+      ],
+      "replacementKey": "products/is-aos-06347/organized-2026-09-14/image-2/generated-image-2-replacement-8a8a4dd093f9.png",
+      "width": 1100,
+      "height": 1100
+    },
+    {
+      "sku": "IS-AOS-06349",
+      "product": "Lamborghini Aventador Blue",
+      "archivedSource": "archive/products/is-aos-06349/replaced-2026-09-14/image-2/iron-sprue-image-2-db905d512f27.png",
+      "rejectedRows": [
+        "products/is-aos-06349/organized-2026-09-14/image-2/tasma-image-2-fix-e33701c05fdb.jpg"
+      ],
+      "replacementKey": "products/is-aos-06349/organized-2026-09-14/image-2/generated-image-2-replacement-a6f9743d7466.png",
+      "width": 1100,
+      "height": 1100
+    },
+    {
+      "sku": "IS-AOS-06459",
+      "product": "Toyota GR86 Spark Red",
+      "archivedSource": "archive/products/is-aos-06459/replaced-2026-09-14/image-2/iron-sprue-image-2-6d3cac50221e.png",
+      "rejectedRows": [
+        "products/is-aos-06459/organized-2026-09-14/image-2/tasma-image-2-fix-de4351f05a01.jpg"
+      ],
+      "replacementKey": "products/is-aos-06459/organized-2026-09-14/image-2/generated-image-2-replacement-c618c2cb32e0.png",
+      "width": 1100,
+      "height": 1100
+    },
+    {
+      "sku": "IS-AOS-06460",
+      "product": "Toyota GR86 White Pearl",
+      "archivedSource": "archive/products/is-aos-06460/replaced-2026-09-14/image-2/iron-sprue-image-2-53ebbc2ad4f2.png",
+      "rejectedRows": [
+        "products/is-aos-06460/organized-2026-09-14/image-2/tasma-image-2-fix-7172eb5cc6dc.jpg"
+      ],
+      "replacementKey": "products/is-aos-06460/organized-2026-09-14/image-2/generated-image-2-replacement-0f5f08dab4f5.png",
+      "width": 1100,
+      "height": 1100
+    },
+    {
+      "sku": "IS-AOS-06474",
+      "product": "Nissan S30 Fairlady Z Red Custom Wheels",
+      "archivedSource": "archive/products/is-aos-06474/replaced-2026-09-14/image-2/iron-sprue-image-2-aba57b20dfba.png",
+      "rejectedRows": [
+        "products/is-aos-06474/organized-2026-09-14/image-2/tasma-image-2-fix-cf2999f03899.jpg"
+      ],
+      "replacementKey": "products/is-aos-06474/organized-2026-09-14/image-2/generated-image-2-replacement-03b41ee6dd3c.png",
+      "width": 1100,
+      "height": 1100
+    },
+    {
+      "sku": "IS-AOS-06477",
+      "product": "Nissan S30 Fairlady Z Brown Custom Wheels",
+      "archivedSource": "archive/products/is-aos-06477/replaced-2026-09-14/image-2/iron-sprue-image-2-0ea9ecc3e054.png",
+      "rejectedRows": [
+        "products/is-aos-06477/organized-2026-09-14/image-2/tasma-image-2-fix-170e32638154.jpg"
+      ],
+      "replacementKey": "products/is-aos-06477/organized-2026-09-14/image-2/generated-image-2-replacement-523da2825f87.png",
+      "width": 1100,
+      "height": 1100
+    },
+    {
+      "sku": "IS-AOS-06540",
+      "product": "Lamborghini Countach LPI 800-4 Red",
+      "archivedSource": "archive/products/is-aos-06540/replaced-2026-09-14/image-2/iron-sprue-image-2-a7e7d0aad658.png",
+      "rejectedRows": [
+        "products/is-aos-06540/organized-2026-09-14/image-2/tasma-image-2-fix-d65f5443fa44.jpg"
+      ],
+      "replacementKey": "products/is-aos-06540/organized-2026-09-14/image-2/generated-image-2-replacement-bac78361379c.png",
+      "width": 1100,
+      "height": 1100
+    }
+  ],
+  "errors": []
+}
