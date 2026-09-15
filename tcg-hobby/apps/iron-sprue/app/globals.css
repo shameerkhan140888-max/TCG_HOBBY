@@ -6308,11 +6308,10 @@ body::before {
 }
 
 .product-detail-page .pdp-addon-carousel-controls {
-  position: absolute;
-  top: -62px;
-  right: 0;
   display: flex;
+  justify-content: flex-end;
   gap: 8px;
+  margin: 0 0 14px;
 }
 
 .product-detail-page .pdp-addon-carousel-controls button {
@@ -6353,8 +6352,8 @@ body::before {
 }
 
 .product-detail-page .pdp-addon-carousel-track .product-card {
-  flex: 0 0 clamp(218px, 21vw, 248px);
-  min-width: clamp(218px, 21vw, 248px);
+  flex: 0 0 clamp(278px, 23vw, 316px);
+  min-width: clamp(278px, 23vw, 316px);
   scroll-snap-align: start;
 }
 
@@ -6369,18 +6368,101 @@ body::before {
     inset 0 0 0 1px rgba(184, 112, 31, 0.1);
 }
 
+.product-detail-page .pdp-addon-carousel-track .product-card-surface {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
 .product-detail-page .pdp-addon-carousel-track .product-card .product-image {
-  height: 174px;
+  aspect-ratio: 1 / 0.72;
+  height: auto;
   min-height: 0;
+  overflow: hidden;
 }
 
 .product-detail-page .pdp-addon-carousel-track .product-card .product-card-body {
-  min-height: 238px;
-  padding: 20px;
+  display: grid;
+  grid-template-rows:
+    auto
+    minmax(2.56em, auto)
+    auto
+    auto
+    8px
+    auto
+    auto
+    8px
+    auto;
+  min-height: 286px;
+  gap: 4px;
+  padding: 18px;
+  align-content: start;
 }
 
 .product-detail-page .pdp-addon-carousel-track .product-card h3 {
+  min-height: 2.56em;
   font-size: 17px;
+  line-height: 1.28;
+  -webkit-line-clamp: 2;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .product-card-category {
+  grid-row: 3 !important;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .product-card-facts {
+  grid-row: 4 !important;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .stock-badge {
+  grid-row: 6 !important;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card strong {
+  grid-row: 7 !important;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .product-actions {
+  grid-row: 9 !important;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-self: end;
+  margin: 0 !important;
+  padding: 0;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .product-actions > a,
+.product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack button {
+  width: 100%;
+  height: 42px;
+  min-height: 42px;
+  max-height: 42px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack {
+  grid-template-rows: 42px 13px;
+  gap: 2px;
+  min-height: 57px;
+  max-height: 57px;
+  overflow: hidden;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack button {
+  font-size: 13px;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack button span {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
 }
 
 .product-detail-page .pdp-addon-carousel-track .product-card .stock-badge.in-stock {
@@ -6683,19 +6765,35 @@ body::before {
   }
 
   .product-detail-page .pdp-addon-carousel-track .product-card {
-    flex-basis: clamp(154px, 46vw, 196px);
-    min-width: clamp(154px, 46vw, 196px);
-    padding: 12px;
+    flex-basis: clamp(212px, 72vw, 252px);
+    min-width: clamp(212px, 72vw, 252px);
+    padding: 10px;
   }
 
   .product-detail-page .pdp-addon-carousel-track .product-card .product-image {
-    height: 104px;
-    padding: 8px;
+    aspect-ratio: 1 / 0.74;
+    height: auto;
+    padding: 0;
+  }
+
+  .product-detail-page .pdp-addon-carousel-track .product-card .product-card-body {
+    grid-template-rows:
+      auto
+      minmax(2.56em, auto)
+      auto
+      auto
+      7px
+      auto
+      auto
+      7px
+      auto;
+    min-height: 266px;
+    padding: 14px;
   }
 
   .product-detail-page .pdp-addon-carousel-track .product-card h3 {
     display: -webkit-box;
-    min-height: 38px;
+    min-height: 2.56em;
     overflow: hidden;
     font-size: 14px;
     line-height: 1.28;
