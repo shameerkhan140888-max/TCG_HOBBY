@@ -297,6 +297,91 @@ export function buildTypeOptions(products: IronSprueProduct[]) {
   return Array.from(new Set(products.map(productBuildType).filter((value): value is string => Boolean(value?.trim())))).sort();
 }
 
+function normaliseSearchValue(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function searchableProductText(product: IronSprueProduct) {
+  const specifications = product.specifications && typeof product.specifications === 'object' && !Array.isArray(product.specifications)
+    ? Object.values(product.specifications).join(' ')
+    : '';
+  return [
+    product.sku,
+    product.supplierSku,
+    product.manufacturerReference,
+    product.barcode,
+    product.slug,
+    product.name,
+    product.customerTitle,
+    product.sourceTitle,
+    product.brand,
+    product.category,
+    product.productType,
+    productScale(product),
+    productBuildType(product),
+    productPieceCount(product) ? `${productPieceCount(product)} pieces` : '',
+    productSize(product),
+    productStructure(product),
+    vehicleManufacturerForProduct(product),
+    product.skillLevel,
+    product.shortDescription,
+    product.description,
+    specifications,
+    ...(product.features ?? []),
+    ...(product.searchKeywords ?? []),
+  ].filter(Boolean).join(' ');
+}
+
+function levenshteinDistance(left: string, right: string) {
+  if (left === right) return 0;
+  if (!left.length) return right.length;
+  if (!right.length) return left.length;
+
+  const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  const current = Array.from({ length: right.length + 1 }, () => 0);
+
+  for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+    current[0] = leftIndex;
+    for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+      const substitutionCost = left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1;
+      current[rightIndex] = Math.min(
+        current[rightIndex - 1]! + 1,
+        previous[rightIndex]! + 1,
+        previous[rightIndex - 1]! + substitutionCost,
+      );
+    }
+    for (let index = 0; index < previous.length; index += 1) previous[index] = current[index]!;
+  }
+
+  return previous[right.length]!;
+}
+
+function fuzzyTokenMatches(needle: string, haystackTokens: string[]) {
+  if (needle.length <= 2) return haystackTokens.includes(needle);
+  const allowedDistance = needle.length <= 4 ? 1 : 2;
+  return haystackTokens.some((token) => {
+    if (token.includes(needle) || needle.includes(token)) return true;
+    if (Math.abs(token.length - needle.length) > allowedDistance) return false;
+    return levenshteinDistance(needle, token) <= allowedDistance;
+  });
+}
+
+function productMatchesSearch(product: IronSprueProduct, search: string) {
+  const normalisedSearch = normaliseSearchValue(search);
+  if (!normalisedSearch) return true;
+  const haystack = normaliseSearchValue(searchableProductText(product));
+  if (haystack.includes(normalisedSearch)) return true;
+
+  const haystackTokens = Array.from(new Set(haystack.split(' ').filter(Boolean)));
+  const searchTokens = normalisedSearch.split(' ').filter(Boolean);
+  return searchTokens.every((token) => fuzzyTokenMatches(token, haystackTokens));
+}
+
 export function filterIronSprueProducts(products: IronSprueProduct[], query: { availability?: string | undefined; brand?: string | undefined; buildType?: string | undefined; bundles?: string | undefined; category?: string | undefined; offers?: string | undefined; pieceCount?: string | undefined; scale?: string | undefined; search?: string | undefined; structure?: string | undefined; vehicleManufacturer?: string | undefined }) {
   const availability = query.availability?.trim().toLowerCase();
   const brand = query.brand?.trim().toLowerCase();
@@ -306,7 +391,7 @@ export function filterIronSprueProducts(products: IronSprueProduct[], query: { a
   const offers = query.offers?.trim().toLowerCase();
   const pieceCount = query.pieceCount?.trim();
   const scale = normalizedScale(query.scale);
-  const search = query.search?.trim().toLowerCase();
+  const search = query.search?.trim();
   const structure = query.structure?.trim().toLowerCase();
   const vehicleManufacturer = query.vehicleManufacturer?.trim().toLowerCase();
 
@@ -333,26 +418,7 @@ export function filterIronSprueProducts(products: IronSprueProduct[], query: { a
     if (buildType && productBuildType(product).toLowerCase() !== buildType) return false;
     if (vehicleManufacturer && vehicleManufacturerForProduct(product)?.toLowerCase() !== vehicleManufacturer) return false;
     if (search) {
-      const specifications = product.specifications && typeof product.specifications === 'object'
-        ? Object.values(product.specifications).join(' ')
-        : '';
-      const haystack = [
-        product.name,
-        product.brand,
-        product.category,
-        product.productType,
-        productScale(product),
-        productBuildType(product),
-        productPieceCount(product) ? `${productPieceCount(product)} pieces` : '',
-        productSize(product),
-        productStructure(product),
-        vehicleManufacturerForProduct(product),
-        product.skillLevel,
-        specifications,
-        ...(product.features ?? []),
-        ...(product.searchKeywords ?? []),
-      ].filter(Boolean).join(' ').toLowerCase();
-      if (!haystack.includes(search)) return false;
+      if (!productMatchesSearch(product, search)) return false;
     }
     return true;
   });

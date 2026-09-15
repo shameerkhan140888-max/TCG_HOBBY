@@ -33,6 +33,17 @@ describe('Iron Sprue PO-derived launch products', () => {
     expect(backToTheFuture.map((product) => product.sku).sort()).toEqual(['IS-AOS-06437', 'IS-AOS-06438']);
   });
 
+  it('searches product names, SKU references and close spelling variants', () => {
+    const deloreanTypo = filterIronSprueProducts(products, { search: 'deloreon' });
+    const skuFragment = filterIronSprueProducts(products, { search: '06438' });
+    const vehicleSearch = filterIronSprueProducts(products, { category: 'model-kits', search: 'pagani zonda' });
+
+    expect(deloreanTypo.map((product) => product.sku)).toEqual(expect.arrayContaining(['IS-AOS-06437', 'IS-AOS-06438']));
+    expect(skuFragment.map((product) => product.sku)).toContain('IS-AOS-06438');
+    expect(vehicleSearch.every(isModelKitProduct)).toBe(true);
+    expect(vehicleSearch.map((product) => product.sku)).toContain('IS-AOS-05603');
+  });
+
   it('returns sellable workshop-category add-ons for product detail recommendations', () => {
     const product = products.find((item) => item.sku === 'IS-AOS-05628');
     expect(product).toBeTruthy();

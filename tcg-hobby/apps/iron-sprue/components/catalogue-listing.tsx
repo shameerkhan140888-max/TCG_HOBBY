@@ -182,6 +182,16 @@ export async function CatalogueListing({
     if (fixedCategory && !categoryMatches(product, fixedCategory)) return false;
     return true;
   });
+  const brandFacetProducts = scopedProducts.filter((product) => {
+    if (fixedBrand) return true;
+    if (selectedCategory && !categoryMatches(product, selectedCategory)) return false;
+    return true;
+  });
+  const categoryFacetProducts = scopedProducts.filter((product) => {
+    if (fixedCategory) return true;
+    if (selectedBrand && product.brand !== selectedBrand) return false;
+    return true;
+  });
   const vehicleManufacturers = selectedBrand === 'Aoshima' || selectedCategory === 'model-kits'
     ? vehicleManufacturerOptions(scopedProducts)
     : [];
@@ -263,7 +273,7 @@ export async function CatalogueListing({
       ) : (
         <select id={`brand-filter-${idSuffix}`} name="brand" defaultValue={selectedBrand}>
           <option value="">All brands</option>
-          {brandOptions(storefrontProducts).map((brand) => <option value={brand} key={brand}>{brand}</option>)}
+          {brandOptions(brandFacetProducts).map((brand) => <option value={brand} key={brand}>{brand}</option>)}
         </select>
       )}
       <label htmlFor={`category-filter-${idSuffix}`}>Category</label>
@@ -272,7 +282,7 @@ export async function CatalogueListing({
       ) : (
         <select id={`category-filter-${idSuffix}`} name="category" defaultValue={selectedCategory}>
           <option value="">All categories</option>
-          {categoryOptions(storefrontProducts).map((category) => <option value={slugForCategory(category)} key={category}>{category}</option>)}
+          {categoryOptions(categoryFacetProducts).map((category) => <option value={slugForCategory(category)} key={category}>{category}</option>)}
         </select>
       )}
       {vehicleManufacturers.length ? (

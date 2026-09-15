@@ -142,7 +142,7 @@ export default async function HomePage() {
         <h2>{brandPlacement?.title || 'Brands we stock'}</h2>
         <div className="brand-stage">
           <div className="brand-viewport" aria-live="off">
-            {brandsWeStock.slice(0, 5).map((brand, index) => (
+            {brandsWeStock.map((brand, index) => (
             <a
               className="brand-feature"
               href={brand.href}
@@ -156,7 +156,7 @@ export default async function HomePage() {
           </div>
         </div>
         <ol className="carousel-dots" aria-label="Brand carousel position">
-          {brandsWeStock.slice(0, 5).map((brand, index) => (
+          {brandsWeStock.map((brand, index) => (
             <li key={brand.slug} aria-current={index === 0 ? 'true' : undefined} />
           ))}
         </ol>
