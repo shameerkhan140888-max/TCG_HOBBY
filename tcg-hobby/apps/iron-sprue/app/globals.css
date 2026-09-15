@@ -8810,6 +8810,33 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 }
 
+/* Desktop card media must constrain the image element itself, otherwise tall
+   product crops can overflow the white frame before object-fit is applied. */
+@media (min-width: 701px) {
+  .homepage-board .product-card .product-image,
+  .catalogue-grid .product-card .product-image,
+  .product-grid .product-card .product-image {
+    position: relative;
+    display: block;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .homepage-board .product-card .product-image img,
+  .catalogue-grid .product-card .product-image img,
+  .product-grid .product-card .product-image img {
+    position: absolute;
+    inset: 24px;
+    width: calc(100% - 48px) !important;
+    height: calc(100% - 48px) !important;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    object-position: center;
+  }
+}
+
 /* Homepage hero typography treatments are keyed by product mood, not one global style. */
 .hero-slide[data-hero-style="time-machine"] .hero-message {
   left: clamp(52px, 4.6rem, 86px);
