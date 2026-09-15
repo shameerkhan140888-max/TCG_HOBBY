@@ -107,9 +107,8 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
               Close image
             </button>
             <img
-              src={ironSprueDisplayMediaUrl(activeImage, 1400)}
-              srcSet={ironSprueDisplayMediaSrcSet(activeImage, [960, 1400])}
-              sizes="(max-width: 700px) 94vw, (max-width: 1100px) 92vw, 1120px"
+              src={activeImage}
+              sizes="100vw"
               alt={productName}
               width="1600"
               height="1600"
