@@ -6052,6 +6052,7 @@ body::before {
 
 .product-unified-panel .primary-product-image {
   border-color: rgba(3, 4, 3, 0.96);
+  padding: 0;
   box-shadow:
     0 0 0 1px rgba(190, 122, 37, 0.38),
     0 0 0 3px rgba(0, 0, 0, 0.82),
@@ -6225,7 +6226,8 @@ body::before {
   height: auto;
   aspect-ratio: 1 / 1;
   border-color: rgba(190, 122, 37, 0.28);
-  background: rgba(255, 250, 241, 0.94);
+  background: #fff;
+  padding: 0;
   box-shadow:
     0 0 0 2px rgba(0, 0, 0, 0.68),
     inset 0 1px 0 rgba(255, 250, 241, 0.28);
@@ -6492,7 +6494,7 @@ body::before {
     grid-area: auto;
     min-height: clamp(210px, 60vw, 280px);
     aspect-ratio: 1 / 1;
-    padding: 10px;
+    padding: 0;
     order: 1;
   }
 
@@ -6519,7 +6521,7 @@ body::before {
     width: 72px;
     height: 72px;
     min-width: 72px;
-    padding: 5px;
+    padding: 0;
     scroll-snap-align: start;
   }
 
@@ -8943,9 +8945,9 @@ body:has(.product-detail-page) .payment-trust-banner {
   .catalogue-grid .product-card .product-image img,
   .product-grid .product-card .product-image img {
     position: absolute;
-    inset: 24px;
-    width: calc(100% - 48px) !important;
-    height: calc(100% - 48px) !important;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
     max-width: none;
     max-height: none;
     object-fit: contain;
