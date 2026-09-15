@@ -9,18 +9,18 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: postgresql://tcg_hobby:tcg_hobby@localhost:5432/tcg_hobby?schema=public
+      DATABASE_URL: postgresql://capital_hobby_group:capital_hobby_group@localhost:5432/capital_hobby_group?schema=public
     services:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: tcg_hobby
-          POSTGRES_PASSWORD: tcg_hobby
-          POSTGRES_DB: tcg_hobby
+          POSTGRES_USER: capital_hobby_group
+          POSTGRES_PASSWORD: capital_hobby_group
+          POSTGRES_DB: capital_hobby_group
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U tcg_hobby"
+          --health-cmd "pg_isready -U capital_hobby_group"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5

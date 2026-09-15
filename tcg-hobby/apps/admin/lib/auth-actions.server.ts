@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createSessionExpiry, generateSessionToken, SESSION_COOKIE_NAME, validateLoginInput, verifyPassword } from '@capital-hobby/auth';
+import { createSessionExpiry, generateSessionToken, SESSION_COOKIE_NAME, SESSION_COOKIE_NAMES, validateLoginInput, verifyPassword } from '@capital-hobby/auth';
 import { getIronSprueAdminPrisma, prisma } from '@capital-hobby/database';
 import { requireAdminSession, requireIronSprueAdminSession } from './auth.server';
 
@@ -62,13 +62,15 @@ export async function loginIronSprueAdminAction(_state: AdminLoginState, formDat
 export async function logoutAdminAction(): Promise<never> {
   const session = await requireAdminSession();
   await prisma.session.deleteMany({ where: { sessionToken: session.sessionToken } });
-  (await cookies()).delete(SESSION_COOKIE_NAME);
+  const cookieStore = await cookies();
+  SESSION_COOKIE_NAMES.forEach((name) => cookieStore.delete(name));
   redirect('/login');
 }
 
 export async function logoutIronSprueAdminAction(): Promise<never> {
   const session = await requireIronSprueAdminSession('/iron-sprue-admin', '/iron-sprue-admin/login');
   await getIronSprueAdminPrisma().session.deleteMany({ where: { sessionToken: session.sessionToken } });
-  (await cookies()).delete(SESSION_COOKIE_NAME);
+  const cookieStore = await cookies();
+  SESSION_COOKIE_NAMES.forEach((name) => cookieStore.delete(name));
   redirect('/iron-sprue-admin/login');
 }

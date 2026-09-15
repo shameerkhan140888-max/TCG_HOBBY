@@ -2,9 +2,7 @@ import 'server-only';
 
 import { getWishlistItems, prisma, type WishlistItem } from '@capital-hobby/database/storefront';
 import {
-  SESSION_COOKIE_NAME,
-  createSessionExpiry,
-  generateSessionToken,
+  SESSION_COOKIE_NAMES,
   type SessionUser,
 } from '@capital-hobby/auth';
 import { cookies } from 'next/headers';
@@ -45,7 +43,7 @@ function sessionCookieOptions(expires: Date) {
 
 export const getCurrentCustomerSession = cache(async (): Promise<CustomerSession | null> => {
   const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const token = SESSION_COOKIE_NAMES.map((name) => cookieStore.get(name)?.value).find(Boolean);
 
   if (!token) {
     return null;

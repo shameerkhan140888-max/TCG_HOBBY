@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import {
   SESSION_COOKIE_NAME,
+  SESSION_COOKIE_NAMES,
   createSessionExpiry,
   generateSessionToken,
   hashPassword,
@@ -54,12 +55,12 @@ async function createCustomerSession(userId: string) {
 
 export async function logoutIronSprueCustomerAction() {
   const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const token = SESSION_COOKIE_NAMES.map((name) => cookieStore.get(name)?.value).find(Boolean);
   if (token) {
     const { prisma } = await importLocalStorefrontDatabase();
     await prisma.session.deleteMany({ where: { sessionToken: token } });
   }
-  cookieStore.delete(SESSION_COOKIE_NAME);
+  SESSION_COOKIE_NAMES.forEach((name) => cookieStore.delete(name));
   redirect('/login');
 }
 

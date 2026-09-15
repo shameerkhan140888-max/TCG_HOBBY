@@ -3,8 +3,10 @@ export {
   canAccessCustomerAccount,
   createSessionExpiry,
   generateSessionToken,
+  LEGACY_SESSION_COOKIE_NAME,
   requireCustomerAccount,
   SESSION_COOKIE_NAME,
+  SESSION_COOKIE_NAMES,
   SESSION_DURATION_MS,
 } from './session.js';
 export type { CustomerSession, SessionRole, SessionUser } from './session.js';

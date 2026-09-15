@@ -15,7 +15,9 @@ export type CustomerSession = {
   expires: Date;
 };
 
-export const SESSION_COOKIE_NAME = 'tcg_hobby_session';
+export const SESSION_COOKIE_NAME = 'chg_session';
+export const LEGACY_SESSION_COOKIE_NAME = 'tcg_hobby_session';
+export const SESSION_COOKIE_NAMES = [SESSION_COOKIE_NAME, LEGACY_SESSION_COOKIE_NAME] as const;
 export const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 14;
 
 export function generateSessionToken() {
@@ -41,4 +43,3 @@ export function requireCustomerAccount(user: SessionUser | null | undefined): Se
 
   return user;
 }
-

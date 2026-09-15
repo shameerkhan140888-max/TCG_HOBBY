@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { canAccessAdmin, canAccessCustomerAccount, createSessionExpiry, generateSessionToken, requireCustomerAccount } from './session';
+import {
+  canAccessAdmin,
+  canAccessCustomerAccount,
+  createSessionExpiry,
+  generateSessionToken,
+  LEGACY_SESSION_COOKIE_NAME,
+  requireCustomerAccount,
+  SESSION_COOKIE_NAME,
+  SESSION_COOKIE_NAMES,
+} from './session';
 
 describe('session helpers', () => {
   it('generates unique session tokens and expiry windows', () => {
@@ -8,6 +17,12 @@ describe('session helpers', () => {
 
     expect(token.length).toBeGreaterThan(30);
     expect(expiry).toBeInstanceOf(Date);
+  });
+
+  it('uses CHG session cookies while accepting the legacy TCG cookie during migration', () => {
+    expect(SESSION_COOKIE_NAME).toBe('chg_session');
+    expect(LEGACY_SESSION_COOKIE_NAME).toBe('tcg_hobby_session');
+    expect(SESSION_COOKIE_NAMES).toEqual(['chg_session', 'tcg_hobby_session']);
   });
 
   it('restricts customer account access to customer users', () => {

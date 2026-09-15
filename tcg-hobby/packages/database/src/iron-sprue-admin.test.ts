@@ -483,7 +483,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
   });
 
   it('uses the explicit Railway-production admin database target when configured', () => {
-    process.env.DATABASE_URL = 'postgresql://root@local.example/tcg_hobby';
+    process.env.DATABASE_URL = 'postgresql://root@local.example/capital_hobby_group';
     process.env.IRON_SPRUE_DATABASE_URL = 'postgresql://iron@neon.example/neondb';
     process.env.IRON_SPRUE_ADMIN_DATABASE_URL = 'postgresql://railway@railway.internal/railway';
     process.env.IRON_SPRUE_ADMIN_ENVIRONMENT = 'railway-production';
@@ -724,7 +724,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
   });
 
   it('counts dashboard data only through Iron Sprue scoped tables', async () => {
-    process.env.DATABASE_URL = 'postgresql://root@local.example/tcg_hobby';
+    process.env.DATABASE_URL = 'postgresql://root@local.example/capital_hobby_group';
     process.env.IRON_SPRUE_ENVIRONMENT = 'development';
     process.env.IRON_SPRUE_WORKER_READ_DATABASE_URL = 'postgresql://redacted.example/iron';
     process.env.IRON_SPRUE_R2_BUCKET_NAME = 'iron-sprue-product-media';

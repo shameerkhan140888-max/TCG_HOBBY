@@ -3,7 +3,7 @@ import 'server-only';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { canAccessAdmin, SESSION_COOKIE_NAME, type SessionUser } from '@capital-hobby/auth';
+import { canAccessAdmin, SESSION_COOKIE_NAMES, type SessionUser } from '@capital-hobby/auth';
 import { getIronSprueAdminPrisma, prisma } from '@capital-hobby/database';
 
 export type AdminSession = {
@@ -28,7 +28,7 @@ export function isAdminDatabaseUnavailable(error: unknown) {
 
 export const getCurrentAdminSession = cache(async (): Promise<AdminSession | null> => {
   const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const token = SESSION_COOKIE_NAMES.map((name) => cookieStore.get(name)?.value).find(Boolean);
   if (!token) return null;
 
   const session = await prisma.session.findUnique({
@@ -51,7 +51,7 @@ export const getCurrentAdminSession = cache(async (): Promise<AdminSession | nul
 
 export const getCurrentIronSprueAdminSession = cache(async (): Promise<AdminSession | null> => {
   const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const token = SESSION_COOKIE_NAMES.map((name) => cookieStore.get(name)?.value).find(Boolean);
   if (!token) return null;
 
   const session = await getIronSprueAdminPrisma().session.findUnique({

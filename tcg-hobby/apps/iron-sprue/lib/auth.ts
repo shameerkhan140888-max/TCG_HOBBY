@@ -3,7 +3,7 @@ import 'server-only';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { SESSION_COOKIE_NAME, type SessionUser } from '@capital-hobby/auth';
+import { SESSION_COOKIE_NAMES, type SessionUser } from '@capital-hobby/auth';
 import { importLocalStorefrontDatabase } from './local-database';
 import { shouldUseIronSprueProductionApi } from './production-api';
 
@@ -17,7 +17,7 @@ export const getCurrentIronSprueCustomerSession = cache(async (): Promise<IronSp
   if (shouldUseIronSprueProductionApi()) return null;
 
   const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const token = SESSION_COOKIE_NAMES.map((name) => cookieStore.get(name)?.value).find(Boolean);
   if (!token) return null;
 
   const { prisma } = await importLocalStorefrontDatabase();

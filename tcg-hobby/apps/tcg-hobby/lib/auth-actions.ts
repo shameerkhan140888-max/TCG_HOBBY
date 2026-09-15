@@ -2,8 +2,12 @@
 
 import { prisma } from '@capital-hobby/database/storefront';
 import {
+  createSessionExpiry,
+  generateSessionToken,
   hashPassword,
   normalizeEmail,
+  SESSION_COOKIE_NAME,
+  SESSION_COOKIE_NAMES,
   validateLoginInput,
   validateProfileInput,
   validateRegisterInput,
@@ -12,7 +16,6 @@ import {
 } from '@capital-hobby/auth';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createSessionExpiry, generateSessionToken, SESSION_COOKIE_NAME } from '@capital-hobby/auth';
 import { requireCustomerSession } from './auth';
 import { resolveInternalReturnTo } from './internal-return';
 
@@ -73,12 +76,12 @@ async function createCustomerSession(userId: string) {
 async function destroyCustomerSession(sessionToken: string) {
   await prisma.session.deleteMany({ where: { sessionToken } });
   const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE_NAME);
+  SESSION_COOKIE_NAMES.forEach((name) => cookieStore.delete(name));
 }
 
 export async function logoutCustomerAction() {
   const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const token = SESSION_COOKIE_NAMES.map((name) => cookieStore.get(name)?.value).find(Boolean);
 
   if (token) {
     await destroyCustomerSession(token);

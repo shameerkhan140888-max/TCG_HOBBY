@@ -11,6 +11,9 @@ coverage
 playwright-report
 test-results
 .media-work
+debug.log
+outputs/
+tmp/
 .env
 .env.local
 .dev.vars

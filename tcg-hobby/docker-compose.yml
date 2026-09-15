@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: tcg_hobby
-      POSTGRES_PASSWORD: tcg_hobby
-      POSTGRES_DB: tcg_hobby
+      POSTGRES_USER: capital_hobby_group
+      POSTGRES_PASSWORD: capital_hobby_group
+      POSTGRES_DB: capital_hobby_group
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tcg_hobby"]
+      test: ["CMD-SHELL", "pg_isready -U capital_hobby_group"]
       interval: 10s
       timeout: 5s
       retries: 5

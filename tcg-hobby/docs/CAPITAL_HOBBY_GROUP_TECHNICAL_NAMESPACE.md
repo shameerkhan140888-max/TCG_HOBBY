@@ -26,12 +26,16 @@ Iron Sprue production must not depend on Neon, localhost, or a developer Railway
 | Railway project/service URL | `sublime-stillness` / `considerate-unity` | Stable deployment identifiers | Retained to avoid unnecessary API URL churn before launch. |
 | Cloudflare Iron Sprue Worker/R2 | `iron-sprue-storefront-staging` / `iron-sprue-product-media` | Brand-specific deployment/media identifiers | Retained. |
 | Cloudflare TCG Hobby Worker/R2 | `tcg-hobby-*` | Child-brand resources | Retained. |
+| Local/CI PostgreSQL placeholder | `tcg_hobby` | Incorrect parent/test namespace | Migrated to `capital_hobby_group` in CI and local Docker config. |
+| Shared auth cookie | `tcg_hobby_session` | Former shared technical namespace | Primary cookie migrated to `chg_session`; legacy cookie remains as a read/delete fallback. |
 
 ## Environment Naming
 
 Shared CHG configuration should use `CHG_*` names. Existing brand-specific variables remain `IRON_SPRUE_*` or `TCG_HOBBY_*`.
 
 The Iron Sprue Cloudflare build now uses `CHG_CLOUDFLARE_UNOPTIMIZED_IMAGES` and backfills the former `TCG_HOBBY_CLOUDFLARE_UNOPTIMIZED_IMAGES` process variable during the build as a compatibility alias.
+
+The shared session cookie now uses `chg_session`. Applications still read and delete the former `tcg_hobby_session` cookie during migration so existing sessions can expire naturally.
 
 ## Deferred Hard Items
 
