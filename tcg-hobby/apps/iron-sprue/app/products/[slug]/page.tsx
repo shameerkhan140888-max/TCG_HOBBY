@@ -1,9 +1,9 @@
 import launchProducts from '../../../data/launch-products.json';
 import React from 'react';
 import type { Metadata } from 'next';
+import { AddonCarousel } from '../../../components/addon-carousel';
 import { ProductGallery } from '../../../components/product-gallery';
 import { PaymentMethodStrip } from '../../../components/payment-method-strip';
-import { ProductCard } from '../../../components/product-card';
 import { ironSprueBrand } from '../../../lib/brand';
 import { AddToBasketButton } from '../../../components/basket-client';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
@@ -159,7 +159,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const availableQuantity = productSellableQuantity(product);
   const isOutOfStock = availableQuantity <= 0;
   const availabilityClass = productAvailabilityClass(product);
-  const addonProducts = productDetailAddons(storefrontProducts, product.sku, 6);
+  const addonProducts = productDetailAddons(storefrontProducts, product.sku);
   const specifications = customerFacingSpecifications(product);
   const customerFeatures = specifications.length ? [] : customerFacingFeatures(product, specifications);
   const lead = conciseProductLead(product);
@@ -254,16 +254,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <section className="section-block compact pdp-addon-panel">
           <div className="section-head split">
             <div>
-              <p className="eyebrow">Recommended add-ons</p>
-              <h2>Useful bench companions.</h2>
+              <p className="pdp-addon-kicker">Frequently bought together</p>
+              <h2>Complete the bench setup.</h2>
             </div>
             <a className="text-link" href="/shop?category=workshop-essentials">View add-ons</a>
           </div>
-          <div className="product-grid pdp-product-grid" aria-label="Recommended add-on products">
-            {addonProducts.map((item) => (
-              <ProductCard detailsLabel="View details" headingLevel={3} key={item.sku} product={item} />
-            ))}
-          </div>
+          <AddonCarousel products={addonProducts} />
         </section>
       ) : null}
     </section>

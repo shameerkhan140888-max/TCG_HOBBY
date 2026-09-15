@@ -45,6 +45,23 @@ describe('Iron Sprue PO-derived launch products', () => {
     expect(addons.every((item) => ['Adhesives & Finishing', 'Epoxy Adhesives', 'Knives & Blades', 'Magnification', 'Masking & Finishing', 'Measuring Tools', 'Pin Vices & Drills', 'Sanding & Files', 'Tool Sets', 'Tweezers & Pliers'].includes(item.category))).toBe(true);
   });
 
+  it('keeps display-build add-ons focused instead of padding to six items', () => {
+    const product = products.find((item) => item.sku === 'IS-PIN-S1009');
+    expect(product).toBeTruthy();
+
+    const addons = productDetailAddons(products, product!.sku);
+
+    expect(addons).toHaveLength(2);
+    expect(addons.map((item) => item.category)).toEqual(['Knives & Blades', 'Tweezers & Pliers']);
+  });
+
+  it('does not recommend add-ons for products that are already workshop add-ons', () => {
+    const product = products.find((item) => item.sku === 'IS-DLM-AC9');
+    expect(product).toBeTruthy();
+
+    expect(productDetailAddons(products, product!.sku)).toEqual([]);
+  });
+
   it('has VAT-inclusive launch prices for every product', () => {
     expect(products.every((product) => productPriceMinor(product) > 0)).toBe(true);
     expect(products.every((product) => product.vatRate === 20)).toBe(true);

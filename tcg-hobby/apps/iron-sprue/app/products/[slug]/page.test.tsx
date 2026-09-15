@@ -78,10 +78,12 @@ describe('Iron Sprue product detail page', () => {
     }));
 
     expect(markup).toContain('Toyota 2000GT Red');
-    expect(markup).toContain('Recommended add-ons');
-    expect(markup).toContain('/media/iron-sprue/products/is-dlm-ac9/original.jpg');
-    expect(markup).toContain('/media/iron-sprue/products/is-dlm-ac20/original.webp');
-    expect(markup).toContain('/products/deluxe-materials-ac9-micro-tips-tube');
+    expect(markup).toContain('Frequently bought together');
+    expect(markup).toContain('Complete the bench setup.');
+    expect(markup).toContain('pdp-addon-carousel-track');
+    expect(markup).toContain('/products/deluxe-materials-ad44-roket-rapid-medium-20g');
+    expect(markup).toContain('/products/tasma-11mm-hobby-knife-11mm-hobby-knife');
+    expect(markup).toContain('/products/occre-creations-19114-short-sander-new');
     expect(markup.match(/Add to basket/g)?.length).toBeGreaterThan(1);
   });
 });

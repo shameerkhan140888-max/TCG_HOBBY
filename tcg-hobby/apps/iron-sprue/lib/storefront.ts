@@ -1,5 +1,6 @@
 import {
   brandSlug,
+  isModelKitProduct,
   productBuildType,
   productPieceCount,
   productPriceMinor,
@@ -338,13 +339,69 @@ export function isProductAddonCandidate(product: IronSprueProduct) {
   return workshopAddonCategories.has(slugForCategory(product.category));
 }
 
-export function productDetailAddons(products: IronSprueProduct[], currentSku: string, count = 4) {
+const addonRelevanceProfiles: Record<string, string[]> = {
+  'model-kits': [
+    'adhesives-finishing',
+    'knives-blades',
+    'sanding-files',
+    'tweezers-pliers',
+    'masking-finishing',
+    'pin-vices-drills',
+    'measuring-tools',
+  ],
+  'vases': ['knives-blades', 'tweezers-pliers'],
+  'clocks': ['knives-blades', 'tweezers-pliers'],
+  'flowerpots': ['knives-blades', 'tweezers-pliers'],
+  'lanterns': ['knives-blades', 'tweezers-pliers'],
+  'screens': ['knives-blades', 'tweezers-pliers'],
+  'architecture': ['knives-blades', 'tweezers-pliers'],
+  'ships': ['knives-blades', 'tweezers-pliers'],
+};
+
+function productAddonProfile(product: IronSprueProduct) {
+  const category = slugForCategory(product.category);
+  if (isModelKitProduct(product)) return addonRelevanceProfiles['model-kits'] ?? [];
+  return addonRelevanceProfiles[category] ?? [];
+}
+
+function addonScore(product: IronSprueProduct, preferredCategories: string[]) {
+  const category = slugForCategory(product.category);
+  const categoryIndex = preferredCategories.indexOf(category);
+  if (categoryIndex === -1) return Number.NEGATIVE_INFINITY;
+  const name = product.name.toLowerCase();
+  let score = (preferredCategories.length - categoryIndex) * 100;
+  if (/hobby knife|reverse tweezer|micro tips|roket rapid|speedbond|flexible file|sander|masking magic|pin vice|mini drill|calliper/i.test(name)) score += 20;
+  if (/sold individually|blades \(5\)|glue buster/i.test(name)) score -= 15;
+  score += Math.min(20, productSellableQuantity(product));
+  return score;
+}
+
+export function productDetailAddons(products: IronSprueProduct[], currentSku: string, count?: number) {
+  const currentProduct = products.find((product) => product.sku === currentSku);
+  if (!currentProduct) return [];
+  const preferredCategories = productAddonProfile(currentProduct);
+  if (!preferredCategories.length) return [];
+  const limit = count ?? (isModelKitProduct(currentProduct) ? 5 : 2);
   const candidates = products
     .filter((product) => product.sku !== currentSku)
     .filter((product) => productSellableQuantity(product) > 0)
-    .filter(isProductAddonCandidate);
+    .filter(isProductAddonCandidate)
+    .map((product) => ({ product, score: addonScore(product, preferredCategories) }))
+    .filter((item) => Number.isFinite(item.score))
+    .sort((left, right) => right.score - left.score || productPriceMinor(left.product) - productPriceMinor(right.product));
 
-  return featuredProducts(candidates, count, { includeUnpublishedPreview: true });
+  const selected: typeof candidates = [];
+  for (const category of preferredCategories) {
+    const match = candidates.find((item) => slugForCategory(item.product.category) === category && !selected.includes(item));
+    if (match) selected.push(match);
+    if (selected.length >= limit) break;
+  }
+  for (const candidate of candidates) {
+    if (selected.length >= limit) break;
+    if (!selected.includes(candidate)) selected.push(candidate);
+  }
+
+  return selected.map((item) => item.product);
 }
 
 export function categoryOptions(products: IronSprueProduct[]) {
