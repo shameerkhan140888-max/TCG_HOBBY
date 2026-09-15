@@ -6389,14 +6389,14 @@ body::before {
     minmax(2.56em, auto)
     auto
     auto
-    8px
+    5px
     auto
     auto
-    8px
+    5px
     auto;
-  min-height: 286px;
+  min-height: 232px;
   gap: 4px;
-  padding: 18px;
+  padding: 16px;
   align-content: start;
 }
 
@@ -6465,16 +6465,12 @@ body::before {
   white-space: normal;
 }
 
-.product-detail-page .pdp-addon-carousel-track .product-card .stock-badge.in-stock {
-  background: rgba(211, 160, 74, 0.14);
-  color: rgba(255, 250, 241, 0.86);
-  box-shadow: 0 0 14px rgba(211, 160, 74, 0.12);
-  text-shadow: none;
+.product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack .form-status.success {
+  color: var(--approved-cta);
 }
 
-.product-detail-page .pdp-addon-carousel-track .product-card .stock-badge.in-stock::before {
-  background: rgba(211, 160, 74, 0.86);
-  box-shadow: 0 0 9px rgba(211, 160, 74, 0.28);
+.product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack .form-status.error {
+  color: var(--capped-red);
 }
 
 @media (max-width: 920px) {
@@ -6782,13 +6778,13 @@ body::before {
       minmax(2.56em, auto)
       auto
       auto
-      7px
+      4px
       auto
       auto
-      7px
+      4px
       auto;
-    min-height: 266px;
-    padding: 14px;
+    min-height: 226px;
+    padding: 13px;
   }
 
   .product-detail-page .pdp-addon-carousel-track .product-card h3 {
