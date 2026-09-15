@@ -1,0 +1,1663 @@
+{
+  "generatedAt": "2026-09-15T12:09:00.061Z",
+  "runId": "2026-09-15",
+  "outDir": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15",
+  "vases": [
+    {
+      "sku": "IS-PIN-S1009",
+      "product": "3D Jigsaw Vase - Children",
+      "slug": "pintoo-s1009-3d-jigsaw-vase-children",
+      "manufacturer": {
+        "id": "cmu1am1qo002il4vzx7mc5gpn",
+        "role": "manufacturer-original",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-s1009/organized-2026-09-14/manufacturer/tasma-manufacturer-4c9851c0dc9d.jpg",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-s1009-manufacturer-original-x7mc5gpn.jpg",
+        "mimeType": "image/jpeg",
+        "byteSize": 100437,
+        "width": 1100,
+        "height": 1100,
+        "format": "jpeg"
+      },
+      "image2": {
+        "id": "cmu1am22c002jl4vzqtueefbw",
+        "role": "catalogue-primary",
+        "approvalState": "APPROVED",
+        "isPrimary": true,
+        "sortOrder": 0,
+        "storageKey": "products/is-pin-s1009/organized-2026-09-14/image-2/current-image-2-941bb6bcaa6d.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-s1009-catalogue-primary-qtueefbw.png",
+        "mimeType": "image/png",
+        "byteSize": 1217764,
+        "width": 1086,
+        "height": 1448,
+        "format": "png"
+      },
+      "workshop": {
+        "id": "cmu1am2mf002kl4vz3c6kn4bo",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-s1009/organized-2026-09-14/workshop/current-workshop-6ba01218750d.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-s1009-workshop-photography-3c6kn4bo.png",
+        "mimeType": "image/png",
+        "byteSize": 1952337,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      }
+    },
+    {
+      "sku": "IS-PIN-S1024",
+      "product": "3D Jigsaw Vase - Koi Carp and Lotus",
+      "slug": "pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus",
+      "manufacturer": {
+        "id": "cmu1am4ox002ll4vzyixsl6e7",
+        "role": "manufacturer-original",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-s1024/organized-2026-09-14/manufacturer/tasma-manufacturer-75c7493c7b2f.jpg",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-s1024-manufacturer-original-yixsl6e7.jpg",
+        "mimeType": "image/jpeg",
+        "byteSize": 136945,
+        "width": 1100,
+        "height": 1100,
+        "format": "jpeg"
+      },
+      "image2": {
+        "id": "cmu1am59v002ml4vzlscl6ax1",
+        "role": "catalogue-primary",
+        "approvalState": "APPROVED",
+        "isPrimary": true,
+        "sortOrder": 0,
+        "storageKey": "products/is-pin-s1024/organized-2026-09-14/image-2/current-image-2-e323829b6af5.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-s1024-catalogue-primary-lscl6ax1.png",
+        "mimeType": "image/png",
+        "byteSize": 1217296,
+        "width": 1254,
+        "height": 1254,
+        "format": "png"
+      },
+      "workshop": {
+        "id": "cmu1am5vh002nl4vzj4xaqn0h",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-s1024/organized-2026-09-14/workshop/current-workshop-47fff3a83d59.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-s1024-workshop-photography-j4xaqn0h.png",
+        "mimeType": "image/png",
+        "byteSize": 1973892,
+        "width": 1536,
+        "height": 1024,
+        "format": "png"
+      }
+    },
+    {
+      "sku": "IS-PIN-S1025",
+      "product": "3D Jigsaw Vase - Magpies on a Plum Tree",
+      "slug": "pintoo-s1025-3d-jigsaw-vase-magpies-on-a-plum-tree",
+      "manufacturer": {
+        "id": "cmu1am86s002ol4vzhcwwdhrp",
+        "role": "manufacturer-original",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-s1025/organized-2026-09-14/manufacturer/tasma-manufacturer-0fe06fd8619c.jpg",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-s1025-manufacturer-original-hcwwdhrp.jpg",
+        "mimeType": "image/jpeg",
+        "byteSize": 158409,
+        "width": 1100,
+        "height": 1100,
+        "format": "jpeg"
+      },
+      "image2": {
+        "id": "cmu1d9lz70001ycvzcohjj6qv",
+        "role": "catalogue-primary",
+        "approvalState": "APPROVED",
+        "isPrimary": true,
+        "sortOrder": 0,
+        "storageKey": "products/is-pin-s1025/organized-2026-09-14/image-2/white-image-2-replacement-bf675104ebce.webp",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-s1025-catalogue-primary-cohjj6qv.webp",
+        "mimeType": "image/webp",
+        "byteSize": 82154,
+        "width": 1100,
+        "height": 1100,
+        "format": "webp"
+      },
+      "workshop": {
+        "id": "cmu1am9zq002ql4vz0aheam0g",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-s1025/organized-2026-09-14/workshop/current-workshop-3a8a97b4cb09.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-s1025-workshop-photography-0aheam0g.png",
+        "mimeType": "image/png",
+        "byteSize": 2046568,
+        "width": 1536,
+        "height": 1024,
+        "format": "png"
+      }
+    }
+  ],
+  "workshop": [
+    {
+      "sku": "IS-AOS-05603",
+      "product": "Pagani Zonda F",
+      "slug": "aoshima-05603-pagani-zonda-f",
+      "workshop": {
+        "id": "cmu1aky6d001dl4vzv17qb4y9",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-05603/organized-2026-09-14/workshop/current-workshop-7682da426eee.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-05603-workshop-photography-v17qb4y9.png",
+        "mimeType": "image/png",
+        "byteSize": 1979930,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-05603/organized-2026-09-14/image-2/current-image-2-ddc9b0dbc551.png",
+        "width": 1586,
+        "height": 992,
+        "byteSize": 1343298
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-05603/organized-2026-09-14/manufacturer/tasma-manufacturer-c2a7169288bd.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 121911
+      }
+    },
+    {
+      "sku": "IS-AOS-05627",
+      "product": "Toyota 2000GT White",
+      "slug": "aoshima-05627-toyota-2000gt-white",
+      "workshop": {
+        "id": "cmu1ajmx80002l4vziyjjn4vn",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-05627/organized-2026-09-14/workshop/current-workshop-ffc2069bb0a8.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-05627-workshop-photography-iyjjn4vn.png",
+        "mimeType": "image/png",
+        "byteSize": 1722336,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-05627/organized-2026-09-14/image-2/current-image-2-b59714c97e4f.png",
+        "width": 1586,
+        "height": 992,
+        "byteSize": 1133513
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-05627/organized-2026-09-14/manufacturer/tasma-manufacturer-8f87b0ff5508.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 167428
+      }
+    },
+    {
+      "sku": "IS-AOS-05628",
+      "product": "Toyota 2000GT Red",
+      "slug": "aoshima-05628-toyota-2000gt-red",
+      "workshop": {
+        "id": "cmu1ajq2f0005l4vz50bt9xqo",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-05628/organized-2026-09-14/workshop/current-workshop-b7cb05a33330.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-05628-workshop-photography-50bt9xqo.png",
+        "mimeType": "image/png",
+        "byteSize": 1816216,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-05628/organized-2026-09-14/image-2/current-image-2-acf115ef37eb.png",
+        "width": 1254,
+        "height": 1254,
+        "byteSize": 971919
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-05628/organized-2026-09-14/manufacturer/tasma-manufacturer-afade4e2c8db.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 173699
+      }
+    },
+    {
+      "sku": "IS-AOS-05629",
+      "product": "Toyota 2000GT Silver",
+      "slug": "aoshima-05629-toyota-2000gt-silver",
+      "workshop": {
+        "id": "cmu1ajsv50008l4vz367odxnj",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-05629/organized-2026-09-14/workshop/current-workshop-c74a01de27b3.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-05629-workshop-photography-367odxnj.png",
+        "mimeType": "image/png",
+        "byteSize": 1895252,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-05629/organized-2026-09-14/image-2/current-image-2-cfda60ed140c.png",
+        "width": 1586,
+        "height": 992,
+        "byteSize": 1130996
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-05629/organized-2026-09-14/manufacturer/tasma-manufacturer-d56653e674fd.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 170766
+      }
+    },
+    {
+      "sku": "IS-AOS-05778",
+      "product": "Suzuki Jimny Blue",
+      "slug": "aoshima-05778-suzuki-jimny-blue",
+      "workshop": {
+        "id": "cmu1ajw4v000bl4vznzfms5ok",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-05778/organized-2026-09-14/workshop/current-workshop-46b2c053741e.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-05778-workshop-photography-nzfms5ok.png",
+        "mimeType": "image/png",
+        "byteSize": 1889677,
+        "width": 1562,
+        "height": 1007,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-05778/organized-2026-09-14/image-2/current-image-2-5def2b2b40fa.png",
+        "width": 1731,
+        "height": 909,
+        "byteSize": 1476698
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-05778/organized-2026-09-14/manufacturer/tasma-manufacturer-17feafc7191e.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 182139
+      }
+    },
+    {
+      "sku": "IS-AOS-06259",
+      "product": "Nissan Fairlady Z Blue",
+      "slug": "aoshima-06259-nissan-fairlady-z-blue",
+      "workshop": {
+        "id": "cmu1ajzr6000fl4vzs4hhuuzm",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06259/organized-2026-09-14/workshop/current-workshop-da42b0a6b55a.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06259-workshop-photography-s4hhuuzm.png",
+        "mimeType": "image/png",
+        "byteSize": 1943807,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06259/organized-2026-09-14/image-2/current-image-2-00f860c5e693.png",
+        "width": 1586,
+        "height": 992,
+        "byteSize": 1166317
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06259/organized-2026-09-14/manufacturer/tasma-manufacturer-69d4179017fd.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 176411
+      }
+    },
+    {
+      "sku": "IS-AOS-06290",
+      "product": "Honda Motocompo",
+      "slug": "aoshima-06290-honda-motocompo",
+      "workshop": {
+        "id": "cmu1al25q001gl4vz963mnogt",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06290/organized-2026-09-14/workshop/current-workshop-1525f5321e48.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06290-workshop-photography-963mnogt.png",
+        "mimeType": "image/png",
+        "byteSize": 1792472,
+        "width": 1733,
+        "height": 908,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06290/organized-2026-09-14/image-2/current-image-2-b92daa5b560f.png",
+        "width": 1731,
+        "height": 909,
+        "byteSize": 1070390
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06290/organized-2026-09-14/manufacturer/tasma-manufacturer-0c0eb18ce145.png",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 662968
+      }
+    },
+    {
+      "sku": "IS-AOS-06345",
+      "product": "Lamborghini Aventador White",
+      "slug": "aoshima-06345-lamborghini-aventador-white",
+      "workshop": {
+        "id": "cmu1ak2l7000il4vz0ruogt64",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06345/organized-2026-09-14/workshop/current-workshop-ae9bdd9e5a79.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06345-workshop-photography-0ruogt64.png",
+        "mimeType": "image/png",
+        "byteSize": 1836602,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06345/organized-2026-09-14/image-2/current-image-2-99539ed899a1.png",
+        "width": 1586,
+        "height": 992,
+        "byteSize": 1124837
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06345/organized-2026-09-14/manufacturer/tasma-manufacturer-ccf463afe1c7.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 155990
+      }
+    },
+    {
+      "sku": "IS-AOS-06347",
+      "product": "Lamborghini Aventador Red",
+      "slug": "aoshima-06347-lamborghini-aventador-red",
+      "workshop": {
+        "id": "cmu1ak5o1000ll4vz2yfit0rc",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06347/organized-2026-09-14/workshop/current-workshop-908015f121d5.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06347-workshop-photography-2yfit0rc.png",
+        "mimeType": "image/png",
+        "byteSize": 1860703,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06347/organized-2026-09-14/image-2/current-image-2-454108e1a24f.png",
+        "width": 1729,
+        "height": 910,
+        "byteSize": 1293201
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06347/organized-2026-09-14/manufacturer/tasma-manufacturer-f6b89d83d540.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 160234
+      }
+    },
+    {
+      "sku": "IS-AOS-06349",
+      "product": "Lamborghini Aventador Blue",
+      "slug": "aoshima-06349-lamborghini-aventador-blue",
+      "workshop": {
+        "id": "cmu1ak8xo000ol4vzil4pndeh",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06349/organized-2026-09-14/workshop/current-workshop-e5e5d0329887.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06349-workshop-photography-il4pndeh.png",
+        "mimeType": "image/png",
+        "byteSize": 1881537,
+        "width": 1535,
+        "height": 1025,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06349/organized-2026-09-14/image-2/current-image-2-db905d512f27.png",
+        "width": 1729,
+        "height": 910,
+        "byteSize": 1344172
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06349/organized-2026-09-14/manufacturer/tasma-manufacturer-e33701c05fdb.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 163601
+      }
+    },
+    {
+      "sku": "IS-AOS-06357",
+      "product": "Skyline GTR Red Pearl",
+      "slug": "aoshima-06357-skyline-gtr-red-pearl",
+      "workshop": {
+        "id": "cmu1akbrs000rl4vzoxcfkw2a",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06357/organized-2026-09-14/workshop/current-workshop-303dcb1f3647.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06357-workshop-photography-oxcfkw2a.png",
+        "mimeType": "image/png",
+        "byteSize": 1959214,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06357/organized-2026-09-14/image-2/current-image-2-a2e405794cfe.png",
+        "width": 1586,
+        "height": 992,
+        "byteSize": 1191904
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06357/organized-2026-09-14/manufacturer/tasma-manufacturer-0070fec12c14.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 168732
+      }
+    },
+    {
+      "sku": "IS-AOS-06437",
+      "product": "Back to the Future Part II",
+      "slug": "aoshima-06437-back-to-the-future-part-ii",
+      "workshop": {
+        "id": "cmu1al58x001jl4vzl0w1hs3j",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06437/organized-2026-09-14/workshop/current-workshop-5afbee26bc2b.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06437-workshop-photography-l0w1hs3j.png",
+        "mimeType": "image/png",
+        "byteSize": 2083638,
+        "width": 1535,
+        "height": 1025,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06437/organized-2026-09-14/image-2/current-image-2-f01e49fe8ab6.png",
+        "width": 1731,
+        "height": 909,
+        "byteSize": 1394363
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06437/organized-2026-09-14/manufacturer/tasma-manufacturer-1c36cf3e12b1.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 186350
+      }
+    },
+    {
+      "sku": "IS-AOS-06438",
+      "product": "Back to the Future Part III",
+      "slug": "aoshima-06438-back-to-the-future-part-iii",
+      "workshop": {
+        "id": "cmu1al8ol001ml4vz8nqzza8x",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06438/organized-2026-09-14/workshop/current-workshop-7bfb241cf199.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06438-workshop-photography-8nqzza8x.png",
+        "mimeType": "image/png",
+        "byteSize": 2245019,
+        "width": 1536,
+        "height": 1024,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06438/organized-2026-09-14/image-2/current-image-2-d0247964633c.png",
+        "width": 1729,
+        "height": 910,
+        "byteSize": 1322301
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06438/organized-2026-09-14/manufacturer/tasma-manufacturer-b6b3f2b3c1de.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 172586
+      }
+    },
+    {
+      "sku": "IS-AOS-06459",
+      "product": "Toyota GR86 Spark Red",
+      "slug": "aoshima-06459-toyota-gr86-spark-red",
+      "workshop": {
+        "id": "cmu1aken4000ul4vzmhwb25bh",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06459/organized-2026-09-14/workshop/current-workshop-9c394a81cf89.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06459-workshop-photography-mhwb25bh.png",
+        "mimeType": "image/png",
+        "byteSize": 1923023,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06459/organized-2026-09-14/image-2/current-image-2-6d3cac50221e.png",
+        "width": 1728,
+        "height": 910,
+        "byteSize": 1361215
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06459/organized-2026-09-14/manufacturer/tasma-manufacturer-de4351f05a01.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 160920
+      }
+    },
+    {
+      "sku": "IS-AOS-06460",
+      "product": "Toyota GR86 White Pearl",
+      "slug": "aoshima-06460-toyota-gr86-white-pearl",
+      "workshop": {
+        "id": "cmu1akhia000xl4vzd8z3mls9",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06460/organized-2026-09-14/workshop/current-workshop-fa3137d79ef6.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06460-workshop-photography-d8z3mls9.png",
+        "mimeType": "image/png",
+        "byteSize": 1995694,
+        "width": 1535,
+        "height": 1025,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06460/organized-2026-09-14/image-2/current-image-2-53ebbc2ad4f2.png",
+        "width": 1728,
+        "height": 910,
+        "byteSize": 1203169
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06460/organized-2026-09-14/manufacturer/tasma-manufacturer-7172eb5cc6dc.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 156960
+      }
+    },
+    {
+      "sku": "IS-AOS-06474",
+      "product": "Nissan S30 Fairlady Z Red Custom Wheels",
+      "slug": "aoshima-06474-nissan-s30-fairlady-z-red-custom-wheels",
+      "workshop": {
+        "id": "cmu1akkhm0010l4vzujt8aoeg",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06474/organized-2026-09-14/workshop/current-workshop-8619fa0329a5.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06474-workshop-photography-ujt8aoeg.png",
+        "mimeType": "image/png",
+        "byteSize": 1907515,
+        "width": 1725,
+        "height": 912,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06474/organized-2026-09-14/image-2/current-image-2-aba57b20dfba.png",
+        "width": 1727,
+        "height": 910,
+        "byteSize": 1340837
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06474/organized-2026-09-14/manufacturer/tasma-manufacturer-cf2999f03899.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 187294
+      }
+    },
+    {
+      "sku": "IS-AOS-06477",
+      "product": "Nissan S30 Fairlady Z Brown Custom Wheels",
+      "slug": "aoshima-06477-nissan-s30-fairlady-z-brown-custom-wheels",
+      "workshop": {
+        "id": "cmu1ako6h0014l4vzulhfaf2o",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06477/organized-2026-09-14/workshop/current-workshop-97616261b78f.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06477-workshop-photography-ulhfaf2o.png",
+        "mimeType": "image/png",
+        "byteSize": 1867969,
+        "width": 1648,
+        "height": 954,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06477/organized-2026-09-14/image-2/current-image-2-0ea9ecc3e054.png",
+        "width": 1647,
+        "height": 955,
+        "byteSize": 1379782
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06477/organized-2026-09-14/manufacturer/tasma-manufacturer-170e32638154.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 187108
+      }
+    },
+    {
+      "sku": "IS-AOS-06539",
+      "product": "Lamborghini Countach LPI 800-4 White",
+      "slug": "aoshima-06539-lamborghini-countach-lpi-800-4-white",
+      "workshop": {
+        "id": "cmu1aks2d0017l4vz136kla83",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06539/organized-2026-09-14/workshop/current-workshop-fef0186834a9.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06539-workshop-photography-136kla83.png",
+        "mimeType": "image/png",
+        "byteSize": 1784234,
+        "width": 1535,
+        "height": 1025,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06539/organized-2026-09-14/image-2/current-image-2-36081ea5c503.png",
+        "width": 1500,
+        "height": 1049,
+        "byteSize": 1142234
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06539/organized-2026-09-14/manufacturer/tasma-manufacturer-fa1b4bd38bee.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 142693
+      }
+    },
+    {
+      "sku": "IS-AOS-06540",
+      "product": "Lamborghini Countach LPI 800-4 Red",
+      "slug": "aoshima-06540-lamborghini-countach-lpi-800-4-red",
+      "workshop": {
+        "id": "cmu1akv6m001al4vz1mbi1fti",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-aos-06540/organized-2026-09-14/workshop/current-workshop-363b5305aa52.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-aos-06540-workshop-photography-1mbi1fti.png",
+        "mimeType": "image/png",
+        "byteSize": 1859466,
+        "width": 1535,
+        "height": 1025,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-aos-06540/organized-2026-09-14/image-2/current-image-2-a7e7d0aad658.png",
+        "width": 1727,
+        "height": 911,
+        "byteSize": 1303632
+      },
+      "manufacturer": {
+        "storageKey": "products/is-aos-06540/organized-2026-09-14/manufacturer/tasma-manufacturer-d65f5443fa44.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 148269
+      }
+    },
+    {
+      "sku": "IS-CUB-C007H",
+      "product": "Era of Navigation",
+      "slug": "cubicfun-c007h-era-of-navigation",
+      "workshop": {
+        "id": "cmu1an46x003kl4vzrddvby1u",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-c007h/organized-2026-09-14/workshop/current-workshop-1cb968387a96.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-c007h-workshop-photography-rddvby1u.png",
+        "mimeType": "image/png",
+        "byteSize": 1985745,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-c007h/organized-2026-09-14/image-2/current-image-2-cf977fed543b.png",
+        "width": 1586,
+        "height": 992,
+        "byteSize": 1148566
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-c007h/organized-2026-09-14/manufacturer/tasma-manufacturer-1b25ca51d4b8.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 231470
+      }
+    },
+    {
+      "sku": "IS-CUB-C108H",
+      "product": "Thomas Jefferson Memorial",
+      "slug": "cubicfun-c108h-thomas-jefferson-memorial",
+      "workshop": {
+        "id": "cmu1anwh0004bl4vzt41ozfc6",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-c108h/organized-2026-09-14/workshop/current-workshop-13fe341dd895.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-c108h-workshop-photography-t41ozfc6.png",
+        "mimeType": "image/png",
+        "byteSize": 2061467,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-c108h/organized-2026-09-14/image-2/current-image-2-d002b0e40799.png",
+        "width": 1448,
+        "height": 1086,
+        "byteSize": 1387620
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-c108h/organized-2026-09-14/manufacturer/tasma-manufacturer-7c2bc0bf0d98.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 168108
+      }
+    },
+    {
+      "sku": "IS-CUB-C112H",
+      "product": "Basilica of the National Shrine",
+      "slug": "cubicfun-c112h-basilica-of-the-national-shrine",
+      "workshop": {
+        "id": "cmu1ao27c004hl4vz9rr1f753",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-c112h/organized-2026-09-14/workshop/current-workshop-65d6a9497a74.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-c112h-workshop-photography-9rr1f753.png",
+        "mimeType": "image/png",
+        "byteSize": 2077970,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-c112h/organized-2026-09-14/image-2/current-image-2-08c9b0d76e1a.png",
+        "width": 1448,
+        "height": 1086,
+        "byteSize": 1375655
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-c112h/organized-2026-09-14/manufacturer/tasma-manufacturer-3548418366cf.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 246477
+      }
+    },
+    {
+      "sku": "IS-CUB-C114H",
+      "product": "St Patrick's Cathedral",
+      "slug": "cubicfun-c114h-st-patrick-s-cathedral",
+      "workshop": {
+        "id": "cmu1anzba004el4vzr1n7onhu",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-c114h/organized-2026-09-14/workshop/current-workshop-cff04559d987.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-c114h-workshop-photography-r1n7onhu.png",
+        "mimeType": "image/png",
+        "byteSize": 2040347,
+        "width": 1615,
+        "height": 974,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-c114h/organized-2026-09-14/image-2/current-image-2-32afe14cde5d.png",
+        "width": 1731,
+        "height": 909,
+        "byteSize": 1274852
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-c114h/organized-2026-09-14/manufacturer/tasma-manufacturer-de616d29d9ee.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 240271
+      }
+    },
+    {
+      "sku": "IS-CUB-C119H",
+      "product": "Two Masted Schooner",
+      "slug": "cubicfun-c119h-two-masted-schooner",
+      "workshop": {
+        "id": "cmu1andk2003tl4vziwu3vmp5",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-c119h/organized-2026-09-14/workshop/current-workshop-712558c9c135.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-c119h-workshop-photography-iwu3vmp5.png",
+        "mimeType": "image/png",
+        "byteSize": 1927889,
+        "width": 1535,
+        "height": 1024,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-c119h/organized-2026-09-14/image-2/current-image-2-5200342f6a45.png",
+        "width": 1508,
+        "height": 1043,
+        "byteSize": 1229441
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-c119h/organized-2026-09-14/manufacturer/tasma-manufacturer-c586f0c11920.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 153074
+      }
+    },
+    {
+      "sku": "IS-CUB-C712H",
+      "product": "Brandenburg Gate",
+      "slug": "cubicfun-c712h-brandenburg-gate",
+      "workshop": {
+        "id": "cmu1anjji003zl4vz59aiofog",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-c712h/organized-2026-09-14/workshop/current-workshop-2ef1d089f6ff.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-c712h-workshop-photography-59aiofog.png",
+        "mimeType": "image/png",
+        "byteSize": 2031570,
+        "width": 1470,
+        "height": 1070,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-c712h/organized-2026-09-14/image-2/current-image-2-7c41c2d26b3a.png",
+        "width": 1375,
+        "height": 1144,
+        "byteSize": 1573145
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-c712h/organized-2026-09-14/manufacturer/tasma-manufacturer-d1313ca50916.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 112018
+      }
+    },
+    {
+      "sku": "IS-CUB-MC092H",
+      "product": "St Peter's Basilica",
+      "slug": "cubicfun-mc092h-st-peter-s-basilica",
+      "workshop": {
+        "id": "cmu1anmpd0042l4vz5f2knpuf",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-mc092h/organized-2026-09-14/workshop/current-workshop-220d1dd623e4.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-mc092h-workshop-photography-5f2knpuf.png",
+        "mimeType": "image/png",
+        "byteSize": 2172402,
+        "width": 1635,
+        "height": 962,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-mc092h/organized-2026-09-14/image-2/current-image-2-37e59e6cec7e.png",
+        "width": 1730,
+        "height": 909,
+        "byteSize": 1387401
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-mc092h/organized-2026-09-14/manufacturer/tasma-manufacturer-0898ddd77917.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 192420
+      }
+    },
+    {
+      "sku": "IS-CUB-MC093H",
+      "product": "St Basil's Cathedral",
+      "slug": "cubicfun-mc093h-st-basil-s-cathedral",
+      "workshop": {
+        "id": "cmu1anqg60045l4vzs8icl5lj",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-mc093h/organized-2026-09-14/workshop/current-workshop-efa9953125f3.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-mc093h-workshop-photography-s8icl5lj.png",
+        "mimeType": "image/png",
+        "byteSize": 2078740,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-mc093h/organized-2026-09-14/image-2/current-image-2-b30dcb977811.png",
+        "width": 1254,
+        "height": 1254,
+        "byteSize": 1277590
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-mc093h/organized-2026-09-14/manufacturer/tasma-manufacturer-e499c7716446.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 163642
+      }
+    },
+    {
+      "sku": "IS-CUB-MC106H",
+      "product": "Queen Anne's Revenge",
+      "slug": "cubicfun-mc106h-queen-anne-s-revenge",
+      "workshop": {
+        "id": "cmu1ananj003ql4vz4pvagyh0",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-mc106h/organized-2026-09-14/workshop/current-workshop-d7b445b40aba.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-mc106h-workshop-photography-4pvagyh0.png",
+        "mimeType": "image/png",
+        "byteSize": 1912185,
+        "width": 1403,
+        "height": 1121,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-mc106h/organized-2026-09-14/image-2/current-image-2-d20e4ee57487.png",
+        "width": 1353,
+        "height": 1162,
+        "byteSize": 1318261
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-mc106h/organized-2026-09-14/manufacturer/tasma-manufacturer-2268aecc985b.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 238020
+      }
+    },
+    {
+      "sku": "IS-CUB-MC133H",
+      "product": "Burj Khalifa",
+      "slug": "cubicfun-mc133h-burj-khalifa",
+      "workshop": {
+        "id": "cmu1angit003wl4vz8ejik3vk",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-mc133h/organized-2026-09-14/workshop/current-workshop-5629f852a858.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-mc133h-workshop-photography-8ejik3vk.png",
+        "mimeType": "image/png",
+        "byteSize": 2100356,
+        "width": 1536,
+        "height": 1024,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-mc133h/organized-2026-09-14/image-2/white-image-2-replacement-9e2fd08129ca.webp",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 30974
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-mc133h/organized-2026-09-14/manufacturer/tasma-manufacturer-335937fc39c8.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 151408
+      }
+    },
+    {
+      "sku": "IS-CUB-MC139H",
+      "product": "Chateau de Chenonceau",
+      "slug": "cubicfun-mc139h-chateau-de-chenonceau",
+      "workshop": {
+        "id": "cmu1antey0048l4vzai7ut8zg",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-mc139h/organized-2026-09-14/workshop/current-workshop-f81f18a9d8ac.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-mc139h-workshop-photography-ai7ut8zg.png",
+        "mimeType": "image/png",
+        "byteSize": 2209373,
+        "width": 1635,
+        "height": 962,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-mc139h/organized-2026-09-14/image-2/current-image-2-7cd23d5b9d3b.png",
+        "width": 1731,
+        "height": 909,
+        "byteSize": 1632718
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-mc139h/organized-2026-09-14/manufacturer/tasma-manufacturer-e96b5d708bab.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 181625
+      }
+    },
+    {
+      "sku": "IS-CUB-OM3603",
+      "product": "Magic Box  Underwater World",
+      "slug": "cubicfun-om3603-magic-box-underwater-world",
+      "workshop": {
+        "id": "cmu1ao59x004kl4vzu5subwak",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-om3603/organized-2026-09-14/workshop/current-workshop-0be23db6f118.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-om3603-workshop-photography-u5subwak.png",
+        "mimeType": "image/png",
+        "byteSize": 1953473,
+        "width": 1535,
+        "height": 1025,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-om3603/organized-2026-09-14/image-2/current-image-2-c7cf596a1dde.png",
+        "width": 1731,
+        "height": 909,
+        "byteSize": 1563024
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-om3603/organized-2026-09-14/manufacturer/tasma-manufacturer-9326494ecfe2.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 223875
+      }
+    },
+    {
+      "sku": "IS-CUB-OM3606",
+      "product": "Magic Box  London at Night",
+      "slug": "cubicfun-om3606-magic-box-london-at-night",
+      "workshop": {
+        "id": "cmu1ao8c0004nl4vzxw1jrqwi",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-om3606/organized-2026-09-14/workshop/current-workshop-25272a2bf071.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-om3606-workshop-photography-xw1jrqwi.png",
+        "mimeType": "image/png",
+        "byteSize": 2263150,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-om3606/organized-2026-09-14/image-2/current-image-2-dd4595112682.png",
+        "width": 1448,
+        "height": 1086,
+        "byteSize": 2084888
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-om3606/organized-2026-09-14/manufacturer/tasma-manufacturer-95d5c7d82029.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 210096
+      }
+    },
+    {
+      "sku": "IS-CUB-T4008H",
+      "product": "Santa Maria",
+      "slug": "cubicfun-t4008h-santa-maria",
+      "workshop": {
+        "id": "cmu1an7dj003nl4vzch5swzxz",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-cub-t4008h/organized-2026-09-14/workshop/current-workshop-27833826caf0.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-cub-t4008h-workshop-photography-ch5swzxz.png",
+        "mimeType": "image/png",
+        "byteSize": 2019165,
+        "width": 1537,
+        "height": 1023,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-cub-t4008h/organized-2026-09-14/image-2/current-image-2-fd6cba0c107b.png",
+        "width": 1334,
+        "height": 1179,
+        "byteSize": 1277349
+      },
+      "manufacturer": {
+        "storageKey": "products/is-cub-t4008h/organized-2026-09-14/manufacturer/tasma-manufacturer-1b88e0c9ac39.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 236394
+      }
+    },
+    {
+      "sku": "IS-PIN-K1001",
+      "product": "Jigsaw Flowerpot - Red Carpet of Life",
+      "slug": "pintoo-k1001-jigsaw-flowerpot-red-carpet-of-life",
+      "workshop": {
+        "id": "cmu1amn350032l4vzv2t7nji1",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-k1001/organized-2026-09-14/workshop/current-workshop-aec52398258c.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-k1001-workshop-photography-v2t7nji1.png",
+        "mimeType": "image/png",
+        "byteSize": 2023912,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-k1001/organized-2026-09-14/image-2/current-image-2-cd661318b632.png",
+        "width": 1254,
+        "height": 1254,
+        "byteSize": 1291851
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-k1001/organized-2026-09-14/manufacturer/tasma-manufacturer-864d26345284.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 178046
+      }
+    },
+    {
+      "sku": "IS-PIN-K1002",
+      "product": "Jigsaw Flowerpot - Slow Down",
+      "slug": "pintoo-k1002-jigsaw-flowerpot-slow-down",
+      "workshop": {
+        "id": "cmu1ampsj0035l4vzhfvtdawe",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-k1002/organized-2026-09-14/workshop/current-workshop-e48b489edce2.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-k1002-workshop-photography-hfvtdawe.png",
+        "mimeType": "image/png",
+        "byteSize": 1963819,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-k1002/organized-2026-09-14/image-2/current-image-2-d71ba2645069.png",
+        "width": 1254,
+        "height": 1254,
+        "byteSize": 1241676
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-k1002/organized-2026-09-14/manufacturer/tasma-manufacturer-1a32953f1242.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 180326
+      }
+    },
+    {
+      "sku": "IS-PIN-K1006",
+      "product": "Jigsaw Flowerpot - Singing Birds & Flowers",
+      "slug": "pintoo-k1006-jigsaw-flowerpot-singing-birds-flowers",
+      "workshop": {
+        "id": "cmu1ams8h0038l4vzn1dfndft",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-k1006/organized-2026-09-14/workshop/current-workshop-5bf104e60a52.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-k1006-workshop-photography-n1dfndft.png",
+        "mimeType": "image/png",
+        "byteSize": 1717787,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-k1006/organized-2026-09-14/image-2/current-image-2-22150a7d50a5.png",
+        "width": 1026,
+        "height": 992,
+        "byteSize": 459661
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-k1006/organized-2026-09-14/manufacturer/tasma-manufacturer-43e3553eb45c.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 137715
+      }
+    },
+    {
+      "sku": "IS-PIN-KC1005",
+      "product": "Jigsaw Clock - Classic Rose",
+      "slug": "pintoo-kc1005-jigsaw-clock-classic-rose",
+      "workshop": {
+        "id": "cmu1amdmb002tl4vzt4jg7wv3",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-kc1005/organized-2026-09-14/workshop/current-workshop-a1f826f52a0e.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-kc1005-workshop-photography-t4jg7wv3.png",
+        "mimeType": "image/png",
+        "byteSize": 2124678,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-kc1005/organized-2026-09-14/image-2/current-image-2-64894116645b.png",
+        "width": 1254,
+        "height": 1254,
+        "byteSize": 1739252
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-kc1005/organized-2026-09-14/manufacturer/tasma-manufacturer-2e1050cf4fd7.png",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 759229
+      }
+    },
+    {
+      "sku": "IS-PIN-KC1007",
+      "product": "Jigsaw Clock - Into the Woods",
+      "slug": "pintoo-kc1007-jigsaw-clock-into-the-woods",
+      "workshop": {
+        "id": "cmu1amgqf002wl4vz8gzs6n86",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-kc1007/organized-2026-09-14/workshop/current-workshop-325fcfe48f69.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-kc1007-workshop-photography-8gzs6n86.png",
+        "mimeType": "image/png",
+        "byteSize": 2064487,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-kc1007/organized-2026-09-14/image-2/current-image-2-6c11bfbba930.png",
+        "width": 985,
+        "height": 992,
+        "byteSize": 1181681
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-kc1007/organized-2026-09-14/manufacturer/tasma-manufacturer-6452c6945efc.png",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 820030
+      }
+    },
+    {
+      "sku": "IS-PIN-KC1046",
+      "product": "Jigsaw Clock - Singing Birds and Fragrant Flowers",
+      "slug": "pintoo-kc1046-jigsaw-clock-singing-birds-and-fragrant-flowers",
+      "workshop": {
+        "id": "cmu1amjyw002zl4vzfdt5nopu",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-kc1046/organized-2026-09-14/workshop/current-workshop-80ae4d45b359.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-kc1046-workshop-photography-fdt5nopu.png",
+        "mimeType": "image/png",
+        "byteSize": 1995435,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-kc1046/organized-2026-09-14/image-2/current-image-2-2c3ea2e8c576.png",
+        "width": 1254,
+        "height": 1254,
+        "byteSize": 1730726
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-kc1046/organized-2026-09-14/manufacturer/tasma-manufacturer-08aca3cbd969.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 173058
+      }
+    },
+    {
+      "sku": "IS-PIN-Q1035",
+      "product": "Jigsaw Screen - Famous Architectures",
+      "slug": "pintoo-q1035-jigsaw-screen-famous-architectures",
+      "workshop": {
+        "id": "cmu1aoc7h004rl4vzfvggx0uz",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-q1035/organized-2026-09-14/workshop/current-workshop-01433d97449a.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-q1035-workshop-photography-fvggx0uz.png",
+        "mimeType": "image/png",
+        "byteSize": 2582272,
+        "width": 1543,
+        "height": 1019,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-q1035/organized-2026-09-14/image-2/current-image-2-9c27b85da6ed.png",
+        "width": 1732,
+        "height": 908,
+        "byteSize": 2650584
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-q1035/organized-2026-09-14/manufacturer/tasma-manufacturer-0454a9be228b.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 229294
+      }
+    },
+    {
+      "sku": "IS-PIN-Q1037",
+      "product": "Jigsaw Lantern - Famous Architecture",
+      "slug": "pintoo-q1037-jigsaw-lantern-famous-architecture",
+      "workshop": {
+        "id": "cmu1amuzi003bl4vzavrzn6wd",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-q1037/organized-2026-09-14/workshop/current-workshop-209abd68cc63.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-q1037-workshop-photography-avrzn6wd.png",
+        "mimeType": "image/png",
+        "byteSize": 1989513,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-q1037/organized-2026-09-14/image-2/current-image-2-7bdd1e11fbf8.png",
+        "width": 1730,
+        "height": 909,
+        "byteSize": 1216885
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-q1037/organized-2026-09-14/manufacturer/tasma-manufacturer-73a681667b4c.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 139116
+      }
+    },
+    {
+      "sku": "IS-PIN-Q1038",
+      "product": "Jigsaw Lantern - Floral",
+      "slug": "pintoo-q1038-jigsaw-lantern-floral",
+      "workshop": {
+        "id": "cmu1amy2v003el4vz3r6gfm4l",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-q1038/organized-2026-09-14/workshop/current-workshop-23a78d66991c.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-q1038-workshop-photography-3r6gfm4l.png",
+        "mimeType": "image/png",
+        "byteSize": 2279392,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-q1038/organized-2026-09-14/image-2/current-image-2-451b20491a41.png",
+        "width": 1254,
+        "height": 1254,
+        "byteSize": 1957442
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-q1038/organized-2026-09-14/manufacturer/tasma-manufacturer-29b2af94519a.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 194846
+      }
+    },
+    {
+      "sku": "IS-PIN-Q1040",
+      "product": "Jigsaw Lantern - Derjen Dancing Girls",
+      "slug": "pintoo-q1040-jigsaw-lantern-derjen-dancing-girls",
+      "workshop": {
+        "id": "cmu1an12e003hl4vz9zitubu0",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-q1040/organized-2026-09-14/workshop/current-workshop-ae443bed1055.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-q1040-workshop-photography-9zitubu0.png",
+        "mimeType": "image/png",
+        "byteSize": 2033936,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-q1040/organized-2026-09-14/image-2/current-image-2-e7b3457bf5b1.png",
+        "width": 1254,
+        "height": 1254,
+        "byteSize": 1537877
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-q1040/organized-2026-09-14/manufacturer/tasma-manufacturer-cdac07fe9d79.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 144018
+      }
+    },
+    {
+      "sku": "IS-PIN-Q1061",
+      "product": "Jigsaw Screen - Le Papillon et la Fleur",
+      "slug": "pintoo-q1061-jigsaw-screen-le-papillon-et-la-fleur",
+      "workshop": {
+        "id": "cmu1aoffa004ul4vzl16xqt32",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-q1061/organized-2026-09-14/workshop/current-workshop-9f79ede5ae71.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-q1061-workshop-photography-l16xqt32.png",
+        "mimeType": "image/png",
+        "byteSize": 2440853,
+        "width": 1635,
+        "height": 962,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-q1061/organized-2026-09-14/image-2/current-image-2-d47b3dab9b36.png",
+        "width": 1731,
+        "height": 908,
+        "byteSize": 1851397
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-q1061/organized-2026-09-14/manufacturer/tasma-manufacturer-8000f7a5f31a.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 202173
+      }
+    },
+    {
+      "sku": "IS-PIN-S1009",
+      "product": "3D Jigsaw Vase - Children",
+      "slug": "pintoo-s1009-3d-jigsaw-vase-children",
+      "workshop": {
+        "id": "cmu1am2mf002kl4vz3c6kn4bo",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-s1009/organized-2026-09-14/workshop/current-workshop-6ba01218750d.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-s1009-workshop-photography-3c6kn4bo.png",
+        "mimeType": "image/png",
+        "byteSize": 1952337,
+        "width": 1586,
+        "height": 992,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-s1009/organized-2026-09-14/image-2/current-image-2-941bb6bcaa6d.png",
+        "width": 1086,
+        "height": 1448,
+        "byteSize": 1217764
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-s1009/organized-2026-09-14/manufacturer/tasma-manufacturer-4c9851c0dc9d.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 100437
+      }
+    },
+    {
+      "sku": "IS-PIN-S1024",
+      "product": "3D Jigsaw Vase - Koi Carp and Lotus",
+      "slug": "pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus",
+      "workshop": {
+        "id": "cmu1am5vh002nl4vzj4xaqn0h",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-s1024/organized-2026-09-14/workshop/current-workshop-47fff3a83d59.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-s1024-workshop-photography-j4xaqn0h.png",
+        "mimeType": "image/png",
+        "byteSize": 1973892,
+        "width": 1536,
+        "height": 1024,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-s1024/organized-2026-09-14/image-2/current-image-2-e323829b6af5.png",
+        "width": 1254,
+        "height": 1254,
+        "byteSize": 1217296
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-s1024/organized-2026-09-14/manufacturer/tasma-manufacturer-75c7493c7b2f.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 136945
+      }
+    },
+    {
+      "sku": "IS-PIN-S1025",
+      "product": "3D Jigsaw Vase - Magpies on a Plum Tree",
+      "slug": "pintoo-s1025-3d-jigsaw-vase-magpies-on-a-plum-tree",
+      "workshop": {
+        "id": "cmu1am9zq002ql4vz0aheam0g",
+        "role": "workshop-photography",
+        "approvalState": "APPROVED",
+        "isPrimary": false,
+        "sortOrder": 40,
+        "storageKey": "products/is-pin-s1025/organized-2026-09-14/workshop/current-workshop-3a8a97b4cb09.png",
+        "url": null,
+        "localPath": "C:\\Users\\Shameer\\Documents\\Codex\\2026-07-02\\you-are-the-lead-software-engineer\\tcg-hobby\\apps\\iron-sprue\\reports\\vase-workshop-live-references-2026-09-15\\is-pin-s1025-workshop-photography-0aheam0g.png",
+        "mimeType": "image/png",
+        "byteSize": 2046568,
+        "width": 1536,
+        "height": 1024,
+        "format": "png"
+      },
+      "image2": {
+        "storageKey": "products/is-pin-s1025/organized-2026-09-14/image-2/white-image-2-replacement-bf675104ebce.webp",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 82154
+      },
+      "manufacturer": {
+        "storageKey": "products/is-pin-s1025/organized-2026-09-14/manufacturer/tasma-manufacturer-0fe06fd8619c.jpg",
+        "width": 1100,
+        "height": 1100,
+        "byteSize": 158409
+      }
+    }
+  ]
+}

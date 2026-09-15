@@ -1,0 +1,448 @@
+{
+  "generatedAt": "2026-09-15T12:17:27.858Z",
+  "mode": "applied",
+  "vases": [
+    {
+      "sku": "IS-PIN-S1009",
+      "product": "3D Jigsaw Vase - Children",
+      "method": "manufacturer image reused exactly as Image 2",
+      "replacementKey": "products/is-pin-s1009/organized-2026-09-15/image-2/manufacturer-as-image2-4c9851c0dc9d.jpg",
+      "replacementSize": "1100x1100",
+      "byteSize": 100437
+    },
+    {
+      "sku": "IS-PIN-S1025",
+      "product": "3D Jigsaw Vase - Magpies on a Plum Tree",
+      "method": "new Birds Image 2 generated from Koi shape reference",
+      "replacementKey": "products/is-pin-s1025/organized-2026-09-15/image-2/koi-shape-birds-image2-dbf3986b530d.png",
+      "replacementSize": "1254x1254",
+      "byteSize": 1342005
+    }
+  ],
+  "workshops": [
+    {
+      "sku": "IS-AOS-05603",
+      "product": "Pagani Zonda F",
+      "sourceKey": "products/is-aos-05603/organized-2026-09-14/workshop/current-workshop-7682da426eee.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-aos-05603/organized-2026-09-15/workshop/full-frame-resize-a0b4f1dbccbe.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 269962
+    },
+    {
+      "sku": "IS-AOS-05627",
+      "product": "Toyota 2000GT White",
+      "sourceKey": "products/is-aos-05627/organized-2026-09-14/workshop/current-workshop-ffc2069bb0a8.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-aos-05627/organized-2026-09-15/workshop/full-frame-resize-eb1eeddccaf6.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 175334
+    },
+    {
+      "sku": "IS-AOS-05628",
+      "product": "Toyota 2000GT Red",
+      "sourceKey": "products/is-aos-05628/organized-2026-09-14/workshop/current-workshop-b7cb05a33330.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-aos-05628/organized-2026-09-15/workshop/full-frame-resize-ae600354ce47.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 218058
+    },
+    {
+      "sku": "IS-AOS-05629",
+      "product": "Toyota 2000GT Silver",
+      "sourceKey": "products/is-aos-05629/organized-2026-09-14/workshop/current-workshop-c74a01de27b3.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-aos-05629/organized-2026-09-15/workshop/full-frame-resize-b96065ded8a1.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 227356
+    },
+    {
+      "sku": "IS-AOS-05778",
+      "product": "Suzuki Jimny Blue",
+      "sourceKey": "products/is-aos-05778/organized-2026-09-14/workshop/current-workshop-46b2c053741e.png",
+      "sourceSize": "1562x1007",
+      "replacementKey": "products/is-aos-05778/organized-2026-09-15/workshop/full-frame-resize-0f12f2bc09e9.webp",
+      "replacementSize": "2100x1354",
+      "byteSize": 257312
+    },
+    {
+      "sku": "IS-AOS-06259",
+      "product": "Nissan Fairlady Z Blue",
+      "sourceKey": "products/is-aos-06259/organized-2026-09-14/workshop/current-workshop-da42b0a6b55a.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-aos-06259/organized-2026-09-15/workshop/full-frame-resize-7e60adf61a91.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 264670
+    },
+    {
+      "sku": "IS-AOS-06290",
+      "product": "Honda Motocompo",
+      "sourceKey": "products/is-aos-06290/organized-2026-09-14/workshop/current-workshop-1525f5321e48.png",
+      "sourceSize": "1733x908",
+      "replacementKey": "products/is-aos-06290/organized-2026-09-15/workshop/full-frame-resize-0f344b650b0d.webp",
+      "replacementSize": "2100x1100",
+      "byteSize": 185694
+    },
+    {
+      "sku": "IS-AOS-06345",
+      "product": "Lamborghini Aventador White",
+      "sourceKey": "products/is-aos-06345/organized-2026-09-14/workshop/current-workshop-ae9bdd9e5a79.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-aos-06345/organized-2026-09-15/workshop/full-frame-resize-60cce2db002b.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 207206
+    },
+    {
+      "sku": "IS-AOS-06347",
+      "product": "Lamborghini Aventador Red",
+      "sourceKey": "products/is-aos-06347/organized-2026-09-14/workshop/current-workshop-908015f121d5.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-aos-06347/organized-2026-09-15/workshop/full-frame-resize-894e5a4e556c.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 236630
+    },
+    {
+      "sku": "IS-AOS-06349",
+      "product": "Lamborghini Aventador Blue",
+      "sourceKey": "products/is-aos-06349/organized-2026-09-14/workshop/current-workshop-e5e5d0329887.png",
+      "sourceSize": "1535x1025",
+      "replacementKey": "products/is-aos-06349/organized-2026-09-15/workshop/full-frame-resize-1abb082dad8b.webp",
+      "replacementSize": "2100x1402",
+      "byteSize": 244200
+    },
+    {
+      "sku": "IS-AOS-06357",
+      "product": "Skyline GTR Red Pearl",
+      "sourceKey": "products/is-aos-06357/organized-2026-09-14/workshop/current-workshop-303dcb1f3647.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-aos-06357/organized-2026-09-15/workshop/full-frame-resize-51d6a43f18f0.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 292702
+    },
+    {
+      "sku": "IS-AOS-06437",
+      "product": "Back to the Future Part II",
+      "sourceKey": "products/is-aos-06437/organized-2026-09-14/workshop/current-workshop-5afbee26bc2b.png",
+      "sourceSize": "1535x1025",
+      "replacementKey": "products/is-aos-06437/organized-2026-09-15/workshop/full-frame-resize-8835c9c19990.webp",
+      "replacementSize": "2100x1402",
+      "byteSize": 303346
+    },
+    {
+      "sku": "IS-AOS-06438",
+      "product": "Back to the Future Part III",
+      "sourceKey": "products/is-aos-06438/organized-2026-09-14/workshop/current-workshop-7bfb241cf199.png",
+      "sourceSize": "1536x1024",
+      "replacementKey": "products/is-aos-06438/organized-2026-09-15/workshop/full-frame-resize-81dc723f989c.webp",
+      "replacementSize": "2100x1400",
+      "byteSize": 297784
+    },
+    {
+      "sku": "IS-AOS-06459",
+      "product": "Toyota GR86 Spark Red",
+      "sourceKey": "products/is-aos-06459/organized-2026-09-14/workshop/current-workshop-9c394a81cf89.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-aos-06459/organized-2026-09-15/workshop/full-frame-resize-0386474e2ddf.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 267108
+    },
+    {
+      "sku": "IS-AOS-06460",
+      "product": "Toyota GR86 White Pearl",
+      "sourceKey": "products/is-aos-06460/organized-2026-09-14/workshop/current-workshop-fa3137d79ef6.png",
+      "sourceSize": "1535x1025",
+      "replacementKey": "products/is-aos-06460/organized-2026-09-15/workshop/full-frame-resize-1c71acbd35de.webp",
+      "replacementSize": "2100x1402",
+      "byteSize": 277548
+    },
+    {
+      "sku": "IS-AOS-06474",
+      "product": "Nissan S30 Fairlady Z Red Custom Wheels",
+      "sourceKey": "products/is-aos-06474/organized-2026-09-14/workshop/current-workshop-8619fa0329a5.png",
+      "sourceSize": "1725x912",
+      "replacementKey": "products/is-aos-06474/organized-2026-09-15/workshop/full-frame-resize-6a040416a513.webp",
+      "replacementSize": "2100x1110",
+      "byteSize": 237626
+    },
+    {
+      "sku": "IS-AOS-06477",
+      "product": "Nissan S30 Fairlady Z Brown Custom Wheels",
+      "sourceKey": "products/is-aos-06477/organized-2026-09-14/workshop/current-workshop-97616261b78f.png",
+      "sourceSize": "1648x954",
+      "replacementKey": "products/is-aos-06477/organized-2026-09-15/workshop/full-frame-resize-b32727493297.webp",
+      "replacementSize": "2100x1216",
+      "byteSize": 225362
+    },
+    {
+      "sku": "IS-AOS-06539",
+      "product": "Lamborghini Countach LPI 800-4 White",
+      "sourceKey": "products/is-aos-06539/organized-2026-09-14/workshop/current-workshop-fef0186834a9.png",
+      "sourceSize": "1535x1025",
+      "replacementKey": "products/is-aos-06539/organized-2026-09-15/workshop/full-frame-resize-ec62db67e43f.webp",
+      "replacementSize": "2100x1402",
+      "byteSize": 213024
+    },
+    {
+      "sku": "IS-AOS-06540",
+      "product": "Lamborghini Countach LPI 800-4 Red",
+      "sourceKey": "products/is-aos-06540/organized-2026-09-14/workshop/current-workshop-363b5305aa52.png",
+      "sourceSize": "1535x1025",
+      "replacementKey": "products/is-aos-06540/organized-2026-09-15/workshop/full-frame-resize-1f17ba501939.webp",
+      "replacementSize": "2100x1402",
+      "byteSize": 253440
+    },
+    {
+      "sku": "IS-CUB-C007H",
+      "product": "Era of Navigation",
+      "sourceKey": "products/is-cub-c007h/organized-2026-09-14/workshop/current-workshop-1cb968387a96.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-cub-c007h/organized-2026-09-15/workshop/full-frame-resize-40158765513e.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 283164
+    },
+    {
+      "sku": "IS-CUB-C108H",
+      "product": "Thomas Jefferson Memorial",
+      "sourceKey": "products/is-cub-c108h/organized-2026-09-14/workshop/current-workshop-13fe341dd895.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-cub-c108h/organized-2026-09-15/workshop/full-frame-resize-684eeeeb4a79.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 284536
+    },
+    {
+      "sku": "IS-CUB-C112H",
+      "product": "Basilica of the National Shrine",
+      "sourceKey": "products/is-cub-c112h/organized-2026-09-14/workshop/current-workshop-65d6a9497a74.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-cub-c112h/organized-2026-09-15/workshop/full-frame-resize-5f3ed13e1ca4.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 339156
+    },
+    {
+      "sku": "IS-CUB-C114H",
+      "product": "St Patrick's Cathedral",
+      "sourceKey": "products/is-cub-c114h/organized-2026-09-14/workshop/current-workshop-cff04559d987.png",
+      "sourceSize": "1615x974",
+      "replacementKey": "products/is-cub-c114h/organized-2026-09-15/workshop/full-frame-resize-dde342378157.webp",
+      "replacementSize": "2100x1267",
+      "byteSize": 291856
+    },
+    {
+      "sku": "IS-CUB-C119H",
+      "product": "Two Masted Schooner",
+      "sourceKey": "products/is-cub-c119h/organized-2026-09-14/workshop/current-workshop-712558c9c135.png",
+      "sourceSize": "1535x1024",
+      "replacementKey": "products/is-cub-c119h/organized-2026-09-15/workshop/full-frame-resize-38e904a3e706.webp",
+      "replacementSize": "2100x1401",
+      "byteSize": 273098
+    },
+    {
+      "sku": "IS-CUB-C712H",
+      "product": "Brandenburg Gate",
+      "sourceKey": "products/is-cub-c712h/organized-2026-09-14/workshop/current-workshop-2ef1d089f6ff.png",
+      "sourceSize": "1470x1070",
+      "replacementKey": "products/is-cub-c712h/organized-2026-09-15/workshop/full-frame-resize-29af35f13964.webp",
+      "replacementSize": "2100x1529",
+      "byteSize": 365958
+    },
+    {
+      "sku": "IS-CUB-MC092H",
+      "product": "St Peter's Basilica",
+      "sourceKey": "products/is-cub-mc092h/organized-2026-09-14/workshop/current-workshop-220d1dd623e4.png",
+      "sourceSize": "1635x962",
+      "replacementKey": "products/is-cub-mc092h/organized-2026-09-15/workshop/full-frame-resize-9f7139832ce2.webp",
+      "replacementSize": "2100x1236",
+      "byteSize": 332548
+    },
+    {
+      "sku": "IS-CUB-MC093H",
+      "product": "St Basil's Cathedral",
+      "sourceKey": "products/is-cub-mc093h/organized-2026-09-14/workshop/current-workshop-efa9953125f3.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-cub-mc093h/organized-2026-09-15/workshop/full-frame-resize-351db62f9e08.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 342112
+    },
+    {
+      "sku": "IS-CUB-MC106H",
+      "product": "Queen Anne's Revenge",
+      "sourceKey": "products/is-cub-mc106h/organized-2026-09-14/workshop/current-workshop-d7b445b40aba.png",
+      "sourceSize": "1403x1121",
+      "replacementKey": "products/is-cub-mc106h/organized-2026-09-15/workshop/full-frame-resize-a0ab35d3ae98.webp",
+      "replacementSize": "2100x1678",
+      "byteSize": 285568
+    },
+    {
+      "sku": "IS-CUB-MC133H",
+      "product": "Burj Khalifa",
+      "sourceKey": "products/is-cub-mc133h/organized-2026-09-14/workshop/current-workshop-5629f852a858.png",
+      "sourceSize": "1536x1024",
+      "replacementKey": "products/is-cub-mc133h/organized-2026-09-15/workshop/full-frame-resize-60f2b07e01c4.webp",
+      "replacementSize": "2100x1400",
+      "byteSize": 254906
+    },
+    {
+      "sku": "IS-CUB-MC139H",
+      "product": "Chateau de Chenonceau",
+      "sourceKey": "products/is-cub-mc139h/organized-2026-09-14/workshop/current-workshop-f81f18a9d8ac.png",
+      "sourceSize": "1635x962",
+      "replacementKey": "products/is-cub-mc139h/organized-2026-09-15/workshop/full-frame-resize-1055382a4f2e.webp",
+      "replacementSize": "2100x1236",
+      "byteSize": 340836
+    },
+    {
+      "sku": "IS-CUB-OM3603",
+      "product": "Magic Box  Underwater World",
+      "sourceKey": "products/is-cub-om3603/organized-2026-09-14/workshop/current-workshop-0be23db6f118.png",
+      "sourceSize": "1535x1025",
+      "replacementKey": "products/is-cub-om3603/organized-2026-09-15/workshop/full-frame-resize-838c340c3686.webp",
+      "replacementSize": "2100x1402",
+      "byteSize": 288616
+    },
+    {
+      "sku": "IS-CUB-OM3606",
+      "product": "Magic Box  London at Night",
+      "sourceKey": "products/is-cub-om3606/organized-2026-09-14/workshop/current-workshop-25272a2bf071.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-cub-om3606/organized-2026-09-15/workshop/full-frame-resize-c2c7d37214b5.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 400252
+    },
+    {
+      "sku": "IS-CUB-T4008H",
+      "product": "Santa Maria",
+      "sourceKey": "products/is-cub-t4008h/organized-2026-09-14/workshop/current-workshop-27833826caf0.png",
+      "sourceSize": "1537x1023",
+      "replacementKey": "products/is-cub-t4008h/organized-2026-09-15/workshop/full-frame-resize-490adf0a14e6.webp",
+      "replacementSize": "2100x1398",
+      "byteSize": 316672
+    },
+    {
+      "sku": "IS-PIN-K1001",
+      "product": "Jigsaw Flowerpot - Red Carpet of Life",
+      "sourceKey": "products/is-pin-k1001/organized-2026-09-14/workshop/current-workshop-aec52398258c.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-pin-k1001/organized-2026-09-15/workshop/full-frame-resize-59e58bfebedb.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 279158
+    },
+    {
+      "sku": "IS-PIN-K1002",
+      "product": "Jigsaw Flowerpot - Slow Down",
+      "sourceKey": "products/is-pin-k1002/organized-2026-09-14/workshop/current-workshop-e48b489edce2.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-pin-k1002/organized-2026-09-15/workshop/full-frame-resize-c0622551f337.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 253434
+    },
+    {
+      "sku": "IS-PIN-K1006",
+      "product": "Jigsaw Flowerpot - Singing Birds & Flowers",
+      "sourceKey": "products/is-pin-k1006/organized-2026-09-14/workshop/current-workshop-5bf104e60a52.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-pin-k1006/organized-2026-09-15/workshop/full-frame-resize-21295facec58.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 202792
+    },
+    {
+      "sku": "IS-PIN-KC1005",
+      "product": "Jigsaw Clock - Classic Rose",
+      "sourceKey": "products/is-pin-kc1005/organized-2026-09-14/workshop/current-workshop-a1f826f52a0e.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-pin-kc1005/organized-2026-09-15/workshop/full-frame-resize-1a17c60dfed0.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 288062
+    },
+    {
+      "sku": "IS-PIN-KC1007",
+      "product": "Jigsaw Clock - Into the Woods",
+      "sourceKey": "products/is-pin-kc1007/organized-2026-09-14/workshop/current-workshop-325fcfe48f69.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-pin-kc1007/organized-2026-09-15/workshop/full-frame-resize-63e475f4530c.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 307564
+    },
+    {
+      "sku": "IS-PIN-KC1046",
+      "product": "Jigsaw Clock - Singing Birds and Fragrant Flowers",
+      "sourceKey": "products/is-pin-kc1046/organized-2026-09-14/workshop/current-workshop-80ae4d45b359.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-pin-kc1046/organized-2026-09-15/workshop/full-frame-resize-3244a5c438a8.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 263544
+    },
+    {
+      "sku": "IS-PIN-Q1035",
+      "product": "Jigsaw Screen - Famous Architectures",
+      "sourceKey": "products/is-pin-q1035/organized-2026-09-14/workshop/current-workshop-01433d97449a.png",
+      "sourceSize": "1543x1019",
+      "replacementKey": "products/is-pin-q1035/organized-2026-09-15/workshop/full-frame-resize-928075db5860.webp",
+      "replacementSize": "2100x1387",
+      "byteSize": 630578
+    },
+    {
+      "sku": "IS-PIN-Q1037",
+      "product": "Jigsaw Lantern - Famous Architecture",
+      "sourceKey": "products/is-pin-q1037/organized-2026-09-14/workshop/current-workshop-209abd68cc63.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-pin-q1037/organized-2026-09-15/workshop/full-frame-resize-b3a24d5bfc28.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 277160
+    },
+    {
+      "sku": "IS-PIN-Q1038",
+      "product": "Jigsaw Lantern - Floral",
+      "sourceKey": "products/is-pin-q1038/organized-2026-09-14/workshop/current-workshop-23a78d66991c.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-pin-q1038/organized-2026-09-15/workshop/full-frame-resize-a4351c0b8c3a.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 430850
+    },
+    {
+      "sku": "IS-PIN-Q1040",
+      "product": "Jigsaw Lantern - Derjen Dancing Girls",
+      "sourceKey": "products/is-pin-q1040/organized-2026-09-14/workshop/current-workshop-ae443bed1055.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-pin-q1040/organized-2026-09-15/workshop/full-frame-resize-914858614cf1.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 297828
+    },
+    {
+      "sku": "IS-PIN-Q1061",
+      "product": "Jigsaw Screen - Le Papillon et la Fleur",
+      "sourceKey": "products/is-pin-q1061/organized-2026-09-14/workshop/current-workshop-9f79ede5ae71.png",
+      "sourceSize": "1635x962",
+      "replacementKey": "products/is-pin-q1061/organized-2026-09-15/workshop/full-frame-resize-f4d6c27da23e.webp",
+      "replacementSize": "2100x1236",
+      "byteSize": 452058
+    },
+    {
+      "sku": "IS-PIN-S1009",
+      "product": "3D Jigsaw Vase - Children",
+      "sourceKey": "products/is-pin-s1009/organized-2026-09-14/workshop/current-workshop-6ba01218750d.png",
+      "sourceSize": "1586x992",
+      "replacementKey": "products/is-pin-s1009/organized-2026-09-15/workshop/full-frame-resize-5283744e0cf5.webp",
+      "replacementSize": "2100x1313",
+      "byteSize": 256456
+    },
+    {
+      "sku": "IS-PIN-S1024",
+      "product": "3D Jigsaw Vase - Koi Carp and Lotus",
+      "sourceKey": "products/is-pin-s1024/organized-2026-09-14/workshop/current-workshop-47fff3a83d59.png",
+      "sourceSize": "1536x1024",
+      "replacementKey": "products/is-pin-s1024/organized-2026-09-15/workshop/full-frame-resize-4c1ed7610330.webp",
+      "replacementSize": "2100x1400",
+      "byteSize": 239680
+    },
+    {
+      "sku": "IS-PIN-S1025",
+      "product": "3D Jigsaw Vase - Magpies on a Plum Tree",
+      "sourceKey": "products/is-pin-s1025/organized-2026-09-14/workshop/current-workshop-3a8a97b4cb09.png",
+      "sourceSize": "1536x1024",
+      "replacementKey": "products/is-pin-s1025/organized-2026-09-15/workshop/full-frame-resize-f4c4e0a35b15.webp",
+      "replacementSize": "2100x1400",
+      "byteSize": 275058
+    }
+  ],
+  "errors": []
+}
