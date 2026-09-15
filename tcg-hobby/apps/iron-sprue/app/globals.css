@@ -2568,10 +2568,6 @@ p {
   mix-blend-mode: multiply;
 }
 
-.brand-feature img[src*="pintoo-transparent"] {
-  mix-blend-mode: normal;
-}
-
 @keyframes brandCarousel {
   0%, 16% {
     opacity: 1;
@@ -8426,14 +8422,9 @@ body:has(.product-detail-page) .payment-trust-banner {
 }
 
 .homepage-brand-carousel .brand-viewport {
-  position: static;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
-  gap: clamp(14px, 2.4vw, 34px);
-  align-items: center;
-  min-height: 0;
-  height: auto;
-  overflow: visible;
+  position: relative;
+  min-height: 92px;
+  overflow: hidden;
 }
 
 .homepage-brand-carousel .brand-stage > button {
@@ -8445,25 +8436,43 @@ body:has(.product-detail-page) .payment-trust-banner {
 }
 
 .homepage-brand-carousel .brand-feature {
-  position: static;
-  inset: auto;
-  min-height: 78px;
+  position: absolute;
+  inset: 0;
   background: transparent;
   box-shadow: none;
-  opacity: 1;
-  transform: none;
-  animation: none;
+  opacity: 0;
+  transform: translateX(18px);
+  animation: homepageBrandCarousel calc(var(--brand-count, 7) * 4s) infinite;
+  animation-delay: calc(var(--brand-index) * 4s);
 }
 
 .homepage-brand-carousel .brand-feature img {
-  width: min(174px, 100%);
-  max-height: 72px;
+  width: min(280px, 58vw);
+  max-height: 82px;
   object-fit: contain;
   mix-blend-mode: normal;
 }
 
-.homepage-brand-carousel .carousel-dots {
-  display: none;
+.homepage-brand-carousel .carousel-dots li,
+.homepage-brand-carousel .carousel-dots button {
+  background: rgba(3, 4, 3, 0.28);
+}
+
+.homepage-brand-carousel .carousel-dots li[aria-current="true"],
+.homepage-brand-carousel .carousel-dots button.is-active {
+  background: var(--brass);
+}
+
+@keyframes homepageBrandCarousel {
+  0%, 11% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  14%, 100% {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
 }
 
 @media (max-width: 700px) {
@@ -8614,18 +8623,9 @@ body:has(.product-detail-page) .payment-trust-banner {
     padding: 22px 16px;
   }
 
-  .homepage-brand-carousel .brand-viewport {
-    grid-template-columns: repeat(3, minmax(84px, 1fr));
-    gap: 12px 16px;
-  }
-
-  .homepage-brand-carousel .brand-feature {
-    min-height: 58px;
-  }
-
   .homepage-brand-carousel .brand-feature img {
-    width: min(128px, 100%);
-    max-height: 54px;
+    width: min(210px, 70vw);
+    max-height: 68px;
   }
 }
 

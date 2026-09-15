@@ -11,7 +11,7 @@ import {
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
 import { DEFAULT_HOMEPAGE_PRODUCT_SECTION_SLUGS, getIronSprueProductionApiHomeSnapshot, shouldUseIronSprueProductionApi } from '../lib/production-api';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
-import { brandLogoRegistry, categoryNavigation, heroSlides, hrefForCategoryLabel, promoPanels, withOfficialBrandLogos } from '../lib/storefront';
+import { categoryNavigation, heroSlides, hrefForCategoryLabel, promoPanels, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { HeroCarousel } from '../components/hero-carousel';
 import { ProductCard } from '../components/product-card';
@@ -49,13 +49,7 @@ export default async function HomePage() {
   approvedFallbackBrands.forEach((brand) => {
     if (!brandMap.has(brand.name)) brandMap.set(brand.name, brand);
   });
-  const brandsWeStock = Array.from(brandMap.values())
-    .map((brand) => ({
-      ...brand,
-      logoUrl: brandLogoRegistry[brand.name] || brand.logoUrl,
-      approvalStatus: brandLogoRegistry[brand.name] ? ('LOGO_APPROVED' as const) : brand.approvalStatus,
-    }))
-    .sort((left, right) => (left.displayOrder ?? 999) - (right.displayOrder ?? 999) || left.name.localeCompare(right.name));
+  const brandsWeStock = Array.from(brandMap.values()).sort((left, right) => (left.displayOrder ?? 999) - (right.displayOrder ?? 999) || left.name.localeCompare(right.name));
   const newArrivals = productsFromFeaturedPlacements(storefrontProducts, homepagePlacements, 4);
   const productSections = productSectionsFromPlacements(storefrontProducts, homepagePlacements);
   const homepagePromoPanels = promoPanels.slice(0, 3);
@@ -147,7 +141,7 @@ export default async function HomePage() {
       <section className="brand-carousel homepage-brand-carousel" aria-label="Brands we stock">
         <h2>{brandPlacement?.title || 'Brands we stock'}</h2>
         <div className="brand-stage">
-          <div className="brand-viewport" aria-live="off">
+          <div className="brand-viewport" aria-live="off" style={{ '--brand-count': Math.max(brandsWeStock.length, 1) } as CSSProperties}>
             {brandsWeStock.map((brand, index) => (
             <a
               className="brand-feature"
