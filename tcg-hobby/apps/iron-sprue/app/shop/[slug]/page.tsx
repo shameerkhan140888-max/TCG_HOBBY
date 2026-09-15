@@ -1,3 +1,4 @@
+import React from 'react';
 import { notFound } from 'next/navigation';
 import { CatalogueListing } from '../../../components/catalogue-listing';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
@@ -51,6 +52,12 @@ const showcaseRoutes: Record<string, {
     lead: 'Cutting, sanding, measuring and handling tools selected to support precise assembly and tidy finishing.',
     title: 'Tools',
   },
+  'paints-weathering': {
+    eyebrow: 'Paints & weathering',
+    fixedCategory: 'paints-weathering',
+    lead: 'Paint, weathering and finishing stock is being prepared for the Iron Sprue range.',
+    title: 'Paint and weathering stock range coming soon',
+  },
   pintoo: {
     eyebrow: 'Pintoo showcase',
     fixedBrand: 'Pintoo',
@@ -74,7 +81,7 @@ export default async function ShopShowcasePage({
     ? { ...resolvedSearchParams, offers: resolvedSearchParams.offers ?? 'true' }
     : resolvedSearchParams;
 
-  return <CatalogueListing {...route} searchParams={routeSearchParams} />;
+  return await CatalogueListing({ ...route, searchParams: routeSearchParams });
 }
 
 async function categoryRouteForSlug(slug: string) {

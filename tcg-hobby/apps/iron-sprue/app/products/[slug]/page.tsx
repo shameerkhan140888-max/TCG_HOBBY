@@ -59,16 +59,32 @@ function customerFacingSpecifications(product: IronSprueProduct) {
     : {};
   const entries = Object.entries(raw);
   const buildType = String(raw.buildType ?? '').trim().toLowerCase();
+  const category = String(raw.category ?? product.category ?? '').trim().toLowerCase();
   const productType = String(raw.productType ?? '').trim().toLowerCase();
+  const seenKeys = new Set<string>();
+  const seenValues = new Set<string>();
 
   return entries
     .filter(([key, value]) => !hiddenSpecificationKeys.has(key) && value != null && String(value).trim().length > 0)
     .filter(([key]) => !(key === 'productType' && productType.length > 0 && productType === buildType))
-    .map(([key, value]) => ({
-      key,
-      label: productSpecificationLabels[key] ?? key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (letter) => letter.toUpperCase()),
-      value: String(value).trim(),
-    }));
+    .filter(([key, value]) => {
+      const normalisedValue = String(value).trim().toLowerCase();
+      const canonicalKey = key === 'size' ? 'dimensions' : key === 'pieces' ? 'pieceCount' : key;
+      if ((key === 'structure' || key === 'productType') && normalisedValue === category) return false;
+      if (canonicalKey === 'productType' && normalisedValue === buildType) return false;
+      if (seenKeys.has(canonicalKey) || seenValues.has(normalisedValue)) return false;
+      seenKeys.add(canonicalKey);
+      seenValues.add(normalisedValue);
+      return true;
+    })
+    .map(([key, value]) => {
+      const canonicalKey = key === 'size' ? 'dimensions' : key === 'pieces' ? 'pieceCount' : key;
+      return {
+        key: canonicalKey,
+        label: productSpecificationLabels[canonicalKey] ?? canonicalKey.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (letter) => letter.toUpperCase()),
+        value: String(value).trim(),
+      };
+    });
 }
 
 function customerFacingFeatures(product: IronSprueProduct, specifications: ReturnType<typeof customerFacingSpecifications>) {

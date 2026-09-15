@@ -103,9 +103,15 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 <div className="menu-panel">
                   <nav aria-label="Category navigation">
                     <h2>Shop the range</h2>
-                    {categoryNavigation.map((item) => (
-                      <a key={item.href} href={item.href}>{item.label}</a>
-                    ))}
+                    {categoryNavigation.map((item) => {
+                      const badge = 'badge' in item ? item.badge : '';
+                      return (
+                        <a className={badge ? 'has-menu-badge' : undefined} key={item.href} href={item.href}>
+                          <span>{item.label}</span>
+                          {badge ? <small>{badge}</small> : null}
+                        </a>
+                      );
+                    })}
                   </nav>
                   <nav aria-label="Featured shop navigation">
                     <h2>Featured</h2>

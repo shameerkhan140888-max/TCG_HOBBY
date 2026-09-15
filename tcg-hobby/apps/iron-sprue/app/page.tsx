@@ -40,10 +40,16 @@ export default async function HomePage() {
   const homepagePlacements = productionHome?.homepagePlacements ?? fallbackHomepagePlacements;
   const storefrontProducts = productionHome?.products ?? fallbackStorefrontProducts;
   const previewProducts = storefrontProducts.map((product) => ({ ...product, published: true }));
-  const brandsWeStock = productionHome?.brandPresentation.length
+  const liveBrandsWeStock = productionHome?.brandPresentation.length
     ? productionHome.brandPresentation
     : await getIronSprueBrandPresentation(previewProducts)
       .then((brands) => brands.length ? brands : withOfficialBrandLogos(deriveBrandsWeStock(previewProducts)));
+  const approvedFallbackBrands = withOfficialBrandLogos(deriveBrandsWeStock(previewProducts));
+  const brandMap = new Map(liveBrandsWeStock.map((brand) => [brand.name, brand]));
+  approvedFallbackBrands.forEach((brand) => {
+    if (!brandMap.has(brand.name)) brandMap.set(brand.name, brand);
+  });
+  const brandsWeStock = Array.from(brandMap.values()).sort((left, right) => (left.displayOrder ?? 999) - (right.displayOrder ?? 999) || left.name.localeCompare(right.name));
   const newArrivals = productsFromFeaturedPlacements(storefrontProducts, homepagePlacements, 4);
   const productSections = productSectionsFromPlacements(storefrontProducts, homepagePlacements);
   const homepagePromoPanels = promoPanels.slice(0, 3);

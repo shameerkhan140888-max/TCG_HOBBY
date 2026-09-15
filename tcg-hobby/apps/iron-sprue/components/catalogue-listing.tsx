@@ -1,4 +1,5 @@
 import launchProducts from '../data/launch-products.json';
+import React from 'react';
 import type { CSSProperties } from 'react';
 import { buildTypeOptions, filterIronSprueProducts, isBundleProduct, isModelKitProduct, launchCatalogueStatus, pieceCountOptions, scaleOptions, structureOptions, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
 import { getIronSprueStorefrontProducts } from '../lib/admin-storefront-controls';
@@ -174,6 +175,7 @@ export async function CatalogueListing({
   const selectedOffers = single(searchParams, 'offers');
   const selectedSort = single(searchParams, 'sort') || 'featured';
   const search = single(searchParams, 'search');
+  const isPaintWeatheringComingSoon = selectedCategory === 'paints-weathering';
   const storefrontProducts = await getIronSprueStorefrontProducts(importedProducts);
   const scopedProducts = storefrontProducts.filter((product) => {
     if (fixedBrand && product.brand !== fixedBrand) return false;
@@ -237,6 +239,22 @@ export async function CatalogueListing({
           ? 'offers'
           : selectedCategory || (fixedCategory ?? fixedBrand ? '' : 'shop');
   const shopBanner = shopBanners[bannerKey];
+
+  if (isPaintWeatheringComingSoon) {
+    return (
+      <section className="section-block catalogue-page coming-soon-range-page">
+        <div className="catalogue-hero coming-soon-range-hero">
+          <div>
+            <p className="eyebrow">{eyebrow}</p>
+            <h1>Paint and weathering stock range coming soon</h1>
+            <p className="lead">Paints, weathering media and finishing stock are being prepared for the Iron Sprue range. This section will open once approved stock is ready to sell.</p>
+          </div>
+          <a className="button secondary" href="/shop">Browse current stock</a>
+        </div>
+      </section>
+    );
+  }
+
   const filterControls = (idSuffix: string) => (
     <form action={formAction}>
       <label htmlFor={`brand-filter-${idSuffix}`}>Brand</label>

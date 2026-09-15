@@ -17,7 +17,7 @@ export const categoryNavigation = [
   { label: '3D Puzzles & Builds', href: '/shop/3d-puzzles-and-builds' },
   { label: 'Tools', href: '/shop/tools' },
   { label: 'Adhesives & Finishing', href: '/shop?category=adhesives-finishing' },
-  { label: 'Paints & Weathering', href: '/shop?category=paints-weathering' },
+  { label: 'Paints & Weathering', href: '/shop/paints-weathering', badge: 'Coming soon' },
 ] as const;
 
 export const featuredNavigation = [
@@ -122,7 +122,7 @@ export const brandLogoRegistry: Record<string, string> = {
   'Deluxe Materials': '/assets/brands/deluxe-materials.svg',
   'Expo Tools': '/assets/brands/expo-tools.svg',
   'OcCre Creations': '/assets/brands/occre-creations.svg',
-  Pintoo: '/assets/brands/pintoo.webp',
+  Pintoo: '/assets/brands/pintoo-transparent.png',
 };
 
 export function withOfficialBrandLogos(brands: IronSprueBrandRecord[]) {
@@ -426,6 +426,7 @@ export function hrefForCategoryLabel(label: string) {
   if (normalised.includes('puzzle') || normalised.includes('architecture') || normalised.includes('display build') || normalised.includes('giftable')) return '/shop/3d-puzzles-and-builds';
   if (normalised.includes('tool')) return '/shop/tools';
   if (normalised.includes('adhesive') || normalised.includes('finishing')) return '/shop?category=adhesives-finishing';
+  if (normalised.includes('paint') || normalised.includes('weathering')) return '/shop/paints-weathering';
   if (normalised.includes('brand')) return '/brands';
   if (normalised.includes('new')) return '/shop?sort=newest';
   return `/shop?category=${encodeURIComponent(slugForCategory(label))}`;

@@ -72,6 +72,16 @@ describe('Iron Sprue product detail page', () => {
     expect(markup).toContain('Vase');
   });
 
+  it('removes duplicated build information values for display-build categories', async () => {
+    const markup = renderToStaticMarkup(await ProductPage({
+      params: Promise.resolve({ slug: 'cubicfun-mc133h-burj-khalifa' }),
+    }));
+
+    expect(markup).toContain('Build information');
+    expect(markup).toContain('<dt>Category</dt><dd>Architecture</dd>');
+    expect(markup).not.toContain('<dt>Structure</dt><dd>Architecture</dd>');
+  });
+
   it('renders configured add-ons with their resolved product images', async () => {
     const markup = renderToStaticMarkup(await ProductPage({
       params: Promise.resolve({ slug: 'aoshima-05628-toyota-2000gt-red' }),
