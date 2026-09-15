@@ -1,0 +1,342 @@
+{
+  "generatedAt": "2026-09-15T10:47:56.243Z",
+  "runId": "2026-09-15",
+  "restored": [
+    {
+      "sku": "IS-AOS-05603",
+      "product": "Pagani Zonda F",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-05603/replaced-2026-09-15/workshop/current-workshop-7682da426eee.png",
+      "restoredKey": "products/is-aos-05603/organized-2026-09-14/workshop/current-workshop-7682da426eee.png"
+    },
+    {
+      "sku": "IS-AOS-05627",
+      "product": "Toyota 2000GT White",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-05627/replaced-2026-09-15/workshop/current-workshop-ffc2069bb0a8.png",
+      "restoredKey": "products/is-aos-05627/organized-2026-09-14/workshop/current-workshop-ffc2069bb0a8.png"
+    },
+    {
+      "sku": "IS-AOS-05628",
+      "product": "Toyota 2000GT Red",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-05628/replaced-2026-09-15/workshop/current-workshop-b7cb05a33330.png",
+      "restoredKey": "products/is-aos-05628/organized-2026-09-14/workshop/current-workshop-b7cb05a33330.png"
+    },
+    {
+      "sku": "IS-AOS-05629",
+      "product": "Toyota 2000GT Silver",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-05629/replaced-2026-09-15/workshop/current-workshop-c74a01de27b3.png",
+      "restoredKey": "products/is-aos-05629/organized-2026-09-14/workshop/current-workshop-c74a01de27b3.png"
+    },
+    {
+      "sku": "IS-AOS-05778",
+      "product": "Suzuki Jimny Blue",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-05778/replaced-2026-09-15/workshop/current-workshop-46b2c053741e.png",
+      "restoredKey": "products/is-aos-05778/organized-2026-09-14/workshop/current-workshop-46b2c053741e.png"
+    },
+    {
+      "sku": "IS-AOS-06259",
+      "product": "Nissan Fairlady Z Blue",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06259/replaced-2026-09-15/workshop/current-workshop-da42b0a6b55a.png",
+      "restoredKey": "products/is-aos-06259/organized-2026-09-14/workshop/current-workshop-da42b0a6b55a.png"
+    },
+    {
+      "sku": "IS-AOS-06290",
+      "product": "Honda Motocompo",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06290/replaced-2026-09-15/workshop/current-workshop-1525f5321e48.png",
+      "restoredKey": "products/is-aos-06290/organized-2026-09-14/workshop/current-workshop-1525f5321e48.png"
+    },
+    {
+      "sku": "IS-AOS-06345",
+      "product": "Lamborghini Aventador White",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06345/replaced-2026-09-15/workshop/current-workshop-ae9bdd9e5a79.png",
+      "restoredKey": "products/is-aos-06345/organized-2026-09-14/workshop/current-workshop-ae9bdd9e5a79.png"
+    },
+    {
+      "sku": "IS-AOS-06347",
+      "product": "Lamborghini Aventador Red",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06347/replaced-2026-09-15/workshop/current-workshop-908015f121d5.png",
+      "restoredKey": "products/is-aos-06347/organized-2026-09-14/workshop/current-workshop-908015f121d5.png"
+    },
+    {
+      "sku": "IS-AOS-06349",
+      "product": "Lamborghini Aventador Blue",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06349/replaced-2026-09-15/workshop/current-workshop-e5e5d0329887.png",
+      "restoredKey": "products/is-aos-06349/organized-2026-09-14/workshop/current-workshop-e5e5d0329887.png"
+    },
+    {
+      "sku": "IS-AOS-06357",
+      "product": "Skyline GTR Red Pearl",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06357/replaced-2026-09-15/workshop/current-workshop-303dcb1f3647.png",
+      "restoredKey": "products/is-aos-06357/organized-2026-09-14/workshop/current-workshop-303dcb1f3647.png"
+    },
+    {
+      "sku": "IS-AOS-06437",
+      "product": "Back to the Future Part II",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06437/replaced-2026-09-15/workshop/current-workshop-5afbee26bc2b.png",
+      "restoredKey": "products/is-aos-06437/organized-2026-09-14/workshop/current-workshop-5afbee26bc2b.png"
+    },
+    {
+      "sku": "IS-AOS-06438",
+      "product": "Back to the Future Part III",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06438/replaced-2026-09-15/workshop/current-workshop-7bfb241cf199.png",
+      "restoredKey": "products/is-aos-06438/organized-2026-09-14/workshop/current-workshop-7bfb241cf199.png"
+    },
+    {
+      "sku": "IS-AOS-06459",
+      "product": "Toyota GR86 Spark Red",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06459/replaced-2026-09-15/workshop/current-workshop-9c394a81cf89.png",
+      "restoredKey": "products/is-aos-06459/organized-2026-09-14/workshop/current-workshop-9c394a81cf89.png"
+    },
+    {
+      "sku": "IS-AOS-06460",
+      "product": "Toyota GR86 White Pearl",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06460/replaced-2026-09-15/workshop/current-workshop-fa3137d79ef6.png",
+      "restoredKey": "products/is-aos-06460/organized-2026-09-14/workshop/current-workshop-fa3137d79ef6.png"
+    },
+    {
+      "sku": "IS-AOS-06474",
+      "product": "Nissan S30 Fairlady Z Red Custom Wheels",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06474/replaced-2026-09-15/workshop/current-workshop-8619fa0329a5.png",
+      "restoredKey": "products/is-aos-06474/organized-2026-09-14/workshop/current-workshop-8619fa0329a5.png"
+    },
+    {
+      "sku": "IS-AOS-06477",
+      "product": "Nissan S30 Fairlady Z Brown Custom Wheels",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06477/replaced-2026-09-15/workshop/current-workshop-97616261b78f.png",
+      "restoredKey": "products/is-aos-06477/organized-2026-09-14/workshop/current-workshop-97616261b78f.png"
+    },
+    {
+      "sku": "IS-AOS-06539",
+      "product": "Lamborghini Countach LPI 800-4 White",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06539/replaced-2026-09-15/workshop/current-workshop-fef0186834a9.png",
+      "restoredKey": "products/is-aos-06539/organized-2026-09-14/workshop/current-workshop-fef0186834a9.png"
+    },
+    {
+      "sku": "IS-AOS-06540",
+      "product": "Lamborghini Countach LPI 800-4 Red",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-aos-06540/replaced-2026-09-15/workshop/current-workshop-363b5305aa52.png",
+      "restoredKey": "products/is-aos-06540/organized-2026-09-14/workshop/current-workshop-363b5305aa52.png"
+    },
+    {
+      "sku": "IS-CUB-C007H",
+      "product": "Era of Navigation",
+      "role": "catalogue-primary",
+      "archiveKey": "archive/products/is-cub-c007h/replaced-2026-09-15/image-2/current-image-2-cf977fed543b.png",
+      "restoredKey": "products/is-cub-c007h/organized-2026-09-14/image-2/current-image-2-cf977fed543b.png"
+    },
+    {
+      "sku": "IS-CUB-C007H",
+      "product": "Era of Navigation",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-c007h/replaced-2026-09-15/workshop/current-workshop-1cb968387a96.png",
+      "restoredKey": "products/is-cub-c007h/organized-2026-09-14/workshop/current-workshop-1cb968387a96.png"
+    },
+    {
+      "sku": "IS-CUB-C108H",
+      "product": "Thomas Jefferson Memorial",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-c108h/replaced-2026-09-15/workshop/current-workshop-13fe341dd895.png",
+      "restoredKey": "products/is-cub-c108h/organized-2026-09-14/workshop/current-workshop-13fe341dd895.png"
+    },
+    {
+      "sku": "IS-CUB-C112H",
+      "product": "Basilica of the National Shrine",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-c112h/replaced-2026-09-15/workshop/current-workshop-65d6a9497a74.png",
+      "restoredKey": "products/is-cub-c112h/organized-2026-09-14/workshop/current-workshop-65d6a9497a74.png"
+    },
+    {
+      "sku": "IS-CUB-C114H",
+      "product": "St Patrick's Cathedral",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-c114h/replaced-2026-09-15/workshop/current-workshop-cff04559d987.png",
+      "restoredKey": "products/is-cub-c114h/organized-2026-09-14/workshop/current-workshop-cff04559d987.png"
+    },
+    {
+      "sku": "IS-CUB-C119H",
+      "product": "Two Masted Schooner",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-c119h/replaced-2026-09-15/workshop/current-workshop-712558c9c135.png",
+      "restoredKey": "products/is-cub-c119h/organized-2026-09-14/workshop/current-workshop-712558c9c135.png"
+    },
+    {
+      "sku": "IS-CUB-C712H",
+      "product": "Brandenburg Gate",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-c712h/replaced-2026-09-15/workshop/current-workshop-2ef1d089f6ff.png",
+      "restoredKey": "products/is-cub-c712h/organized-2026-09-14/workshop/current-workshop-2ef1d089f6ff.png"
+    },
+    {
+      "sku": "IS-CUB-MC092H",
+      "product": "St Peter's Basilica",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-mc092h/replaced-2026-09-15/workshop/current-workshop-220d1dd623e4.png",
+      "restoredKey": "products/is-cub-mc092h/organized-2026-09-14/workshop/current-workshop-220d1dd623e4.png"
+    },
+    {
+      "sku": "IS-CUB-MC093H",
+      "product": "St Basil's Cathedral",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-mc093h/replaced-2026-09-15/workshop/current-workshop-efa9953125f3.png",
+      "restoredKey": "products/is-cub-mc093h/organized-2026-09-14/workshop/current-workshop-efa9953125f3.png"
+    },
+    {
+      "sku": "IS-CUB-MC106H",
+      "product": "Queen Anne's Revenge",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-mc106h/replaced-2026-09-15/workshop/current-workshop-d7b445b40aba.png",
+      "restoredKey": "products/is-cub-mc106h/organized-2026-09-14/workshop/current-workshop-d7b445b40aba.png"
+    },
+    {
+      "sku": "IS-CUB-MC133H",
+      "product": "Burj Khalifa",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-mc133h/replaced-2026-09-15/workshop/current-workshop-5629f852a858.png",
+      "restoredKey": "products/is-cub-mc133h/organized-2026-09-14/workshop/current-workshop-5629f852a858.png"
+    },
+    {
+      "sku": "IS-CUB-MC139H",
+      "product": "Chateau de Chenonceau",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-mc139h/replaced-2026-09-15/workshop/current-workshop-f81f18a9d8ac.png",
+      "restoredKey": "products/is-cub-mc139h/organized-2026-09-14/workshop/current-workshop-f81f18a9d8ac.png"
+    },
+    {
+      "sku": "IS-CUB-OM3603",
+      "product": "Magic Box  Underwater World",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-om3603/replaced-2026-09-15/workshop/current-workshop-0be23db6f118.png",
+      "restoredKey": "products/is-cub-om3603/organized-2026-09-14/workshop/current-workshop-0be23db6f118.png"
+    },
+    {
+      "sku": "IS-CUB-OM3606",
+      "product": "Magic Box  London at Night",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-om3606/replaced-2026-09-15/workshop/current-workshop-25272a2bf071.png",
+      "restoredKey": "products/is-cub-om3606/organized-2026-09-14/workshop/current-workshop-25272a2bf071.png"
+    },
+    {
+      "sku": "IS-CUB-T4008H",
+      "product": "Santa Maria",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-cub-t4008h/replaced-2026-09-15/workshop/current-workshop-27833826caf0.png",
+      "restoredKey": "products/is-cub-t4008h/organized-2026-09-14/workshop/current-workshop-27833826caf0.png"
+    },
+    {
+      "sku": "IS-PIN-K1001",
+      "product": "Jigsaw Flowerpot - Red Carpet of Life",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-k1001/replaced-2026-09-15/workshop/current-workshop-aec52398258c.png",
+      "restoredKey": "products/is-pin-k1001/organized-2026-09-14/workshop/current-workshop-aec52398258c.png"
+    },
+    {
+      "sku": "IS-PIN-K1002",
+      "product": "Jigsaw Flowerpot - Slow Down",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-k1002/replaced-2026-09-15/workshop/current-workshop-e48b489edce2.png",
+      "restoredKey": "products/is-pin-k1002/organized-2026-09-14/workshop/current-workshop-e48b489edce2.png"
+    },
+    {
+      "sku": "IS-PIN-K1006",
+      "product": "Jigsaw Flowerpot - Singing Birds & Flowers",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-k1006/replaced-2026-09-15/workshop/current-workshop-5bf104e60a52.png",
+      "restoredKey": "products/is-pin-k1006/organized-2026-09-14/workshop/current-workshop-5bf104e60a52.png"
+    },
+    {
+      "sku": "IS-PIN-KC1005",
+      "product": "Jigsaw Clock - Classic Rose",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-kc1005/replaced-2026-09-15/workshop/current-workshop-a1f826f52a0e.png",
+      "restoredKey": "products/is-pin-kc1005/organized-2026-09-14/workshop/current-workshop-a1f826f52a0e.png"
+    },
+    {
+      "sku": "IS-PIN-KC1007",
+      "product": "Jigsaw Clock - Into the Woods",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-kc1007/replaced-2026-09-15/workshop/current-workshop-325fcfe48f69.png",
+      "restoredKey": "products/is-pin-kc1007/organized-2026-09-14/workshop/current-workshop-325fcfe48f69.png"
+    },
+    {
+      "sku": "IS-PIN-KC1046",
+      "product": "Jigsaw Clock - Singing Birds and Fragrant Flowers",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-kc1046/replaced-2026-09-15/workshop/current-workshop-80ae4d45b359.png",
+      "restoredKey": "products/is-pin-kc1046/organized-2026-09-14/workshop/current-workshop-80ae4d45b359.png"
+    },
+    {
+      "sku": "IS-PIN-Q1035",
+      "product": "Jigsaw Screen - Famous Architectures",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-q1035/replaced-2026-09-15/workshop/current-workshop-01433d97449a.png",
+      "restoredKey": "products/is-pin-q1035/organized-2026-09-14/workshop/current-workshop-01433d97449a.png"
+    },
+    {
+      "sku": "IS-PIN-Q1037",
+      "product": "Jigsaw Lantern - Famous Architecture",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-q1037/replaced-2026-09-15/workshop/current-workshop-209abd68cc63.png",
+      "restoredKey": "products/is-pin-q1037/organized-2026-09-14/workshop/current-workshop-209abd68cc63.png"
+    },
+    {
+      "sku": "IS-PIN-Q1038",
+      "product": "Jigsaw Lantern - Floral",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-q1038/replaced-2026-09-15/workshop/current-workshop-23a78d66991c.png",
+      "restoredKey": "products/is-pin-q1038/organized-2026-09-14/workshop/current-workshop-23a78d66991c.png"
+    },
+    {
+      "sku": "IS-PIN-Q1040",
+      "product": "Jigsaw Lantern - Derjen Dancing Girls",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-q1040/replaced-2026-09-15/workshop/current-workshop-ae443bed1055.png",
+      "restoredKey": "products/is-pin-q1040/organized-2026-09-14/workshop/current-workshop-ae443bed1055.png"
+    },
+    {
+      "sku": "IS-PIN-Q1061",
+      "product": "Jigsaw Screen - Le Papillon et la Fleur",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-q1061/replaced-2026-09-15/workshop/current-workshop-9f79ede5ae71.png",
+      "restoredKey": "products/is-pin-q1061/organized-2026-09-14/workshop/current-workshop-9f79ede5ae71.png"
+    },
+    {
+      "sku": "IS-PIN-S1009",
+      "product": "3D Jigsaw Vase - Children",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-s1009/replaced-2026-09-15/workshop/current-workshop-6ba01218750d.png",
+      "restoredKey": "products/is-pin-s1009/organized-2026-09-14/workshop/current-workshop-6ba01218750d.png"
+    },
+    {
+      "sku": "IS-PIN-S1024",
+      "product": "3D Jigsaw Vase - Koi Carp and Lotus",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-s1024/replaced-2026-09-15/workshop/current-workshop-47fff3a83d59.png",
+      "restoredKey": "products/is-pin-s1024/organized-2026-09-14/workshop/current-workshop-47fff3a83d59.png"
+    },
+    {
+      "sku": "IS-PIN-S1025",
+      "product": "3D Jigsaw Vase - Magpies on a Plum Tree",
+      "role": "workshop-photography",
+      "archiveKey": "archive/products/is-pin-s1025/replaced-2026-09-15/workshop/current-workshop-3a8a97b4cb09.png",
+      "restoredKey": "products/is-pin-s1025/organized-2026-09-14/workshop/current-workshop-3a8a97b4cb09.png"
+    }
+  ]
+}
