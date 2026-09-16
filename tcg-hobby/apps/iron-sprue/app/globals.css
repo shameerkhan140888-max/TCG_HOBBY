@@ -9257,6 +9257,31 @@ body:has(.product-detail-page) .payment-trust-banner {
   font-weight: 800;
 }
 
+/* Mobile listing media must win over the desktop launch corrections above. */
+@media (max-width: 700px) {
+  .homepage-board .product-card .product-image,
+  .catalogue-grid .product-card .product-image,
+  .product-grid .product-card .product-image {
+    position: relative !important;
+    display: block !important;
+    overflow: hidden;
+    padding: 0 !important;
+  }
+
+  .homepage-board .product-card .product-image img,
+  .catalogue-grid .product-card .product-image img,
+  .product-grid .product-card .product-image img {
+    position: absolute !important;
+    inset: 9px !important;
+    width: calc(100% - 18px) !important;
+    height: calc(100% - 18px) !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: contain !important;
+    object-position: center !important;
+  }
+}
+
 .product-detail-page .pdp-addon-carousel-track .product-card .product-card-body {
   grid-template-rows:
     auto
