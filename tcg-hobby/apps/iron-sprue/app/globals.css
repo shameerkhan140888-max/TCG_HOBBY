@@ -9522,6 +9522,44 @@ body:has(.product-detail-page) .payment-trust-banner {
   object-position: center;
 }
 
+/* Listing cards should not resize when add-to-basket feedback is set. */
+.catalogue-grid .product-card .basket-action-stack,
+.catalogue-grid .product-card .basket-action-stack.has-feedback,
+.catalogue-grid .product-card .basket-action-stack.is-added,
+.product-grid .product-card .basket-action-stack,
+.product-grid .product-card .basket-action-stack.has-feedback,
+.product-grid .product-card .basket-action-stack.is-added {
+  grid-template-rows: 42px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  gap: 0 !important;
+}
+
+.catalogue-grid .product-card .basket-action-stack .form-status,
+.product-grid .product-card .basket-action-stack .form-status {
+  display: none !important;
+}
+
+@media (max-width: 700px) {
+  .catalogue-grid .product-card .basket-action-stack,
+  .catalogue-grid .product-card .basket-action-stack.has-feedback,
+  .catalogue-grid .product-card .basket-action-stack.is-added,
+  .product-grid .product-card .basket-action-stack,
+  .product-grid .product-card .basket-action-stack.has-feedback,
+  .product-grid .product-card .basket-action-stack.is-added,
+  .catalogue-grid .product-card .basket-action-stack button,
+  .catalogue-grid .product-card .basket-action-stack.has-feedback button,
+  .catalogue-grid .product-card .basket-action-stack.is-added button,
+  .product-grid .product-card .basket-action-stack button {
+    grid-template-rows: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    gap: 0 !important;
+  }
+}
+
 /* Homepage hero typography treatments are keyed by product mood, not one global style. */
 .hero-slide[data-hero-style="time-machine"] .hero-message {
   left: clamp(52px, 4.6rem, 86px);
