@@ -29,7 +29,10 @@ export type StoredBasketItem = {
   imageAlt?: string | null;
 };
 
-export type BasketUpsellProduct = Omit<StoredBasketItem, 'quantity'>;
+export type BasketUpsellProduct = Omit<StoredBasketItem, 'quantity'> & {
+  productBrand?: string | null;
+  productCategory?: string | null;
+};
 
 type CheckoutPaymentIntent = {
   orderNumber: string;
@@ -334,6 +337,20 @@ function formatPrice(minor: number) {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(minor / 100);
 }
 
+function basketUpsellAvailabilityClass(product: BasketUpsellProduct) {
+  const limit = availabilityLimit(product);
+  if (limit <= 0) return 'out-of-stock';
+  if (limit <= 2) return 'low-stock';
+  return 'in-stock';
+}
+
+function basketUpsellAvailability(product: BasketUpsellProduct) {
+  const limit = availabilityLimit(product);
+  if (limit <= 0) return 'Out of stock';
+  if (limit <= 2) return 'Low stock';
+  return 'In stock';
+}
+
 function toInputItems(items: StoredBasketItem[]): PublicBasketInputItem[] {
   return items.map((item) => ({ productId: item.productId, quantity: item.quantity }));
 }
@@ -503,6 +520,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutPaymentIntent, setCheckoutPaymentIntent] = useState<CheckoutPaymentIntent | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>('details');
+  const upsellTrackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const refresh = () => setItems(readBasket());
@@ -573,6 +591,13 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
       .filter((product) => availabilityLimit(product) > 0)
       .slice(0, 4);
   }, [basketProductIds, upsellProducts]);
+  const scrollUpsells = useCallback((direction: -1 | 1) => {
+    const track = upsellTrackRef.current;
+    if (!track) return;
+    const firstCard = track.querySelector<HTMLElement>('.product-card');
+    const distance = firstCard ? firstCard.offsetWidth + 16 : track.clientWidth * 0.72;
+    track.scrollBy({ left: direction * distance, behavior: 'smooth' });
+  }, []);
   const subtotalMinor = resolved?.subtotalMinor ?? basketLineItems.reduce((sum, item) => sum + item.unitPriceMinor * item.quantity, 0);
   const hasUnavailableItems = basketLineItems.some((item) => Boolean(basketLineWarning(item)));
   const deliveryMinor = useMemo(() => {
@@ -807,34 +832,58 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
           </aside>
         </div>
         {visibleUpsells.length ? (
-          <section className="basket-upsell-section">
-            <div>
-              <p className="eyebrow">Complete your build</p>
-              <h2>Useful additions for the bench</h2>
+          <section className="section-block compact pdp-addon-panel basket-upsell-section">
+            <div className="section-head split basket-upsell-head">
+              <div>
+                <p className="pdp-addon-kicker">Frequently bought together</p>
+                <h2>Complete the bench setup.</h2>
+              </div>
+              <a className="text-link" href="/shop?category=workshop-essentials">View add-ons</a>
             </div>
-            <div className="basket-upsell-grid">
-              {visibleUpsells.map((product) => (
-                <article className="basket-upsell-card" key={product.productId}>
-                  <a className="basket-upsell-image" href={`/products/${product.productSlug}`}>
-                    {product.imageUrl ? (
-                      <img
-                        src={ironSprueDisplayMediaUrl(product.imageUrl, 320)}
-                        srcSet={ironSprueDisplayMediaSrcSet(product.imageUrl, [320, 480])}
-                        sizes="96px"
-                        alt={product.imageAlt ?? product.productName}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : <span className="basket-image-fallback">Iron Sprue</span>}
-                  </a>
-                  <div className="basket-upsell-info">
-                    <p className="eyebrow">Add-on</p>
-                    <a href={`/products/${product.productSlug}`}>{product.productName}</a>
-                    <p>{formatPrice(product.unitPriceMinor)} inc VAT</p>
-                    <AddToBasketButton item={product} />
-                  </div>
-                </article>
-              ))}
+            <div className="pdp-addon-carousel">
+              {visibleUpsells.length > 1 ? (
+                <div className="pdp-addon-carousel-controls" aria-label="Recommended add-on carousel controls">
+                  <button type="button" aria-label="Previous add-ons" onClick={() => scrollUpsells(-1)}>
+                    <span aria-hidden="true">&lsaquo;</span>
+                  </button>
+                  <button type="button" aria-label="Next add-ons" onClick={() => scrollUpsells(1)}>
+                    <span aria-hidden="true">&rsaquo;</span>
+                  </button>
+                </div>
+              ) : null}
+              <div className="pdp-addon-carousel-track basket-upsell-grid" ref={upsellTrackRef} aria-label="Recommended add-on products" tabIndex={0}>
+                {visibleUpsells.map((product) => (
+                  <article className="product-card basket-upsell-card" key={product.productId}>
+                    <div className="product-card-surface">
+                      <a className="product-image" href={`/products/${product.productSlug}`} aria-label={`View ${product.productName}`}>
+                        {product.imageUrl ? (
+                          <img
+                            src={ironSprueDisplayMediaUrl(product.imageUrl, 480)}
+                            srcSet={ironSprueDisplayMediaSrcSet(product.imageUrl, [320, 480, 640])}
+                            sizes="(max-width: 720px) 64vw, 280px"
+                            alt={product.imageAlt ?? product.productName}
+                            width="1000"
+                            height="1000"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        ) : <span className="basket-image-fallback">Iron Sprue</span>}
+                      </a>
+                      <div className="product-card-body">
+                        <p className="product-brand">{product.productBrand || 'Iron Sprue'}</p>
+                        <h3>{product.productName}</h3>
+                        {product.productCategory ? <p className="product-card-category">{product.productCategory}</p> : null}
+                        <span className={`stock-badge ${basketUpsellAvailabilityClass(product)}`}>{basketUpsellAvailability(product)}</span>
+                        <strong>{formatPrice(product.unitPriceMinor)} inc VAT</strong>
+                        <div className="product-actions">
+                          <a href={`/products/${product.productSlug}`}>View details</a>
+                          <AddToBasketButton item={product} />
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
           </section>
         ) : null}

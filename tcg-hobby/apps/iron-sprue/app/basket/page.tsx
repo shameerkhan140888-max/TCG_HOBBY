@@ -22,6 +22,8 @@ function toUpsellProduct(product: IronSprueProduct): BasketUpsellProduct {
     productId: productCommerceId(product),
     productName: product.name,
     productSlug: product.slug,
+    productBrand: product.brand,
+    productCategory: product.category,
     unitPriceMinor: productPriceMinor(product),
     availableQuantity: availableQuantity(product),
     imageUrl: productImage(product),
