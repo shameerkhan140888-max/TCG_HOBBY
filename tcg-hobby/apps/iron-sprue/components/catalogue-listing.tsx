@@ -253,13 +253,36 @@ export async function CatalogueListing({
   if (isPaintWeatheringComingSoon) {
     return (
       <section className="section-block catalogue-page coming-soon-range-page">
-        <div className="catalogue-hero coming-soon-range-hero">
-          <div>
-            <p className="eyebrow">{eyebrow}</p>
-            <h1>Paint and weathering stock range coming soon</h1>
-            <p className="lead">Paints, weathering media and finishing stock are being prepared for the Iron Sprue range. This section will open once approved stock is ready to sell.</p>
+        <div className="coming-soon-range-hero">
+          <div className="coming-soon-range-copy">
+            <p className="eyebrow">Paints & weathering</p>
+            <h1>Paint and weathering stock range coming soon.</h1>
+            <p className="lead">Colour, surface prep and weathering stock is being prepared for the Iron Sprue bench. This range will open once approved live stock is ready.</p>
+            <div className="coming-soon-range-tags" aria-label="Paint and weathering range preview">
+              <span>Paints</span>
+              <span>Primers</span>
+              <span>Weathering</span>
+              <span>Finishing</span>
+            </div>
+            <a className="button secondary" href="/shop">Browse current stock</a>
           </div>
-          <a className="button secondary" href="/shop">Browse current stock</a>
+          <div className="coming-soon-range-visual" aria-hidden="true">
+            <div className="coming-soon-range-icon">
+              <img src="/assets/category-icons/paints-weathering.png" alt="" loading="lazy" decoding="async" />
+            </div>
+            <div className="paint-swatch-grid">
+              <span style={{ '--paint-swatch': '#d7372f' } as CSSProperties} />
+              <span style={{ '--paint-swatch': '#e4b23d' } as CSSProperties} />
+              <span style={{ '--paint-swatch': '#2d75b8' } as CSSProperties} />
+              <span style={{ '--paint-swatch': '#6a7d42' } as CSSProperties} />
+              <span style={{ '--paint-swatch': '#f4efe4' } as CSSProperties} />
+              <span style={{ '--paint-swatch': '#262626' } as CSSProperties} />
+            </div>
+            <div className="coming-soon-range-note">
+              <strong>Range preparing</strong>
+              <span>Curated for model kits, display builds and clean finishing work.</span>
+            </div>
+          </div>
         </div>
       </section>
     );

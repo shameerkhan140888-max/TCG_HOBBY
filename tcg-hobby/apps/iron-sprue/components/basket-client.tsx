@@ -735,7 +735,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
 
   if (!items.length) {
     return (
-      <div className="empty-state">
+      <div className="empty-state basket-empty-state">
         <h2>Your basket is empty.</h2>
         <p>Start with model kits, puzzle builds or workshop essentials.</p>
         <a className="button" href="/shop">Continue shopping</a>
@@ -802,6 +802,10 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   if (mode === 'basket') {
     return (
       <div className="basket-page-stack">
+        <div className="section-head">
+          <h1>Your basket</h1>
+          <p className="lead">Review your order before proceeding to checkout</p>
+        </div>
         <div className="basket-layout">
           {basketLines}
           <aside className="checkout-panel basket-review-panel">
