@@ -9110,6 +9110,113 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 }
 
+/* Final pre-live card polish: remove empty basket feedback space and keep product/gallery media seated. */
+.product-card .basket-action-stack,
+.homepage-board .product-card .basket-action-stack,
+.catalogue-grid .product-card .basket-action-stack,
+.product-grid .product-card .basket-action-stack,
+.product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack {
+  grid-template-rows: 42px !important;
+  gap: 0 !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  overflow: visible;
+}
+
+.product-card .basket-action-stack.has-feedback,
+.product-card .basket-action-stack.is-added,
+.homepage-board .product-card .basket-action-stack.has-feedback,
+.homepage-board .product-card .basket-action-stack.is-added,
+.catalogue-grid .product-card .basket-action-stack.has-feedback,
+.catalogue-grid .product-card .basket-action-stack.is-added,
+.product-grid .product-card .basket-action-stack.has-feedback,
+.product-grid .product-card .basket-action-stack.is-added,
+.product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack.has-feedback,
+.product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack.is-added {
+  grid-template-rows: 42px 14px !important;
+  gap: 2px !important;
+  min-height: 58px !important;
+  max-height: 58px !important;
+}
+
+.product-card .basket-action-stack .form-status,
+.product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack .form-status {
+  min-height: 14px;
+  line-height: 14px;
+}
+
+.product-card .basket-action-stack.is-added .form-status.success,
+.product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack.is-added .form-status.success {
+  color: #8ed9a9;
+  font-weight: 800;
+}
+
+.product-card .basket-action-stack .form-status.error,
+.product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack .form-status.error {
+  color: #ee9a8f;
+  font-weight: 800;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .product-card-body {
+  grid-template-rows:
+    auto
+    minmax(2.56em, auto)
+    auto
+    auto
+    auto
+    auto
+    auto;
+  min-height: 184px;
+  gap: 6px;
+  padding: 14px;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .stock-badge,
+.product-detail-page .pdp-addon-carousel-track .product-card strong,
+.product-detail-page .pdp-addon-carousel-track .product-card .product-actions {
+  grid-row: auto !important;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .product-actions {
+  align-self: start;
+  margin-top: 2px !important;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .product-image {
+  display: grid;
+  aspect-ratio: 4 / 3;
+  max-height: 210px;
+  place-items: center;
+  background: #fff;
+}
+
+.product-detail-page .pdp-addon-carousel-track .product-card .product-image img {
+  width: calc(100% - 22px) !important;
+  height: calc(100% - 22px) !important;
+  max-width: calc(100% - 22px);
+  max-height: calc(100% - 22px);
+  object-fit: contain;
+  object-position: center;
+}
+
+.primary-product-image,
+.product-unified-panel .primary-product-image,
+.product-detail-page .primary-product-image {
+  background: #fff;
+  padding: clamp(10px, 1.8vw, 18px);
+}
+
+.primary-product-image img,
+.product-unified-panel .primary-product-image img,
+.product-detail-page .primary-product-image img,
+.product-detail-page .thumbnail-button img,
+.product-detail-page .gallery-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
 /* Homepage hero typography treatments are keyed by product mood, not one global style. */
 .hero-slide[data-hero-style="time-machine"] .hero-message {
   left: clamp(52px, 4.6rem, 86px);
