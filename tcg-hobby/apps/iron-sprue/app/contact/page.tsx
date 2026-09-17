@@ -9,7 +9,42 @@ export default function ContactPage() {
         <p className="lead">For customer support, order questions, supplier enquiries and Iron Sprue account help.</p>
       </div>
       <div className="detail-panels">
-        <article className="legal-board">
+        <article className="legal-board contact-board">
+          <section className="contact-form-section">
+            <h2>Send a message</h2>
+            <form className="contact-form" action={`mailto:${ironSprueBrand.contactEmail}`} method="post" encType="text/plain">
+              <label htmlFor="contact-name">
+                Name
+                <input id="contact-name" name="Name" type="text" autoComplete="name" required />
+              </label>
+              <label htmlFor="contact-email">
+                Email address
+                <input id="contact-email" name="Email" type="email" autoComplete="email" required />
+              </label>
+              <label htmlFor="contact-topic">
+                Enquiry type
+                <select id="contact-topic" name="Enquiry type" required defaultValue="">
+                  <option value="" disabled>Choose an enquiry type</option>
+                  <option>Order or delivery help</option>
+                  <option>Return, refund or damaged item</option>
+                  <option>Product question</option>
+                  <option>Supplier or brand enquiry</option>
+                  <option>Account help</option>
+                  <option>Other enquiry</option>
+                </select>
+              </label>
+              <label htmlFor="contact-order">
+                Order number, if relevant
+                <input id="contact-order" name="Order number" type="text" autoComplete="off" placeholder="Example: IS-1001" />
+              </label>
+              <label className="contact-form-full" htmlFor="contact-message">
+                Message
+                <textarea id="contact-message" name="Message" rows={7} maxLength={1600} required placeholder="Tell us what you need help with. Include product names, tracking details or relevant context where helpful." />
+              </label>
+              <p className="contact-form-note">This opens your email app with the message addressed to Iron Sprue support. Please attach photos there if the enquiry involves damage, missing parts or an incorrect item.</p>
+              <button type="submit">Prepare email</button>
+            </form>
+          </section>
           <section>
             <h2>Email support</h2>
             <p>Contact Iron Sprue at <a href={`mailto:${ironSprueBrand.contactEmail}`}>{ironSprueBrand.contactEmail}</a>.</p>
