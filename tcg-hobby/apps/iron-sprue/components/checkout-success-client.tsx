@@ -186,7 +186,7 @@ export function CheckoutSuccessClient({
           <h1>
             Order <span className="order-reference-heading">{order.orderNumber}</span> confirmed
           </h1>
-          <p className="lead">Thank you. Your payment has been received and your order is now confirmed.</p>
+          <p className="lead">Thank you. Your payment has been received and your order has been accepted for fulfilment.</p>
           <h2>Items</h2>
           <ul className="order-lines">
             {order.items.map((item) => (

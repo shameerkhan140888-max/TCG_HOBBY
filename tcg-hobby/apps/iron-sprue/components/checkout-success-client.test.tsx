@@ -83,7 +83,7 @@ describe('Iron Sprue checkout result state', () => {
     />);
 
     expect(markup).toContain('Order <span class="order-reference-heading">IS-20260824-ABC123</span> confirmed');
-    expect(markup).toContain('Thank you. Your payment has been received and your order is now confirmed.');
+    expect(markup).toContain('Thank you. Your payment has been received and your order has been accepted for fulfilment.');
     expect(markup).toContain('Continue shopping');
     expect(markup).not.toContain('IS-VAT-2026-000001');
     expect(markup).not.toContain('VAT No.');

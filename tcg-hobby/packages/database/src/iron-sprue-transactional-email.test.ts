@@ -187,7 +187,7 @@ describe('Iron Sprue transactional email sending', () => {
     const body = lastEmailPayload();
     expect(body.from).toBe('Iron Sprue <orders@example.test>');
     expect(body.html).toContain('Iron Sprue');
-    expect(body.html).toContain('VAT No. 525 2040 33');
+    expect(body.html).toContain('VAT No. GB525204033');
     expect(body.html).toContain('VAT included');
     expect(body.html).toContain('https://media.ironsprue.co.uk/brand/iron-sprue-email-avatar.png');
     expect(body.html).toContain('https://media.example.test/toyota.png');

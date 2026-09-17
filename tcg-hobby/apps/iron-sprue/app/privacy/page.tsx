@@ -6,55 +6,93 @@ export default function PrivacyPage() {
       <div className="section-head">
         <p className="eyebrow">Privacy</p>
         <h1>Privacy policy</h1>
-        <p className="lead">How Iron Sprue collects, uses and protects customer, account, order, support and marketing-consent information.</p>
+        <p className="lead">How Capital Hobby Group Ltd collects and uses personal information through Iron Sprue.</p>
       </div>
       <div className="detail-panels">
         <article className="legal-board">
           <section>
-            <h2>Who controls your data</h2>
-            <p>{ironSprueBrand.legalEntity} is the data controller for Iron Sprue. Registered office: {ironSprueBrand.registeredOffice.join(', ')}. Company number {ironSprueBrand.companyNumber}. VAT No. {ironSprueBrand.vatNumber}.</p>
-            <p>For privacy questions, contact <a href={`mailto:${ironSprueBrand.contactEmail}`}>{ironSprueBrand.contactEmail}</a>.</p>
+            <h2>Who we are</h2>
+            <p>Iron Sprue is a trading name of {ironSprueBrand.legalEntity}. {ironSprueBrand.legalEntity} is the data controller for personal information processed through Iron Sprue.</p>
+            <p>Registered office: {ironSprueBrand.registeredOffice.join(', ')}. Company number {ironSprueBrand.companyNumber}. Privacy enquiries: <a href={`mailto:${ironSprueBrand.contactEmail}`}>{ironSprueBrand.contactEmail}</a>.</p>
           </section>
           <section>
-            <h2>Information we collect</h2>
-            <p>We may collect information you provide when you browse, create an account, join the launch list, contact us, use wishlist features, place an order or request support.</p>
+            <h2>Information we may collect</h2>
             <ul>
-              <li>Name, email address and account details.</li>
-              <li>Delivery and billing information supplied at checkout.</li>
-              <li>Order details, product lines, payment status, fulfilment and return/refund records.</li>
-              <li>Marketing-consent records, including consent wording, source and timestamp.</li>
-              <li>Support messages and information needed to help with an order or product issue.</li>
-              <li>Limited technical information needed for security, fraud prevention, basket operation and service reliability.</li>
+              <li>Identity and contact information, including name, email address, delivery address, billing address and contact information.</li>
+              <li>Account information, including account identifiers, profile information, saved preferences, wishlist information and authentication or security records.</li>
+              <li>Order information, including products ordered, quantities, prices, VAT, delivery information, fulfilment status, returns, refunds and order communications.</li>
+              <li>Payment information, including payment status, transaction references and limited information returned by our payment provider. We do not store full payment-card details.</li>
+              <li>Customer-service information, including messages, photographs and information you send when contacting us about an order, product, return or enquiry.</li>
+              <li>Marketing information, including newsletter subscription status, consent records, consent wording, source, timestamp, unsubscribe status and marketing preferences.</li>
+              <li>Technical and security information, including IP address, device/browser information, request information, session/security identifiers, fraud-prevention information, cookie preferences and limited diagnostic information.</li>
+              <li>Analytics information where optional analytics has been enabled and you have given the required consent.</li>
             </ul>
           </section>
           <section>
-            <h2>How we use information</h2>
-            <p>We use personal information to operate accounts, baskets, checkout, payments, delivery, order history, customer support, refunds, returns, fraud prevention, legal record keeping and requested marketing updates.</p>
-            <p>We only send marketing where consent or another lawful basis allows it, and you can unsubscribe from marketing emails at any time.</p>
+            <h2>Why we use information</h2>
+            <p>To process and deliver orders, we use information necessary to take payment, arrange delivery, provide order updates, manage returns and perform our contract with you. Lawful basis: contract.</p>
+            <p>To provide accounts and requested features, we process information needed to operate accounts, order history, wishlists and customer features you choose to use. Lawful basis: contract and, where appropriate, legitimate interests in operating and securing our service.</p>
+            <p>To comply with legal and financial obligations, we retain information necessary for accounting, taxation, fraud prevention, regulatory requirements and legal claims. Lawful basis: legal obligation and, where appropriate, legitimate interests.</p>
+            <p>To provide customer support, we use information to answer enquiries and resolve order or product issues. Lawful basis: contract and legitimate interests.</p>
+            <p>To protect the website and prevent fraud, we process limited technical/security information to maintain the integrity of accounts, payments, orders and the website. Lawful basis: legitimate interests and, where applicable, legal obligation.</p>
+            <p>To send marketing emails, we normally rely on consent for Iron Sprue email marketing. You can unsubscribe at any time.</p>
+            <p>Analytics and optional marketing technologies operate only in accordance with applicable consent requirements. Lawful basis: normally consent.</p>
           </section>
           <section>
-            <h2>Sharing information</h2>
-            <p>We share information only where needed to operate Iron Sprue, such as with payment, delivery, email, hosting, analytics where consented, fraud-prevention, accounting or support providers.</p>
-            <p>We do not sell customer personal information.</p>
+            <h2>Who we share information with</h2>
+            <p>We may share information with service providers where necessary to operate Iron Sprue, including payment processors, delivery and logistics providers, email and transactional-message providers, website, hosting and infrastructure providers, security and fraud-prevention providers, accounting and professional advisers, analytics providers where enabled and consented to, and government, tax, regulatory or law-enforcement bodies where legally required.</p>
+            <p>Current provider categories reflected in the service include Stripe for payment processing, Resend for transactional and marketing email where configured, Cloudflare for storefront delivery, security and media storage, Railway and database-hosting infrastructure for the API and operational data, and Google Analytics or Meta technologies only where configured and consented to.</p>
+            <p>Providers receive only the information reasonably required for their role. We do not sell personal information to advertisers.</p>
           </section>
           <section>
-            <h2>Payment and security</h2>
-            <p>Payments are handled by the payment provider shown at checkout. Iron Sprue does not store full card details on its own systems.</p>
-            <p>We use reasonable technical and organisational measures designed to protect personal information from unauthorised access, misuse, alteration or loss.</p>
+            <h2>Payment information</h2>
+            <p>Payments are processed using the payment provider presented at checkout. Full card details are handled by the payment provider rather than stored by Iron Sprue.</p>
           </section>
           <section>
-            <h2>Retention</h2>
-            <p>We keep information only for as long as needed for the purpose collected, including customer support, account operation, tax, accounting, fraud prevention, consent audit and legal record requirements.</p>
-            <p>If you unsubscribe from marketing, we may keep enough information to make sure the unsubscribe request continues to be respected.</p>
+            <h2>International transfers</h2>
+            <p>Some service providers may process information outside the United Kingdom. Where personal information is transferred internationally, we will use an appropriate lawful transfer mechanism where required, such as an adequacy regulation, recognised contractual safeguards or another mechanism permitted by data-protection law.</p>
+            <p>This policy describes the transfer position at a customer-appropriate level. Provider-specific safeguards are reviewed as part of operational supplier management.</p>
+          </section>
+          <section>
+            <h2>How long we keep information</h2>
+            <p>We keep personal information only for as long as reasonably necessary for the purpose for which it was collected, including applicable legal, tax, accounting, fraud-prevention and dispute-resolution requirements.</p>
+            <ul>
+              <li>Order and accounting records are retained for the period required for tax, accounting, legal and dispute-resolution obligations.</li>
+              <li>Account records are retained while the account remains active and afterwards where reasonably required to operate the service, protect the account, resolve disputes or comply with legal obligations.</li>
+              <li>Customer-service correspondence is retained for an appropriate period to resolve enquiries, returns, disputes and service records.</li>
+              <li>Marketing consent records are retained as necessary to demonstrate consent and honour unsubscribe choices.</li>
+              <li>Security and fraud logs are retained for a limited period proportionate to the security purpose.</li>
+            </ul>
           </section>
           <section>
             <h2>Your rights</h2>
-            <p>You can ask for access, correction, deletion, restriction or portability of your personal data, or object to certain processing, where applicable law gives you those rights.</p>
-            <p>To make a request, contact <a href={`mailto:${ironSprueBrand.contactEmail}`}>{ironSprueBrand.contactEmail}</a>.</p>
+            <p>Depending on the circumstances, you may have rights including access to your personal information, correction of inaccurate information, deletion, restriction of processing, data portability, objection to processing, and withdrawal of consent where processing is based on consent.</p>
+            <p>These rights are not absolute in every situation. To exercise a right, contact <a href={`mailto:${ironSprueBrand.contactEmail}`}>{ironSprueBrand.contactEmail}</a>. If you withdraw marketing consent, this will not affect processing carried out lawfully before withdrawal.</p>
           </section>
           <section>
-            <h2>Cookies and similar technologies</h2>
-            <p>Strictly necessary cookies and essential technical delivery/cache storage are used for security, account sessions, basket, checkout, consent choices and reliable page delivery. Where enabled and where you have consented, optional analytics technologies help us understand site use and optional marketing technologies help us measure campaigns and product interest.</p>
+            <h2>Direct marketing</h2>
+            <p>You have the right to object to direct marketing. Every marketing email should provide an unsubscribe method.</p>
+          </section>
+          <section>
+            <h2>Automated decision-making</h2>
+            <p>Iron Sprue does not currently intend to make decisions producing legal or similarly significant effects about customers solely by automated processing.</p>
+          </section>
+          <section>
+            <h2>Complaints</h2>
+            <p>If you have concerns about how we use your information, please contact us first so we can investigate.</p>
+            <p>You also have the right to complain to the Information Commissioner's Office. The ICO provides information about complaints and data-protection rights at its official website.</p>
+          </section>
+          <section>
+            <h2>Security</h2>
+            <p>We use technical and organisational measures intended to protect personal information. No internet-based service can guarantee absolute security.</p>
+          </section>
+          <section>
+            <h2>Cookies</h2>
+            <p>See our <a href="/cookies">Cookie Policy</a> and cookie-preference controls for information about browser storage and optional analytics or marketing technologies.</p>
+          </section>
+          <section>
+            <h2>Changes to this policy</h2>
+            <p>We may update this policy when our processing activities, service providers or legal obligations change. The current version will be published on this page.</p>
           </section>
         </article>
       </div>

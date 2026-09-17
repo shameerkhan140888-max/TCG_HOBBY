@@ -4192,6 +4192,36 @@ label {
   color: var(--brass);
 }
 
+.legal-table-wrap {
+  overflow-x: auto;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.legal-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  color: rgba(255, 250, 241, 0.86);
+  font-size: 13px;
+}
+
+.legal-table th,
+.legal-table td {
+  border: 1px solid rgba(199, 153, 71, 0.18);
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.legal-table th {
+  background: rgba(199, 153, 71, 0.12);
+  color: var(--brass);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .site-footer {
   background: var(--graphite);
   color: var(--paper-soft);

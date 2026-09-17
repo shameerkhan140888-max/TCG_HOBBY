@@ -345,7 +345,7 @@ function footer(config: IronSprueEmailTemplateConfig) {
   return `
     <div class="footer">
       <p><strong>Capital Hobby Group Ltd</strong>, trading as Iron Sprue.</p>
-      <p>Company number 17336948. VAT No. 525 2040 33. Registered office: 4-6 Greatorex Street, London, United Kingdom, E1 5NF.</p>
+      <p>Company number 17336948. VAT No. GB525204033. Registered office: 4-6 Greatorex Street, London, United Kingdom, E1 5NF.</p>
       <p>Need help? Contact ${escapeHtml(config.supportEmail)}.</p>
     </div>
   `;
@@ -391,7 +391,7 @@ export function buildIronSprueOrderConfirmationEmail(
 ): IronSprueEmailTemplate {
   const subject = `Order confirmed - ${order.orderNumber}`;
   const html = wrap(`
-    ${header(config, 'Order confirmed', 'Thank you for your order. We have received your payment and your order is now being prepared.')}
+    ${header(config, 'Order confirmed', 'Thank you for your order. We have received your payment and accepted your order for fulfilment.')}
     <div class="body">
       ${orderMeta(order)}
       ${itemsTable(order, config)}
@@ -407,7 +407,7 @@ export function buildIronSprueOrderConfirmationEmail(
   const text = [
     `Order confirmed - ${order.orderNumber}`,
     '',
-    'Thank you for your order. We have received your payment and your order is now being prepared.',
+    'Thank you for your order. We have received your payment and accepted your order for fulfilment.',
     '',
     textOrderLines(order),
     '',

@@ -2,7 +2,7 @@ export const ironSprueBrand = {
   name: 'Iron Sprue',
   legalEntity: 'Capital Hobby Group Ltd',
   companyNumber: '17336948',
-  vatNumber: '525 2040 33',
+  vatNumber: 'GB525204033',
   registeredOffice: ['4-6 Greatorex Street', 'London', 'United Kingdom', 'E1 5NF'],
   instagramHandle: '@iron.sprue',
   instagramUrl: 'https://www.instagram.com/iron.sprue/',
