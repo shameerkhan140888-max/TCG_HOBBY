@@ -1,5 +1,5 @@
 import React from 'react';
-import type { IronSprueProduct } from '../lib/catalogue';
+import { isBundleProduct, type IronSprueProduct } from '../lib/catalogue';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 import {
   formatPrice,
@@ -26,8 +26,14 @@ export function ProductCard({ detailsLabel = 'Details', headingLevel = 3, produc
   const mobileFact = productCardMobileFact(product);
   const HeadingTag = headingLevel === 2 ? 'h2' : 'h3';
 
+  const cardClassName = [
+    'product-card',
+    isOutOfStock ? 'is-out-of-stock' : '',
+    isBundleProduct(product) ? 'is-bundle-card' : '',
+  ].filter(Boolean).join(' ');
+
   return (
-    <article className={`product-card${isOutOfStock ? ' is-out-of-stock' : ''}`}>
+    <article className={cardClassName}>
       <div className="product-card-surface">
         <a className="product-image" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
           {imageUrl ? (

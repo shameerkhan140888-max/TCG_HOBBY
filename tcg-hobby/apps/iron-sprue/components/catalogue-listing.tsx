@@ -267,9 +267,13 @@ export async function CatalogueListing({
             <a className="button secondary" href="/shop">Browse current stock</a>
           </div>
           <div className="coming-soon-range-visual" aria-hidden="true">
-            <div className="coming-soon-range-icon">
-              <img src="/assets/category-icons/paints-weathering.png" alt="" loading="lazy" decoding="async" />
-            </div>
+            <img
+              className="coming-soon-range-art"
+              src="/assets/category-banners/paints-weathering-coming-soon.webp"
+              alt=""
+              loading="eager"
+              decoding="async"
+            />
             <div className="paint-swatch-grid">
               <span style={{ '--paint-swatch': '#d7372f' } as CSSProperties} />
               <span style={{ '--paint-swatch': '#e4b23d' } as CSSProperties} />
