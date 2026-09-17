@@ -3051,8 +3051,11 @@ p {
 }
 
 .coming-soon-range-page {
-  min-height: clamp(480px, 68vh, 720px);
+  width: 100vw;
+  min-height: calc(100vh - 148px);
+  margin: 0 calc(50% - 50vw);
   overflow: hidden;
+  padding: 0;
 }
 
 .coming-soon-range-hero {
@@ -3071,6 +3074,7 @@ p {
     var(--iron-board-surface);
   padding: clamp(28px, 5vw, 54px);
   box-shadow: none;
+  min-height: calc(100vh - 148px);
 }
 
 .coming-soon-range-hero::after {
@@ -3082,6 +3086,10 @@ p {
     linear-gradient(120deg, transparent 0 52%, rgba(211, 160, 74, 0.16) 52% 52.35%, transparent 52.35%);
   content: "";
   pointer-events: none;
+}
+
+body:has(.coming-soon-range-page) .trust-workshop-band {
+  display: none;
 }
 
 .coming-soon-range-hero::before {
@@ -3288,6 +3296,13 @@ p {
   .coming-soon-range-note {
     margin-left: 16px;
     margin-right: 16px;
+  }
+}
+
+@media (max-width: 700px) {
+  .coming-soon-range-page,
+  .coming-soon-range-hero {
+    min-height: calc(100vh - 95px);
   }
 }
 
@@ -9356,8 +9371,44 @@ body:has(.product-detail-page) .payment-trust-banner {
 @media (max-width: 700px) {
   .product-card-body,
   .homepage-board .product-card-body {
-    grid-template-rows: auto minmax(2.35em, auto) 28px 8px 15px 18px 57px !important;
-    min-height: 221px !important;
+    grid-template-rows:
+      auto
+      minmax(3.54em, auto)
+      0
+      minmax(18px, auto)
+      minmax(20px, auto)
+      8px
+      16px
+      19px
+      6px
+      57px !important;
+    min-height: 248px !important;
+  }
+
+  .product-card .product-card-category,
+  .homepage-board .product-card .product-card-category,
+  .catalogue-grid .product-card .product-card-category,
+  .product-grid .product-card .product-card-category {
+    min-height: 18px !important;
+    overflow: visible !important;
+    line-height: 1.32 !important;
+  }
+
+  .product-card .product-card-facts,
+  .homepage-board .product-card .product-card-facts,
+  .catalogue-grid .product-card .product-card-facts,
+  .product-grid .product-card .product-card-facts {
+    min-height: 20px !important;
+    overflow: visible !important;
+  }
+
+  .product-card .product-card-facts .product-card-fact-spec,
+  .homepage-board .product-card .product-card-facts .product-card-fact-spec,
+  .catalogue-grid .product-card .product-card-facts .product-card-fact-spec,
+  .product-grid .product-card .product-card-facts .product-card-fact-spec {
+    min-height: 16px !important;
+    overflow: visible !important;
+    line-height: 1.32 !important;
   }
 
   .product-card .product-actions,
