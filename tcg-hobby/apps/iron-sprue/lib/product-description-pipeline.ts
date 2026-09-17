@@ -328,8 +328,8 @@ function createOccreCopy(
 ) {
   const shortDescription = `${product.name} from OcCre Creations is a workshop accessory selected for careful modelling preparation, finishing or storage tasks.`;
   const paragraphs = [
-    `${product.name} adds an OcCre Creations support item to the Iron Sprue bench range. It is listed for customers building out a more organised modelling setup alongside kits, adhesives and finishing tools.`,
-    'It is aimed at builders who value a satisfying project and a finished piece with display character.',
+    `${product.name} adds OcCre Creations bench support to a modelling setup, helping keep preparation, finishing or storage tasks more organised alongside active projects.`,
+    'It is aimed at builders who want practical workshop accessories close to hand without cluttering the bench.',
   ];
   const features = factualFeatureBullets(product, factualSpecs, 'Supports modelling bench organisation or preparation');
 
@@ -360,7 +360,7 @@ function createToolCopy(
                 : 'general modelling bench work';
   const shortDescription = `${product.name} is an Iron Sprue bench essential for ${use}, chosen for model makers building a practical tool setup.`;
   const paragraphs = [
-    `${product.name} is a functional tool rather than a kit, helping with ${use} during model, puzzle or display-build preparation.`,
+    `${product.name} helps with ${use} during model, puzzle or display-build preparation.`,
     'It is a straightforward addition to the workbench for modellers building out a reliable set of everyday tools and accessories.',
   ];
   const features = factualFeatureBullets(product, factualSpecs, sentenceCase(use));

@@ -9432,9 +9432,9 @@ body:has(.product-detail-page) .payment-trust-banner {
   .catalogue-grid .product-card .product-image img,
   .product-grid .product-card .product-image img {
     position: absolute !important;
-    inset: 9px !important;
-    width: calc(100% - 18px) !important;
-    height: calc(100% - 18px) !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
     max-width: none !important;
     max-height: none !important;
     object-fit: contain !important;

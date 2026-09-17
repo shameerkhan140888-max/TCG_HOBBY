@@ -516,6 +516,50 @@ describe('Iron Sprue production catalogue adapter', () => {
     expect(result?.longDescription).not.toMatch(/catalogue currently confirms|unsupported claims|supplier reference|source data/i);
   });
 
+  it('removes internal merchandising wording from public tool and display-build descriptions', async () => {
+    const product = ironSprueProduct({
+      customerTitle: 'Reverse Tweezers',
+      sourceTitle: 'Reverse Tweezers',
+      slug: 'tasma-tw-01-reverse-tweezers',
+      sku: 'IS-TAS-TW01',
+      shortDescription: 'Reverse Tweezers is a practical Tasma bench item for holding small parts.',
+      fullDescription: [
+        'Reverse Tweezers is a practical Tasma bench item for holding small parts.',
+        'Reverse Tweezers is listed as a functional workshop product rather than a display kit.',
+        'It helps with holding, placing and positioning small parts without fingertip pressure.',
+        'This keeps the current CubicFun display-build positioning while adding clearer subject context for shoppers.',
+        'Image 2 has been checked for launch readiness.',
+      ].join(' '),
+    });
+    const client = {
+      ironSprueAdminProduct: { findFirst: vi.fn().mockResolvedValue(product) },
+    };
+
+    const result = await getIronSprueCatalogueProductBySlug(product.slug, client as never);
+
+    expect(result?.longDescription).toContain('Reverse Tweezers is a practical Tasma bench item for holding small parts.');
+    expect(result?.longDescription).toContain('It helps with holding, placing and positioning small parts without fingertip pressure.');
+    expect(result?.longDescription).not.toMatch(/listed as|functional workshop product|display-build positioning|clearer subject context|Image 2/i);
+  });
+
+  it('states that the Basic Tool Case does not include tools', async () => {
+    const product = ironSprueProduct({
+      customerTitle: 'Basic Tool Case',
+      sourceTitle: 'Basic Tool Case',
+      slug: 'occre-19103-basic-tool-case',
+      sku: 'IS-OCC-19103',
+      shortDescription: 'Basic Tool Case is a practical OcCre Creations bench item for organising small tools.',
+      fullDescription: 'Basic Tool Case helps keep knives, files and tweezers easier to find between projects.',
+    });
+    const client = {
+      ironSprueAdminProduct: { findFirst: vi.fn().mockResolvedValue(product) },
+    };
+
+    const result = await getIronSprueCatalogueProductBySlug(product.slug, client as never);
+
+    expect(result?.longDescription).toContain('Case only. Tools shown or mentioned for context are not included.');
+  });
+
   it('uses the same canonical primary image for home, catalogue and product detail', async () => {
     const product = ironSprueProduct({ featured: true });
     const client = {

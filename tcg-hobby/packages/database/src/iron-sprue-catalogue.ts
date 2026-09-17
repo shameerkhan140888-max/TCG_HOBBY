@@ -251,6 +251,17 @@ const INTERNAL_COPY_PHRASES = [
   'reconciliation',
   'internal review',
   'admin-only',
+  'functional tool rather than a kit',
+  'functional workshop product',
+  'listed for customers',
+  'listed as',
+  'display-build positioning',
+  'display-kit positioning',
+  'puzzle-object positioning',
+  'product positioning',
+  'keeps the current',
+  'clearer subject context for shoppers',
+  'image 2',
 ] as const;
 
 function isInternalProductCopyBlock(value: string) {
@@ -351,10 +362,17 @@ function publicShortDescription(product: IronSprueCatalogueProductRow) {
 function publicLongDescription(product: IronSprueCatalogueProductRow) {
   const shortDescription = sanitizePublicProductCopy(product.shortDescription);
   const fullDescription = sanitizePublicProductCopy(product.fullDescription);
-  if (!shortDescription) return fullDescription;
-  if (!fullDescription) return shortDescription;
-  if (fullDescription.toLowerCase().includes(shortDescription.toLowerCase())) return fullDescription;
-  return `${shortDescription}\n\n${fullDescription}`;
+  let publicDescription = '';
+  if (!shortDescription) publicDescription = fullDescription;
+  else if (!fullDescription) publicDescription = shortDescription;
+  else if (fullDescription.toLowerCase().includes(shortDescription.toLowerCase())) publicDescription = fullDescription;
+  else publicDescription = `${shortDescription}\n\n${fullDescription}`;
+  const paragraphs = publicDescription ? [publicDescription] : [];
+  const title = `${product.customerTitle} ${product.sourceTitle} ${product.sku}`.toLowerCase();
+  if (title.includes('basic tool case')) {
+    paragraphs.push('Case only. Tools shown or mentioned for context are not included.');
+  }
+  return paragraphs.join('\n\n').trim();
 }
 
 function preferredMedia(product: IronSprueCatalogueProductRow): { asset: IronSprueMediaAssetRow; url: string } | null {

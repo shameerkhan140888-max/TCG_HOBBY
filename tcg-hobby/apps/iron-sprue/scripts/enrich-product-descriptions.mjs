@@ -229,7 +229,7 @@ function generateCopy(product) {
       product,
       `${product.name} is an Iron Sprue bench essential for ${use}, chosen for model makers building a practical tool setup.`,
       [
-        `${product.name} is a functional tool rather than a kit, helping with ${use} during model, puzzle or display-build preparation.`,
+        `${product.name} helps with ${use} during model, puzzle or display-build preparation.`,
         'Exact materials, blade sizes, tolerances and compatibility claims are not added unless they already exist in the verified source data. This keeps the product page useful without overstating the tool specification.',
       ],
       factFeatures(product, specs, sentenceCase(use)),
