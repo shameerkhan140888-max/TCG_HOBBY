@@ -78,7 +78,7 @@ function overlaySvg(bundle, slots) {
   const slotRects = slots.map((slot) =>
     `<rect x="${slot.x}" y="${slot.y}" width="${slot.w}" height="${slot.h}" rx="24" fill="#f8f4ec" stroke="#d19a3d" stroke-width="4"/>`,
   ).join('');
-  return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
     <defs>
       <linearGradient id="bench" x1="0" x2="1" y1="0" y2="1">
         <stop offset="0" stop-color="#11120f"/>
@@ -90,23 +90,23 @@ function overlaySvg(bundle, slots) {
         <stop offset="1" stop-color="#000" stop-opacity="0"/>
       </radialGradient>
     </defs>
-    <rect width="1200" height="900" fill="url(#bench)"/>
-    <rect width="1200" height="900" fill="url(#glow)"/>
-    <rect x="30" y="30" width="1140" height="840" rx="38" fill="none" stroke="#d19a3d" stroke-width="4" opacity="0.8"/>
+    <rect width="1200" height="1200" fill="url(#bench)"/>
+    <rect width="1200" height="1200" fill="url(#glow)"/>
+    <rect x="30" y="30" width="1140" height="1140" rx="38" fill="none" stroke="#d19a3d" stroke-width="4" opacity="0.8"/>
     <text x="600" y="112" text-anchor="middle" fill="#d19a3d" font-family="Arial, sans-serif" font-size="30" font-weight="800" letter-spacing="3">BUNDLE SAVINGS</text>
     <text x="600" y="156" text-anchor="middle" fill="#fff" font-family="Arial Black, Arial, sans-serif" font-size="46" font-weight="900">${escapeXml(bundle.title)}</text>
     ${slotRects}
-    <text x="411" y="392" text-anchor="middle" dominant-baseline="middle" fill="#d19a3d" font-family="Arial Black, Arial, sans-serif" font-size="76">+</text>
-    <text x="789" y="392" text-anchor="middle" dominant-baseline="middle" fill="#d19a3d" font-family="Arial Black, Arial, sans-serif" font-size="76">+</text>
-    <text x="600" y="760" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="26" font-weight="700">Three stocked Iron Sprue picks in one set</text>
+    <text x="411" y="520" text-anchor="middle" dominant-baseline="middle" fill="#d19a3d" font-family="Arial Black, Arial, sans-serif" font-size="76">+</text>
+    <text x="789" y="520" text-anchor="middle" dominant-baseline="middle" fill="#d19a3d" font-family="Arial Black, Arial, sans-serif" font-size="76">+</text>
+    <text x="600" y="1034" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="26" font-weight="700">Three stocked Iron Sprue picks in one set</text>
   </svg>`);
 }
 
 async function buildComposite(bundle, components) {
   const slots = [
-    { x: 72, y: 214, w: 300, h: 330 },
-    { x: 450, y: 160, w: 300, h: 420 },
-    { x: 828, y: 214, w: 300, h: 330 },
+    { x: 72, y: 342, w: 300, h: 330 },
+    { x: 450, y: 288, w: 300, h: 420 },
+    { x: 828, y: 342, w: 300, h: 330 },
   ];
   const overlays = [{ input: overlaySvg(bundle, slots), top: 0, left: 0 }];
 
@@ -128,7 +128,7 @@ async function buildComposite(bundle, components) {
   return sharp({
     create: {
       width: 1200,
-      height: 900,
+      height: 1200,
       channels: 4,
       background: { r: 0, g: 0, b: 0, alpha: 0 },
     },

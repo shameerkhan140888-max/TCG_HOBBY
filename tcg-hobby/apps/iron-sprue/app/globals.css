@@ -8997,7 +8997,7 @@ body:has(.product-detail-page) .payment-trust-banner {
   grid-row: 5 !important;
   grid-column: 1 !important;
   display: block !important;
-  min-height: 0;
+  min-height: 1.22em;
   margin: 0;
   overflow: hidden;
 }
