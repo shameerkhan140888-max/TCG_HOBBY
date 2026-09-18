@@ -1,7 +1,7 @@
 import launchProducts from '../data/launch-products.json';
 import React from 'react';
 import type { CSSProperties } from 'react';
-import { buildTypeOptions, filterIronSprueProducts, isBundleProduct, isModelKitProduct, launchCatalogueStatus, pieceCountOptions, scaleOptions, structureOptions, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
+import { buildTypeOptions, filterIronSprueProducts, isAdhesiveFinishingProduct, isBundleProduct, isModelKitProduct, launchCatalogueStatus, pieceCountOptions, scaleOptions, structureOptions, type IronSprueProduct, vehicleManufacturerOptions } from '../lib/catalogue';
 import { getIronSprueStorefrontProducts } from '../lib/admin-storefront-controls';
 import {
   brandOptions,
@@ -113,6 +113,7 @@ function categoryMatches(product: IronSprueProduct, category: string) {
     'tool-sets',
     'tweezers-pliers',
   ].includes(slugForCategory(product.category));
+  if (category === 'adhesives-finishing') return isAdhesiveFinishingProduct(product);
   if (category === 'bundles') return isBundleProduct(product);
   return slugForCategory(product.category) === category;
 }

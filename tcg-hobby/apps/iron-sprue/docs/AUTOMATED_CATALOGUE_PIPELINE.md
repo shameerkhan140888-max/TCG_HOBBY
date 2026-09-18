@@ -110,7 +110,7 @@ Image 2: clean catalogue primary image. It must be isolated, consistently framed
 
 Image 3: completed product/result image where available and factually accurate.
 
-Image 4: Iron Sprue workshop image using the approved mat, Foamex, bench, lighting and camera treatment.
+Image 4: Iron Sprue workshop image using the approved individual square workshop recipe in `apps/iron-sprue/docs/IRON_SPRUE_WORKSHOP_V1.md`.
 
 Image 5+: useful contents, detail or in-use imagery where available.
 
@@ -161,7 +161,7 @@ Run only a representative pilot before any full 81-product creative batch:
 - Pintoo
 - CubicFun
 
-The pilot must be visually reviewed for identity accuracy, Image 2 quality, gallery order, workshop consistency, storefront rendering and brand logo treatment before processing the remaining catalogue.
+The pilot must be visually reviewed for identity accuracy, Image 2 quality, gallery order, workshop consistency, storefront rendering and brand logo treatment before processing the remaining catalogue. Workshop assets must be generated and accepted one SKU at a time; bulk workshop generation is not an approved path.
 
 ## Current Blockers
 

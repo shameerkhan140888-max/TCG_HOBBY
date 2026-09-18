@@ -193,6 +193,8 @@ function slugLabel(value: string): string {
   return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+const adhesiveFinishingCategorySlugs = ['adhesives-finishing', 'epoxy-adhesives', 'masking-finishing'];
+
 function resolvePagination(totalItems: number, page: number, pageSize: number): PaginationMeta {
   const totalPages = Math.max(Math.ceil(totalItems / pageSize), 1);
   const currentPage = Math.min(Math.max(page, 1), totalPages);
@@ -607,6 +609,11 @@ function buildProductWhere(filters: IronSprueCatalogueFilters): Prisma.IronSprue
         ...(category === 'tools'
           ? [
               { category: { is: { slug: { in: ['knives-blades', 'magnification', 'measuring-tools', 'pin-vices-drills', 'sanding-files', 'tool-sets', 'tweezers-pliers'] } } } },
+            ]
+          : []),
+        ...(category === 'adhesives-finishing'
+          ? [
+              { category: { is: { slug: { in: adhesiveFinishingCategorySlugs } } } },
             ]
           : []),
       ],

@@ -210,9 +210,22 @@ const toolCategorySlugs = new Set([
   'tweezers-pliers',
 ]);
 
+const adhesiveFinishingCategorySlugs = new Set([
+  'adhesives-finishing',
+  'epoxy-adhesives',
+  'masking-finishing',
+]);
+
+function slugForCatalogueCategory(category: string) {
+  return category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 export function isToolProduct(product: IronSprueProduct) {
-  const categorySlug = product.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  return toolCategorySlugs.has(categorySlug);
+  return toolCategorySlugs.has(slugForCatalogueCategory(product.category));
+}
+
+export function isAdhesiveFinishingProduct(product: IronSprueProduct) {
+  return adhesiveFinishingCategorySlugs.has(slugForCatalogueCategory(product.category));
 }
 
 export function isBundleProduct(product: IronSprueProduct) {
@@ -403,6 +416,8 @@ export function filterIronSprueProducts(products: IronSprueProduct[], query: { a
         if (!isModelKitProduct(product)) return false;
       } else if (category === 'tools') {
         if (!isToolProduct(product)) return false;
+      } else if (category === 'adhesives-finishing') {
+        if (!isAdhesiveFinishingProduct(product)) return false;
       } else if (productCategory !== category) {
         return false;
       }

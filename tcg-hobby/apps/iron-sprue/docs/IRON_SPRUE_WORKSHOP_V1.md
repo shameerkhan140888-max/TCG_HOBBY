@@ -1,68 +1,111 @@
-# IRON_SPRUE_WORKSHOP_V1
+# Iron Sprue Workshop Image Recipe
 
-- version: IRON_SPRUE_WORKSHOP_V1
-- visualStatus: APPROVED_FOR_BATCH_USE_AFTER_SAMPLE_REVIEW
-- primaryProofSku: IS-AOS-05628
-- acceptedSampleSkus: IS-CUB-C108H, IS-AOS-05778
+- version: `IRON_SPRUE_WORKSHOP_V2`
+- status: approved operating recipe for all future workshop image generation
+- generation mode: individual product generation only
+- bulk/composite generation: rejected
 
-## Required Input
+This is the single source of truth for Iron Sprue product workshop images.
+Any older landscape, Foamex, playmat, flat-composite, or batch-generation guidance is superseded by this document.
 
-- Start from the product's approved Image 2 subject/candidate.
-- Do not place raw packaging, supplier catalogue cards, product labels, or white-background source screenshots directly into the workshop scene.
-- If Image 2 is not available or product identity is uncertain, stop and mark the product for review rather than generating a workshop image.
+## Required Source
 
-## Future Workshop Generation Checklist
+- Start from the product's approved Image 2 or clean product-on-white master.
+- Use exactly one product reference per generation.
+- Do not use raw packaging, catalogue cards, screenshots, labels, supplier artwork, or manufacturer lifestyle scenes as the product subject.
+- If the clean product reference is missing, incorrect, low quality, or identity is uncertain, stop and repair Image 2 before generating a workshop image.
 
-- Read this document before generating, uploading, or assigning any Iron Sprue workshop image.
-- Use the product's clean Image 2 as the product subject source.
-- Keep the workshop environment consistent with IRON_SPRUE_WORKSHOP_V1; only the product changes.
-- Compare the generated image against the accepted CubicFun and Jimny samples before upload.
-- Compare camera zoom against the accepted samples before upload; reject images where the mat appears materially larger/smaller or the product scale feels like a different photoshoot.
-- Reject and regenerate if the product is pasted onto a flat mat, appears on a white card, loses the rear Foamex/banner, or uses a different workshop background.
-- Store accepted workshop masters under the product workshop prefix and assign them as REVIEW_REQUIRED until catalogue review.
+## Generation Rule
 
-## Approved Visual Recipe
+Generate workshop images one product at a time.
 
-- benchMaterial: dark premium modelling workbench with restrained industrial finish
-- matPlacement: approved Iron Sprue cutting mat flat on the bench, ruler/grid/cog details visible
-- foamexPosition: dark Iron Sprue Foamex/banner panel clearly present in the rear background, softly out of focus but recognisable
-- cameraHeight: approximately 20-30cm above bench
-- cameraAngle: three-quarter front product view, landscape gallery framing
-- framing: product prominent and detailed, camera slightly pulled back so the product has breathing room and enough mat identity is visible
-- focalFeel: realistic product photography depth of field, background gently softened
-- lightingDirection: warm key light from upper left with soft fill
-- lightingTemperature: warm workshop/studio light, not orange-heavy
-- shadowCharacter: realistic contact shadows under the model
-- backgroundDepth: shallow shelf/display depth, no cluttered/random props
-- logoBannerVisibility: Iron Sprue mark visible on mat and rear banner without oversized ad treatment
-- colourGrade: dark graphite, neutral bench, subtle orange accents, accurate product colour
-- workshopProps: limited paints/tools at edges only, supporting the modelling workshop context
-- productPlacementZone: central mat area, clear of logo-heavy corners and ruler edges
+Do not bulk-generate multiple products in one prompt, contact sheet, composite script, or shared scene. Bulk generation has already produced inconsistent scale, incorrect product shapes, wide shots, and mismatched outputs. Each SKU needs its own prompt, visual review, and selected output.
 
-## Camera And Scale Lock
+## Visual Recipe
 
-- Use a single landscape gallery frame for all workshop masters.
-- Keep the mat boundary/ruler visible across the lower edge and side edges at roughly the same scale as the accepted Jimny revision and CubicFun sample.
-- Keep the rear Foamex/banner visible in the upper background at a consistent size; it should not disappear, crop out, or become a different board.
-- Product footprint should normally occupy about the central 45-65% of the image width for wide/low subjects and about 35-50% for tall/narrow subjects.
-- Leave consistent breathing room above tall subjects and around wide subjects; do not zoom so far out that the product feels small or so far in that the mat/bench identity changes.
-- Do not alter the virtual camera height, bench depth, Foamex position, mat size, or side prop spacing to fit the product. Scale and position the product within the locked workshop instead.
-- If a product cannot fit the locked frame without major environment changes, generate a review candidate and flag it rather than quietly changing the workshop recipe.
+- Format: square 1:1 product-gallery image.
+- Setting: dark Iron Sprue-style modelling workbench.
+- Surface: black cutting mat or dark modelling mat with a subtle grid.
+- Background: softly blurred pegboard, modelling tools, brushes, paints, clamps, or sprues.
+- Product: the exact referenced item, large and centred as the clear subject.
+- Framing: product fills the gallery frame neatly without becoming cropped.
+- Lighting: crisp premium workshop/studio lighting with realistic shadows and reflections.
+- Colour: accurate product colour and markings; dark graphite/black bench context; restrained warm highlights.
+- Branding/text: no added text, watermarks, labels, logos, packaging, or promotional marks.
 
-## Explicitly Rejected
+The image should feel like a finished product photographed on the Iron Sprue bench, not a product pasted onto a mat and not a wide environmental shot.
 
-- Flat mat-only composite with the source image pasted onto the mat.
-- White square/card around the product.
-- Product shown as a resized source screenshot instead of an integrated photographed object.
-- Product too tiny in the frame.
-- Product close-cropped so it loses consistency with the approved red car and CubicFun examples.
-- Missing or obscured rear Iron Sprue Foamex/banner.
-- New workshop backgrounds, fantasy garage styling, or unrelated bench props.
+## Framing Rules
 
-## Locked References
+For every subject:
 
-- r2Key: products/is-aos-05628/workshop/iron-sprue-workshop-v1-d3590e768878.png
-- localAcceptedCubicFunSample: public/assets/workshop-acceptance-samples/is-cub-c108h-workshop-sample.png
-- localAcceptedJimnySample: public/assets/workshop-acceptance-samples/is-aos-05778-workshop-sample.png
-- rejectedJimnyTooWideSample: public/assets/workshop-acceptance-samples/is-aos-05778-workshop-sample-too-wide.png
-- batchStatus: approved to continue only if future images follow this recipe and zoom/framing
+- The whole product must be visible.
+- Leave a small, even margin around the product.
+- Avoid large empty bench space.
+- Keep the product materially larger than the old wide workshop images.
+- Reject any output where the gallery subject feels smaller than the manufacturer/Image 2 subject.
+
+For vehicles:
+
+- Preserve true vehicle proportions from the reference.
+- Do not squash, compress, stretch, shorten, widen, or distort the car.
+- Full front bumper, rear bumper, roof, wheels, and rear quarter must remain visible.
+- Reject cropped bumpers, cropped wheels, over-tight front corners, or fisheye/exaggerated perspective.
+
+For ships, buildings, lanterns, clocks, screens, globes, vases, and flowerpots:
+
+- Preserve the product shape, pattern, architecture, sails, silhouette, and visible details from the clean reference.
+- Use the same square workshop treatment, but allow the product's natural footprint to decide the camera distance.
+- Tall/narrow products should have breathing room above and below without appearing tiny.
+- Sets must show the complete set when the product is sold as a set.
+
+## Prompt Template
+
+Use this as the starting prompt and adapt only the product-specific subject details.
+
+```text
+Use case: product-mockup
+Asset type: Iron Sprue product gallery workshop image, square 1:1.
+Input image: reference for the exact <product name> product, including shape, proportions, colours, markings, pattern, and key details.
+Primary request: Create a high-quality workshop product image of this exact <product name> on a dark modelling workbench.
+Scene/backdrop: dark Iron Sprue-style model-making bench, black cutting mat surface with subtle grid, softly blurred pegboard/tools in the background, premium hobby photography.
+Subject: the exact <product name> from the reference, full product visible.
+Composition/framing: square image; camera pulled back enough that the whole product is clearly inside the frame with a small even margin on all sides; product large and centred; no wide empty bench.
+Critical accuracy constraints: preserve the original product proportions, silhouette, colours, markings, and visible details from the reference. Do not squash, stretch, crop, redesign, or simplify the product.
+Lighting/mood: crisp studio/workshop lighting, realistic contact shadows, sharp product detail.
+Avoid: text, logos, packaging, watermark, labels, white card, pasted cutout look, flat composite, wide environmental shot, cropped subject, distorted proportions.
+```
+
+Vehicle prompts must add:
+
+```text
+Full front bumper, front wheel, roof, rear wheel, and rear bumper must be visible. Preserve the wheelbase, nose length, cabin shape, rear quarter and roofline from the reference.
+```
+
+Set prompts must add:
+
+```text
+Show the complete set exactly as sold; do not reduce it to a single item.
+```
+
+## Acceptance Checklist
+
+Before upload or assignment:
+
+- Product identity matches the source.
+- Shape, scale, colour, markings, and key details are faithful.
+- The subject is not squashed, stretched, cropped, or redesigned.
+- The product is large enough for PDP gallery and card use.
+- The product sits naturally in the workshop scene.
+- No packaging, labels, white source card, watermark, or generated text appears.
+- The image is square and suitable for the gallery grid.
+- The output was generated individually, not as part of a bulk scene.
+
+Reject and regenerate if any checklist item fails.
+
+## Storage And Review
+
+- Store accepted workshop masters under the product workshop prefix.
+- Archive or pause previous workshop images rather than deleting them immediately.
+- Record rejected generated outputs in the local work manifest only; do not upload rejected outputs.
+- Do not publish a replacement until it has been visually checked against the reference and the existing gallery treatment.

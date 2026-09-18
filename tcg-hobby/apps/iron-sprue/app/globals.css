@@ -10671,12 +10671,20 @@ body:has(.product-detail-page) .payment-trust-banner {
 
 /* Final info/legal page surface. Keep About, Contact and legal policy copy
    directly on the black page background rather than inside a framed board. */
+body:has(.info-page) {
+  background: #050605 !important;
+  color: var(--paper-soft);
+}
+
+body:has(.info-page)::before {
+  content: none !important;
+  background: none !important;
+}
+
 .info-page {
   width: min(calc(100% - 40px), 1120px);
   margin-inline: auto;
-  background:
-    radial-gradient(circle at 12% 6%, rgba(199, 153, 71, 0.12), transparent 28%),
-    linear-gradient(180deg, rgba(255, 250, 241, 0.02), transparent 34%);
+  background: transparent !important;
 }
 
 .info-page .section-head {

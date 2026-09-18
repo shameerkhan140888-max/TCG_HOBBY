@@ -122,7 +122,7 @@ Required per-product media stages:
 - manufacturer original archive;
 - catalogue white-background Image 2;
 - completed product render;
-- workshop photography using the Iron Sprue playmat/Foamex visual standard;
+- workshop photography using the approved individual square workshop recipe in `apps/iron-sprue/docs/IRON_SPRUE_WORKSHOP_V1.md`;
 - optional supporting workshop image;
 - separate hero artwork when the product is used in merchandising.
 

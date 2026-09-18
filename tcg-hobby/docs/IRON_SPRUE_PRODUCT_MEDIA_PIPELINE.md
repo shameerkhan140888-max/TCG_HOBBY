@@ -68,7 +68,7 @@ Each imported product should have these media records, all replaceable through t
 1. Manufacturer original: authorised source image kept unaltered for audit/reference and gallery use. It is not the default storefront image.
 2. Catalogue white background: clean product-only commerce image on white. This is Image 2 and is the default customer-facing storefront image.
 3. Completed product render: faithful finished-kit/product visual.
-4. Workshop photography: product staged on the official Iron Sprue playmat/workbench identity.
+4. Workshop photography: product staged using the approved individual square workshop recipe.
 5. Supporting workshop image: optional additional range/detail image.
 6. Hero artwork: bespoke promotional artwork for home panels and offer banners.
 
@@ -82,16 +82,9 @@ Responsive derivatives should be prepared at `320`, `640`, `960`, `1280`, `1600`
 
 ## Workshop Identity
 
-Use the approved Iron Sprue workshop materials as visual direction:
+Use only the approved individual square workshop recipe in `apps/iron-sprue/docs/IRON_SPRUE_WORKSHOP_V1.md`.
 
-- Dark cutting playmat with millimetre ruler border.
-- Subtle precision grid, cog diagrams and technical linework.
-- Iron Sprue orange accent details.
-- Build/Paint/Perfect icon treatment where appropriate.
-- Foamex display/backdrop with official Iron Sprue logo and range language.
-- Premium workbench lighting with modelling tools, shelves and depth.
-
-Avoid generic stock-photo workbench scenes, raw catalogue backgrounds and full packaging images pasted into cards.
+Do not use older playmat/Foamex, landscape-frame, flat-composite, or bulk-generation workshop guidance. Workshop images must be generated and reviewed one product at a time from the clean Image 2/product-on-white source.
 
 ## Copy and Rights
 
