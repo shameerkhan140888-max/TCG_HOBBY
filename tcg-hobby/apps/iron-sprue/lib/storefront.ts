@@ -163,6 +163,101 @@ export function conciseProductLead(product: IronSprueProduct) {
   return `${product.name} from ${product.brand}.`;
 }
 
+function heroProductSearchText(product: IronSprueProduct) {
+  return [
+    product.name,
+    product.customerTitle,
+    product.sourceTitle,
+    product.brand,
+    product.category,
+    product.productType,
+    product.scale,
+    product.shortDescription,
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+export function heroScriptForProduct(product: IronSprueProduct) {
+  const source = heroProductSearchText(product);
+  if (source.includes('back to the future') || source.includes('delorean')) return '1:24 scale, film icon, bench-ready.';
+  if (source.includes('skyline') || source.includes('gtr')) return 'Pearl red street legend, tuned for the shelf.';
+  if (source.includes('magic box') && source.includes('london')) return 'Layered London light, built into a display scene.';
+  if (source.includes('magic box') && source.includes('underwater')) return 'A miniature world with depth, colour and glow.';
+  if (source.includes('magic box')) return 'Layered scene-building with a display-ready finish.';
+  if (source.includes('lamborghini') || source.includes('countach') || source.includes('aventador')) return 'Supercar stance, sharp lines, display impact.';
+  if (source.includes('toyota 2000gt')) return 'Classic curves, compact scale, collector poise.';
+  if (source.includes('jimny')) return 'Compact off-road character for the bench.';
+  if (source.includes('burj') || source.includes('tower') || source.includes('khalifa')) return 'Vertical architecture with skyline presence.';
+  if (source.includes('brandenburg') || source.includes('gate')) return 'Landmark detail, balanced for display.';
+  if (source.includes('santa maria') || source.includes('ship') || source.includes('navigation') || source.includes('schooner')) return 'Maritime display builds with rigged detail.';
+  if (source.includes('globe') || source.includes('blue marble')) return 'A puzzle object with planetary presence.';
+  if (source.includes('vase') || source.includes('koi') || source.includes('lotus')) return 'Piece by piece, then made to stay out.';
+  if (source.includes('clock')) return 'Functional puzzle decor with a finished face.';
+  if (source.includes('lantern')) return 'Puzzle-built light, made for atmosphere.';
+  if (source.includes('cubicfun') || source.includes('architecture') || source.includes('landmark')) return 'Architectural detail for shelf-ready builds.';
+  if (source.includes('pintoo') || source.includes('puzzle')) return 'Puzzle form, decorative finish, display ready.';
+  if (source.includes('aoshima') || source.includes('model kit')) return 'Precision kit detail for focused builders.';
+  return 'Build-focused detail selected for the display shelf.';
+}
+
+export function heroBodyCopyForProduct(product: IronSprueProduct) {
+  const source = heroProductSearchText(product);
+  if (source.includes('back to the future') || source.includes('delorean')) {
+    return 'Aoshima Back to the Future kits pair licensed screen presence with a focused build for collectors and display-led modellers.';
+  }
+  if (source.includes('skyline') || source.includes('gtr')) {
+    return 'The Skyline GTR Red Pearl brings Japanese performance styling into a crisp Aoshima kit with strong stance and display presence.';
+  }
+  if (source.includes('magic box') && source.includes('london')) {
+    return 'CubicFun London at Night turns familiar city landmarks into a layered illuminated scene for a compact display build.';
+  }
+  if (source.includes('magic box') && source.includes('underwater')) {
+    return 'CubicFun Underwater World builds into a colourful dimensional scene with decorative depth beyond a standard puzzle.';
+  }
+  if (source.includes('magic box')) {
+    return 'CubicFun Magic Box kits combine layered artwork and model construction into compact scenes made for display.';
+  }
+  if (source.includes('lamborghini') || source.includes('countach') || source.includes('aventador')) {
+    return 'Aoshima supercar kits focus on crisp body lines, low stance and clean bench work for collectors of modern performance cars.';
+  }
+  if (source.includes('toyota 2000gt')) {
+    return 'Aoshima classic car kits bring elegant Japanese motoring history into a compact, display-led modelling project.';
+  }
+  if (source.includes('jimny')) {
+    return 'The Jimny kit keeps the compact off-road shape and character that makes the real vehicle instantly recognisable.';
+  }
+  if (source.includes('burj') || source.includes('tower') || source.includes('khalifa')) {
+    return 'CubicFun landmark builds turn recognisable architecture into vertical display pieces with strong shelf presence.';
+  }
+  if (source.includes('brandenburg') || source.includes('gate')) {
+    return 'CubicFun architecture kits balance approachable assembly with recognisable landmark detail for display-led projects.';
+  }
+  if (source.includes('santa maria') || source.includes('ship') || source.includes('navigation') || source.includes('schooner')) {
+    return 'CubicFun ship builds bring sails, hull forms and historical character into compact maritime display projects.';
+  }
+  if (source.includes('globe') || source.includes('blue marble')) {
+    return 'Pintoo globe puzzles reward careful assembly with a decorative object designed to remain on show after the final piece.';
+  }
+  if (source.includes('vase') || source.includes('koi') || source.includes('lotus')) {
+    return 'Pintoo vase puzzles turn patterned pieces into decorative finished forms that work as display objects, not just completed puzzles.';
+  }
+  if (source.includes('clock')) {
+    return 'Pintoo clock puzzles combine satisfying assembly with a finished decorative piece for a shelf or desk.';
+  }
+  if (source.includes('lantern')) {
+    return 'Pintoo lantern builds add gentle display atmosphere after assembly, pairing puzzle work with decorative use.';
+  }
+  if (source.includes('cubicfun') || source.includes('architecture') || source.includes('landmark')) {
+    return 'CubicFun builds focus on recognisable structures and display-friendly finished models for relaxed bench sessions.';
+  }
+  if (source.includes('pintoo') || source.includes('puzzle')) {
+    return 'Pintoo puzzle objects are selected for slower assembly and decorative finished forms that deserve shelf space.';
+  }
+  if (source.includes('aoshima') || source.includes('model kit')) {
+    return 'Aoshima kits bring subject accuracy and display appeal together for focused model builders.';
+  }
+  return product.shortDescription || `${product.name} from ${product.brand} is selected for builders who want a finished piece worth displaying.`;
+}
+
 function normalisePublicCopy(value: string) {
   return value
     .toLowerCase()

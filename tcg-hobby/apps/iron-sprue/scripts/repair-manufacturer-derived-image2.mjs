@@ -1,6 +1,6 @@
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
-import { PrismaNeon } from '@prisma/adapter-neon';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -10,6 +10,7 @@ import sharp from 'sharp';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
 const envPath = path.join(appRoot, '.env.local');
+const rootEnvPath = path.resolve(appRoot, '..', '..', '.env.local');
 const reportsDir = path.join(appRoot, 'reports');
 const dataDir = path.join(appRoot, 'data');
 const STORE_CODE = 'IRON_SPRUE';
@@ -32,6 +33,26 @@ function parseEnvFile(text) {
     values[name] = value;
   }
   return values;
+}
+
+async function loadEnv() {
+  const values = {};
+  for (const file of [rootEnvPath, envPath]) {
+    try {
+      Object.assign(values, parseEnvFile(await readFile(file, 'utf8')));
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+  }
+  return { ...values, ...process.env };
+}
+
+function assertRailwayAdminDatabase(connectionString) {
+  if (!connectionString) throw new Error('IRON_SPRUE_ADMIN_DATABASE_URL is required. Image 2 repairs must use the guarded Railway admin database target.');
+  const url = new URL(connectionString);
+  const railwayHost = /(^|\.)railway\.internal$|(^|\.)proxy\.rlwy\.net$|(^|\.)railway\.app$/i.test(url.hostname);
+  const railwayTunnel = /^(127\.0\.0\.1|localhost)$/i.test(url.hostname) && url.pathname.replace(/^\//, '') === 'railway';
+  if (!railwayHost && !railwayTunnel) throw new Error('Refusing non-Railway Iron Sprue admin database target.');
 }
 
 function publicUrl(env, key) {
@@ -98,8 +119,8 @@ async function createImage2Replacement(buffer) {
   };
 }
 
-const env = parseEnvFile(await readFile(envPath, 'utf8'));
-if (!env.IRON_SPRUE_DATABASE_URL) throw new Error('IRON_SPRUE_DATABASE_URL is required.');
+const env = await loadEnv();
+assertRailwayAdminDatabase(env.IRON_SPRUE_ADMIN_DATABASE_URL);
 if (env.IRON_SPRUE_R2_BUCKET_NAME !== BUCKET) throw new Error(`IRON_SPRUE_R2_BUCKET_NAME must be ${BUCKET}.`);
 
 await mkdir(reportsDir, { recursive: true });
@@ -111,7 +132,7 @@ const s3 = new S3Client({
   credentials: { accessKeyId: env.IRON_SPRUE_R2_ACCESS_KEY_ID, secretAccessKey: env.IRON_SPRUE_R2_SECRET_ACCESS_KEY },
 });
 const prisma = new PrismaClient({
-  adapter: new PrismaNeon({ connectionString: env.IRON_SPRUE_DATABASE_URL, allowExitOnIdle: true, connectionTimeoutMillis: 10_000, idleTimeoutMillis: 5_000, max: 5 }),
+  adapter: new PrismaPg({ connectionString: env.IRON_SPRUE_ADMIN_DATABASE_URL, connectionTimeoutMillis: 10_000, idleTimeoutMillis: 5_000, max: 5 }),
 });
 
 try {

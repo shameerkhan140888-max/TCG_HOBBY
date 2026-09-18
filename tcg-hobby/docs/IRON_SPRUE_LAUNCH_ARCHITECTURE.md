@@ -30,7 +30,7 @@ The production Worker must not connect directly to Postgres. All catalogue, bask
 
 Iron Sprue must use dedicated operational resources. Store-aware schema fields remain useful as a safety layer, but they are not the primary production boundary.
 
-- Railway Postgres: Iron Sprue production uses the Railway Postgres database behind the Railway API/Admin path. Legacy `IRON_SPRUE_DATABASE_URL`, `IRON_SPRUE_DIRECT_DATABASE_URL` and `IRON_SPRUE_WORKER_READ_DATABASE_URL` names remain compatibility aliases for local/import tooling until platform variables are fully consolidated. Do not point Iron Sprue at the TCG Hobby production database.
+- Railway Postgres: Iron Sprue production uses the Railway Postgres database behind the Railway API/Admin path. Media records, Admin product state, hero state and storefront catalogue state are authoritative there. Legacy `IRON_SPRUE_DATABASE_URL`, `IRON_SPRUE_DIRECT_DATABASE_URL` and `IRON_SPRUE_WORKER_READ_DATABASE_URL` names are compatibility/read-history aliases only and must not be used for current media mutation, media cleanup or storefront publication writes. Do not point Iron Sprue at the TCG Hobby production database.
 - R2: Iron Sprue media uses a dedicated `iron-sprue-product-media` bucket and `IRON_SPRUE_MEDIA` Worker binding. Product images, order images, email images, logos and import assets must not be stored in the TCG Hobby bucket.
 - Stripe: Iron Sprue uses a separate Stripe account and store-specific test/live keys, webhook secrets, account ID, descriptor, public business name, success URL and cancel URL. Do not use the unqualified `STRIPE_SECRET_KEY` for Iron Sprue.
 - Railway/Node API: Worker-to-Railway mutation calls are signed with HMAC using Iron Sprue-scoped key IDs and secrets. Stripe webhooks call the Node API directly and are authenticated only by store-specific Stripe raw-body signature validation.
@@ -38,8 +38,8 @@ Iron Sprue must use dedicated operational resources. Store-aware schema fields r
 Required environment names are intentionally explicit:
 
 - `DATABASE_URL` on Railway API/migration services
-- `IRON_SPRUE_ADMIN_DATABASE_URL` for the local/admin Railway tunnel target
-- `IRON_SPRUE_DATABASE_URL` as a compatibility alias where older Iron Sprue tooling still reads it
+- `IRON_SPRUE_ADMIN_DATABASE_URL` for guarded Iron Sprue Admin/media tooling and local Railway tunnel work
+- `IRON_SPRUE_DATABASE_URL` as a legacy compatibility alias only; media scripts must not write through it
 - `IRON_SPRUE_DIRECT_DATABASE_URL` as a compatibility alias for legacy direct migration tooling
 - `IRON_SPRUE_WORKER_READ_DATABASE_URL` as a deprecated compatibility alias; production Cloudflare storefront must not use it
 - `IRON_SPRUE_R2_BUCKET_NAME`

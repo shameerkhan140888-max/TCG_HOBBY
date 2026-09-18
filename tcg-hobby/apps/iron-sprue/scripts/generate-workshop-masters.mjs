@@ -7,6 +7,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
+throw new Error('Deprecated media script disabled: workshop media generation/publication now uses the guarded Railway admin DB pipeline and approved batch upload scripts.');
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
 const envPath = path.join(appRoot, '.env.local');

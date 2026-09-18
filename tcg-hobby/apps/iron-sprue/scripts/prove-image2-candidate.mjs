@@ -7,6 +7,8 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import sharp from 'sharp';
 
+throw new Error('Deprecated Image2 proof script disabled: current Image2 replacements must use the guarded Railway admin DB media pipeline.');
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
 const envPath = path.join(appRoot, '.env.local');

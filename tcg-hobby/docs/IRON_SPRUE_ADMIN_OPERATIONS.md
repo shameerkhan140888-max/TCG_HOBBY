@@ -4,6 +4,8 @@
 > Current Iron Sprue production commerce uses Cloudflare storefront -> Railway API
 > -> Railway Postgres. Do not use the Neon branch recovery sections below as live
 > launch architecture without a coordinated post-launch migration decision.
+> Current media publication, media cleanup and product-media repair scripts must use
+> `IRON_SPRUE_ADMIN_DATABASE_URL` against the guarded Railway Postgres target.
 
 Iron Sprue now has a dedicated Admin workspace inside the existing Admin application shell. It reuses authentication, UI primitives and database infrastructure code, but Iron Sprue product, inventory, media, homepage and review records are held in Iron Sprue-specific tables and are always server-scoped to `IRON_SPRUE`.
 
@@ -122,7 +124,7 @@ Keep the old Iron Sprue Neon branch as recovery history until the catalogue impo
 
 Create the replacement branch inside the same dedicated Iron Sprue Neon project. Name it clearly, for example `iron-sprue-catalogue-ready`, and generate these branch-specific values:
 
-- `IRON_SPRUE_DATABASE_URL`: pooled application connection string for the clean branch.
+- `IRON_SPRUE_DATABASE_URL`: historical pooled application connection string for the old clean branch. It is not the current media publication/write target.
 - `IRON_SPRUE_DIRECT_DATABASE_URL`: direct, non-pooler migration connection string for the clean branch.
 - `IRON_SPRUE_WORKER_READ_DATABASE_URL`: worker/read connection string for the clean branch, using the approved worker-compatible endpoint.
 

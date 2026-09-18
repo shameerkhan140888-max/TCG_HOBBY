@@ -1,6 +1,6 @@
 import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
-import { PrismaNeon } from '@prisma/adapter-neon';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
 const envPath = path.join(appRoot, '.env.local');
+const rootEnvPath = path.resolve(appRoot, '..', '..', '.env.local');
 const reportPath = path.join(appRoot, 'data', 'media-integrity-report.json');
 const STORE_CODE = 'IRON_SPRUE';
 const BUCKET = 'iron-sprue-product-media';
@@ -29,9 +30,16 @@ function parseEnvFile(text) {
 }
 
 async function loadEnv() {
-  const fileEnv = parseEnvFile(await readFile(envPath, 'utf8'));
+  const fileEnv = {};
+  for (const file of [rootEnvPath, envPath]) {
+    try {
+      Object.assign(fileEnv, parseEnvFile(await readFile(file, 'utf8')));
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+  }
   return {
-    databaseUrl: process.env.IRON_SPRUE_DATABASE_URL?.trim() || fileEnv.IRON_SPRUE_DATABASE_URL?.trim(),
+    databaseUrl: process.env.IRON_SPRUE_ADMIN_DATABASE_URL?.trim() || fileEnv.IRON_SPRUE_ADMIN_DATABASE_URL?.trim(),
     endpoint: process.env.IRON_SPRUE_R2_ENDPOINT?.trim() || fileEnv.IRON_SPRUE_R2_ENDPOINT?.trim(),
     accessKeyId: process.env.IRON_SPRUE_R2_ACCESS_KEY_ID?.trim() || fileEnv.IRON_SPRUE_R2_ACCESS_KEY_ID?.trim(),
     secretAccessKey: process.env.IRON_SPRUE_R2_SECRET_ACCESS_KEY?.trim() || fileEnv.IRON_SPRUE_R2_SECRET_ACCESS_KEY?.trim(),
@@ -61,6 +69,7 @@ function countBy(items, pick) {
 }
 
 const env = await loadEnv();
+if (!env.databaseUrl) throw new Error('IRON_SPRUE_ADMIN_DATABASE_URL is required. Media integrity checks must use the guarded Railway admin database target.');
 if (env.bucket !== BUCKET) throw new Error(`IRON_SPRUE_R2_BUCKET_NAME must be ${BUCKET}.`);
 
 const s3 = new S3Client({
@@ -69,7 +78,7 @@ const s3 = new S3Client({
   credentials: { accessKeyId: env.accessKeyId, secretAccessKey: env.secretAccessKey },
 });
 const prisma = new PrismaClient({
-  adapter: new PrismaNeon({ connectionString: env.databaseUrl, allowExitOnIdle: true, connectionTimeoutMillis: 10_000, idleTimeoutMillis: 5_000, max: 5 }),
+  adapter: new PrismaPg({ connectionString: env.databaseUrl, connectionTimeoutMillis: 10_000, idleTimeoutMillis: 5_000, max: 5 }),
 });
 
 try {

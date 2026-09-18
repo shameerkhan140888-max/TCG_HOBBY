@@ -5,6 +5,8 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+throw new Error('Deprecated CubicFun fallback repair disabled: current product media repairs must use the guarded Railway admin DB media pipeline.');
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
 const envPath = path.join(appRoot, '.env.local');

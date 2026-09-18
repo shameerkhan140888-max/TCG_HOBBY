@@ -7,6 +7,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
+throw new Error('Deprecated Tasma recovery script disabled: current manufacturer/source media recovery must be promoted through the guarded Railway admin DB media pipeline.');
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
 const envPath = path.join(appRoot, '.env.local');

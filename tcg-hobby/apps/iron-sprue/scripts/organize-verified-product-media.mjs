@@ -8,6 +8,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
+throw new Error('Deprecated media organizer disabled: current product-media replacement and cleanup must use product-media-maintenance.mjs with IRON_SPRUE_ADMIN_DATABASE_URL against Railway production.');
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
 const envPath = path.join(appRoot, '.env.local');

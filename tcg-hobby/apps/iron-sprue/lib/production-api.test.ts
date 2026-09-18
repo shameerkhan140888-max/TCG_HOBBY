@@ -247,26 +247,44 @@ describe('Iron Sprue production API client', () => {
   });
 
   it('loads Admin-managed Iron Sprue hero slides from Railway /v1/home', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: vi.fn().mockResolvedValue({
-        featuredProducts: [],
-        latestProducts: [],
-        categories: [],
-        homepagePlacements: [],
-        ironSprueHeroes: [
-          {
-            id: 'hero-1',
-            headline: 'New workshop arrivals',
-            strapline: 'Fresh kits for the bench',
-            ctaLabel: 'Shop now',
-            ctaHref: '/products/aoshima-06347-lamborghini-aventador-red',
-            imageUrl: 'https://media.ironsprue.co.uk/marketing/heroes/new-workshop.webp',
-            merchandisingBadge: 'NEW',
-            sortOrder: 1,
-          },
-        ],
-      }),
+    const fetchMock = vi.fn((input: URL | string) => {
+      const url = String(input);
+      if (url.includes('/v1/catalogue?')) {
+        return Promise.resolve({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            products: [product({
+              sku: 'IS-AOS-06347',
+              slug: 'aoshima-06347-lamborghini-aventador-red',
+              name: 'Lamborghini Aventador Red',
+              brand: 'Aoshima',
+              category: { name: 'Model Kits', slug: 'model-kits' },
+              image: null,
+            })],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          featuredProducts: [],
+          latestProducts: [],
+          categories: [],
+          homepagePlacements: [],
+          ironSprueHeroes: [
+            {
+              id: 'hero-1',
+              headline: 'New workshop arrivals',
+              strapline: 'Fresh kits for the bench',
+              ctaLabel: 'Shop now',
+              ctaHref: '/products/aoshima-06347-lamborghini-aventador-red',
+              imageUrl: 'https://media.ironsprue.co.uk/marketing/heroes/new-workshop.webp',
+              merchandisingBadge: 'NEW',
+              sortOrder: 1,
+            },
+          ],
+        }),
+      });
     });
     vi.stubGlobal('fetch', fetchMock);
 
@@ -278,6 +296,8 @@ describe('Iron Sprue production API client', () => {
         availabilityLabel: 'In stock',
         title: 'New workshop arrivals',
         script: 'Fresh kits for the bench',
+        copy: 'Aoshima supercar kits focus on crisp body lines, low stance and clean bench work for collectors of modern performance cars.',
+        brandName: 'Aoshima',
         image: '/media/iron-sprue/marketing/heroes/new-workshop.webp',
         ctaHref: '/products/aoshima-06347-lamborghini-aventador-red',
       }),

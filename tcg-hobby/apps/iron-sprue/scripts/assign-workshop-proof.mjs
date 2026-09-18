@@ -6,6 +6,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+throw new Error('Deprecated media script disabled: use upload-approved-workshop-batch.mjs or upload-selected-workshop-batch.mjs with IRON_SPRUE_ADMIN_DATABASE_URL against the guarded Railway production database.');
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
 const envPath = path.join(appRoot, '.env.local');

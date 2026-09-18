@@ -1,6 +1,5 @@
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
-import { PrismaNeon } from '@prisma/adapter-neon';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -11,6 +10,7 @@ import sharp from 'sharp';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
 const envPath = path.join(appRoot, '.env.local');
+const rootEnvPath = path.resolve(appRoot, '..', '..', '.env.local');
 const dataDir = path.join(appRoot, 'data');
 const reportsDir = path.join(appRoot, 'reports');
 const STORE_CODE = 'IRON_SPRUE';
@@ -19,7 +19,6 @@ const RUN_ID = '2026-09-14';
 const ACTOR = 'iron-sprue-white-image2-repair';
 const CANVAS_SIZE = 1100;
 const APPLY = process.argv.includes('--apply');
-const RAILWAY_PRODUCTION = process.argv.includes('--railway-production');
 const INCLUDE_REJECTED = process.argv.includes('--include-rejected');
 
 function parseEnvFile(text) {
@@ -53,25 +52,14 @@ async function streamToBuffer(stream) {
 }
 
 function createPrismaClient(env) {
-  if (RAILWAY_PRODUCTION) {
-    const url = new URL(env.IRON_SPRUE_ADMIN_DATABASE_URL);
-    const railwayHost = /(^|\.)railway\.internal$|(^|\.)proxy\.rlwy\.net$|(^|\.)railway\.app$/i.test(url.hostname);
-    const railwayTunnel = /^(127\.0\.0\.1|localhost)$/i.test(url.hostname) && url.pathname.replace(/^\//, '') === 'railway';
-    if (!railwayHost && !railwayTunnel) throw new Error('--railway-production requires an Iron Sprue Railway database host or tunnel.');
-    return new PrismaClient({
-      adapter: new PrismaPg({
-        connectionString: env.IRON_SPRUE_ADMIN_DATABASE_URL,
-        connectionTimeoutMillis: 10_000,
-        idleTimeoutMillis: 5_000,
-        max: 5,
-      }),
-    });
-  }
-  if (!env.IRON_SPRUE_DATABASE_URL) throw new Error('IRON_SPRUE_DATABASE_URL is required.');
+  if (!env.IRON_SPRUE_ADMIN_DATABASE_URL) throw new Error('IRON_SPRUE_ADMIN_DATABASE_URL is required. Image 2 repairs must use the guarded Railway admin database target.');
+  const url = new URL(env.IRON_SPRUE_ADMIN_DATABASE_URL);
+  const railwayHost = /(^|\.)railway\.internal$|(^|\.)proxy\.rlwy\.net$|(^|\.)railway\.app$/i.test(url.hostname);
+  const railwayTunnel = /^(127\.0\.0\.1|localhost)$/i.test(url.hostname) && url.pathname.replace(/^\//, '') === 'railway';
+  if (!railwayHost && !railwayTunnel) throw new Error('Refusing non-Railway Iron Sprue admin database target.');
   return new PrismaClient({
-    adapter: new PrismaNeon({
-      connectionString: env.IRON_SPRUE_DATABASE_URL,
-      allowExitOnIdle: true,
+    adapter: new PrismaPg({
+      connectionString: env.IRON_SPRUE_ADMIN_DATABASE_URL,
       connectionTimeoutMillis: 10_000,
       idleTimeoutMillis: 5_000,
       max: 5,
@@ -152,7 +140,19 @@ function row(cells) {
   return `| ${cells.map((cell) => String(cell ?? '').replace(/\|/g, '/')).join(' | ')} |`;
 }
 
-const env = parseEnvFile(await readFile(envPath, 'utf8'));
+async function loadEnv() {
+  const values = {};
+  for (const file of [rootEnvPath, envPath]) {
+    try {
+      Object.assign(values, parseEnvFile(await readFile(file, 'utf8')));
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+  }
+  return { ...values, ...process.env };
+}
+
+const env = await loadEnv();
 if (env.IRON_SPRUE_R2_BUCKET_NAME !== BUCKET) throw new Error(`IRON_SPRUE_R2_BUCKET_NAME must be ${BUCKET}.`);
 await mkdir(dataDir, { recursive: true });
 await mkdir(reportsDir, { recursive: true });
@@ -279,10 +279,10 @@ try {
     }
   }
 
-  const suffix = `${RAILWAY_PRODUCTION ? '-railway' : '-neon'}${APPLY ? '' : '-dry-run'}`;
+  const suffix = `-railway${APPLY ? '' : '-dry-run'}`;
   const jsonPath = path.join(dataDir, `white-image2-replacement-repair-${RUN_ID}${suffix}.json`);
   const reportPath = path.join(reportsDir, `white-image2-replacement-repair-${RUN_ID}${suffix}.md`);
-  const result = { generatedAt: new Date().toISOString(), mode: APPLY ? 'applied' : 'dry-run', target: RAILWAY_PRODUCTION ? 'railway' : 'neon', includeRejected: INCLUDE_REJECTED, repairs, errors };
+  const result = { generatedAt: new Date().toISOString(), mode: APPLY ? 'applied' : 'dry-run', target: 'railway', includeRejected: INCLUDE_REJECTED, repairs, errors };
   await writeFile(jsonPath, `${JSON.stringify(result, null, 2)}\n`);
   await writeFile(reportPath, `${[
     '# White Image 2 Replacement Repair',

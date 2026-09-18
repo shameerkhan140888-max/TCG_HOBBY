@@ -7236,6 +7236,8 @@ body::before {
   justify-items: center;
   overflow: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y pinch-zoom;
   padding: clamp(12px, 2vw, 20px);
 }
 
@@ -7279,11 +7281,14 @@ body::before {
     justify-items: center;
     overflow: auto;
     overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y pinch-zoom;
     padding: 10px;
   }
 
   .product-detail-page .product-image-lightbox__panel img {
-    min-width: 100%;
+    min-width: min(220vw, 1200px);
+    cursor: grab;
   }
 
   .product-detail-page .product-image-lightbox__close {
@@ -10278,39 +10283,47 @@ body:has(.product-detail-page) .payment-trust-banner {
 }
 
 .hero-slide[data-hero-style="street-racer"] .hero-message {
-  top: 47%;
+  top: 46%;
+  width: min(720px, calc(100% - 112px));
 }
 
 .hero-slide[data-hero-style="street-racer"] .hero-message h1 {
-  max-width: 650px;
-  margin-bottom: 22px;
-  color: #fff8f3;
-  font-family: "Arial Black", Impact, Arial, sans-serif;
-  font-size: clamp(3rem, 5.6vw, 6.15rem);
-  line-height: 0.88;
+  max-width: 690px;
+  margin-bottom: 24px;
+  color: #f5f8ff;
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  font-size: clamp(2.9rem, 5.1vw, 5.9rem);
+  font-weight: 900;
+  line-height: 0.82;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   text-shadow:
-    4px 0 0 rgba(197, 18, 44, 0.92),
-    -3px 0 0 rgba(20, 37, 74, 0.92),
-    0 18px 40px rgba(0, 0, 0, 0.98);
-  transform: skewX(-7deg);
+    1px 1px 0 #04101f,
+    6px 0 0 rgba(190, 23, 34, 0.96),
+    13px 0 0 rgba(26, 68, 125, 0.82),
+    0 18px 38px rgba(0, 0, 0, 0.98);
+  transform: skewX(-14deg) scaleY(0.94);
   transform-origin: left center;
 }
 
 .hero-slide[data-hero-style="street-racer"] .hero-message .script-line {
   display: inline-block;
-  margin-top: 8px;
-  color: #8cc7ff;
-  font-family: "Arial Narrow", Arial, sans-serif;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-left: 5px solid #d61f2d;
+  background: linear-gradient(90deg, rgba(6, 18, 36, 0.9), rgba(6, 18, 36, 0));
+  color: #aee3ff;
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
   font-size: clamp(1rem, 1.6vw, 1.32rem);
   font-style: normal;
   font-weight: 900;
-  letter-spacing: 0.11em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 .hero-slide[data-hero-style="street-racer"] .hero-message .lead {
-  margin-top: 24px;
+  max-width: 530px;
+  margin-top: 22px;
   line-height: 1.5;
 }
 
@@ -10441,26 +10454,41 @@ body:has(.product-detail-page) .payment-trust-banner {
 }
 
 .hero-slide[data-hero-style="night-box"] .hero-message h1 {
-  max-width: 640px;
-  color: #f1f6ff;
-  font-family: "Arial Black", Impact, Arial, sans-serif;
-  font-size: clamp(3rem, 5.2vw, 5.9rem);
-  line-height: 0.88;
-  text-transform: uppercase;
+  max-width: 620px;
+  color: #fff8d8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(3rem, 5vw, 5.65rem);
+  font-style: italic;
+  font-weight: 900;
+  line-height: 0.96;
+  text-transform: none;
   text-shadow:
-    0 0 8px rgba(146, 117, 255, 0.78),
-    4px 4px 0 rgba(28, 14, 85, 0.95),
+    0 0 10px rgba(255, 218, 104, 0.62),
+    4px 3px 0 rgba(53, 24, 103, 0.98),
+    8px 7px 0 rgba(10, 7, 30, 0.98),
     0 20px 42px rgba(0, 0, 0, 0.98);
 }
 
 .hero-slide[data-hero-style="night-box"] .hero-message .script-line {
-  color: #ffcf66;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: clamp(1rem, 1.52vw, 1.28rem);
+  display: inline-block;
+  margin-top: 12px;
+  padding: 7px 12px 6px;
+  border: 1px solid rgba(137, 229, 255, 0.7);
+  border-radius: 999px;
+  background: rgba(12, 20, 57, 0.62);
+  color: #94f2ff;
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  font-size: clamp(0.98rem, 1.45vw, 1.24rem);
   font-style: normal;
   font-weight: 900;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  box-shadow: 0 0 22px rgba(98, 207, 255, 0.18);
+}
+
+.hero-slide[data-hero-style="night-box"] .hero-message .lead {
+  max-width: 520px;
+  color: rgba(255, 248, 216, 0.9);
 }
 
 .hero-slide[data-hero-style="planet-puzzle"] .hero-message h1 {

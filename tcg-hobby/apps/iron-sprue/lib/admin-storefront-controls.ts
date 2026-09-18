@@ -6,7 +6,7 @@ import {
   getIronSprueProductionApiHomepagePlacements,
   shouldUseIronSprueProductionApi,
 } from './production-api';
-import { brandLogoRegistry, categoryNavigation, featuredProducts, heroSlides, promoPanels } from './storefront';
+import { brandLogoRegistry, categoryNavigation, featuredProducts, heroBodyCopyForProduct, heroScriptForProduct, heroSlides, promoPanels } from './storefront';
 
 const STORE_CODE = 'IRON_SPRUE';
 const fallbackPromoStripItems = ['Free UK delivery on orders over \u00a330', 'Fast dispatch on stocked lines', 'Safe and secure checkout'];
@@ -358,8 +358,8 @@ export function adminHeroRowsToSlides(rows: AdminHeroRow[]): IronSprueHeroSlide[
       label: merchandisingLabel,
       availabilityLabel: merchandisingLabel,
       title: row.headline,
-      script: row.strapline ?? '',
-      copy: fallbackHero?.copy ?? '',
+      script: row.strapline?.trim() || (linkedProduct ? heroScriptForProduct(linkedProduct) : fallbackHero?.script ?? ''),
+      copy: fallbackHero?.copy ?? (linkedProduct ? heroBodyCopyForProduct(linkedProduct) : ''),
       image: publicImageUrl,
       sourceProductSlug: linkedProduct?.slug || linkedProductSlug || '',
       ...(brandName ? { brandName } : {}),

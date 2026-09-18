@@ -10,7 +10,7 @@ import type {
 } from '@capital-hobby/types';
 import type { IronSprueBrandRecord, IronSprueProduct } from './catalogue';
 import type { IronSprueHeroSlide, IronSprueHomepagePlacement } from './admin-storefront-controls';
-import { brandLogoRegistry, categoryNavigation, heroSlides } from './storefront';
+import { brandLogoRegistry, categoryNavigation, heroBodyCopyForProduct, heroScriptForProduct, heroSlides } from './storefront';
 
 export const IRON_SPRUE_PRODUCTION_API_BASE_URL = 'IRON_SPRUE_PRODUCTION_API_BASE_URL';
 const IRON_SPRUE_MEDIA_HOST = 'media.ironsprue.co.uk';
@@ -203,8 +203,11 @@ async function productsFromPublicHomeResponse(response: PublicHomeResponse, extr
       return sectionProduct ?? '';
     })
     .filter(Boolean);
+  const heroProductSlugs = (response.ironSprueHeroes ?? [])
+    .map((hero) => hero.ctaHref?.match(/\/products\/([^/?#]+)/)?.[1]?.trim() ?? '')
+    .filter(Boolean);
   const existingHomeProductSlugs = new Set([...response.featuredProducts, ...response.latestProducts].map((product) => product.slug));
-  const homeProductSlugs = [...new Set([...placementSlugs, ...extraProductSlugs])]
+  const homeProductSlugs = [...new Set([...placementSlugs, ...heroProductSlugs, ...extraProductSlugs])]
     .filter((slug) => !existingHomeProductSlugs.has(slug));
   let placementProducts: PublicProductSummary[] = [];
   if (homeProductSlugs.length) {
@@ -270,8 +273,8 @@ export function publicIronSprueHeroesToSlides(rows: PublicIronSprueHero[], produ
       label: availabilityLabel,
       availabilityLabel,
       title: row.headline,
-      script: row.strapline ?? '',
-      copy: fallbackHero?.copy ?? '',
+      script: row.strapline?.trim() || (linkedProduct ? heroScriptForProduct(linkedProduct) : fallbackHero?.script ?? ''),
+      copy: fallbackHero?.copy ?? (linkedProduct ? heroBodyCopyForProduct(linkedProduct) : ''),
       image,
       sourceProductSlug: linkedProductSlug || fallbackHero?.sourceProductSlug || '',
       ...(brandName ? { brandName } : {}),

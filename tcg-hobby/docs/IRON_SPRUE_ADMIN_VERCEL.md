@@ -57,6 +57,7 @@ Set these only in the Vercel project for the hosted admin. Do not expose them to
 - `DATABASE_URL` as the Iron Sprue admin production target
 - `IRON_SPRUE_DATABASE_URL` as the Iron Sprue admin production target
 - Neon connection strings as the Iron Sprue admin production target
+- Any media upload/cleanup script that does not require `IRON_SPRUE_ADMIN_DATABASE_URL`
 
 The hosted admin fails closed when running on Vercel without `IRON_SPRUE_ADMIN_DATABASE_URL`, or when that variable points at localhost/tunnel or Neon targets.
 

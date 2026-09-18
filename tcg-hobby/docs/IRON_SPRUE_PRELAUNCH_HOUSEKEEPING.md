@@ -27,14 +27,14 @@ Capital Hobby Group Ltd is the parent/corporate identity. Iron Sprue and TCG Hob
 - npm workspace namespace `@capital-hobby/*`: used across imports, package-lock, deployed builds and tests. Rename to a parent namespace such as `@capital-hobby/*` only as a coordinated post-launch migration.
 - Railway project/service names: must be changed in Railway with deployment-variable and webhook checks; do not rename before launch for cosmetics.
 - Cloudflare Worker/Pages project names and deployed URLs: must remain stable while staging/live verification is active.
-- Environment variable names containing `IRON_SPRUE_DATABASE_URL` and related aliases: retain compatibility while platform variables are consolidated.
+- Environment variable names containing `IRON_SPRUE_DATABASE_URL` and related aliases: retain compatibility only for historical/read-only tooling while platform variables are consolidated. Current media writes, destructive media cleanup and publication repair scripts must use `IRON_SPRUE_ADMIN_DATABASE_URL`.
 
 ### Deferred Post-Launch
 
 - Shared package names such as `@capital-hobby/database`, `@capital-hobby/ui`, `@capital-hobby/types`, `@capital-hobby/config`, `@capital-hobby/utils`.
 - TCG Hobby Cloudflare feasibility docs and package names where they genuinely refer to the TCG Hobby child brand.
 - Database/schema naming where it is not user-facing and is already guarded by `storeCode`.
-- Legacy Iron Sprue import/media scripts with explicit Neon guards. They should not be loosened during launch housekeeping because doing so could allow old tools to write to Railway production outside the current admin/publication path.
+- Legacy Iron Sprue import/media scripts with explicit Neon guards. They must not be used for current launch media writes unless migrated to the guarded Railway `IRON_SPRUE_ADMIN_DATABASE_URL` path.
 
 ## Required Production Config
 
@@ -52,6 +52,8 @@ Capital Hobby Group Ltd is the parent/corporate identity. Iron Sprue and TCG Hob
 - `IRON_SPRUE_NODE_API_ORIGIN`
 
 These aliases are retained to avoid breaking working deployments and older launch/import tooling. Platform cleanup should remove or rename them only after Railway and Cloudflare are updated together.
+
+Do not use these aliases for current product-media replacement, R2 cleanup, rejected-media cleanup or Admin publication. Those tasks must fail closed unless `IRON_SPRUE_ADMIN_DATABASE_URL` is set to the Railway production database or an approved local Railway tunnel.
 
 ## Canonical Content Cleanup
 

@@ -8,6 +8,8 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import sharp from 'sharp';
 
+throw new Error('Deprecated media pilot disabled: current Iron Sprue media writes must use the guarded Railway admin DB media pipeline.');
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, '..');
 const manifestPath = path.join(appRoot, 'data', 'final-launch-catalogue-manifest.json');
