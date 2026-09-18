@@ -7271,11 +7271,6 @@ body::before {
   touch-action: none;
 }
 
-.product-detail-page .product-gallery-image--image2 {
-  transform: scale(1.035);
-  transform-origin: center;
-}
-
 .product-detail-page .product-gallery-lightbox-image--image2 {
   background: #fff;
 }
