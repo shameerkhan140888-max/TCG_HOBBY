@@ -631,6 +631,18 @@ function productSectionEyebrow(sectionKey: string) {
 
 const defaultHomepageProductSections = [
   {
+    sectionKey: 'architecture',
+    heading: 'Architectural & landmark builds',
+    eyebrow: 'Architecture',
+    ctaLabel: 'View architecture builds',
+    ctaHref: '/shop/3d-puzzles-and-builds?structure=Landmark',
+    productSlugs: [
+      'cubicfun-mc113h-st-patricks-cathedral',
+      'cubicfun-mc092h-st-peters-basilica',
+      'cubicfun-mc133h-burj-khalifa',
+    ],
+  },
+  {
     sectionKey: 'display-lights-and-screens',
     heading: 'Night boxes and display screens.',
     eyebrow: 'Display builds',

@@ -234,9 +234,9 @@ describe('PublicCommerceService Iron Sprue source selection', () => {
         {
           id: 'heading',
           placementKey: 'featured-products',
-          title: '1:24 Scale Aoshima',
-          ctaLabel: 'See all 1:24 kits',
-          ctaHref: '/shop/model-kits?scale=1-24',
+          title: 'Popular models 1:32 scale.',
+          ctaLabel: 'View the 1:32 range',
+          ctaHref: '/shop/model-kits?scale=1%3A32',
           imageUrl: null,
           active: true,
           sortOrder: 0,
@@ -270,7 +270,7 @@ describe('PublicCommerceService Iron Sprue source selection', () => {
     expect(result.featuredProducts).toHaveLength(1);
     expect(result.latestProducts[0]?.slug).toBe('latest-kit');
     expect(result.homepagePlacements).toEqual([
-      expect.objectContaining({ placementKey: 'featured-products', title: '1:24 Scale Aoshima' }),
+      expect.objectContaining({ placementKey: 'featured-products', title: 'Popular models 1:32 scale.' }),
     ]);
     expect(result.brandPresentation).toEqual([
       expect.objectContaining({

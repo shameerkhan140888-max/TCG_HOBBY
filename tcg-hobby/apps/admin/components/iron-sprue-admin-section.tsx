@@ -74,6 +74,18 @@ const IRON_SPRUE_DISPLAY_SECTION_SUGGESTION = {
   ],
 };
 
+const IRON_SPRUE_ARCHITECTURE_SECTION_SUGGESTION = {
+  sectionKey: 'architecture',
+  heading: 'Architectural & landmark builds',
+  ctaLabel: 'View architecture builds',
+  ctaHref: '/shop/3d-puzzles-and-builds?structure=Landmark',
+  productSlugs: [
+    'cubicfun-mc113h-st-patricks-cathedral',
+    'cubicfun-mc092h-st-peters-basilica',
+    'cubicfun-mc133h-burj-khalifa',
+  ],
+};
+
 function money(value: number | null | undefined, currency = 'GBP') {
   if (value == null) return 'Not set';
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(value / 100);
@@ -1993,11 +2005,11 @@ function HomepagePlacementForm({
   const placementKey = record?.placementKey ?? defaultPlacementKey;
   const label = homepagePlacementLabel(placementKey);
   const isStripPlacement = isPromoStripPlacementKey(placementKey);
-  const isOpeningBenchHeading = placementKey === 'featured-products';
+  const isPopularModelsHeading = placementKey === 'featured-products';
   return (
     <form action={saveIronSprueHomepagePlacementAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-2">
       <input type="hidden" name="id" value={record?.id ?? ''} />
-      {isOpeningBenchHeading ? (
+      {isPopularModelsHeading ? (
         <>
           <input type="hidden" name="placementKey" value="featured-products" />
           <input type="hidden" name="imageUrl" value="" />
@@ -2008,14 +2020,14 @@ function HomepagePlacementForm({
       <div className="md:col-span-2">
         <h3 className="font-bold">{record ? `Edit ${label}` : `Create ${label.toLowerCase()}`}</h3>
         <p className="mt-1 text-sm text-neutral-500">
-          {isOpeningBenchHeading
+          {isPopularModelsHeading
             ? 'Controls the visible heading and link for the editable product row below.'
             : record ? 'Updates this saved homepage control.' : 'Add a homepage strip or banner that the storefront can render.'}
         </p>
       </div>
-      {!isOpeningBenchHeading && previewUrl ? <img src={previewUrl} alt={record?.title ?? 'Homepage placement'} className="h-40 w-full rounded-md border border-surface-line object-cover md:col-span-2" /> : null}
-      {!isOpeningBenchHeading ? <Field label="Internal placement key"><input name="placementKey" defaultValue={record?.placementKey ?? defaultPlacementKey} className={fieldClass} /></Field> : null}
-      <Field label={isOpeningBenchHeading ? 'Opening row heading' : 'Title'}><input name="title" defaultValue={record?.title ?? ''} required className={fieldClass} /></Field>
+      {!isPopularModelsHeading && previewUrl ? <img src={previewUrl} alt={record?.title ?? 'Homepage placement'} className="h-40 w-full rounded-md border border-surface-line object-cover md:col-span-2" /> : null}
+      {!isPopularModelsHeading ? <Field label="Internal placement key"><input name="placementKey" defaultValue={record?.placementKey ?? defaultPlacementKey} className={fieldClass} /></Field> : null}
+      <Field label={isPopularModelsHeading ? 'Popular models heading' : 'Title'}><input name="title" defaultValue={record?.title ?? ''} required className={fieldClass} /></Field>
       {isStripPlacement ? (
         <Field label="Strip icon">
           <select name="ctaLabel" defaultValue={record?.ctaLabel ?? 'DELIVERY'} className={fieldClass}>
@@ -2026,7 +2038,7 @@ function HomepagePlacementForm({
         <Field label="CTA label"><input name="ctaLabel" defaultValue={record?.ctaLabel ?? ''} className={fieldClass} /></Field>
       )}
       <Field label="CTA href"><input name="ctaHref" defaultValue={record?.ctaHref ?? ''} className={fieldClass} /></Field>
-      {!isOpeningBenchHeading ? (
+      {!isPopularModelsHeading ? (
         <>
           <Field label="Image URL"><input name="imageUrl" defaultValue={record?.imageUrl ?? ''} className={fieldClass} /></Field>
           <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={record?.sortOrder ?? 0} className={fieldClass} /></Field>
@@ -2087,7 +2099,7 @@ function RecordMeta({ active, sortOrder }: { active: boolean; sortOrder: number 
 
 function homepagePlacementLabel(placementKey: string) {
   const labels: Record<string, string> = {
-    'featured-products': 'Opening bench picks heading',
+    'featured-products': 'Popular models heading',
     'promo-banner': 'Promo banner',
     'promo-strip-delivery': 'Delivery promo strip',
     'brand-carousel': 'Brand carousel heading',
@@ -2129,7 +2141,19 @@ function productPrimaryPreview(product: { mediaAssets?: Array<{ approvalState: s
     ?? null;
 }
 
-function openingBenchFallbackProducts(products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products']) {
+const popularModelsFallbackSlugs = [
+  'aoshima-06349-lamborghini-aventador-blue',
+  'aoshima-06539-lamborghini-countach-lpi-800-4-white',
+  'aoshima-06357-skyline-gtr-red-pearl',
+  'aoshima-06459-toyota-gr86-spark-red',
+];
+
+function popularModelsFallbackProducts(products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products']) {
+  const productBySlug = new Map(products.map((product) => [product.slug, product]));
+  const configuredProducts = popularModelsFallbackSlugs
+    .map((slug) => productBySlug.get(slug))
+    .filter((product): product is Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'][number] => Boolean(product));
+  if (configuredProducts.length) return configuredProducts;
   const withImages = products.filter((product) => productPrimaryPreview(product));
   const withoutImages = products.filter((product) => !productPrimaryPreview(product));
   return [...withImages, ...withoutImages].slice(0, 4);
@@ -2462,7 +2486,7 @@ function FeaturedProductsManager({
     .filter(isFeaturedProductPlacement)
     .sort((left, right) => Number(right.active) - Number(left.active) || (left.sortOrder ?? 0) - (right.sortOrder ?? 0));
   const activeFeaturedPlacements = featuredPlacements.filter((placement) => placement.active);
-  const fallbackProducts = openingBenchFallbackProducts(products);
+  const fallbackProducts = popularModelsFallbackProducts(products);
   const effectiveProductCount = activeFeaturedPlacements.length || fallbackProducts.length;
   const usingFallbackProducts = activeFeaturedPlacements.length === 0 && fallbackProducts.length > 0;
 
@@ -2471,7 +2495,7 @@ function FeaturedProductsManager({
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="font-bold">Opening bench picks row</h2>
+            <h2 className="font-bold">Popular models row</h2>
             <p className="text-sm text-neutral-400">Controls the first product row after the promo cards on the public homepage.</p>
           </div>
           <StatusBadge tone={activeFeaturedPlacements.length ? 'success' : usingFallbackProducts ? 'warning' : 'neutral'}>
@@ -2483,12 +2507,12 @@ function FeaturedProductsManager({
           <HomepagePlacementForm
             defaultPlacementKey="featured-products"
             record={sectionHeading}
-            submitLabel="Save opening row heading and link"
+            submitLabel="Save popular models heading and link"
           />
         ) : (
           <HomepagePlacementForm
             defaultPlacementKey="featured-products"
-            submitLabel="Create opening row heading and link"
+            submitLabel="Create popular models heading and link"
           />
         )}
 
@@ -2496,7 +2520,7 @@ function FeaturedProductsManager({
           <div className="rounded-md border border-surface-line bg-black/30 p-3">
             <h3 className="text-sm font-bold">Current products in this row</h3>
             <p className="mt-1 text-xs text-neutral-500">
-              Row link: {sectionHeading?.ctaLabel || 'See new arrivals'} {`-> ${sectionHeading?.ctaHref || '/shop?sort=newest'}`}
+              Row link: {sectionHeading?.ctaLabel || 'View the 1:32 range'} {`-> ${sectionHeading?.ctaHref || '/shop/model-kits?scale=1%3A32'}`}
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {activeFeaturedPlacements.map((placement) => {
@@ -2572,7 +2596,7 @@ function FeaturedProductsManager({
             })}
           </div>
         ) : (
-          <EmptyNote>No opening bench products are saved yet. The public homepage will use the catalogue fallback until products are added below.</EmptyNote>
+          <EmptyNote>No popular model products are saved yet. The public homepage will use the Popular Models fallback until products are added below.</EmptyNote>
         )}
 
         <form action={saveIronSprueFeaturedProductPlacementAction} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-3 md:grid-cols-[minmax(220px,1fr)_120px_140px]">
@@ -2585,7 +2609,7 @@ function FeaturedProductsManager({
           <input type="hidden" name="productTitle" value="" />
           <Field label="Sort order"><input name="sortOrder" type="number" defaultValue={featuredPlacements.length} className={fieldClass} /></Field>
           <label className="flex items-end gap-2 pb-2 text-sm"><input name="active" type="checkbox" defaultChecked /> Active</label>
-          <Button type="submit" className="md:col-span-3">Add product to opening row</Button>
+          <Button type="submit" className="md:col-span-3">Add product to popular models row</Button>
         </form>
       </CardContent>
     </Card>
@@ -2661,7 +2685,7 @@ function HomepageProductSectionsManager({
       <CardContent className="space-y-4">
         <div>
           <h2 className="font-bold">Additional homepage product rows</h2>
-          <p className="mt-1 text-sm text-neutral-400">Controls extra product rows that appear below the opening bench picks on the public homepage.</p>
+            <p className="mt-1 text-sm text-neutral-400">Controls extra product rows that appear below the Popular Models row on the public homepage.</p>
         </div>
         <datalist id="homepage-section-keys">
           {sectionKeys.map((key) => <option key={key} value={key} />)}
@@ -2707,6 +2731,13 @@ function HomepageProductSectionsManager({
             <summary className="cursor-pointer text-sm font-bold text-accent">Suggested section: night boxes and display screens</summary>
             <p className="mt-2 text-sm text-neutral-400">Adds the two night boxes and a jigsaw screen beneath the architecture row. Saving this makes the section fully admin-managed.</p>
             <div className="mt-3">{renderSectionForm(undefined, IRON_SPRUE_DISPLAY_SECTION_SUGGESTION)}</div>
+          </details>
+        ) : null}
+        {!sectionKeys.includes(IRON_SPRUE_ARCHITECTURE_SECTION_SUGGESTION.sectionKey) ? (
+          <details className="rounded-md border border-dashed border-accent bg-black/30 p-3">
+            <summary className="cursor-pointer text-sm font-bold text-accent">Suggested section: architecture builds</summary>
+            <p className="mt-2 text-sm text-neutral-400">Adds the architecture row with a storefront link to the Landmark structure filter. Saving this makes the section fully admin-managed.</p>
+            <div className="mt-3">{renderSectionForm(undefined, IRON_SPRUE_ARCHITECTURE_SECTION_SUGGESTION)}</div>
           </details>
         ) : null}
         {renderSectionForm()}

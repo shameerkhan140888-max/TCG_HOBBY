@@ -415,8 +415,11 @@ describe('Iron Sprue Admin storefront controls', () => {
     expect(sections[0]?.products.map((product) => product.slug)).toEqual(['toyota-red', 'toyota-white']);
   });
 
-  it('adds the display lights and screens homepage row until Admin records take over', () => {
+  it('adds the default homepage product rows until Admin records take over', () => {
     const products = [
+      { slug: 'cubicfun-mc113h-st-patricks-cathedral', sku: 'MC113H', storeCode: 'IRON_SPRUE', published: true },
+      { slug: 'cubicfun-mc092h-st-peters-basilica', sku: 'MC092H', storeCode: 'IRON_SPRUE', published: true },
+      { slug: 'cubicfun-mc133h-burj-khalifa', sku: 'MC133H', storeCode: 'IRON_SPRUE', published: true },
       { slug: 'cubicfun-om3603-magic-box-underwater-world', sku: 'OM3603', storeCode: 'IRON_SPRUE', published: true },
       { slug: 'cubicfun-om3606-magic-box-london-at-night', sku: 'OM3606', storeCode: 'IRON_SPRUE', published: true },
       { slug: 'pintoo-q1035-jigsaw-screen-famous-architectures', sku: 'Q1035', storeCode: 'IRON_SPRUE', published: true },
@@ -424,14 +427,20 @@ describe('Iron Sprue Admin storefront controls', () => {
 
     const sections = productSectionsFromPlacements(products, []);
 
-    expect(sections).toHaveLength(1);
+    expect(sections).toHaveLength(2);
     expect(sections[0]).toMatchObject({
+      sectionKey: 'architecture',
+      heading: 'Architectural & landmark builds',
+      ctaLabel: 'View architecture builds',
+      ctaHref: '/shop/3d-puzzles-and-builds?structure=Landmark',
+    });
+    expect(sections[1]).toMatchObject({
       sectionKey: 'display-lights-and-screens',
       heading: 'Night boxes and display screens.',
       ctaLabel: 'Shop display builds',
       ctaHref: '/shop/3d-puzzles-and-builds',
     });
-    expect(sections[0]?.products.map((product) => product.slug)).toEqual([
+    expect(sections[1]?.products.map((product) => product.slug)).toEqual([
       'cubicfun-om3603-magic-box-underwater-world',
       'cubicfun-om3606-magic-box-london-at-night',
       'pintoo-q1035-jigsaw-screen-famous-architectures',

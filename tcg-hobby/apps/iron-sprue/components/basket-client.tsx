@@ -878,7 +878,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
                         <h3>{product.productName}</h3>
                         {product.productCategory ? <p className="product-card-category">{product.productCategory}</p> : null}
                         <span className={`stock-badge ${basketUpsellAvailabilityClass(product)}`}>{basketUpsellAvailability(product)}</span>
-                        <strong>{formatPrice(product.unitPriceMinor)} inc VAT</strong>
+                        <strong>{formatPrice(product.unitPriceMinor)}</strong>
                         <div className="product-actions">
                           <a href={`/products/${product.productSlug}`}>View details</a>
                           <AddToBasketButton item={product} />

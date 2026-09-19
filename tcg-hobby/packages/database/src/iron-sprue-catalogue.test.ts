@@ -653,9 +653,9 @@ describe('Iron Sprue production catalogue adapter', () => {
           {
             id: 'heading',
             placementKey: 'featured-products',
-            title: '1:24 Scale Aoshima',
-            ctaLabel: 'See all 1:24 kits',
-            ctaHref: '/shop/model-kits?scale=1-24',
+            title: 'Popular models 1:32 scale.',
+            ctaLabel: 'View the 1:32 range',
+            ctaHref: '/shop/model-kits?scale=1%3A32',
             imageUrl: null,
             active: true,
             sortOrder: 0,
@@ -712,7 +712,7 @@ describe('Iron Sprue production catalogue adapter', () => {
     const home = await getIronSprueCatalogueHomeData(client as never);
 
     expect(home.homepagePlacements).toEqual([
-      expect.objectContaining({ placementKey: 'featured-products', title: '1:24 Scale Aoshima' }),
+      expect.objectContaining({ placementKey: 'featured-products', title: 'Popular models 1:32 scale.' }),
       expect.objectContaining({ placementKey: 'featured-product:second-kit' }),
       expect.objectContaining({ placementKey: 'featured-product:first-kit' }),
     ]);

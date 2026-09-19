@@ -60,7 +60,7 @@ export function ProductCard({ detailsLabel = 'Details', headingLevel = 3, produc
             </ul>
           ) : null}
           <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
-          <strong>{formatPrice(product)} inc VAT</strong>
+          <strong>{formatPrice(product)}</strong>
           <div className="product-actions">
             <a href={`/products/${product.slug}`}>{detailsLabel}</a>
             <AddToBasketButton

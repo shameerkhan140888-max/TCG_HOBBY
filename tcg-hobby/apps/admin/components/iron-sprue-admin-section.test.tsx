@@ -694,9 +694,9 @@ describe('IronSprueAdminSection operational controls', () => {
       }, {
         id: 'placement-2',
         placementKey: 'featured-products',
-        title: 'Opening bench picks.',
-        ctaLabel: 'See new arrivals',
-        ctaHref: '/shop?sort=newest',
+        title: 'Popular models 1:32 scale.',
+        ctaLabel: 'View the 1:32 range',
+        ctaHref: '/shop/model-kits?scale=1%3A32',
         imageUrl: null,
         active: true,
         sortOrder: 0,
@@ -768,18 +768,18 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Free UK delivery on orders over £30');
     expect(markup).toContain('promo-banner');
     expect(markup).toContain('Create promo banner');
-    expect(markup).toContain('Opening bench picks row');
+    expect(markup).toContain('Popular models row');
     expect(markup).toContain('Current products in this row');
     expect(markup).toContain('Row link:');
-    expect(markup).toContain('See new arrivals');
-    expect(markup).toContain('-&gt; /shop?sort=newest');
+    expect(markup).toContain('View the 1:32 range');
+    expect(markup).toContain('-&gt; /shop/model-kits?scale=1%3A32');
     expect(markup).toContain('Lamborghini Aventador Blue');
     expect(markup).toContain('Additional homepage product rows');
     expect(markup).toContain('Our favourite Aoshima kits');
     expect(markup).toContain('Section key');
     expect(markup).toContain('Products selected');
     expect(markup).toContain('our-aoshima-picks');
-    expect(markup).toContain('Add product to opening row');
+    expect(markup).toContain('Add product to popular models row');
     expect(markup).toContain('Product in this slot');
     expect(markup).toContain('Save or replace row product');
     expect(markup).not.toContain('Featured products');
@@ -791,7 +791,7 @@ describe('IronSprueAdminSection operational controls', () => {
     expect(markup).toContain('Save typography controls');
   });
 
-  it('shows opening bench fallback products when no saved homepage row products exist', async () => {
+  it('shows popular model fallback products when no saved homepage row products exist', async () => {
     mocks.getIronSprueAdminWorkspaceCards.mockReturnValue(cards);
     mocks.getIronSprueAdminReferenceData.mockResolvedValue({ categories: [], suppliers: [], brands: [] });
     mocks.getIronSprueAdminStorefrontControls.mockResolvedValue({
