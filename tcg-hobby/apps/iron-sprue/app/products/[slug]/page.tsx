@@ -124,14 +124,16 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
+  const launchProduct = products.find((candidate) => candidate.slug === slug);
   const product = shouldUseIronSprueProductionApi()
     ? await getIronSprueProductionApiProduct(slug)
     : products.find((candidate) => candidate.slug === slug);
-  if (!product) return { title: 'Product unavailable' };
-  const image = productImage(product);
-  const title = product.seoTitle || `${product.name} by ${product.brand}`;
-  const description = product.metaDescription || product.shortDescription;
-  const url = `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/products/${product.slug}`;
+  const resolvedProduct = product ?? launchProduct;
+  if (!resolvedProduct) return { title: 'Product unavailable' };
+  const image = productImage(resolvedProduct);
+  const title = resolvedProduct.seoTitle || `${resolvedProduct.name} by ${resolvedProduct.brand}`;
+  const description = resolvedProduct.metaDescription || resolvedProduct.shortDescription;
+  const url = `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/products/${resolvedProduct.slug}`;
 
   return {
     title,
@@ -143,7 +145,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title,
       description,
       url,
-      images: image ? [{ url: image, alt: product.name }] : undefined,
+      images: image ? [{ url: image, alt: resolvedProduct.name }] : undefined,
     },
     twitter: {
       card: image ? 'summary_large_image' : 'summary',
@@ -156,17 +158,19 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const launchProduct = products.find((candidate) => candidate.slug === slug);
   const [storefrontProducts, apiProduct] = await Promise.all([
     getIronSprueStorefrontProducts(products),
     shouldUseIronSprueProductionApi() ? getIronSprueProductionApiProduct(slug) : Promise.resolve(null),
   ]);
-  const product = apiProduct ?? storefrontProducts.find((candidate) => candidate.slug === slug);
+  const product = apiProduct ?? storefrontProducts.find((candidate) => candidate.slug === slug) ?? launchProduct;
 
   if (!product) {
     return (
-      <section className="section-block">
+      <section className="section-block product-not-found-page">
         <p className="eyebrow">Product unavailable</p>
         <h1>Product not found</h1>
+        <p>The product may have been moved while the catalogue is being refreshed.</p>
         <a className="button secondary" href="/shop">Back to shop</a>
       </section>
     );

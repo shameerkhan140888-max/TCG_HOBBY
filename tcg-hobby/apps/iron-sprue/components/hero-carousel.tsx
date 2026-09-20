@@ -20,7 +20,7 @@ export function heroStyleForSlide(slide: IronSprueHeroSlide) {
   ].join(' ').toLowerCase();
 
   if (source.includes('delorean') || source.includes('future')) return 'time-machine';
-  if (source.includes('bundle') || source.includes('savings') || source.includes('bench') || source.includes('workshop')) return 'workshop-bundle';
+  if (source.includes('bundle') || source.includes('savings') || source.includes('three-piece')) return 'workshop-bundle';
   if (source.includes('aventador') || source.includes('countach') || source.includes('lamborghini')) return 'supercar';
   if (source.includes('skyline') || source.includes('gtr')) return 'street-racer';
   if (source.includes('toyota 2000gt')) return 'classic-coupe';
