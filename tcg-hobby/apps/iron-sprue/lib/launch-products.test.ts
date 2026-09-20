@@ -44,6 +44,17 @@ describe('Iron Sprue PO-derived launch products', () => {
     expect(vehicleSearch.map((product) => product.sku)).toContain('IS-AOS-05603');
   });
 
+  it('keeps storefront search tight for short brand terms and random input', () => {
+    const lamborghiniSearch = filterIronSprueProducts(products, { search: 'lambo' });
+    const lamborghiniTypo = filterIronSprueProducts(products, { search: 'lamobgini' });
+    const randomSearch = filterIronSprueProducts(products, { search: 'xyzrandom' });
+
+    expect(lamborghiniSearch).toHaveLength(5);
+    expect(lamborghiniSearch.every((product) => /lamborghini/i.test(product.name))).toBe(true);
+    expect(lamborghiniTypo.map((product) => product.sku).sort()).toEqual(lamborghiniSearch.map((product) => product.sku).sort());
+    expect(randomSearch).toHaveLength(0);
+  });
+
   it('returns sellable workshop-category add-ons for product detail recommendations', () => {
     const product = products.find((item) => item.sku === 'IS-AOS-05628');
     expect(product).toBeTruthy();

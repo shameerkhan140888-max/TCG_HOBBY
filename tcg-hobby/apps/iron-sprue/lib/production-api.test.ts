@@ -110,7 +110,7 @@ describe('Iron Sprue production API client', () => {
           {
             id: 'heading',
             placementKey: 'featured-products',
-            title: 'Popular models 1:32 scale.',
+            title: '1:32 scale',
             ctaLabel: 'View the 1:32 range',
             ctaHref: '/shop/model-kits?scale=1%3A32',
             imageUrl: null,

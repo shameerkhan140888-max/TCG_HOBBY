@@ -417,12 +417,14 @@ describe('Iron Sprue Admin storefront controls', () => {
 
   it('adds the default homepage product rows until Admin records take over', () => {
     const products = [
-      { slug: 'cubicfun-mc113h-st-patricks-cathedral', sku: 'MC113H', storeCode: 'IRON_SPRUE', published: true },
-      { slug: 'cubicfun-mc092h-st-peters-basilica', sku: 'MC092H', storeCode: 'IRON_SPRUE', published: true },
+      { slug: 'cubicfun-c114h-st-patrick-s-cathedral', sku: 'C114H', storeCode: 'IRON_SPRUE', published: true },
+      { slug: 'cubicfun-mc092h-st-peter-s-basilica', sku: 'MC092H', storeCode: 'IRON_SPRUE', published: true },
       { slug: 'cubicfun-mc133h-burj-khalifa', sku: 'MC133H', storeCode: 'IRON_SPRUE', published: true },
+      { slug: 'cubicfun-c112h-basilica-of-the-national-shrine', sku: 'C112H', storeCode: 'IRON_SPRUE', published: true },
       { slug: 'cubicfun-om3603-magic-box-underwater-world', sku: 'OM3603', storeCode: 'IRON_SPRUE', published: true },
       { slug: 'cubicfun-om3606-magic-box-london-at-night', sku: 'OM3606', storeCode: 'IRON_SPRUE', published: true },
       { slug: 'pintoo-q1035-jigsaw-screen-famous-architectures', sku: 'Q1035', storeCode: 'IRON_SPRUE', published: true },
+      { slug: 'pintoo-q1061-jigsaw-screen-le-papillon-et-la-fleur', sku: 'Q1061', storeCode: 'IRON_SPRUE', published: true },
     ] as any[];
 
     const sections = productSectionsFromPlacements(products, []);
@@ -431,7 +433,7 @@ describe('Iron Sprue Admin storefront controls', () => {
     expect(sections[0]).toMatchObject({
       sectionKey: 'architecture',
       heading: 'Architectural & landmark builds',
-      ctaLabel: 'View architecture builds',
+      ctaLabel: 'View architecture',
       ctaHref: '/shop/3d-puzzles-and-builds?structure=Landmark',
     });
     expect(sections[1]).toMatchObject({
@@ -444,6 +446,7 @@ describe('Iron Sprue Admin storefront controls', () => {
       'cubicfun-om3603-magic-box-underwater-world',
       'cubicfun-om3606-magic-box-london-at-night',
       'pintoo-q1035-jigsaw-screen-famous-architectures',
+      'pintoo-q1061-jigsaw-screen-le-papillon-et-la-fleur',
     ]);
   });
 

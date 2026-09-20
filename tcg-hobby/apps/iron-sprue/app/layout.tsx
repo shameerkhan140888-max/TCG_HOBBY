@@ -3,12 +3,16 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ironSprueBrand } from '../lib/brand';
 import {
+  getIronSprueStorefrontProducts,
   getIronSpruePromoStripItems,
   getIronSprueTypographySettings,
   ironSprueTypographyCustomProperties,
 } from '../lib/admin-storefront-controls';
+import launchProducts from '../data/launch-products.json';
+import type { IronSprueProduct } from '../lib/catalogue';
 import { LaunchListForm } from '../components/launch-list-form';
 import { BasketLink } from '../components/basket-link';
+import { ProductSearchSuggestions } from '../components/product-search-suggestions';
 import { IronSprueAnalyticsProvider, IronSprueCookieConsentBanner, IronSprueCookiePreferenceLink } from '../components/analytics-consent';
 import { PaymentMethodStrip } from '../components/payment-method-strip';
 import { categoryNavigation, featuredNavigation } from '../lib/storefront';
@@ -52,9 +56,10 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const [promoStripItems, typographySettings] = await Promise.all([
+  const [promoStripItems, typographySettings, searchProducts] = await Promise.all([
     getIronSpruePromoStripItems(),
     getIronSprueTypographySettings(),
+    getIronSprueStorefrontProducts(launchProducts as IronSprueProduct[]),
   ]);
   const ga4Id = process.env.NEXT_PUBLIC_IRON_SPRUE_GA4_MEASUREMENT_ID?.trim() || null;
   const metaPixelId = process.env.NEXT_PUBLIC_IRON_SPRUE_META_PIXEL_ID?.trim() || null;
@@ -76,11 +81,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                     <path d="m16 16 4 4" />
                   </svg>
                 </summary>
-                <form className="site-search" action="/shop" role="search">
-                  <label htmlFor="site-search">Search Iron Sprue</label>
-                  <input id="site-search" name="search" type="search" placeholder="Search kits, brands, tools..." />
-                  <button type="submit">Search</button>
-                </form>
+                <ProductSearchSuggestions products={searchProducts} />
               </details>
               <nav className="utility-nav" aria-label="Account and basket">
                 <a className="account-link" href="/account" aria-label="Account">

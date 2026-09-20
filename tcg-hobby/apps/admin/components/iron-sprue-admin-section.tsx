@@ -71,18 +71,20 @@ const IRON_SPRUE_DISPLAY_SECTION_SUGGESTION = {
     'cubicfun-om3603-magic-box-underwater-world',
     'cubicfun-om3606-magic-box-london-at-night',
     'pintoo-q1035-jigsaw-screen-famous-architectures',
+    'pintoo-q1061-jigsaw-screen-le-papillon-et-la-fleur',
   ],
 };
 
 const IRON_SPRUE_ARCHITECTURE_SECTION_SUGGESTION = {
   sectionKey: 'architecture',
   heading: 'Architectural & landmark builds',
-  ctaLabel: 'View architecture builds',
+  ctaLabel: 'View architecture',
   ctaHref: '/shop/3d-puzzles-and-builds?structure=Landmark',
   productSlugs: [
-    'cubicfun-mc113h-st-patricks-cathedral',
-    'cubicfun-mc092h-st-peters-basilica',
+    'cubicfun-c114h-st-patrick-s-cathedral',
+    'cubicfun-mc092h-st-peter-s-basilica',
     'cubicfun-mc133h-burj-khalifa',
+    'cubicfun-c112h-basilica-of-the-national-shrine',
   ],
 };
 
@@ -2027,7 +2029,7 @@ function HomepagePlacementForm({
       </div>
       {!isPopularModelsHeading && previewUrl ? <img src={previewUrl} alt={record?.title ?? 'Homepage placement'} className="h-40 w-full rounded-md border border-surface-line object-cover md:col-span-2" /> : null}
       {!isPopularModelsHeading ? <Field label="Internal placement key"><input name="placementKey" defaultValue={record?.placementKey ?? defaultPlacementKey} className={fieldClass} /></Field> : null}
-      <Field label={isPopularModelsHeading ? 'Popular models heading' : 'Title'}><input name="title" defaultValue={record?.title ?? ''} required className={fieldClass} /></Field>
+      <Field label={isPopularModelsHeading ? 'Popular models heading' : 'Title'}><input name="title" defaultValue={record?.title ?? (isPopularModelsHeading ? '1:32 scale' : '')} required className={fieldClass} /></Field>
       {isStripPlacement ? (
         <Field label="Strip icon">
           <select name="ctaLabel" defaultValue={record?.ctaLabel ?? 'DELIVERY'} className={fieldClass}>
@@ -2035,9 +2037,9 @@ function HomepagePlacementForm({
           </select>
         </Field>
       ) : (
-        <Field label="CTA label"><input name="ctaLabel" defaultValue={record?.ctaLabel ?? ''} className={fieldClass} /></Field>
+        <Field label="CTA label"><input name="ctaLabel" defaultValue={record?.ctaLabel ?? (isPopularModelsHeading ? 'View the 1:32 range' : '')} className={fieldClass} /></Field>
       )}
-      <Field label="CTA href"><input name="ctaHref" defaultValue={record?.ctaHref ?? ''} className={fieldClass} /></Field>
+      <Field label="CTA href"><input name="ctaHref" defaultValue={record?.ctaHref ?? (isPopularModelsHeading ? '/shop/model-kits?scale=1%3A32' : '')} className={fieldClass} /></Field>
       {!isPopularModelsHeading ? (
         <>
           <Field label="Image URL"><input name="imageUrl" defaultValue={record?.imageUrl ?? ''} className={fieldClass} /></Field>

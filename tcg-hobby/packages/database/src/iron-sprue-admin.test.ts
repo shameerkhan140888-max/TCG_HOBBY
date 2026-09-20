@@ -5,6 +5,7 @@ import {
   assertNoClientStoreOverride,
   calculateIronSprueOnHandStock,
   createIronSprueCustomerOrderRequest,
+  createIronSprueAdminMediaAsset,
   createIronSprueAdminProduct,
   createIronSprueManualOrder,
   deriveIronSprueProductReadinessState,
@@ -273,10 +274,12 @@ describe('Iron Sprue dedicated Admin foundation', () => {
       create: expect.objectContaining({
         productId: 'product-1',
         role: 'catalogue-primary',
-        approvalState: 'APPROVED',
-        isPrimary: true,
+        approvalState: 'REVIEW_REQUIRED',
+        isPrimary: false,
         storageKey: 'products/is-aos-05603/image-2/iron-sprue-image-2-ddc9b0dbc551.png',
         url: 'r2://products/is-aos-05603/image-2/iron-sprue-image-2-ddc9b0dbc551.png',
+        approvedById: null,
+        approvedAt: null,
       }),
     }));
     expect(client.ironSprueAdminMediaAsset.upsert).not.toHaveBeenCalledWith(expect.objectContaining({
@@ -285,10 +288,7 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     expect(client.ironSprueAdminMediaAsset.upsert).not.toHaveBeenCalledWith(expect.objectContaining({
       create: expect.objectContaining({ storageKey: 'archive/products/aoshima-05603-pagani-zonda-f/original/better-source.jpg' }),
     }));
-    expect(client.ironSprueAdminMediaAsset.updateMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ productId: 'product-1', role: 'catalogue-primary' }),
-      data: { isPrimary: false },
-    }));
+    expect(client.ironSprueAdminMediaAsset.updateMany).not.toHaveBeenCalled();
   });
 
   it('does not resurface rejected R2 media during reconciliation', async () => {
@@ -333,6 +333,31 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     })]);
     expect(client.ironSprueAdminMediaAsset.upsert).not.toHaveBeenCalled();
     expect(client.ironSprueAdminMediaAsset.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('refuses to create a newly uploaded media asset as already approved', async () => {
+    const client = {
+      ironSprueAdminProduct: {
+        findFirst: vi.fn().mockResolvedValue({ id: 'product-1', sku: 'IS-AOS-05603' }),
+      },
+      ironSprueAdminMediaAsset: {
+        upsert: vi.fn(),
+        create: vi.fn(),
+      },
+      ironSprueAdminAuditLog: { create: vi.fn() },
+    };
+
+    await expect(createIronSprueAdminMediaAsset({
+      productId: 'product-1',
+      role: 'catalogue-primary',
+      storageKey: 'products/is-aos-05603/image-2/generated.png',
+      url: 'r2://products/is-aos-05603/image-2/generated.png',
+      approvalState: 'APPROVED',
+      isPrimary: true,
+    }, actor, client as never)).rejects.toThrow(/must be created for review/i);
+
+    expect(client.ironSprueAdminMediaAsset.upsert).not.toHaveBeenCalled();
+    expect(client.ironSprueAdminMediaAsset.create).not.toHaveBeenCalled();
   });
 
   it('returns one structured readiness answer for media, content, commercial, review and inventory blockers', () => {

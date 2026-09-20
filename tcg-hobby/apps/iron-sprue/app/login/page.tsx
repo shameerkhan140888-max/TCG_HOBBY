@@ -2,7 +2,7 @@ import { IronSprueLoginForm } from '../../components/account-forms';
 
 export default function LoginPage() {
   return (
-    <section className="section-block auth-page">
+    <section className="auth-page auth-page--login">
       <div className="section-head">
         <p className="eyebrow">Account</p>
         <h1>Sign in</h1>

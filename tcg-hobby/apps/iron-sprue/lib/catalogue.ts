@@ -376,9 +376,11 @@ function levenshteinDistance(left: string, right: string) {
 
 function fuzzyTokenMatches(needle: string, haystackTokens: string[]) {
   if (needle.length <= 2) return haystackTokens.includes(needle);
-  const allowedDistance = needle.length <= 4 ? 1 : 2;
+  const allowedDistance = needle.length <= 4 ? 0 : needle.length <= 6 ? 1 : needle.length <= 8 ? 2 : 3;
   return haystackTokens.some((token) => {
-    if (token.includes(needle) || needle.includes(token)) return true;
+    if (token === needle) return true;
+    if (token.length <= 2) return false;
+    if (token.startsWith(needle)) return true;
     if (Math.abs(token.length - needle.length) > allowedDistance) return false;
     return levenshteinDistance(needle, token) <= allowedDistance;
   });

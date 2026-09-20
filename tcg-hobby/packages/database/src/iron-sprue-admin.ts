@@ -2179,6 +2179,10 @@ export async function createIronSprueAdminMediaAsset(
   const storageKey = cleanNullable(input.storageKey);
   const url = cleanNullable(input.url);
   if (!storageKey && !url) throw new Error('Media upload requires either a storage key or URL.');
+  const requestedApprovalState = cleanNullable(input.approvalState) ?? 'REVIEW_REQUIRED';
+  if (requestedApprovalState === 'APPROVED') {
+    throw new Error('New Iron Sprue media must be created for review. Use the admin approval action to publish customer-facing media.');
+  }
 
   const data = {
     storeCode: IRON_SPRUE_STORE_CODE,
@@ -2191,8 +2195,8 @@ export async function createIronSprueAdminMediaAsset(
     byteSize: input.byteSize ?? null,
     width: input.width ?? null,
     height: input.height ?? null,
-    approvalState: cleanNullable(input.approvalState) ?? 'REVIEW_REQUIRED',
-    isPrimary: Boolean(input.isPrimary),
+    approvalState: requestedApprovalState,
+    isPrimary: false,
     sortOrder: input.sortOrder ?? 0,
     uploadedById: actor.id,
   };
@@ -2364,8 +2368,8 @@ export async function reconcileIronSprueR2ProductMedia(
 
       for (const candidate of candidates) {
         matchedObjects += 1;
-        const isPrimary = role === 'catalogue-primary';
-        const approvalState = 'APPROVED';
+        const isPrimary = false;
+        const approvalState = 'REVIEW_REQUIRED';
         const record = await client.ironSprueAdminMediaAsset.upsert({
           where: { storeCode_storageKey: { storeCode: IRON_SPRUE_STORE_CODE, storageKey: candidate.key } },
           create: {
@@ -2381,8 +2385,8 @@ export async function reconcileIronSprueR2ProductMedia(
             isPrimary,
             sortOrder: candidate.sortOrder,
             uploadedById: actor.id,
-            approvedById: actor.id,
-            approvedAt: new Date(),
+            approvedById: null,
+            approvedAt: null,
             lastError: null,
           },
           update: {
@@ -2396,25 +2400,14 @@ export async function reconcileIronSprueR2ProductMedia(
             isPrimary,
             sortOrder: candidate.sortOrder,
             uploadedById: actor.id,
-            approvedById: actor.id,
-            approvedAt: new Date(),
+            approvedById: null,
+            approvedAt: null,
             lastError: null,
           },
         });
         upsertedMedia += 1;
         affectedProductIds.add(product.id);
 
-        if (isPrimary) {
-          await client.ironSprueAdminMediaAsset.updateMany({
-            where: {
-              storeCode: IRON_SPRUE_STORE_CODE,
-              productId: product.id,
-              role: 'catalogue-primary',
-              id: { not: record.id },
-            },
-            data: { isPrimary: false },
-          });
-        }
       }
     }
   }
@@ -2430,7 +2423,7 @@ export async function reconcileIronSprueR2ProductMedia(
         actorId: actor.id,
         action: 'media.r2_reconciliation',
         entityType: 'media',
-        summary: `Reconciled ${upsertedMedia} existing R2 Iron Sprue media object${upsertedMedia === 1 ? '' : 's'} into canonical product media.`,
+        summary: `Attached ${upsertedMedia} existing R2 Iron Sprue media object${upsertedMedia === 1 ? '' : 's'} for canonical product media review.`,
         after: {
           scannedObjects: objects.length,
           matchedObjects,

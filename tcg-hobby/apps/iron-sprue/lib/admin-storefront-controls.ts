@@ -13,6 +13,20 @@ const fallbackPromoStripItems = ['Free UK delivery on orders over \u00a330', 'Fa
 const launchCatalogue = launchProducts as IronSprueProduct[];
 let localIronSprueEnv: Record<string, string> | null = null;
 
+export const ironSpruePopularModelsFallbackSlugs = [
+  'aoshima-06349-lamborghini-aventador-blue',
+  'aoshima-06539-lamborghini-countach-lpi-800-4-white',
+  'aoshima-06357-skyline-gtr-red-pearl',
+  'aoshima-06459-toyota-gr86-spark-red',
+] as const;
+
+export const ironSpruePopularModelsDefaultPlacement = {
+  placementKey: 'featured-products',
+  title: '1:32 scale',
+  ctaLabel: 'View the 1:32 range',
+  ctaHref: '/shop/model-kits?scale=1%3A32',
+} as const;
+
 export const ironSpruePromoStripIconKeys = ['DELIVERY', 'PARCEL', 'ANNOUNCEMENT', 'OFFER', 'INFORMATION', 'SECURITY'] as const;
 export type IronSpruePromoStripIconKey = (typeof ironSpruePromoStripIconKeys)[number];
 
@@ -614,6 +628,15 @@ export function productsFromFeaturedPlacements(products: IronSprueProduct[], pla
   return slugs.map((slug) => bySlug.get(slug)).filter((product): product is IronSprueProduct => Boolean(product)).slice(0, count);
 }
 
+export function popularModelsFallbackProducts(products: IronSprueProduct[], count = 4) {
+  const bySlug = new Map(products.map((product) => [product.slug, product]));
+  const configuredProducts = ironSpruePopularModelsFallbackSlugs
+    .map((slug) => bySlug.get(slug))
+    .filter((product): product is IronSprueProduct => Boolean(product));
+  if (configuredProducts.length) return configuredProducts.slice(0, count);
+  return featuredProducts(products, count, { includeUnpublishedPreview: true });
+}
+
 function productSectionPlacementParts(placementKey: string) {
   const match = placementKey.match(/^product-section:([^:]+):(.+)$/);
   if (!match) return null;
@@ -634,12 +657,13 @@ const defaultHomepageProductSections = [
     sectionKey: 'architecture',
     heading: 'Architectural & landmark builds',
     eyebrow: 'Architecture',
-    ctaLabel: 'View architecture builds',
+    ctaLabel: 'View architecture',
     ctaHref: '/shop/3d-puzzles-and-builds?structure=Landmark',
     productSlugs: [
-      'cubicfun-mc113h-st-patricks-cathedral',
-      'cubicfun-mc092h-st-peters-basilica',
+      'cubicfun-c114h-st-patrick-s-cathedral',
+      'cubicfun-mc092h-st-peter-s-basilica',
       'cubicfun-mc133h-burj-khalifa',
+      'cubicfun-c112h-basilica-of-the-national-shrine',
     ],
   },
   {
@@ -652,12 +676,14 @@ const defaultHomepageProductSections = [
       'cubicfun-om3603-magic-box-underwater-world',
       'cubicfun-om3606-magic-box-london-at-night',
       'pintoo-q1035-jigsaw-screen-famous-architectures',
+      'pintoo-q1061-jigsaw-screen-le-papillon-et-la-fleur',
     ],
   },
 ];
 
 export function productSectionsFromPlacements(products: IronSprueProduct[], placements: IronSprueHomepagePlacement[]): IronSprueHomepageProductSection[] {
   const bySlug = new Map(products.map((product) => [product.slug, product]));
+  const defaultsBySectionKey = new Map(defaultHomepageProductSections.map((section) => [section.sectionKey, section]));
   const placementSectionKeys = new Set(
     placements
       .map((placement) => productSectionPlacementParts(placement.placementKey)?.sectionKey)
@@ -677,15 +703,21 @@ export function productSectionsFromPlacements(products: IronSprueProduct[], plac
     if (!parts) continue;
     const product = bySlug.get(parts.productSlug);
     if (!product) continue;
+    const defaultSection = defaultsBySectionKey.get(parts.sectionKey);
     const existing = sections.get(parts.sectionKey) ?? {
-      heading: placement.title || productSectionEyebrow(parts.sectionKey),
-      eyebrow: productSectionEyebrow(parts.sectionKey),
-      ctaLabel: placement.ctaLabel,
-      ctaHref: placement.ctaHref,
+      heading: placement.title || defaultSection?.heading || productSectionEyebrow(parts.sectionKey),
+      eyebrow: defaultSection?.eyebrow || productSectionEyebrow(parts.sectionKey),
+      ctaLabel: placement.ctaLabel || defaultSection?.ctaLabel || null,
+      ctaHref: placement.ctaHref || defaultSection?.ctaHref || null,
       rows: [],
     };
+    if (existing.heading === productSectionEyebrow(parts.sectionKey) && (placement.title || defaultSection?.heading)) {
+      existing.heading = placement.title || defaultSection?.heading || existing.heading;
+    }
     if (!existing.ctaLabel && placement.ctaLabel) existing.ctaLabel = placement.ctaLabel;
     if (!existing.ctaHref && placement.ctaHref) existing.ctaHref = placement.ctaHref;
+    if (!existing.ctaLabel && defaultSection?.ctaLabel) existing.ctaLabel = defaultSection.ctaLabel;
+    if (!existing.ctaHref && defaultSection?.ctaHref) existing.ctaHref = defaultSection.ctaHref;
     existing.rows.push({ sortOrder: placement.sortOrder, product });
     sections.set(parts.sectionKey, existing);
   }

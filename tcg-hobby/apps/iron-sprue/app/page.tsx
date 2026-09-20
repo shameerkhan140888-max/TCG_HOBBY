@@ -5,7 +5,10 @@ import {
   getIronSprueHomepagePlacements,
   getIronSprueStorefrontProducts,
   featuredProductSlugsFromPlacements,
+  ironSpruePopularModelsDefaultPlacement,
+  ironSpruePopularModelsFallbackSlugs,
   placementByKey,
+  popularModelsFallbackProducts,
   productSectionsFromPlacements,
   productsFromFeaturedPlacements,
 } from '../lib/admin-storefront-controls';
@@ -21,13 +24,6 @@ const products = launchProducts as IronSprueProduct[];
 
 export const dynamic = 'force-dynamic';
 
-const popularModelSlugs = [
-  'aoshima-06349-lamborghini-aventador-blue',
-  'aoshima-06539-lamborghini-countach-lpi-800-4-white',
-  'aoshima-06357-skyline-gtr-red-pearl',
-  'aoshima-06459-toyota-gr86-spark-red',
-];
-
 const categoryIconByLabel: Record<string, string> = {
   'Model Kits': '/assets/category-icons/model-kits.png',
   '3D Puzzles & Builds': '/assets/category-icons/puzzles-builds.png',
@@ -40,7 +36,7 @@ export default async function HomePage() {
   const useProductionApi = shouldUseIronSprueProductionApi();
   const [fallbackHeroSlides, productionHome, fallbackHomepagePlacements, fallbackStorefrontProducts] = await Promise.all([
     useProductionApi ? Promise.resolve([]) : getIronSprueHeroSlides(),
-    useProductionApi ? getIronSprueProductionApiHomeSnapshot({ extraProductSlugs: [...DEFAULT_HOMEPAGE_PRODUCT_SECTION_SLUGS, ...popularModelSlugs] }) : Promise.resolve(null),
+    useProductionApi ? getIronSprueProductionApiHomeSnapshot({ extraProductSlugs: [...DEFAULT_HOMEPAGE_PRODUCT_SECTION_SLUGS, ...ironSpruePopularModelsFallbackSlugs] }) : Promise.resolve(null),
     useProductionApi ? Promise.resolve([]) : getIronSprueHomepagePlacements(),
     useProductionApi ? Promise.resolve([]) : getIronSprueStorefrontProducts(products),
   ]);
@@ -60,14 +56,9 @@ export default async function HomePage() {
   const brandsWeStock = Array.from(brandMap.values()).sort((left, right) => (left.displayOrder ?? 999) - (right.displayOrder ?? 999) || left.name.localeCompare(right.name));
   const productBySlug = new Map(storefrontProducts.map((product) => [product.slug, product]));
   const hasFeaturedProductPlacements = featuredProductSlugsFromPlacements(homepagePlacements).length > 0;
-  const popularModels = popularModelSlugs
-    .map((slug) => productBySlug.get(slug))
-    .filter((product): product is IronSprueProduct => Boolean(product));
   const newArrivals = hasFeaturedProductPlacements
     ? productsFromFeaturedPlacements(storefrontProducts, homepagePlacements, 4)
-    : popularModels.length === popularModelSlugs.length
-      ? popularModels
-      : productsFromFeaturedPlacements(storefrontProducts, homepagePlacements, 4);
+    : popularModelsFallbackProducts(storefrontProducts, 4);
   const productSections = productSectionsFromPlacements(storefrontProducts, homepagePlacements);
   const homepagePromoPanels = promoPanels.slice(0, 3);
   const featuredPlacement = placementByKey(homepagePlacements, 'featured-products');
@@ -125,10 +116,10 @@ export default async function HomePage() {
           <div className="section-head split">
             <div>
               <p className="eyebrow">Popular models</p>
-              <h2>{featuredPlacement?.title || 'Popular models 1:32 scale.'}</h2>
+              <h2>{featuredPlacement?.title || ironSpruePopularModelsDefaultPlacement.title}</h2>
             </div>
-            <a className="text-link" href={featuredPlacement?.ctaHref || '/shop/model-kits?scale=1%3A32'}>
-              {featuredPlacement?.ctaLabel || 'View the 1:32 range'}
+            <a className="text-link" href={featuredPlacement?.ctaHref || ironSpruePopularModelsDefaultPlacement.ctaHref}>
+              {featuredPlacement?.ctaLabel || ironSpruePopularModelsDefaultPlacement.ctaLabel}
             </a>
           </div>
           <div className="product-grid">
