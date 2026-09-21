@@ -520,7 +520,6 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutPaymentIntent, setCheckoutPaymentIntent] = useState<CheckoutPaymentIntent | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>('details');
-  const upsellTrackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const refresh = () => setItems(readBasket());
@@ -591,13 +590,6 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
       .filter((product) => availabilityLimit(product) > 0)
       .slice(0, 4);
   }, [basketProductIds, upsellProducts]);
-  const scrollUpsells = useCallback((direction: -1 | 1) => {
-    const track = upsellTrackRef.current;
-    if (!track) return;
-    const firstCard = track.querySelector<HTMLElement>('.product-card');
-    const distance = firstCard ? firstCard.offsetWidth + 16 : track.clientWidth * 0.72;
-    track.scrollBy({ left: direction * distance, behavior: 'smooth' });
-  }, []);
   const subtotalMinor = resolved?.subtotalMinor ?? basketLineItems.reduce((sum, item) => sum + item.unitPriceMinor * item.quantity, 0);
   const hasUnavailableItems = basketLineItems.some((item) => Boolean(basketLineWarning(item)));
   const deliveryMinor = useMemo(() => {
@@ -845,17 +837,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
               <a className="text-link" href="/shop?category=workshop-essentials">View add-ons</a>
             </div>
             <div className="pdp-addon-carousel">
-              {visibleUpsells.length > 1 ? (
-                <div className="pdp-addon-carousel-controls" aria-label="Recommended add-on carousel controls">
-                  <button type="button" aria-label="Previous add-ons" onClick={() => scrollUpsells(-1)}>
-                    <span aria-hidden="true">&lsaquo;</span>
-                  </button>
-                  <button type="button" aria-label="Next add-ons" onClick={() => scrollUpsells(1)}>
-                    <span aria-hidden="true">&rsaquo;</span>
-                  </button>
-                </div>
-              ) : null}
-              <div className="pdp-addon-carousel-track basket-upsell-grid" ref={upsellTrackRef} aria-label="Recommended add-on products" tabIndex={0}>
+              <div className="pdp-addon-carousel-track basket-upsell-grid" aria-label="Recommended add-on products">
                 {visibleUpsells.map((product) => (
                   <article className="product-card basket-upsell-card" key={product.productId}>
                     <div className="product-card-surface">
@@ -1073,7 +1055,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
           {status ? <p className="form-status error">{status}</p> : null}
         </form>
         <section className="checkout-panel checkout-reassurance checkout-reassurance-icons" aria-label="Delivery returns and payment information">
-          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK standard delivery is £3.99, with free UK standard delivery over £30.00 qualifying spend.</span></p>
+          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK standard delivery is £3.99, with free UK standard delivery over £30.00 qualifying spend. <a href="/delivery">Delivery information</a></span></p>
           <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Please check the Returns page before sending items back so we can confirm the right route for your order.</span></p>
           <div className="reassurance-row"><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Payments</strong> Secure payments.</span><PaymentMethodStrip compact /></div>
         </section>
