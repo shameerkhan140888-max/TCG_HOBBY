@@ -219,7 +219,6 @@ function rewriteAoshima(product) {
     fact.copy,
     sentenceList([
       product.scale ? `Presented in ${product.scale} scale, it is a compact choice for ${fact.displayUse ?? 'a themed vehicle line-up'}.` : `It is a compact choice for ${fact.displayUse ?? 'a themed vehicle line-up'}.`,
-      colour ? `Choose this ${colour} version if that finish best suits your collection.` : '',
       product.manufacturerReference ? `Aoshima reference ${product.manufacturerReference}.` : '',
     ]),
   ];

@@ -11,11 +11,12 @@ import {
   popularModelsFallbackProducts,
   productSectionsFromPlacements,
   productsFromFeaturedPlacements,
+  promoPanelsFromPlacements,
 } from '../lib/admin-storefront-controls';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../lib/catalogue';
 import { DEFAULT_HOMEPAGE_PRODUCT_SECTION_SLUGS, getIronSprueProductionApiHomeSnapshot, shouldUseIronSprueProductionApi } from '../lib/production-api';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
-import { categoryNavigation, heroSlides, hrefForCategoryLabel, promoPanels, withOfficialBrandLogos } from '../lib/storefront';
+import { categoryNavigation, heroSlides, hrefForCategoryLabel, withOfficialBrandLogos } from '../lib/storefront';
 import type { CSSProperties } from 'react';
 import { HeroCarousel } from '../components/hero-carousel';
 import { ProductCard } from '../components/product-card';
@@ -104,7 +105,7 @@ export default async function HomePage() {
     ? productsFromFeaturedPlacements(storefrontProducts, homepagePlacements, 4)
     : popularModelsFallbackProducts(storefrontProducts, 4);
   const productSections = productSectionsFromPlacements(storefrontProducts, homepagePlacements);
-  const homepagePromoPanels = promoPanels.slice(0, 3);
+  const homepagePromoPanels = promoPanelsFromPlacements(homepagePlacements, 3);
   const featuredPlacement = placementByKey(homepagePlacements, 'featured-products');
   const brandPlacement = placementByKey(homepagePlacements, 'brand-carousel');
   const launchCategories = categoryNavigation.map((item) => item.label);

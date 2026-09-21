@@ -9,4 +9,12 @@ describe('Iron Sprue storefront showcase cards', () => {
       '/shop/pintoo',
     ]);
   });
+
+  it('keeps homepage showcase copy balanced in length', () => {
+    const copyLengths = promoPanels.map((panel) => panel.copy.length);
+    const shortest = Math.min(...copyLengths);
+    const longest = Math.max(...copyLengths);
+
+    expect(longest - shortest).toBeLessThanOrEqual(12);
+  });
 });

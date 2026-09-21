@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent, type WheelEvent } from 'react';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 
 type ProductGalleryProps = {
@@ -17,6 +17,8 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
   const openButtonRef = useRef<HTMLButtonElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const panStartRef = useRef<{ pointerId: number; x: number; y: number; offsetX: number; offsetY: number } | null>(null);
+  const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchStartRef = useRef<{ distance: number; zoom: number } | null>(null);
   const activeImage = images[activeIndex] ?? null;
   const activeImageIsImage2 = Boolean(activeImage?.includes('/image-2/'));
 
@@ -33,6 +35,8 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
     setLightboxZoom(mobileViewport ? 1.65 : 1.25);
     setLightboxOffset({ x: 0, y: 0 });
     panStartRef.current = null;
+    activePointersRef.current.clear();
+    pinchStartRef.current = null;
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -61,9 +65,27 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
     if (clampedZoom === 1) setLightboxOffset({ x: 0, y: 0 });
   }
 
+  function pointerDistance() {
+    const pointers = Array.from(activePointersRef.current.values());
+    if (pointers.length < 2 || !pointers[0] || !pointers[1]) return 0;
+    return Math.hypot(pointers[0].x - pointers[1].x, pointers[0].y - pointers[1].y);
+  }
+
+  function handleWheelZoom(event: WheelEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const direction = event.deltaY > 0 ? -1 : 1;
+    updateLightboxZoom(lightboxZoom + direction * 0.18);
+  }
+
   function handlePanStart(event: PointerEvent<HTMLImageElement>) {
-    if (lightboxZoom <= 1) return;
+    activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
     event.currentTarget.setPointerCapture(event.pointerId);
+    if (activePointersRef.current.size >= 2) {
+      pinchStartRef.current = { distance: pointerDistance(), zoom: lightboxZoom };
+      panStartRef.current = null;
+      return;
+    }
+    if (lightboxZoom <= 1) return;
     panStartRef.current = {
       pointerId: event.pointerId,
       x: event.clientX,
@@ -74,6 +96,15 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
   }
 
   function handlePanMove(event: PointerEvent<HTMLImageElement>) {
+    if (activePointersRef.current.has(event.pointerId)) {
+      activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+    const pinchStart = pinchStartRef.current;
+    if (pinchStart && activePointersRef.current.size >= 2) {
+      const distance = pointerDistance();
+      if (pinchStart.distance > 0 && distance > 0) updateLightboxZoom(pinchStart.zoom * (distance / pinchStart.distance));
+      return;
+    }
     const start = panStartRef.current;
     if (!start || start.pointerId !== event.pointerId || lightboxZoom <= 1) return;
     const movementLimit = 46 * lightboxZoom;
@@ -84,6 +115,8 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
   }
 
   function handlePanEnd(event: PointerEvent<HTMLImageElement>) {
+    activePointersRef.current.delete(event.pointerId);
+    if (activePointersRef.current.size < 2) pinchStartRef.current = null;
     if (panStartRef.current?.pointerId === event.pointerId) panStartRef.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   }
@@ -154,7 +187,7 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
             <button ref={closeButtonRef} className="product-image-lightbox__close" type="button" onClick={() => setEnlarged(false)}>
               Close image
             </button>
-            <div className="product-image-lightbox__viewport" aria-label="Drag enlarged image to pan">
+            <div className="product-image-lightbox__viewport" aria-label="Scroll or pinch to zoom. Drag enlarged image to pan." onWheel={handleWheelZoom}>
               <img
                 className={activeImageIsImage2 ? 'product-gallery-lightbox-image product-gallery-lightbox-image--image2' : 'product-gallery-lightbox-image'}
                 src={activeImage}

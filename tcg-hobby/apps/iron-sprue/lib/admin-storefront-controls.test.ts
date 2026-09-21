@@ -527,6 +527,11 @@ describe('Iron Sprue Admin storefront controls', () => {
       '/shop?brand=Pintoo',
     ]);
     expect(panels.every((panel) => panel.image)).toBe(true);
+    expect(panels.map((panel) => panel.copy)).toEqual([
+      'Group display builds into better-value sets for bigger bench projects.',
+      'Landmark 3D builds with shelf-ready scale, detail and presence.',
+      'Decorative puzzle objects made to finish, display and keep on show.',
+    ]);
   });
 
   it('falls back to static promo copy when Admin promo records are inactive', async () => {

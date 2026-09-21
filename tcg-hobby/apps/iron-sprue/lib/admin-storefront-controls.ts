@@ -774,7 +774,7 @@ export function promoPanelsFromPlacements(placements: IronSprueHomepagePlacement
       return {
         eyebrow: fallback?.eyebrow || placement.placementKey.replace(/[-_:]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()),
         title: placement.title || fallback?.title || 'Shop Iron Sprue',
-        copy: '',
+        copy: fallback?.copy || '',
         href,
         cta: placement.ctaLabel || fallback?.cta || 'Shop now',
         image,

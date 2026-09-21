@@ -53,14 +53,24 @@ const hiddenSpecificationKeys = new Set([
   'supplierSku',
 ]);
 
+function normaliseSpecificationValue(value: unknown) {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\b(vases|models|kits|builds|objects|vehicles|pieces)\b/g, (match) => match.slice(0, -1))
+    .trim();
+}
+
 function customerFacingSpecifications(product: IronSprueProduct) {
   const raw = product.specifications && typeof product.specifications === 'object' && !Array.isArray(product.specifications)
     ? product.specifications
     : {};
   const entries = Object.entries(raw);
-  const buildType = String(raw.buildType ?? '').trim().toLowerCase();
-  const category = String(raw.category ?? product.category ?? '').trim().toLowerCase();
-  const productType = String(raw.productType ?? '').trim().toLowerCase();
+  const buildType = normaliseSpecificationValue(raw.buildType ?? '');
+  const category = normaliseSpecificationValue(raw.category ?? product.category ?? '');
+  const productType = normaliseSpecificationValue(raw.productType ?? '');
   const seenKeys = new Set<string>();
   const seenValues = new Set<string>();
 
@@ -68,7 +78,7 @@ function customerFacingSpecifications(product: IronSprueProduct) {
     .filter(([key, value]) => !hiddenSpecificationKeys.has(key) && value != null && String(value).trim().length > 0)
     .filter(([key]) => !(key === 'productType' && productType.length > 0 && productType === buildType))
     .filter(([key, value]) => {
-      const normalisedValue = String(value).trim().toLowerCase();
+      const normalisedValue = normaliseSpecificationValue(value);
       const canonicalKey = key === 'size' ? 'dimensions' : key === 'pieces' ? 'pieceCount' : key;
       if ((key === 'structure' || key === 'productType') && normalisedValue === category) return false;
       if (canonicalKey === 'productType' && normalisedValue === buildType) return false;
@@ -193,10 +203,35 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="product-story-panel">
             <ProductGallery images={galleryImages} productName={product.name} fallbackLabel={product.brand} />
 
-            <section className="product-description-panel" aria-labelledby="product-description-heading">
-              <h2 id="product-description-heading">Description</h2>
-              {description.split(/\n{2,}/).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-            </section>
+            <div className="product-pdp-info-grid">
+              <section className="product-description-panel" aria-labelledby="product-description-heading">
+                <h2 id="product-description-heading">Description</h2>
+                {description.split(/\n{2,}/).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+              </section>
+
+              <section className="product-specification-zone" aria-labelledby="product-build-information-heading">
+                <div>
+                  <h2 id="product-build-information-heading">Build information</h2>
+                  {specifications.length ? (
+                    <dl className="product-specification-list">
+                      {specifications.map((specification) => (
+                        <React.Fragment key={specification.key}>
+                          <dt>{specification.label}</dt>
+                          <dd>{specification.value}</dd>
+                        </React.Fragment>
+                      ))}
+                    </dl>
+                  ) : null}
+                  {customerFeatures.length ? (
+                    <ul className="product-key-details">
+                      {customerFeatures.map((feature) => (
+                        <li key={feature}>{feature}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </section>
+            </div>
           </div>
 
           <div className="product-buy-panel">
@@ -245,28 +280,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         </div>
 
-        <section className="product-specification-zone" aria-labelledby="product-build-information-heading">
-          <div>
-            <h2 id="product-build-information-heading">Build information</h2>
-            {specifications.length ? (
-              <dl className="product-specification-list">
-                {specifications.map((specification) => (
-                  <React.Fragment key={specification.key}>
-                    <dt>{specification.label}</dt>
-                    <dd>{specification.value}</dd>
-                  </React.Fragment>
-                ))}
-              </dl>
-            ) : null}
-            {customerFeatures.length ? (
-              <ul className="product-key-details">
-                {customerFeatures.map((feature) => (
-                  <li key={feature}>{feature}</li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        </section>
       </article>
 
       {addonProducts.length ? (

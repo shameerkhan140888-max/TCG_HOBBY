@@ -19,7 +19,8 @@ vi.mock('../../../lib/admin-storefront-controls', () => ({
       if (product.sku === 'IS-PIN-S1009') {
         return {
           ...product,
-          specifications: { ...(product.specifications ?? {}), pieces: '160', structure: 'Vase' },
+          category: 'Vases',
+          specifications: { ...(product.specifications ?? {}), category: 'Vases', pieces: '160', structure: 'Vase' },
         };
       }
       return product;
@@ -68,8 +69,7 @@ describe('Iron Sprue product detail page', () => {
 
     expect(markup).toContain('Piece count');
     expect(markup).toContain('160');
-    expect(markup).toContain('Structure');
-    expect(markup).toContain('Vase');
+    expect(markup).not.toContain('<dt>Structure</dt><dd>Vase</dd>');
   });
 
   it('removes duplicated build information values for display-build categories', async () => {

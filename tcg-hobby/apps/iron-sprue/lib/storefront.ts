@@ -81,7 +81,7 @@ export const promoPanels = [
   {
     eyebrow: 'Bundle savings',
     title: 'Save on sets',
-    copy: 'Group display builds and puzzle objects into better-value project bundles.',
+    copy: 'Group display builds into better-value sets for bigger bench projects.',
     href: '/bundles',
     cta: 'View bundles',
     image: '/assets/promo-bundle-savings.webp',
@@ -90,7 +90,7 @@ export const promoPanels = [
   {
     eyebrow: 'CubicFun display builds',
     title: 'From £16.99',
-    copy: 'Landmarks and shelf-ready 3D builds with real presence.',
+    copy: 'Landmark 3D builds with shelf-ready scale, detail and presence.',
     href: '/shop/cubicfun',
     cta: 'Shop now',
     image: '/assets/promo-cubicfun-display-builds-v2.webp',
@@ -99,7 +99,7 @@ export const promoPanels = [
   {
     eyebrow: 'Pintoo puzzle objects',
     title: 'Built to display',
-    copy: 'Puzzle builds with decorative finished forms.',
+    copy: 'Decorative puzzle objects made to finish, display and keep on show.',
     href: '/shop/pintoo',
     cta: 'Explore',
     image: '/assets/promo-pintoo-display-object-v2.webp',
@@ -323,6 +323,7 @@ function stripInternalProductCopy(value: string) {
     /\b(?:launch catalogue|launch range|source data|supplier data|review flag|review metadata|public copy|admin-only|catalogue-primary|image\s*2)\b/i,
     /\b(?:factual source material|source material|source information|available source|verified source|omitted uncertain specifications|source confidence|available product facts|keeps the current)\b/i,
     /\b(?:final box-specific details|manufacturer specifications required|requires human review)\b/i,
+    /\b(?:choose this\s+[^.?!]+\s+version if that finish best suits your collection|this listing is the\s+[^.?!]+\s+variant)\b/i,
   ];
 
   return value

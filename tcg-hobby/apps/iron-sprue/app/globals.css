@@ -6633,9 +6633,18 @@ body::before {
     inset 0 1px 0 rgba(255, 250, 241, 0.32);
 }
 
+.product-pdp-info-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 0.42fr);
+  gap: clamp(22px, 3vw, 42px);
+  border-top: 1px solid rgba(190, 122, 37, 0.28);
+  border-bottom: 1px solid rgba(190, 122, 37, 0.22);
+  padding: clamp(22px, 3vw, 34px) 0;
+}
+
 .product-description-panel {
-  max-width: 760px;
-  padding: clamp(18px, 2.4vw, 30px) 0 0;
+  max-width: none;
+  padding: 0;
 }
 
 .product-description-panel h2,
@@ -6659,11 +6668,13 @@ body::before {
 
 .product-specification-zone {
   display: grid;
-  grid-template-columns: minmax(220px, 0.55fr) minmax(320px, 1fr);
+  grid-template-columns: 1fr;
   gap: clamp(18px, 2.6vw, 34px);
-  margin-top: clamp(22px, 3vw, 36px);
-  border-top: 1px solid rgba(190, 122, 37, 0.22);
-  padding-top: clamp(20px, 2.7vw, 32px);
+  margin-top: 0;
+  border-top: 0;
+  border-left: 1px solid rgba(190, 122, 37, 0.24);
+  padding-top: 0;
+  padding-left: clamp(20px, 2.8vw, 34px);
 }
 
 .product-key-details {
@@ -6817,8 +6828,11 @@ body::before {
 }
 
 .product-unified-panel .product-description-panel {
-  grid-area: description;
   padding-top: 0;
+}
+
+.product-unified-panel .product-pdp-info-grid {
+  grid-area: description;
 }
 
 .product-unified-panel .product-description-panel h2 {
@@ -6826,7 +6840,6 @@ body::before {
 }
 
 .product-unified-panel .product-specification-zone {
-  grid-template-columns: minmax(260px, 0.62fr);
   align-items: start;
 }
 
@@ -6920,6 +6933,17 @@ body::before {
       "media"
       "thumbnails"
       "description";
+  }
+
+  .product-pdp-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-specification-zone {
+    border-top: 1px solid rgba(190, 122, 37, 0.22);
+    border-left: 0;
+    padding-top: clamp(18px, 5vw, 28px);
+    padding-left: 0;
   }
 
   .product-unified-panel .product-gallery-thumbnails {
@@ -7099,8 +7123,16 @@ body::before {
   .product-unified-panel .product-description-panel {
     grid-area: auto;
     order: 4;
-    border-top: 1px solid rgba(190, 122, 37, 0.22);
-    padding: 16px 0 0;
+  }
+
+  .product-unified-panel .product-pdp-info-grid {
+    grid-area: auto;
+    order: 4;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    border-top: 1px solid rgba(190, 122, 37, 0.28);
+    border-bottom: 1px solid rgba(190, 122, 37, 0.22);
+    padding: 18px 0;
   }
 
   .product-description-panel h2,
@@ -7120,8 +7152,11 @@ body::before {
   .product-unified-panel .product-specification-zone {
     grid-template-columns: 1fr;
     gap: 16px;
-    margin-top: 18px;
+    margin-top: 0;
+    border-top: 1px solid rgba(190, 122, 37, 0.22);
+    border-left: 0;
     padding-top: 18px;
+    padding-left: 0;
   }
 
   .product-key-details {

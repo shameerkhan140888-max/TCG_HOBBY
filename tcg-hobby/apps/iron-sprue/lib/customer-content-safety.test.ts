@@ -123,4 +123,23 @@ describe('Iron Sprue public catalogue copy', () => {
     expect(description).toContain('Scale: 1:24.');
     expect(description.toLowerCase()).not.toContain('canonical scale');
   });
+
+  it('strips repetitive variant-tail copy before rendering customer copy', () => {
+    const description = customerProductDescription({
+      name: 'Toyota GR86 Spark Red',
+      brand: 'Aoshima',
+      category: 'Model Kits',
+      sku: 'IS-AOS-06459',
+      slug: 'aoshima-06459-toyota-gr86-spark-red',
+      description: [
+        'Toyota GR86 Spark Red is a 1:32 Aoshima model kit focused on the Toyota GR86 in Spark Red.',
+        'This listing is the Spark Red variant.',
+        'Choose this Spark Red version if that finish best suits your collection.',
+      ].join(' '),
+    } as IronSprueProduct);
+
+    expect(description).toContain('Toyota GR86 Spark Red');
+    expect(description).not.toContain('This listing is the Spark Red variant');
+    expect(description).not.toContain('Choose this Spark Red version');
+  });
 });
