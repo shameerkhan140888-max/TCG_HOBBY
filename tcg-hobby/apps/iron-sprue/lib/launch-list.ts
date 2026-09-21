@@ -54,7 +54,7 @@ export async function sha256Hex(value: string) {
 }
 
 export function safeSiteUrl(value: string | undefined) {
-  const candidate = value?.trim() || 'https://www.ironsprue.co.uk';
+  const candidate = value?.trim() || 'https://ironsprue.co.uk';
   const url = new URL(candidate);
   if (url.protocol !== 'https:' || url.hostname === 'localhost' || url.username || url.password) {
     throw new Error('IRON_SPRUE_SITE_URL must be a public HTTPS URL.');

@@ -118,7 +118,7 @@ export function defaultIronSprueEmailLogoUrl(_siteUrl: string) {
 
 function assetBaseUrl(config: IronSprueEmailTemplateConfig) {
   const resolved = normaliseSiteUrl(config.assetBaseUrl || config.siteUrl);
-  return isLocalUrl(resolved) ? 'https://www.ironsprue.co.uk' : resolved;
+  return isLocalUrl(resolved) ? 'https://ironsprue.co.uk' : resolved;
 }
 
 function publicEmailAssetBaseUrl(config: IronSprueEmailTemplateConfig) {

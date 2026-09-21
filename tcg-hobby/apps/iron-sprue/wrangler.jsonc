@@ -2,6 +2,7 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "iron-sprue-storefront-staging",
   "main": ".open-next/worker.js",
+  "workers_dev": true,
   "compatibility_date": "2026-08-06",
   "compatibility_flags": [
     "nodejs_compat",
@@ -29,21 +30,31 @@
       "service": "iron-sprue-storefront-staging"
     }
   ],
+  "routes": [
+    {
+      "pattern": "ironsprue.co.uk/*",
+      "zone_name": "ironsprue.co.uk"
+    },
+    {
+      "pattern": "www.ironsprue.co.uk",
+      "custom_domain": true
+    }
+  ],
   "vars": {
     "NEXTJS_ENV": "production",
     "CHG_CLOUDFLARE_UNOPTIMIZED_IMAGES": "1",
     "IRON_SPRUE_ENVIRONMENT": "staging",
     "IRON_SPRUE_STORE_ID": "IRON_SPRUE",
     "IRON_SPRUE_PRODUCTION_API_BASE_URL": "https://considerate-unity-production-b734.up.railway.app",
-    "IRON_SPRUE_SITE_URL": "https://staging.ironsprue.co.uk",
-    "NEXT_PUBLIC_IRON_SPRUE_SITE_URL": "https://staging.ironsprue.co.uk",
-    "IRON_SPRUE_EMAIL_ASSET_BASE_URL": "https://staging.ironsprue.co.uk",
+    "IRON_SPRUE_SITE_URL": "https://ironsprue.co.uk",
+    "NEXT_PUBLIC_IRON_SPRUE_SITE_URL": "https://ironsprue.co.uk",
+    "IRON_SPRUE_EMAIL_ASSET_BASE_URL": "https://ironsprue.co.uk",
     "IRON_SPRUE_EMAIL_LOGO_URL": "https://media.ironsprue.co.uk/brand/iron-sprue-email-avatar.png",
     "IRON_SPRUE_R2_BUCKET_NAME": "iron-sprue-product-media",
     "IRON_SPRUE_R2_ENDPOINT": "https://7fcfe114b04378b1c574a51123a55f2c.r2.cloudflarestorage.com",
     "IRON_SPRUE_R2_REGION": "auto",
     "IRON_SPRUE_R2_PUBLIC_BASE_URL": "https://media.ironsprue.co.uk",
-    "IRON_SPRUE_CHECKOUT_SUCCESS_URL": "https://staging.ironsprue.co.uk/checkout/success?session_id={CHECKOUT_SESSION_ID}",
-    "IRON_SPRUE_CHECKOUT_CANCEL_URL": "https://staging.ironsprue.co.uk/checkout/cancel"
+    "IRON_SPRUE_CHECKOUT_SUCCESS_URL": "https://ironsprue.co.uk/checkout/success?session_id={CHECKOUT_SESSION_ID}",
+    "IRON_SPRUE_CHECKOUT_CANCEL_URL": "https://ironsprue.co.uk/checkout/cancel"
   }
 }

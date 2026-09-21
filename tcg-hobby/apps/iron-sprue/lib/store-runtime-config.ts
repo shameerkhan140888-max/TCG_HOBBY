@@ -115,7 +115,7 @@ export function getIronSprueMediaConfig(): IronSprueMediaConfig {
     maxFileSizeBytes: Number(process.env.IRON_SPRUE_R2_MAX_FILE_SIZE_BYTES ?? 12 * 1024 * 1024),
     cacheControl: process.env.IRON_SPRUE_R2_CACHE_CONTROL?.trim() || 'public, max-age=31536000, immutable',
     corsPolicy: {
-      allowedOrigins: [process.env.IRON_SPRUE_SITE_URL?.trim() || 'https://www.ironsprue.co.uk'],
+      allowedOrigins: [process.env.IRON_SPRUE_SITE_URL?.trim() || 'https://ironsprue.co.uk'],
       allowedMethods: ['GET', 'HEAD'],
       allowedHeaders: ['Content-Type', 'Cache-Control'],
       exposeHeaders: ['ETag', 'Cache-Control'],

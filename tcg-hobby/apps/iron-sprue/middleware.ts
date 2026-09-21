@@ -1,7 +1,18 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { ACCESS_COOKIE_NAME, ACCESS_LOGIN_PATH, isAccessExemptPath, noindexHeaders, storefrontAccessMode, verifyAccessCookieValue } from './lib/staging-access';
 
+const CANONICAL_HOST = 'ironsprue.co.uk';
+const REDIRECT_HOSTS = new Set(['www.ironsprue.co.uk']);
+
 export async function middleware(request: NextRequest) {
+  const hostname = request.nextUrl.hostname.toLowerCase();
+  if (REDIRECT_HOSTS.has(hostname) || (hostname === CANONICAL_HOST && request.nextUrl.protocol !== 'https:')) {
+    const url = request.nextUrl.clone();
+    url.hostname = CANONICAL_HOST;
+    url.protocol = 'https';
+    return NextResponse.redirect(url, 301);
+  }
+
   const mode = storefrontAccessMode();
   const responseHeaders = mode === 'protected' ? noindexHeaders() : undefined;
 
