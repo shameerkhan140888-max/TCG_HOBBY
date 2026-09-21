@@ -1841,6 +1841,106 @@ p {
   font-weight: 800;
 }
 
+.address-lookup-field,
+.address-confirmation-panel {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 10px;
+  min-width: 0;
+}
+
+.address-lookup-field > label {
+  display: grid;
+  gap: 6px;
+}
+
+.address-lookup-status {
+  margin: 0;
+  color: rgba(255, 250, 241, 0.72);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.address-suggestion-list {
+  display: grid;
+  gap: 0;
+  max-height: 280px;
+  margin: 0;
+  overflow: auto;
+  border: 1px solid rgba(190, 122, 37, 0.28);
+  border-radius: 7px;
+  background: rgba(3, 4, 3, 0.96);
+  padding: 0;
+  list-style: none;
+}
+
+.checkout-panel .address-suggestion-list button {
+  display: grid;
+  width: 100%;
+  gap: 3px;
+  min-height: 0;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 250, 241, 0.1);
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 250, 241, 0.84);
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.checkout-panel .address-suggestion-list button:hover,
+.checkout-panel .address-suggestion-list button:focus-visible {
+  background: rgba(199, 150, 67, 0.14);
+  outline: 2px solid rgba(199, 150, 67, 0.48);
+  outline-offset: -2px;
+}
+
+.address-suggestion-list strong {
+  color: var(--paper-soft);
+  font-size: 14px;
+}
+
+.address-suggestion-list span {
+  color: rgba(255, 250, 241, 0.64);
+  font-size: 12px;
+}
+
+.address-manual-toggle {
+  justify-self: start;
+}
+
+.address-confirmation-panel {
+  border: 1px solid rgba(190, 122, 37, 0.26);
+  border-radius: 8px;
+  background: rgba(255, 250, 241, 0.045);
+  padding: 14px;
+}
+
+.address-confirmation-panel p,
+.address-confirmation-panel address {
+  margin: 0;
+}
+
+.address-confirmation-panel address {
+  color: rgba(255, 250, 241, 0.82);
+  font-style: normal;
+  line-height: 1.5;
+}
+
+.checkout-panel .address-suggestion-list button:not(.secondary):not(.text-button):not(.quantity-stepper) {
+  min-height: 0;
+  place-items: start;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 250, 241, 0.1);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: rgba(255, 250, 241, 0.84);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .checkout-grid input,
 .checkout-grid select,
 .basket-line input {
@@ -2105,7 +2205,11 @@ p {
 .reassurance-icon svg {
   width: 17px;
   height: 17px;
-  fill: currentColor;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .checkout-reassurance p,
@@ -6637,6 +6741,8 @@ body::before {
 
 .product-unified-panel .product-buy-panel {
   grid-area: buy;
+  display: grid;
+  align-content: start;
   border-left: 1px solid rgba(190, 122, 37, 0.22);
   padding-left: clamp(22px, 3vw, 42px);
 }
@@ -6733,9 +6839,15 @@ body::before {
 .product-unified-panel .product-reassurance {
   grid-template-columns: 1fr;
   gap: 12px;
-  margin-top: clamp(18px, 2.6vw, 26px);
+  margin-top: clamp(54px, 7vw, 104px);
   border-top: 1px solid rgba(190, 122, 37, 0.22);
   padding-top: clamp(16px, 2.2vw, 22px);
+}
+
+@media (max-width: 900px) {
+  .product-unified-panel .product-reassurance {
+    margin-top: clamp(18px, 5vw, 28px);
+  }
 }
 
 .product-unified-panel .basket-action-stack button:not(:disabled),

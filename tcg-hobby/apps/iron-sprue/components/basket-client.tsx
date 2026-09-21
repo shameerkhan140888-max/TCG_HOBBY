@@ -5,9 +5,11 @@ import type { CheckoutAddress, PublicBasket, PublicBasketInputItem, ShippingMeth
 import { trackIronSprueEcommerceEvent } from '../lib/analytics';
 import type { IronSprueProduct } from '../lib/catalogue';
 import { getIronSprueDeliveryChargeMinor, ironSprueStandardDeliverySummary } from '../lib/delivery-rules';
+import { checkoutAddressDeliveryKey, type IronSprueAddressSuggestion, type IronSprueAddressValidationResult } from '../lib/google-address';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 import { ProductCard } from './product-card';
 import { PaymentMethodStrip } from './payment-method-strip';
+import { DeliveryReassuranceIcon, ReturnsReassuranceIcon, SecurePaymentReassuranceIcon } from './reassurance-icons';
 
 export const IRON_SPRUE_BASKET_STORAGE_KEY = 'iron-sprue-basket-v1';
 export const IRON_SPRUE_PENDING_PAYMENT_BASKET_STORAGE_KEY = 'iron-sprue-pending-payment-basket-v1';
@@ -46,6 +48,15 @@ type CheckoutPaymentIntent = {
 };
 
 type CheckoutStep = 'details' | 'review' | 'payment';
+
+type AddressMode = 'search' | 'manual';
+
+type CheckoutAddressValidationState = {
+  status: 'empty' | 'valid' | 'confirm' | 'invalid' | 'manual-unavailable';
+  key: string | null;
+  message: string;
+  address: CheckoutAddress | null;
+};
 
 type StripePaymentElement = {
   mount(selector: string): void;
@@ -519,11 +530,38 @@ const defaultAddress: CheckoutAddress = {
   country: 'GB',
 };
 
+function createAddressSessionToken() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return `iron-sprue-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function mergeContactIntoAddress(nextAddress: CheckoutAddress, currentAddress: CheckoutAddress): CheckoutAddress {
+  return {
+    ...nextAddress,
+    fullName: currentAddress.fullName,
+    email: currentAddress.email,
+    country: 'GB',
+  };
+}
+
 export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 'basket' | 'checkout'; upsellProducts?: BasketUpsellProduct[] }) {
   const [mounted, setMounted] = useState(false);
   const [items, setItems] = useState<StoredBasketItem[]>([]);
   const [resolved, setResolved] = useState<PublicBasket | null>(null);
   const [address, setAddress] = useState<CheckoutAddress>(defaultAddress);
+  const [addressMode, setAddressMode] = useState<AddressMode>('search');
+  const [addressSearch, setAddressSearch] = useState('');
+  const [addressSuggestions, setAddressSuggestions] = useState<IronSprueAddressSuggestion[]>([]);
+  const [addressSearchMessage, setAddressSearchMessage] = useState('');
+  const [addressSessionToken, setAddressSessionToken] = useState(createAddressSessionToken);
+  const [isAddressSearching, setIsAddressSearching] = useState(false);
+  const [isAddressValidating, setIsAddressValidating] = useState(false);
+  const [addressValidation, setAddressValidation] = useState<CheckoutAddressValidationState>({
+    status: 'empty',
+    key: null,
+    message: '',
+    address: null,
+  });
   const [shippingMethodCode, setShippingMethodCode] = useState<ShippingMethodCode>('UK_STANDARD');
   const [discountCode, setDiscountCode] = useState('');
   const [status, setStatus] = useState('');
@@ -615,6 +653,48 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     && address.postalCode.trim()
     && address.country.trim(),
   );
+  const currentAddressKey = checkoutAddressDeliveryKey(address);
+  const addressReadyForCheckout = requiredDetailsComplete && (
+    (addressValidation.status === 'valid' && addressValidation.key === currentAddressKey)
+    || (addressValidation.status === 'manual-unavailable' && addressValidation.key === currentAddressKey)
+  );
+
+  useEffect(() => {
+    if (mode !== 'checkout' || checkoutStep !== 'details' || addressMode !== 'search') return;
+    const query = addressSearch.trim();
+    if (query.length < 3) {
+      setAddressSuggestions([]);
+      setAddressSearchMessage('');
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      setIsAddressSearching(true);
+      fetch('/api/address/autocomplete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: query, sessionToken: addressSessionToken }),
+      })
+        .then((response) => response.json())
+        .then((payload: { available?: boolean; suggestions?: IronSprueAddressSuggestion[]; message?: string }) => {
+          if (cancelled) return;
+          setAddressSuggestions(payload.suggestions ?? []);
+          setAddressSearchMessage(payload.message ?? '');
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setAddressSuggestions([]);
+          setAddressSearchMessage('Address search is temporarily unavailable. Enter your address manually.');
+        })
+        .finally(() => {
+          if (!cancelled) setIsAddressSearching(false);
+        });
+    }, 260);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [addressMode, addressSearch, addressSessionToken, checkoutStep, mode]);
 
   useEffect(() => {
     setCheckoutPaymentIntent(null);
@@ -655,7 +735,131 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     }
   }, [checkoutStep, hasUnavailableItems, mode]);
 
+  function updateAddressField<Key extends keyof CheckoutAddress>(key: Key, value: CheckoutAddress[Key]) {
+    setAddress((current) => ({ ...current, [key]: value }));
+    if (key !== 'fullName' && key !== 'email') {
+      setAddressValidation({ status: 'empty', key: null, message: '', address: null });
+      setCheckoutPaymentIntent(null);
+    }
+  }
+
+  async function validateCurrentCheckoutAddress(selectedAddressText?: string | null) {
+    const validatingSelectedAddress = Boolean(selectedAddressText?.trim());
+    if (!validatingSelectedAddress && !requiredDetailsComplete) {
+      setStatus('Complete the required delivery and contact details before reviewing your order.');
+      return false;
+    }
+    setIsAddressValidating(true);
+    setStatus(selectedAddressText ? 'Checking selected address...' : 'Checking delivery address...');
+    try {
+      const response = await fetch('/api/address/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, sessionToken: addressSessionToken, selectedAddressText }),
+      });
+      const payload = await response.json() as IronSprueAddressValidationResult;
+      if (payload.status === 'unavailable' && addressMode === 'manual') {
+        const key = checkoutAddressDeliveryKey(address);
+        setAddressValidation({
+          status: 'manual-unavailable',
+          key,
+          message: payload.message,
+          address,
+        });
+        setStatus(payload.message);
+        return true;
+      }
+      if (!payload.address || payload.status === 'invalid') {
+        setAddressValidation({
+          status: 'invalid',
+          key: null,
+          message: payload.message,
+          address: payload.address,
+        });
+        setStatus(payload.message);
+        return false;
+      }
+      const nextAddress = mergeContactIntoAddress(payload.address, address);
+      const key = checkoutAddressDeliveryKey(nextAddress);
+      setAddress(nextAddress);
+      setAddressSearch(payload.formattedAddress ?? selectedAddressText ?? [
+        nextAddress.line1,
+        nextAddress.line2,
+        nextAddress.city,
+        nextAddress.postalCode,
+      ].filter(Boolean).join(', '));
+      setAddressSuggestions([]);
+      setAddressMode('manual');
+      if (payload.status === 'confirm') {
+        setAddressValidation({
+          status: 'confirm',
+          key,
+          message: payload.message,
+          address: nextAddress,
+        });
+        setStatus(payload.message);
+        return false;
+      }
+      setAddressValidation({
+        status: 'valid',
+        key,
+        message: payload.message,
+        address: nextAddress,
+      });
+      setStatus('');
+      setAddressSessionToken(createAddressSessionToken());
+      return true;
+    } catch {
+      if (addressMode === 'manual') {
+        const key = checkoutAddressDeliveryKey(address);
+        setAddressValidation({
+          status: 'manual-unavailable',
+          key,
+          message: 'Address validation is temporarily unavailable. Check the address carefully before continuing.',
+          address,
+        });
+        setStatus('Address validation is temporarily unavailable. Check the address carefully before continuing.');
+        return true;
+      }
+      setStatus('Address validation is temporarily unavailable. Enter the address manually.');
+      return false;
+    } finally {
+      setIsAddressValidating(false);
+    }
+  }
+
+  async function selectAddressSuggestion(suggestion: IronSprueAddressSuggestion) {
+    setAddressSearch(suggestion.label);
+    setAddressSuggestions([]);
+    setAddressMode('search');
+    await validateCurrentCheckoutAddress(suggestion.label);
+  }
+
+  function confirmStandardisedAddress() {
+    if (!addressValidation.address) return;
+    const nextAddress = mergeContactIntoAddress(addressValidation.address, address);
+    setAddress(nextAddress);
+    setAddressValidation({
+      status: 'valid',
+      key: checkoutAddressDeliveryKey(nextAddress),
+      message: 'Address confirmed.',
+      address: nextAddress,
+    });
+    setStatus('');
+    setAddressSessionToken(createAddressSessionToken());
+    if (nextAddress.fullName.trim() && nextAddress.email.trim()) {
+      setCheckoutStep('review');
+    } else {
+      setStatus('Address confirmed. Complete your name and email before reviewing the order.');
+    }
+  }
+
   async function prepareSecurePayment() {
+    if (!addressReadyForCheckout) {
+      setCheckoutStep('details');
+      setStatus('Confirm your delivery address before payment.');
+      return;
+    }
     setIsCheckingOut(true);
     setStatus('Preparing secure payment...');
     try {
@@ -967,7 +1171,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             <span>Total to pay</span><strong>{formatPrice(checkoutPaymentIntent.totalMinor)}</strong>
           </div>
           <div className="checkout-reassurance checkout-reassurance-icons">
-            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h8a4 4 0 0 1 0 8h-4v2h5v2h-5v4H9v-4H6v-2h3v-2H6v-2h3V6H6V4zm4 2v4h4a2 2 0 0 0 0-4z" /></svg></span><span><strong>Secure payment</strong> Payments are handled securely at checkout.</span></p>
+            <p><span className="reassurance-icon" aria-hidden="true"><SecurePaymentReassuranceIcon /></span><span><strong>Secure payment</strong> Payments are handled securely at checkout.</span></p>
             <p><strong>Order reference</strong> {checkoutPaymentIntent.orderNumber}</p>
           </div>
           <PaymentMethodStrip compact />
@@ -990,15 +1194,19 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
           onSubmit={(event) => {
             event.preventDefault();
             setStatus('');
-            if (hasUnavailableItems) {
-              setStatus('One or more basket items are no longer available. Return to basket and remove them before checkout.');
-              return;
-            }
-            if (!requiredDetailsComplete) {
-              setStatus('Complete the required delivery and contact details before reviewing your order.');
-              return;
-            }
-            setCheckoutStep('review');
+            void (async () => {
+              if (hasUnavailableItems) {
+                setStatus('One or more basket items are no longer available. Return to basket and remove them before checkout.');
+                return;
+              }
+              if (addressValidation.status === 'confirm' && addressValidation.key === currentAddressKey) {
+                setStatus('Confirm the standardised address or edit it before reviewing your order.');
+                return;
+              }
+              if (addressReadyForCheckout || await validateCurrentCheckoutAddress()) {
+                setCheckoutStep('review');
+              }
+            })();
           }}
         >
           <p className="eyebrow">Delivery details</p>
@@ -1009,13 +1217,53 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
           <fieldset className="checkout-fieldset">
             <legend>Contact and delivery</legend>
             <div className="checkout-grid">
-              <label htmlFor="checkout-full-name">Full name<input id="checkout-full-name" required value={address.fullName} onChange={(event) => setAddress({ ...address, fullName: event.target.value })} /></label>
-              <label htmlFor="checkout-email">Email<input id="checkout-email" required type="email" value={address.email} onChange={(event) => setAddress({ ...address, email: event.target.value })} /></label>
-              <label htmlFor="checkout-line-1">Address line 1<input id="checkout-line-1" required value={address.line1} onChange={(event) => setAddress({ ...address, line1: event.target.value })} /></label>
-              <label htmlFor="checkout-line-2">Address line 2<input id="checkout-line-2" value={address.line2 ?? ''} onChange={(event) => setAddress({ ...address, line2: event.target.value || null })} /></label>
-              <label htmlFor="checkout-city">City<input id="checkout-city" required value={address.city} onChange={(event) => setAddress({ ...address, city: event.target.value })} /></label>
-              <label htmlFor="checkout-postcode">Postcode<input id="checkout-postcode" required value={address.postalCode} onChange={(event) => setAddress({ ...address, postalCode: event.target.value })} /></label>
-              <label htmlFor="checkout-country">Country<input id="checkout-country" required value={address.country} onChange={(event) => setAddress({ ...address, country: event.target.value.toUpperCase() })} /></label>
+              <label htmlFor="checkout-full-name">Full name<input id="checkout-full-name" required value={address.fullName} onChange={(event) => updateAddressField('fullName', event.target.value)} /></label>
+              <label htmlFor="checkout-email">Email<input id="checkout-email" required type="email" value={address.email} onChange={(event) => updateAddressField('email', event.target.value)} /></label>
+              <div className="address-lookup-field">
+                <label htmlFor="checkout-address-search">Find address or postcode
+                  <input
+                    id="checkout-address-search"
+                    type="search"
+                    autoComplete="off"
+                    value={addressSearch}
+                    onChange={(event) => {
+                      setAddressMode('search');
+                      setAddressSearch(event.target.value);
+                      setAddressSearchMessage('');
+                    }}
+                    aria-controls="checkout-address-suggestions"
+                    aria-expanded={addressSuggestions.length > 0}
+                  />
+                </label>
+                {isAddressSearching ? <p className="address-lookup-status" role="status">Searching addresses...</p> : null}
+                {addressSearchMessage ? <p className="address-lookup-status">{addressSearchMessage}</p> : null}
+                {addressSuggestions.length ? (
+                  <ul className="address-suggestion-list" id="checkout-address-suggestions" role="listbox" aria-label="Address suggestions">
+                    {addressSuggestions.map((suggestion) => (
+                      <li key={suggestion.placeId} role="option" aria-selected="false">
+                        <button type="button" onClick={() => void selectAddressSuggestion(suggestion)}>
+                          <strong>{suggestion.mainText}</strong>
+                          {suggestion.secondaryText ? <span>{suggestion.secondaryText}</span> : null}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                <button type="button" className="text-button address-manual-toggle" onClick={() => {
+                  setAddressMode('manual');
+                  setAddressSuggestions([]);
+                  setAddressSearchMessage('');
+                }}>Enter address manually</button>
+              </div>
+              {(addressMode === 'manual' || address.line1 || addressValidation.status === 'valid' || addressValidation.status === 'confirm') ? (
+                <>
+                  <label htmlFor="checkout-line-1">Address line 1<input id="checkout-line-1" required value={address.line1} onChange={(event) => updateAddressField('line1', event.target.value)} /></label>
+                  <label htmlFor="checkout-line-2">Address line 2<input id="checkout-line-2" value={address.line2 ?? ''} onChange={(event) => updateAddressField('line2', event.target.value || null)} /></label>
+                  <label htmlFor="checkout-city">Town or city<input id="checkout-city" required value={address.city} onChange={(event) => updateAddressField('city', event.target.value)} /></label>
+                  <label htmlFor="checkout-postcode">Postcode<input id="checkout-postcode" required value={address.postalCode} onChange={(event) => updateAddressField('postalCode', event.target.value.toUpperCase())} /></label>
+                  <label htmlFor="checkout-country">Country<input id="checkout-country" required readOnly value={address.country} /></label>
+                </>
+              ) : null}
               <label>Delivery
                 <select value={shippingMethodCode} onChange={(event) => setShippingMethodCode(event.target.value as ShippingMethodCode)}>
                   <option value="UK_STANDARD">Standard delivery</option>
@@ -1024,6 +1272,21 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
               </label>
               <label>Discount code<input value={discountCode} onChange={(event) => setDiscountCode(event.target.value.toUpperCase())} /></label>
             </div>
+            {addressValidation.status === 'confirm' && addressValidation.address ? (
+              <div className="address-confirmation-panel" role="status">
+                <p><strong>Use this standardised address?</strong></p>
+                <address>
+                  {addressValidation.address.line1}<br />
+                  {addressValidation.address.line2 ? <>{addressValidation.address.line2}<br /></> : null}
+                  {addressValidation.address.city}<br />
+                  {addressValidation.address.postalCode}
+                </address>
+                <button type="button" onClick={confirmStandardisedAddress}>Use this address</button>
+              </div>
+            ) : null}
+            {addressValidation.status === 'valid' && addressValidation.key === currentAddressKey ? (
+              <p className="form-status success">Address confirmed.</p>
+            ) : null}
           </fieldset>
           <div className="checkout-totals">
             <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>
@@ -1031,13 +1294,13 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             <span>VAT included estimate</span><strong>{formatPrice(vatIncludedEstimateMinor)}</strong>
             <span>Total</span><strong>{formatPrice(totalMinor)}</strong>
           </div>
-          <button type="submit" disabled={hasUnavailableItems}>Continue to review order</button>
+          <button type="submit" disabled={hasUnavailableItems || isAddressValidating}>{isAddressValidating ? 'Checking address...' : 'Continue to review order'}</button>
           {status ? <p className="form-status error">{status}</p> : null}
         </form>
         <section className="checkout-panel checkout-reassurance checkout-reassurance-icons" aria-label="Delivery returns and payment information">
-          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> {ironSprueStandardDeliverySummary()} <a href="/delivery">Delivery information</a></span></p>
-          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Please check the Returns page before sending items back so we can confirm the right route for your order.</span></p>
-          <div className="reassurance-row"><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Payments</strong> Payments are handled securely at checkout.</span><PaymentMethodStrip compact /></div>
+          <p><span className="reassurance-icon" aria-hidden="true"><DeliveryReassuranceIcon /></span><span><strong>Delivery</strong> {ironSprueStandardDeliverySummary()} <a href="/delivery">Delivery information</a></span></p>
+          <p><span className="reassurance-icon" aria-hidden="true"><ReturnsReassuranceIcon /></span><span><strong>Returns</strong> Please check the Returns page before sending items back so we can confirm the right route for your order.</span></p>
+          <div className="reassurance-row"><span className="reassurance-icon" aria-hidden="true"><SecurePaymentReassuranceIcon /></span><span><strong>Payments</strong> Payments are handled securely at checkout.</span><PaymentMethodStrip compact /></div>
         </section>
       </div>
     </div>

@@ -41,7 +41,7 @@ export default function PrivacyPage() {
           <section>
             <h2>Who we share information with</h2>
             <p>We may share information with service providers where necessary to operate Iron Sprue, including payment processors, delivery and logistics providers, email and transactional-message providers, website, hosting and infrastructure providers, security and fraud-prevention providers, accounting and professional advisers, analytics providers where enabled and consented to, and government, tax, regulatory or law-enforcement bodies where legally required.</p>
-            <p>Current provider categories reflected in the service include Stripe for payment processing, Resend for transactional and marketing email where configured, Cloudflare for storefront delivery, security and media storage, Railway and database-hosting infrastructure for the API and operational data, and Google Analytics or Meta technologies only where configured and consented to.</p>
+            <p>Current provider categories reflected in the service include Stripe for payment processing, Resend for transactional and marketing email where configured, Cloudflare for storefront delivery, security and media storage, Railway and database-hosting infrastructure for the API and operational data, Google Maps Platform for checkout address lookup and validation where configured, and Google Analytics or Meta technologies only where configured and consented to.</p>
             <p>Providers receive only the information reasonably required for their role. We do not sell personal information to advertisers.</p>
           </section>
           <section>

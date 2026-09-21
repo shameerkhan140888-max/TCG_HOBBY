@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { AddonCarousel } from '../../../components/addon-carousel';
 import { ProductGallery } from '../../../components/product-gallery';
 import { PaymentMethodStrip } from '../../../components/payment-method-strip';
+import { DeliveryReassuranceIcon, ReturnsReassuranceIcon, SecurePaymentReassuranceIcon } from '../../../components/reassurance-icons';
 import { ironSprueBrand } from '../../../lib/brand';
 import { AddToBasketButton } from '../../../components/basket-client';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
@@ -273,9 +274,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </form>
             </div>
             <section className="service-summary product-reassurance" aria-label="Delivery returns and payment information">
-              <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> {ironSprueStandardDeliverySummary()} <a href="/delivery">Delivery information</a></span></p>
-              <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Check the <a href="/returns">Returns page</a> for changed-mind returns, damaged items and refund guidance before sending anything back.</span></p>
-              <div className="reassurance-row reassurance-payment-row"><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Secure payments</strong> Payments are handled securely at checkout.<PaymentMethodStrip compact /></span></div>
+              <p><span className="reassurance-icon" aria-hidden="true"><DeliveryReassuranceIcon /></span><span><strong>Delivery</strong> {ironSprueStandardDeliverySummary()} <a href="/delivery">Delivery information</a></span></p>
+              <p><span className="reassurance-icon" aria-hidden="true"><ReturnsReassuranceIcon /></span><span><strong>Returns</strong> Check the <a href="/returns">Returns page</a> for changed-mind returns, damaged items and refund guidance before sending anything back.</span></p>
+              <div className="reassurance-row reassurance-payment-row"><span className="reassurance-icon" aria-hidden="true"><SecurePaymentReassuranceIcon /></span><span><strong>Secure payments</strong> Payments are handled securely at checkout.<PaymentMethodStrip compact /></span></div>
             </section>
           </div>
 

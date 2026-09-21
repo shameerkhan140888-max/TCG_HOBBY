@@ -121,6 +121,7 @@ Do not paste secret values into logs, issues or reports.
 | `IRON_SPRUE_EMAIL_ASSET_BASE_URL` | Transactional email | Yes | No | Public staging HTTPS origin |
 | `IRON_SPRUE_EMAIL_LOGO_URL` | Transactional email | Yes | No | Public staging logo URL |
 | `IRON_SPRUE_R2_*` | Admin/media/API | If using R2 media | Mixed | Dedicated Iron Sprue media bucket settings |
+| `IRON_SPRUE_GOOGLE_MAPS_API_KEY` | Storefront | Recommended for checkout address validation | Yes | Google Maps Platform server-side key restricted to Places API (New) and Address Validation API |
 | `STOREFRONT_ACCESS_MODE` | Storefront | Yes | No | `protected` for staging |
 | `IRON_SPRUE_STAGING_PASSWORD_SHA256` | Storefront | One password option required | Yes | Hashed UAT password |
 | `IRON_SPRUE_STAGING_PASSWORD` | Storefront | Alternative password option | Yes | Plain staging password if hash not used |
@@ -145,6 +146,22 @@ Required events:
 - `charge.refunded` or the existing refund events handled by the app
 
 Verify that the event account id matches `IRON_SPRUE_STRIPE_ACCOUNT_ID` and that events are not live mode.
+
+## Google Address Validation
+
+Checkout address lookup uses Google Places Autocomplete (New) and Google Address Validation through server-side storefront routes. Do not expose the Google API key in browser JavaScript.
+
+Required Google Cloud setup:
+
+- Billing-enabled Google Cloud project.
+- Places API (New) enabled.
+- Address Validation API enabled.
+- API key stored as `IRON_SPRUE_GOOGLE_MAPS_API_KEY`.
+- API key restricted to Places API (New) and Address Validation API.
+- HTTP referrer or origin restrictions where applicable to the deployed staging and production storefront origins.
+- Quotas and budget alerts configured for autocomplete and validation usage.
+
+The customer-facing checkout remains UK-only. Google validates and standardises the address; Iron Sprue delivery rules remain the source of truth for whether that address is deliverable.
 
 ## Email Checks
 
