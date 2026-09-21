@@ -7794,43 +7794,6 @@ body:has(.homepage-brand-carousel) .trust-workshop-band {
     width: 100%;
   }
 
-  .homepage-board .product-card .product-image {
-    aspect-ratio: 1 / 0.54;
-    padding: 10px;
-  }
-
-  .homepage-board .product-card-body {
-    display: grid;
-    grid-template-rows: auto minmax(2.4em, auto) auto auto auto 38px;
-    min-height: 172px;
-    padding: 11px 10px 10px;
-    gap: 5px;
-  }
-
-  .homepage-board .product-card h3 {
-    font-size: 13px;
-    line-height: 1.18;
-  }
-
-  .homepage-board .product-card strong {
-    font-size: 14px;
-  }
-
-  .homepage-board .product-card .product-actions {
-    align-self: flex-end;
-    grid-template-columns: 1fr;
-    gap: 0;
-    margin: 0;
-    padding: 0;
-  }
-
-  .homepage-board .product-card .basket-action-stack button {
-    height: 38px;
-    min-height: 38px;
-    max-height: 38px;
-    padding: 0;
-  }
-
   .homepage-board .section-head.split {
     gap: 12px;
   }
@@ -9068,10 +9031,11 @@ body:has(.product-detail-page) .payment-trust-banner {
   align-self: end;
   justify-self: end;
   color: #ffe2a0;
-  font-family: Impact, "Arial Narrow", "Franklin Gothic Condensed", Arial, sans-serif;
-  font-weight: 900;
+  font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
   letter-spacing: 0;
-  line-height: 0.95;
+  line-height: 1.05;
   text-align: right;
   text-shadow:
     0 1px 0 rgba(255, 247, 218, 0.34),
@@ -9142,11 +9106,11 @@ body:has(.product-detail-page) .payment-trust-banner {
 .basket-upsell-grid .product-card .basket-action-stack.has-feedback,
 .basket-upsell-grid .product-card .basket-action-stack.is-added {
   display: grid;
-  grid-template-rows: 40px 13px;
-  gap: 2px;
+  grid-template-rows: 40px 14px;
+  gap: 3px;
   width: 100%;
-  min-height: 55px;
-  max-height: 55px;
+  min-height: 57px;
+  max-height: 57px;
   overflow: hidden;
 }
 
@@ -9168,15 +9132,15 @@ body:has(.product-detail-page) .payment-trust-banner {
 .product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack .form-status,
 .basket-route .pdp-addon-carousel-track .product-card .basket-action-stack .form-status,
 .basket-upsell-grid .product-card .basket-action-stack .form-status {
-  min-height: 13px;
-  max-height: 13px;
+  min-height: 14px;
+  max-height: 14px;
   margin: 0;
   overflow: hidden;
   border: 0;
   background: transparent;
   padding: 0 1px;
   font-size: 9.5px;
-  line-height: 13px;
+  line-height: 14px;
   opacity: 0;
   text-align: center;
   text-overflow: ellipsis;
@@ -9256,8 +9220,8 @@ body:has(.product-detail-page) .payment-trust-banner {
   .product-detail-page .pdp-addon-carousel-track .product-card .product-card-body,
   .basket-route .pdp-addon-carousel-track .product-card .product-card-body,
   .basket-upsell-grid .product-card .product-card-body {
-    grid-template-rows: 16px minmax(2.28em, auto) 17px 17px 28px 55px;
-    min-height: 222px;
+    grid-template-rows: 16px minmax(2.28em, auto) 17px 17px 30px 57px;
+    min-height: 226px;
     gap: 5px;
     padding: 15px 16px 12px;
   }
@@ -9276,11 +9240,11 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 
   .product-card .stock-badge {
-    line-height: 28px;
+    line-height: 30px;
   }
 
   .product-card strong {
-    font-size: 27px;
+    font-size: 25px;
   }
 }
 
@@ -9309,8 +9273,8 @@ body:has(.product-detail-page) .payment-trust-banner {
   .product-detail-page .pdp-addon-carousel-track .product-card .product-card-body,
   .basket-route .pdp-addon-carousel-track .product-card .product-card-body,
   .basket-upsell-grid .product-card .product-card-body {
-    grid-template-rows: 10px minmax(2.12em, auto) 12px 12px 18px 47px;
-    min-height: 151px;
+    grid-template-rows: 10px minmax(2.12em, auto) 12px 12px 19px 50px;
+    min-height: 155px;
     gap: 2px;
     padding: 7px 8px 5px;
   }
@@ -9336,11 +9300,11 @@ body:has(.product-detail-page) .payment-trust-banner {
 
   .product-card .stock-badge {
     font-size: 9.6px;
-    line-height: 18px;
+    line-height: 19px;
   }
 
   .product-card strong {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .product-card .product-actions,
@@ -9351,8 +9315,8 @@ body:has(.product-detail-page) .payment-trust-banner {
   .basket-route .pdp-addon-carousel-track .product-card .product-actions,
   .basket-upsell-grid .product-card .product-actions {
     grid-template-columns: 1fr;
-    height: 47px;
-    min-height: 47px;
+    height: 50px;
+    min-height: 50px;
   }
 
   .product-card .product-actions > a,
@@ -9386,13 +9350,19 @@ body:has(.product-detail-page) .payment-trust-banner {
   .basket-route .pdp-addon-carousel-track .product-card .basket-action-stack.is-added,
   .basket-upsell-grid .product-card .basket-action-stack.has-feedback,
   .basket-upsell-grid .product-card .basket-action-stack.is-added {
-    grid-template-rows: 32px 13px;
-    gap: 2px;
-    min-height: 47px;
-    max-height: 47px;
+    grid-template-rows: 32px 14px;
+    gap: 4px;
+    min-height: 50px;
+    max-height: 50px;
   }
 
-  .product-card .basket-action-stack button {
+  .product-card .basket-action-stack button,
+  .homepage-board .product-card .basket-action-stack button,
+  .catalogue-grid .product-card .basket-action-stack button,
+  .product-grid .product-card .basket-action-stack button,
+  .product-detail-page .pdp-addon-carousel-track .product-card .basket-action-stack button,
+  .basket-route .pdp-addon-carousel-track .product-card .basket-action-stack button,
+  .basket-upsell-grid .product-card .basket-action-stack button {
     height: 32px;
     min-height: 32px;
     max-height: 32px;
