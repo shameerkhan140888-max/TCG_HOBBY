@@ -36,6 +36,30 @@ const prohibitedPublicPhrases = [
   'keeps the current',
 ] as const;
 
+const prohibitedRenderedDescriptionPhrases = [
+  ...prohibitedPublicPhrases,
+  'source reference',
+  'verified by',
+  'import row',
+  'scraped',
+  'scrape artefact',
+  'archive/products',
+  'review metadata',
+  'public copy',
+  'admin-only',
+  'available source',
+  'available product facts',
+  'final box-specific details',
+  'manufacturer specifications required',
+  'requires human review',
+  'use manufacturer and authorised distributor information',
+  'authorised distributor information as factual',
+  'factual use only',
+  'reference s1024',
+  'choose this',
+  'this listing is the',
+] as const;
+
 function publicText(product: IronSprueProduct) {
   return [
     product.name,
@@ -55,6 +79,17 @@ describe('Iron Sprue public catalogue copy', () => {
     const violations = products.flatMap((product) => {
       const text = publicText(product).toLowerCase();
       return prohibitedPublicPhrases
+        .filter((phrase) => text.includes(phrase.toLowerCase()))
+        .map((phrase) => `${product.sku}: ${phrase}`);
+    });
+
+    expect(violations).toEqual([]);
+  });
+
+  it('does not expose internal pipeline language in any rendered product description', () => {
+    const violations = products.flatMap((product) => {
+      const text = customerProductDescription(product).toLowerCase();
+      return prohibitedRenderedDescriptionPhrases
         .filter((phrase) => text.includes(phrase.toLowerCase()))
         .map((phrase) => `${product.sku}: ${phrase}`);
     });
@@ -108,6 +143,7 @@ describe('Iron Sprue public catalogue copy', () => {
     expect(description).not.toContain('puzzle-object positioning');
     expect(description).not.toContain('omitted uncertain specifications');
     expect(description).not.toContain('factual source material');
+    expect(description).not.toContain('Use manufacturer and authorised distributor information');
   });
 
   it('uses plain customer-facing scale wording in rendered PDP copy', () => {
@@ -141,5 +177,22 @@ describe('Iron Sprue public catalogue copy', () => {
     expect(description).toContain('Toyota GR86 Spark Red');
     expect(description).not.toContain('This listing is the Spark Red variant');
     expect(description).not.toContain('Choose this Spark Red version');
+  });
+
+  it('keeps supplier reference-code tails out of rendered PDP descriptions', () => {
+    const description = customerProductDescription({
+      name: '3D Jigsaw Vase - Koi Carp and Lotus',
+      brand: 'Pintoo',
+      category: 'Vases',
+      sku: 'IS-PIN-S1024',
+      slug: 'pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus',
+      description: [
+        'The koi and lotus artwork gives the finished vase a calm decorative character.',
+        'Pintoo reference S1024.',
+      ].join(' '),
+    } as IronSprueProduct);
+
+    expect(description).toContain('calm decorative character');
+    expect(description).not.toContain('reference S1024');
   });
 });

@@ -323,6 +323,8 @@ function stripInternalProductCopy(value: string) {
     /\b(?:launch catalogue|launch range|source data|supplier data|review flag|review metadata|public copy|admin-only|catalogue-primary|image\s*2)\b/i,
     /\b(?:factual source material|source material|source information|available source|verified source|omitted uncertain specifications|source confidence|available product facts|keeps the current)\b/i,
     /\b(?:final box-specific details|manufacturer specifications required|requires human review)\b/i,
+    /\b(?:use\s+manufacturer\s+and\s+authorised\s+distributor\s+information|authorised\s+distributor\s+information\s+as\s+factual|factual\s+use\s+only)\b/i,
+    /\b(?:manufacturer|supplier|brand|pintoo|aoshima|cubicfun|tasma)?\s*reference\s+[A-Z0-9-]{3,}\b/i,
     /\b(?:choose this\s+[^.?!]+\s+version if that finish best suits your collection|this listing is the\s+[^.?!]+\s+variant)\b/i,
   ];
 

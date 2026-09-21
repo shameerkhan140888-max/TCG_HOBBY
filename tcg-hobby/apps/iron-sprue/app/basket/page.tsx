@@ -35,7 +35,6 @@ export default async function BasketPage() {
   const storefrontProducts = await getIronSprueStorefrontProducts(products);
   const upsellProducts = storefrontProducts
     .filter((product) => availableQuantity(product) > 0)
-    .filter((product) => Boolean(productImage(product)))
     .filter(isUpsellCandidate)
     .slice(0, 8)
     .map(toUpsellProduct);

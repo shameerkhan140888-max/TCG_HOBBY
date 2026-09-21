@@ -610,7 +610,8 @@ export async function getIronSprueStorefrontProducts(products: IronSprueProduct[
     getApprovedIronSprueMediaBySku(),
     getIronSprueInventoryBySku(),
   ]);
-  return applyInventoryToProducts(applyApprovedMediaToProducts(products, approvedMediaBySku), inventoryBySku);
+  const mediaAppliedProducts = applyApprovedMediaToProducts(products, approvedMediaBySku);
+  return inventoryBySku ? applyInventoryToProducts(mediaAppliedProducts, inventoryBySku) : mediaAppliedProducts;
 }
 
 export function featuredProductSlugsFromPlacements(placements: IronSprueHomepagePlacement[]) {

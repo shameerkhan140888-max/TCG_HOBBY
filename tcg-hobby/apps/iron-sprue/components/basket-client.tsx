@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CheckoutAddress, PublicBasket, PublicBasketInputItem, ShippingMethodCode } from '@capital-hobby/types';
 import { trackIronSprueEcommerceEvent } from '../lib/analytics';
+import type { IronSprueProduct } from '../lib/catalogue';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
+import { ProductCard } from './product-card';
 import { PaymentMethodStrip } from './payment-method-strip';
 
 export const IRON_SPRUE_BASKET_STORAGE_KEY = 'iron-sprue-basket-v1';
@@ -337,22 +339,30 @@ function formatPrice(minor: number) {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(minor / 100);
 }
 
-function basketUpsellAvailabilityClass(product: BasketUpsellProduct) {
-  const limit = availabilityLimit(product);
-  if (limit <= 0) return 'out-of-stock';
-  if (limit <= 2) return 'low-stock';
-  return 'in-stock';
-}
-
-function basketUpsellAvailability(product: BasketUpsellProduct) {
-  const limit = availabilityLimit(product);
-  if (limit <= 0) return 'Out of stock';
-  if (limit <= 2) return 'Low stock';
-  return 'In stock';
-}
-
 function toInputItems(items: StoredBasketItem[]): PublicBasketInputItem[] {
   return items.map((item) => ({ productId: item.productId, quantity: item.quantity }));
+}
+
+function basketUpsellToProduct(product: BasketUpsellProduct): IronSprueProduct {
+  const availableQuantity = product.availableQuantity ?? 0;
+
+  const adaptedProduct: IronSprueProduct = {
+    id: product.productId,
+    sku: product.productId,
+    slug: product.productSlug,
+    name: product.productName,
+    brand: product.productBrand || 'Iron Sprue',
+    category: product.productCategory || 'Workshop essentials',
+    productType: product.productCategory || 'Workshop essentials',
+    stockQuantity: availableQuantity,
+    availableQuantity,
+    priceMinor: product.unitPriceMinor,
+    retailPriceMinor: product.unitPriceMinor,
+    shortDescription: '',
+  };
+
+  if (product.imageUrl) adaptedProduct.imageUrl = product.imageUrl;
+  return adaptedProduct;
 }
 
 function basketLineWarning(item: StoredBasketItem & { inStock?: boolean }) {
@@ -837,37 +847,9 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
               <a className="text-link" href="/shop?category=workshop-essentials">View add-ons</a>
             </div>
             <div className="pdp-addon-carousel">
-              <div className="pdp-addon-carousel-track basket-upsell-grid" aria-label="Recommended add-on products">
+              <div className="pdp-addon-carousel-track" aria-label="Recommended add-on products">
                 {visibleUpsells.map((product) => (
-                  <article className="product-card basket-upsell-card" key={product.productId}>
-                    <div className="product-card-surface">
-                      <a className="product-image" href={`/products/${product.productSlug}`} aria-label={`View ${product.productName}`}>
-                        {product.imageUrl ? (
-                          <img
-                            src={ironSprueDisplayMediaUrl(product.imageUrl, 480)}
-                            srcSet={ironSprueDisplayMediaSrcSet(product.imageUrl, [320, 480, 640])}
-                            sizes="(max-width: 720px) 64vw, 280px"
-                            alt={product.imageAlt ?? product.productName}
-                            width="1000"
-                            height="1000"
-                            loading="lazy"
-                            decoding="async"
-                          />
-                        ) : <span className="basket-image-fallback">Iron Sprue</span>}
-                      </a>
-                      <div className="product-card-body">
-                        <p className="product-brand">{product.productBrand || 'Iron Sprue'}</p>
-                        <h3>{product.productName}</h3>
-                        {product.productCategory ? <p className="product-card-category">{product.productCategory}</p> : null}
-                        <span className={`stock-badge ${basketUpsellAvailabilityClass(product)}`}>{basketUpsellAvailability(product)}</span>
-                        <strong>{formatPrice(product.unitPriceMinor)}</strong>
-                        <div className="product-actions">
-                          <a href={`/products/${product.productSlug}`}>View details</a>
-                          <AddToBasketButton item={product} />
-                        </div>
-                      </div>
-                    </div>
-                  </article>
+                  <ProductCard detailsLabel="View details" headingLevel={3} key={product.productId} product={basketUpsellToProduct(product)} />
                 ))}
               </div>
             </div>
