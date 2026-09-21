@@ -34,9 +34,10 @@ const pieceFacts = new Map(Object.entries({
   'IS-CUB-C114H': 72,
   'IS-CUB-C112H': 44,
   'IS-CUB-OM3603': 28,
+  'IS-CUB-OM3606': 27,
 }));
 
-const unresolved = ['IS-CUB-OM3606'];
+const unresolved = [];
 const sizeFacts = new Map(Object.entries({
   'IS-CUB-OM3603': '16cm x 16cm x 26cm',
   'IS-CUB-OM3606': '16cm x 16cm x 26cm',
@@ -51,13 +52,13 @@ for (const file of files) {
   for (const product of products) {
     const pieces = pieceFacts.get(product.sku);
     const size = sizeFacts.get(product.sku);
-    if (!pieces && !size) continue;
+    if (pieces === undefined && !size) continue;
 
     product.specifications = product.specifications && typeof product.specifications === 'object' && !Array.isArray(product.specifications)
       ? product.specifications
       : {};
 
-    if (String(product.specifications.pieces ?? '') !== String(pieces)) {
+    if (pieces !== undefined && String(product.specifications.pieces ?? '') !== String(pieces)) {
       product.specifications.pieces = String(pieces);
       changed += 1;
     }

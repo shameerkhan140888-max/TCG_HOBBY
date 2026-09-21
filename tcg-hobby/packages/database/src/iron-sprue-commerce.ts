@@ -11,6 +11,7 @@ import type {
   ShippingMethod,
   ShippingMethodCode,
 } from '@capital-hobby/types';
+import { getIronSprueDeliveryChargeMinor } from '@capital-hobby/types';
 import type { IronSprueVatInvoice, IronSprueVatInvoiceLine, Prisma } from '@prisma/client';
 import { getIronSprueAdminPrisma } from './client.js';
 import {
@@ -31,9 +32,6 @@ export const IRON_SPRUE_LEGAL_COMPANY_NUMBER = '17336948';
 export const IRON_SPRUE_SELLER_LEGAL_NAME = 'Capital Hobby Group Ltd';
 export const IRON_SPRUE_REGISTERED_OFFICE = '4-6 Greatorex Street, London, United Kingdom, E1 5NF';
 export const IRON_SPRUE_VAT_RATE = 20;
-export const IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR = 399;
-export const IRON_SPRUE_UK_EXPRESS_DELIVERY_MINOR = 599;
-export const IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR = 3000;
 const CURRENCY: CurrencyCode = 'GBP';
 
 type DatabaseClient = ReturnType<typeof getIronSprueAdminPrisma>;
@@ -483,21 +481,9 @@ export async function clearIronSprueCart(userId: string, db: DatabaseClient = ge
 }
 
 export function getIronSprueAvailableShippingMethods(country: string, qualifyingSubtotalMinor = 0) {
-  const normalizedCountry = country.trim().toUpperCase();
-  const qualifiesForFreeStandard = (normalizedCountry === 'GB' || normalizedCountry === 'UK')
-    && qualifyingSubtotalMinor >= IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR;
-
   return getShippingMethodsForCountry(country, 0).map((method) => {
-    if (method.code === 'UK_STANDARD') {
-      return { ...method, amountMinor: qualifiesForFreeStandard ? 0 : IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR };
-    }
-    if (method.code === 'UK_EXPRESS') {
-      return {
-        ...method,
-        amountMinor: qualifiesForFreeStandard ? IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR : IRON_SPRUE_UK_EXPRESS_DELIVERY_MINOR,
-      };
-    }
-    return method;
+    const amountMinor = getIronSprueDeliveryChargeMinor(method.code, country, qualifyingSubtotalMinor);
+    return amountMinor == null ? method : { ...method, amountMinor };
   });
 }
 

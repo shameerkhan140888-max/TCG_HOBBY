@@ -55,6 +55,15 @@ describe('Iron Sprue PO-derived launch products', () => {
     expect(randomSearch).toHaveLength(0);
   });
 
+  it('stores Magic Box London at Night piece count as a product fact', () => {
+    const product = products.find((item) => item.sku === 'IS-CUB-OM3606');
+    expect(product).toBeTruthy();
+
+    expect(product!.specifications?.pieces).toBe('27');
+    expect(product!.specifications?.size).toBe('16cm x 16cm x 26cm');
+    expect(finalManifest.products.find((item) => item.sku === 'IS-CUB-OM3606')?.specifications?.pieces).toBe('27');
+  });
+
   it('returns sellable workshop-category add-ons for product detail recommendations', () => {
     const product = products.find((item) => item.sku === 'IS-AOS-05628');
     expect(product).toBeTruthy();

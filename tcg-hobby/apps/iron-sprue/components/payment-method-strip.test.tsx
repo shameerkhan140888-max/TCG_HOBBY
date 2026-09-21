@@ -11,31 +11,29 @@ describe('Iron Sprue payment method presentation', () => {
     expect(markup).toContain('/payments/visa.svg');
     expect(markup).toContain('/payments/mastercard.svg');
     expect(markup).toContain('/payments/american-express.svg');
-    expect(markup).toContain('/payments/apple-pay.svg');
-    expect(markup).toContain('/payments/google-pay.svg');
+    expect(markup).not.toContain('/payments/apple-pay.svg');
+    expect(markup).not.toContain('/payments/google-pay.svg');
     expect(markup).not.toContain('PayPal');
     expect(markup).not.toContain('Klarna');
   });
 
-  it('keeps PayPal configured-later while exposing the approved launch set', () => {
+  it('keeps wallet and PayPal methods configured-later while exposing the current card set', () => {
     expect(getVisibleIronSpruePaymentMethods().map((method) => method.id)).toEqual([
       'visa',
       'mastercard',
       'american-express',
-      'apple-pay',
-      'google-pay',
     ]);
     expect(ironSpruePaymentMethods.find((method) => method.id === 'paypal')).toMatchObject({
       enabled: false,
       status: 'production-configuration-required',
     });
     expect(ironSpruePaymentMethods.find((method) => method.id === 'apple-pay')).toMatchObject({
-      enabled: true,
-      status: 'eligible-through-stripe',
+      enabled: false,
+      status: 'production-configuration-required',
     });
     expect(ironSpruePaymentMethods.find((method) => method.id === 'google-pay')).toMatchObject({
-      enabled: true,
-      status: 'eligible-through-stripe',
+      enabled: false,
+      status: 'production-configuration-required',
     });
   });
 

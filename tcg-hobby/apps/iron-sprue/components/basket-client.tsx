@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CheckoutAddress, PublicBasket, PublicBasketInputItem, ShippingMethodCode } from '@capital-hobby/types';
 import { trackIronSprueEcommerceEvent } from '../lib/analytics';
 import type { IronSprueProduct } from '../lib/catalogue';
+import { getIronSprueDeliveryChargeMinor, ironSprueStandardDeliverySummary } from '../lib/delivery-rules';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 import { ProductCard } from './product-card';
 import { PaymentMethodStrip } from './payment-method-strip';
@@ -18,7 +19,6 @@ export const IRON_SPRUE_LEGACY_BASKET_STORAGE_KEYS = [
 ] as const;
 
 const ALL_BASKET_STORAGE_KEYS = [IRON_SPRUE_BASKET_STORAGE_KEY, ...IRON_SPRUE_LEGACY_BASKET_STORAGE_KEYS] as const;
-const IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR = 3000;
 
 export type StoredBasketItem = {
   productId: string;
@@ -603,10 +603,8 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   const subtotalMinor = resolved?.subtotalMinor ?? basketLineItems.reduce((sum, item) => sum + item.unitPriceMinor * item.quantity, 0);
   const hasUnavailableItems = basketLineItems.some((item) => Boolean(basketLineWarning(item)));
   const deliveryMinor = useMemo(() => {
-    if (shippingMethodCode === 'UK_STANDARD' && subtotalMinor >= IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR) return 0;
-    if (shippingMethodCode === 'UK_EXPRESS' && subtotalMinor >= IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR) return 399;
-    return shippingMethodCode === 'UK_EXPRESS' ? 599 : 399;
-  }, [shippingMethodCode, subtotalMinor]);
+    return getIronSprueDeliveryChargeMinor(shippingMethodCode, address.country || 'GB', subtotalMinor) ?? 0;
+  }, [address.country, shippingMethodCode, subtotalMinor]);
   const totalMinor = checkoutPaymentIntent?.totalMinor ?? subtotalMinor + deliveryMinor;
   const vatIncludedEstimateMinor = Math.round(totalMinor / 6);
   const requiredDetailsComplete = Boolean(
@@ -969,7 +967,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             <span>Total to pay</span><strong>{formatPrice(checkoutPaymentIntent.totalMinor)}</strong>
           </div>
           <div className="checkout-reassurance checkout-reassurance-icons">
-            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h8a4 4 0 0 1 0 8h-4v2h5v2h-5v4H9v-4H6v-2h3v-2H6v-2h3V6H6V4zm4 2v4h4a2 2 0 0 0 0-4z" /></svg></span><span><strong>Secure payment</strong> Card details are handled securely by our payment partner. Digital wallets may appear where supported by your device and browser.</span></p>
+            <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h8a4 4 0 0 1 0 8h-4v2h5v2h-5v4H9v-4H6v-2h3v-2H6v-2h3V6H6V4zm4 2v4h4a2 2 0 0 0 0-4z" /></svg></span><span><strong>Secure payment</strong> Payments are handled securely at checkout.</span></p>
             <p><strong>Order reference</strong> {checkoutPaymentIntent.orderNumber}</p>
           </div>
           <PaymentMethodStrip compact />
@@ -1037,9 +1035,9 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
           {status ? <p className="form-status error">{status}</p> : null}
         </form>
         <section className="checkout-panel checkout-reassurance checkout-reassurance-icons" aria-label="Delivery returns and payment information">
-          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK standard delivery is £3.99, with free UK standard delivery over £30.00 qualifying spend. <a href="/delivery">Delivery information</a></span></p>
+          <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> {ironSprueStandardDeliverySummary()} <a href="/delivery">Delivery information</a></span></p>
           <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Please check the Returns page before sending items back so we can confirm the right route for your order.</span></p>
-          <div className="reassurance-row"><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Payments</strong> Secure payments.</span><PaymentMethodStrip compact /></div>
+          <div className="reassurance-row"><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Payments</strong> Payments are handled securely at checkout.</span><PaymentMethodStrip compact /></div>
         </section>
       </div>
     </div>

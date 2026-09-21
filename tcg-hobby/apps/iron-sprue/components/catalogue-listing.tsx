@@ -8,6 +8,7 @@ import {
   categoryOptions,
   slugForCategory,
 } from '../lib/storefront';
+import { CatalogueFilterShell } from './catalogue-filter-shell';
 import { ProductCard } from './product-card';
 
 type Params = Record<string, string | string[] | undefined>;
@@ -406,13 +407,9 @@ export async function CatalogueListing({
       ) : null}
 
       <div className="catalogue-layout">
-        <details className="mobile-filter-drawer">
-          <summary>Filters{activeFilterCount ? ` (${activeFilterCount})` : ''}</summary>
-          {filterControls('mobile')}
-        </details>
-        <aside className="filter-panel" aria-label="Catalogue filters">
-          {filterControls('desktop')}
-        </aside>
+        <CatalogueFilterShell activeFilterCount={activeFilterCount}>
+          {filterControls('primary')}
+        </CatalogueFilterShell>
 
         <div>
           <div className="catalogue-toolbar">

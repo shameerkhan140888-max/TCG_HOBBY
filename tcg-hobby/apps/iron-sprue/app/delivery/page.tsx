@@ -1,6 +1,21 @@
 import { ironSprueBrand } from '../../lib/brand';
+import {
+  formatIronSprueDeliveryPrice,
+  getIronSprueDeliveryChargeMinor,
+  ironSprueDeliveryCarrierAssessedAreas,
+  ironSprueDeliveryPostcodeTerritoryExclusions,
+  IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR,
+} from '../../lib/delivery-rules';
 
 export default function DeliveryPage() {
+  const standardDelivery = formatIronSprueDeliveryPrice(getIronSprueDeliveryChargeMinor('UK_STANDARD', 'GB') ?? 0);
+  const expressDelivery = formatIronSprueDeliveryPrice(getIronSprueDeliveryChargeMinor('UK_EXPRESS', 'GB') ?? 0);
+  const freeDeliveryThreshold = formatIronSprueDeliveryPrice(IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR);
+  const excludedTerritories = ironSprueDeliveryPostcodeTerritoryExclusions
+    .map((item) => `${item.area} - ${item.label}`)
+    .join(', ');
+  const carrierAssessedAreas = ironSprueDeliveryCarrierAssessedAreas.join(', ');
+
   return (
     <section className="section-block info-page">
       <div className="section-head">
@@ -14,16 +29,15 @@ export default function DeliveryPage() {
             <h2>Where we deliver</h2>
             <p>Our standard delivery service is intended for addresses within mainland Great Britain that are supported by our checkout and selected carrier.</p>
             <p>Before payment is taken, checkout validates the delivery address and shows the delivery services available for that address.</p>
-            <p>Iron Sprue does not currently offer standard mainland delivery to addresses in the following postcode territories: BT - Northern Ireland, GY - Guernsey, JE - Jersey, IM - Isle of Man, HS - Outer Hebrides, and ZE - Shetland Islands.</p>
-            <p>Some postcode districts within IV, KA, KW, PA and PH include islands, remote areas or carrier-specific zones. The current checkout configuration does not yet publish a district-by-district exclusion list for those postcode areas. Until that configuration is explicit, availability for those addresses must be confirmed by checkout rather than guessed from postcode area alone.</p>
+            <p>Iron Sprue does not currently offer standard mainland delivery to addresses in the following postcode territories: {excludedTerritories}.</p>
+            <p>Some postcode districts within {carrierAssessedAreas} include islands, remote areas or carrier-specific zones. Delivery availability for those addresses is based on the delivery services presented during checkout.</p>
             <p>We do not describe a geographically mainland Scottish address as non-mainland simply because a carrier may classify it as a remote zone.</p>
             <p>If checkout does not offer a delivery service for your postcode, payment will not be taken for an unavailable delivery method.</p>
           </section>
           <section>
             <h2>Delivery charges</h2>
-            <p>Standard delivery is currently £3.99. Express delivery, where available, is currently £5.99.</p>
-            <p>Free standard delivery is available when the qualifying merchandise value reaches the free-delivery threshold shown on the site. The current threshold is £30 including VAT, calculated after discounts and excluding delivery charges.</p>
-            <p>The threshold is controlled by our current delivery configuration. Where the storefront displays a different current threshold, the checkout value takes precedence.</p>
+            <p>Standard delivery is currently {standardDelivery}. Express delivery, where available, is currently {expressDelivery}.</p>
+            <p>Free standard delivery is available when the qualifying merchandise value reaches {freeDeliveryThreshold} including VAT, calculated after discounts and excluding delivery charges.</p>
           </section>
           <section>
             <h2>Dispatch</h2>

@@ -40,15 +40,15 @@ export const ironSpruePaymentMethods = [
     id: 'apple-pay',
     label: 'Apple Pay',
     assetPath: '/payments/apple-pay.svg',
-    enabled: true,
-    status: 'eligible-through-stripe',
+    enabled: false,
+    status: 'production-configuration-required',
   },
   {
     id: 'google-pay',
     label: 'Google Pay',
     assetPath: '/payments/google-pay.svg',
-    enabled: true,
-    status: 'eligible-through-stripe',
+    enabled: false,
+    status: 'production-configuration-required',
   },
   {
     id: 'paypal',
@@ -66,5 +66,5 @@ export function getVisibleIronSpruePaymentMethods(
 }
 
 export function ironSpruePaymentSummary() {
-  return 'Secure card payments are available now. Apple Pay and Google Pay may appear in the secure payment form where supported by Stripe, your device and browser.';
+  return 'Payments are handled securely at checkout.';
 }

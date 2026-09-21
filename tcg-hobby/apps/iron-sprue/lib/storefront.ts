@@ -326,6 +326,7 @@ function stripInternalProductCopy(value: string) {
     /\b(?:use\s+manufacturer\s+and\s+authorised\s+distributor\s+information|authorised\s+distributor\s+information\s+as\s+factual|factual\s+use\s+only)\b/i,
     /\b(?:manufacturer|supplier|brand|pintoo|aoshima|cubicfun|tasma)?\s*reference\s+[A-Z0-9-]{3,}\b/i,
     /\b(?:choose this\s+[^.?!]+\s+version if that finish best suits your collection|this listing is the\s+[^.?!]+\s+variant)\b/i,
+    /\b(?:chosen for customers who want|customers who want|good pick for customers|ideal for\s+[^.?!]+\s+or anyone drawn to)\b/i,
   ];
 
   return value
@@ -347,6 +348,7 @@ function stripInternalProductCopy(value: string) {
 
 export function customerProductDescription(product: IronSprueProduct): string {
   const source = stripInternalProductCopy(product.description || product.shortDescription || conciseProductLead(product));
+  const size = productSize(product);
   const shortDescription = normalisePublicCopy(product.shortDescription || '');
   const seen = new Set<string>();
   const paragraphs = source
@@ -363,7 +365,14 @@ export function customerProductDescription(product: IronSprueProduct): string {
     });
 
   if (!paragraphs.length) return conciseProductLead(product);
-  if (paragraphs.length === 1) return paragraphs[0] ?? conciseProductLead(product);
+  const withFinishedSize = (description: string) => {
+    if (!size) return description;
+    const normalisedDescription = normalisePublicCopy(description);
+    const normalisedSize = normalisePublicCopy(size);
+    if (!normalisedSize || normalisedDescription.includes(normalisedSize)) return description;
+    return `${description}\n\nFinished size: ${size}.`;
+  };
+  if (paragraphs.length === 1) return withFinishedSize(paragraphs[0] ?? conciseProductLead(product));
 
   const [first, ...rest] = paragraphs;
   if (!first) return conciseProductLead(product);
@@ -372,7 +381,7 @@ export function customerProductDescription(product: IronSprueProduct): string {
     const normalised = normalisePublicCopy(paragraph);
     return !firstNormalised.includes(normalised) && !normalised.includes(firstNormalised) && publicCopySimilarity(first, paragraph) < 0.58;
   });
-  return [first, ...filteredRest].join('\n\n');
+  return withFinishedSize([first, ...filteredRest].join('\n\n'));
 }
 
 export function productCardFacts(product: IronSprueProduct) {

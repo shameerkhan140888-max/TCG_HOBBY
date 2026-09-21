@@ -3384,21 +3384,24 @@ body:has(.coming-soon-range-page) .trust-workshop-band {
   align-items: start;
 }
 
-.filter-panel {
+.catalogue-filter-shell {
   position: sticky;
   top: 154px;
+}
+
+.catalogue-filter-body {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255, 250, 241, 0.9);
   padding: 18px;
 }
 
-.filter-panel form {
+.catalogue-filter-body form {
   display: grid;
   gap: 12px;
 }
 
-.mobile-filter-drawer {
+.catalogue-filter-toggle {
   display: none;
 }
 
@@ -4789,7 +4792,7 @@ body:has(.product-not-found-page)::before {
     grid-template-columns: 1fr;
   }
 
-  .filter-panel {
+  .catalogue-filter-shell {
     position: static;
   }
 
@@ -5083,29 +5086,34 @@ body:has(.product-not-found-page)::before {
     gap: 14px;
   }
 
-  .mobile-filter-drawer {
-    display: block;
+  .catalogue-filter-shell {
     border: 1px solid var(--line);
     border-radius: 8px;
     background: rgba(255, 250, 241, 0.92);
     padding: 12px;
   }
 
-  .mobile-filter-drawer summary {
+  .catalogue-filter-toggle {
+    display: block;
+    width: 100%;
+    border: 0;
+    background: transparent;
     cursor: pointer;
     color: var(--ink);
     font-weight: 900;
-    list-style: none;
+    text-align: left;
   }
 
-  .mobile-filter-drawer form {
-    display: grid;
-    gap: 12px;
+  .catalogue-filter-body {
+    display: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
     margin-top: 12px;
   }
 
-  .filter-panel {
-    display: none;
+  .catalogue-filter-shell.is-open .catalogue-filter-body {
+    display: block;
   }
 }
 
@@ -6438,6 +6446,7 @@ body::before {
 /* Batch 2 PDP rollout: approved board surface and restrained machined edges. */
 .product-detail-page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(22px, 3vw, 36px);
   font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
 }
@@ -6563,6 +6572,9 @@ body::before {
 /* Batch 2 PDP consolidation: one machined product surface with internal splits. */
 .product-unified-panel {
   position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow: visible;
   border: 0;
   border-radius: 0;
@@ -6583,10 +6595,10 @@ body::before {
 
 .product-unified-grid {
   grid-template-columns: minmax(360px, 1.25fr) minmax(340px, 0.75fr);
-  grid-template-areas:
-    "media buy"
-    "description description";
+  grid-template-areas: "media buy";
   gap: clamp(22px, 3.4vw, 44px);
+  min-width: 0;
+  width: 100%;
 }
 
 .product-unified-panel .product-story-panel,
@@ -6615,6 +6627,7 @@ body::before {
 
 .product-unified-panel .product-story-panel,
 .product-unified-panel .product-buy-panel {
+  min-width: 0;
   padding: 0;
 }
 
@@ -6643,10 +6656,13 @@ body::before {
 
 .product-pdp-info-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(260px, 0.72fr);
-  gap: clamp(22px, 3vw, 42px);
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1.38fr) minmax(245px, 0.72fr);
+  gap: clamp(20px, 2.6vw, 38px);
+  min-width: 0;
   border-top: 1px solid rgba(190, 122, 37, 0.28);
   border-bottom: 1px solid rgba(190, 122, 37, 0.22);
+  margin-top: clamp(22px, 3vw, 34px);
   padding: clamp(22px, 3vw, 34px) 0;
 }
 
@@ -6786,7 +6802,8 @@ body::before {
   display: grid;
   grid-template-columns: minmax(300px, 0.92fr);
   grid-template-areas:
-    "media";
+    "media"
+    "info";
   gap: clamp(18px, 2.8vw, 34px);
   align-items: start;
 }
@@ -6794,7 +6811,8 @@ body::before {
 .product-unified-panel .product-story-panel:has(.product-gallery-thumbnails) {
   grid-template-columns: minmax(300px, 0.92fr) minmax(240px, 0.82fr);
   grid-template-areas:
-    "media thumbnails";
+    "media thumbnails"
+    "info info";
 }
 
 .product-unified-panel .product-gallery {
@@ -6835,10 +6853,11 @@ body::before {
 
 .product-unified-panel .product-description-panel {
   padding-top: 0;
+  order: 1;
 }
 
 .product-unified-panel .product-pdp-info-grid {
-  grid-area: description;
+  grid-area: info;
 }
 
 .product-unified-panel .product-description-panel h2 {
@@ -6847,6 +6866,7 @@ body::before {
 
 .product-unified-panel .product-specification-zone {
   align-items: start;
+  order: 2;
 }
 
 .product-detail-page .pdp-addon-panel {
@@ -6938,8 +6958,7 @@ body::before {
   .product-unified-grid {
     grid-template-areas:
       "media"
-      "buy"
-      "description";
+      "buy";
   }
 
   .product-unified-panel .product-buy-panel {
@@ -7144,7 +7163,7 @@ body::before {
 
   .product-unified-panel .product-description-panel {
     grid-area: auto;
-    order: 4;
+    order: 1;
   }
 
   .product-unified-panel .product-pdp-info-grid {
@@ -7172,6 +7191,7 @@ body::before {
   }
 
   .product-unified-panel .product-specification-zone {
+    order: 2;
     grid-template-columns: 1fr;
     gap: 16px;
     margin-top: 0;

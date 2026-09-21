@@ -27,4 +27,17 @@ describe('Iron Sprue catalogue listing filters', () => {
     expect(markup).not.toContain('<option value="CubicFun">CubicFun</option>');
     expect(markup).not.toContain('<option value="Pintoo">Pintoo</option>');
   });
+
+  it('renders one canonical filter form for responsive presentations', async () => {
+    const markup = renderToStaticMarkup(await CatalogueListing({
+      searchParams: { brand: 'Aoshima', scale: '1-32' },
+      title: 'Shop',
+    }));
+
+    expect(markup.match(/id="brand-filter-/g) ?? []).toHaveLength(1);
+    expect(markup.match(/id="scale-filter-/g) ?? []).toHaveLength(1);
+    expect(markup).toContain('catalogue-filter-shell');
+    expect(markup).not.toContain('mobile-filter-drawer');
+    expect(markup).not.toContain('filter-panel');
+  });
 });

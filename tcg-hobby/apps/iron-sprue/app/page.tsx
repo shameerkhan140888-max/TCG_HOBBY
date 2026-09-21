@@ -197,7 +197,7 @@ export default async function HomePage() {
               style={{ '--brand-index': index } as CSSProperties}
               key={brand.slug}
             >
-              <img src={brand.logoUrl} alt={brand.altText} width="340" height="130" />
+              <img src={brand.logoUrl} alt="" aria-hidden="true" width="340" height="130" />
             </a>
             ))}
           </div>

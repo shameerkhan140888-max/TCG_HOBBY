@@ -195,4 +195,41 @@ describe('Iron Sprue public catalogue copy', () => {
     expect(description).toContain('calm decorative character');
     expect(description).not.toContain('reference S1024');
   });
+
+  it('strips merchandising-audience tails from rendered PDP descriptions', () => {
+    const description = customerProductDescription({
+      name: '3D Jigsaw Vase - Koi Carp and Lotus',
+      brand: 'Pintoo',
+      category: 'Vases',
+      sku: 'IS-PIN-S1024',
+      slug: 'pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus',
+      description: [
+        'The koi and lotus artwork gives the finished vase a calm decorative character.',
+        'It suits customers who want the completed build to stay on show.',
+      ].join(' '),
+    } as IronSprueProduct);
+
+    expect(description).toContain('calm decorative character');
+    expect(description).not.toContain('customers who want');
+    expect(description).not.toContain('stay on show');
+  });
+
+  it('lists known finished dimensions in rendered PDP descriptions', () => {
+    const description = customerProductDescription({
+      name: 'Magic Box  London at Night',
+      brand: 'CubicFun',
+      category: 'Magic Boxes',
+      sku: 'IS-CUB-OM3606',
+      slug: 'cubicfun-om3606-magic-box-london-at-night',
+      productType: '3D puzzle display build',
+      shortDescription: '',
+      stockQuantity: 1,
+      description: 'London at Night uses the Magic Box format for a compact city-atmosphere display.',
+      specifications: {
+        size: '16cm x 16cm x 26cm',
+      },
+    } as IronSprueProduct);
+
+    expect(description).toContain('Finished size: 16cm x 16cm x 26cm.');
+  });
 });

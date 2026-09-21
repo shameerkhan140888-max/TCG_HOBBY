@@ -400,6 +400,34 @@ export type ShippingMethod = {
   countryScope: 'GB' | 'WORLDWIDE';
 };
 
+export const IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR = 3000;
+export const IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR = 399;
+export const IRON_SPRUE_UK_EXPRESS_DELIVERY_MINOR = 599;
+
+export const ironSprueDeliveryPostcodeTerritoryExclusions = [
+  { area: 'BT', label: 'Northern Ireland' },
+  { area: 'GY', label: 'Guernsey' },
+  { area: 'JE', label: 'Jersey' },
+  { area: 'IM', label: 'Isle of Man' },
+  { area: 'HS', label: 'Outer Hebrides' },
+  { area: 'ZE', label: 'Shetland Islands' },
+] as const;
+
+export const ironSprueDeliveryCarrierAssessedAreas = ['IV', 'KA', 'KW', 'PA', 'PH'] as const;
+
+export function isIronSprueUkCountry(country: string) {
+  const normalizedCountry = country.trim().toUpperCase();
+  return normalizedCountry === 'GB' || normalizedCountry === 'UK';
+}
+
+export function getIronSprueDeliveryChargeMinor(methodCode: ShippingMethodCode, country: string, qualifyingSubtotalMinor = 0) {
+  if (!isIronSprueUkCountry(country)) return null;
+  const qualifiesForFreeStandard = qualifyingSubtotalMinor >= IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR;
+  if (methodCode === 'UK_STANDARD') return qualifiesForFreeStandard ? 0 : IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR;
+  if (methodCode === 'UK_EXPRESS') return qualifiesForFreeStandard ? IRON_SPRUE_UK_STANDARD_DELIVERY_MINOR : IRON_SPRUE_UK_EXPRESS_DELIVERY_MINOR;
+  return null;
+}
+
 export type CartLineItem = {
   id: string;
   productId: string;

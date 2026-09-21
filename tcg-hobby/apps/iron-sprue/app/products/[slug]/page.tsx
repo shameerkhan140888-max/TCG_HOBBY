@@ -8,6 +8,7 @@ import { ironSprueBrand } from '../../../lib/brand';
 import { AddToBasketButton } from '../../../components/basket-client';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
 import { type IronSprueProduct } from '../../../lib/catalogue';
+import { ironSprueStandardDeliverySummary } from '../../../lib/delivery-rules';
 import { getIronSprueProductionApiProduct, shouldUseIronSprueProductionApi } from '../../../lib/production-api';
 import { conciseProductLead, customerProductDescription, formatPrice, productAvailability, productAvailabilityClass, productCommerceId, productDetailAddons, productGalleryImages, productImage, productSellableQuantity } from '../../../lib/storefront';
 import { addIronSprueWishlistItemAction } from '../../../lib/wishlist-actions';
@@ -202,6 +203,35 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <div className="product-detail product-unified-grid">
           <div className="product-story-panel">
             <ProductGallery images={galleryImages} productName={product.name} fallbackLabel={product.brand} />
+            <div className="product-pdp-info-grid">
+              <section className="product-description-panel" aria-labelledby="product-description-heading">
+                <h2 id="product-description-heading">Description</h2>
+                {description.split(/\n{2,}/).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+              </section>
+
+              <section className="product-specification-zone" aria-labelledby="product-build-information-heading">
+                <div>
+                  <h2 id="product-build-information-heading">Build information</h2>
+                  {specifications.length ? (
+                    <dl className="product-specification-list">
+                      {specifications.map((specification) => (
+                        <React.Fragment key={specification.key}>
+                          <dt>{specification.label}</dt>
+                          <dd>{specification.value}</dd>
+                        </React.Fragment>
+                      ))}
+                    </dl>
+                  ) : null}
+                  {customerFeatures.length ? (
+                    <ul className="product-key-details">
+                      {customerFeatures.map((feature) => (
+                        <li key={feature}>{feature}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </section>
+            </div>
           </div>
 
           <div className="product-buy-panel">
@@ -243,41 +273,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </form>
             </div>
             <section className="service-summary product-reassurance" aria-label="Delivery returns and payment information">
-              <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> UK standard delivery is £3.99, with free UK standard delivery over £30.00 qualifying spend. <a href="/delivery">Delivery information</a></span></p>
+              <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg></span><span><strong>Delivery</strong> {ironSprueStandardDeliverySummary()} <a href="/delivery">Delivery information</a></span></p>
               <p><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4V12zM20 8v8l-8 4V12z" /></svg></span><span><strong>Returns</strong> Check the <a href="/returns">Returns page</a> for changed-mind returns, damaged items and refund guidance before sending anything back.</span></p>
-              <div className="reassurance-row reassurance-payment-row"><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Secure payments</strong> Card payments are handled securely at checkout.<PaymentMethodStrip compact /></span></div>
+              <div className="reassurance-row reassurance-payment-row"><span className="reassurance-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h4a3 3 0 0 1 0 6h-2v3H9zm2 2v2h2a1 1 0 0 0 0-2z" /></svg></span><span><strong>Secure payments</strong> Payments are handled securely at checkout.<PaymentMethodStrip compact /></span></div>
             </section>
           </div>
 
-          <div className="product-pdp-info-grid">
-            <section className="product-description-panel" aria-labelledby="product-description-heading">
-              <h2 id="product-description-heading">Description</h2>
-              {description.split(/\n{2,}/).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-            </section>
-
-            <section className="product-specification-zone" aria-labelledby="product-build-information-heading">
-              <div>
-                <h2 id="product-build-information-heading">Build information</h2>
-                {specifications.length ? (
-                  <dl className="product-specification-list">
-                    {specifications.map((specification) => (
-                      <React.Fragment key={specification.key}>
-                        <dt>{specification.label}</dt>
-                        <dd>{specification.value}</dd>
-                      </React.Fragment>
-                    ))}
-                  </dl>
-                ) : null}
-                {customerFeatures.length ? (
-                  <ul className="product-key-details">
-                    {customerFeatures.map((feature) => (
-                      <li key={feature}>{feature}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            </section>
-          </div>
         </div>
 
       </article>
