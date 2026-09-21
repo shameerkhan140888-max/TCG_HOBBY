@@ -32,6 +32,50 @@ const categoryIconByLabel: Record<string, string> = {
   'Paints & Weathering': '/assets/category-icons/paints-weathering.png',
 };
 
+const homepageSectionHeadingArt: Record<string, { src: string; alt: string; className?: string }> = {
+  'featured-products': {
+    src: '/assets/section-headings/popular-scale-models.png',
+    alt: '1:32 scale models',
+    className: 'section-heading-art--scale',
+  },
+  architecture: {
+    src: '/assets/section-headings/architecture-landmark-builds.png',
+    alt: 'Architectural and landmark builds',
+  },
+  display: {
+    src: '/assets/section-headings/night-boxes-display-builds.png',
+    alt: 'Night boxes and display builds',
+  },
+};
+
+function sectionHeadingArtFor(sectionKey: string, heading?: string) {
+  const normalised = `${sectionKey} ${heading ?? ''}`.toLowerCase();
+  if (sectionKey === 'featured-products') return homepageSectionHeadingArt['featured-products'];
+  if (normalised.includes('architecture') || normalised.includes('landmark')) return homepageSectionHeadingArt.architecture;
+  if (normalised.includes('display') || normalised.includes('night box')) return homepageSectionHeadingArt.display;
+  return null;
+}
+
+function HomepageSectionHeading({ sectionKey, eyebrow, heading }: { sectionKey: string; eyebrow: string; heading: string }) {
+  const art = sectionHeadingArtFor(sectionKey, heading);
+  if (!art) {
+    return (
+      <div>
+        <p className="eyebrow">{eyebrow}</p>
+        <h2>{heading}</h2>
+      </div>
+    );
+  }
+
+  return (
+    <div className="homepage-section-heading">
+      <p className="eyebrow">{eyebrow}</p>
+      <h2 className="sr-only">{heading}</h2>
+      <img className={`section-heading-art ${art.className ?? ''}`.trim()} src={art.src} alt={art.alt} loading="eager" decoding="async" />
+    </div>
+  );
+}
+
 export default async function HomePage() {
   const useProductionApi = shouldUseIronSprueProductionApi();
   const [fallbackHeroSlides, productionHome, fallbackHomepagePlacements, fallbackStorefrontProducts] = await Promise.all([
@@ -114,10 +158,7 @@ export default async function HomePage() {
 
         <section className="section-block">
           <div className="section-head split">
-            <div>
-              <p className="eyebrow">Popular models</p>
-              <h2>{featuredPlacement?.title || ironSpruePopularModelsDefaultPlacement.title}</h2>
-            </div>
+            <HomepageSectionHeading sectionKey="featured-products" eyebrow="Popular models" heading={featuredPlacement?.title || ironSpruePopularModelsDefaultPlacement.title} />
             <a className="text-link" href={featuredPlacement?.ctaHref || ironSpruePopularModelsDefaultPlacement.ctaHref}>
               {featuredPlacement?.ctaLabel || ironSpruePopularModelsDefaultPlacement.ctaLabel}
             </a>
@@ -130,10 +171,7 @@ export default async function HomePage() {
         {productSections.map((section) => (
           <section className="section-block" key={section.sectionKey}>
             <div className="section-head split">
-              <div>
-                <p className="eyebrow">{section.eyebrow}</p>
-                <h2>{section.heading}</h2>
-              </div>
+              <HomepageSectionHeading sectionKey={section.sectionKey} eyebrow={section.eyebrow} heading={section.heading} />
               {section.ctaHref ? (
                 <a className="text-link" href={section.ctaHref}>
                   {section.ctaLabel || 'View section'}

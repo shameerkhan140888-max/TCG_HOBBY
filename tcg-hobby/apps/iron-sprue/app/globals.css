@@ -36,26 +36,15 @@ html {
 body {
   margin: 0;
   position: relative;
-  background:
-    radial-gradient(circle at 18% 8%, rgba(255, 255, 255, 0.72), transparent 30%),
-    linear-gradient(135deg, #f1f3f2 0%, #dce1e2 42%, #cbd1d3 100%);
-  color: var(--ink);
+  background: #000;
+  color: var(--paper-soft);
   font-family: var(--iron-sprue-body-font, Arial, Helvetica, sans-serif);
   font-size: calc(16px * var(--iron-sprue-body-scale-factor, 1));
   font-weight: var(--iron-sprue-body-weight, 400);
 }
 
 body::before {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    url("data:image/svg+xml,%3Csvg width='520' height='420' viewBox='0 0 520 420' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23232829' stroke-opacity='.11' stroke-width='1.1'%3E%3Cpath d='M20 360h126m-96-28h74m216-226h118m-88 29h62M230 330h86m-54-28h112'/%3E%3Ccircle cx='104' cy='230' r='62'/%3E%3Ccircle cx='104' cy='230' r='39'/%3E%3Ccircle cx='104' cy='230' r='12'/%3E%3Cpath d='M104 151v-34M104 343v-34M25 230H-9M217 230h-34M48 174 24 150M184 310l-24-24M48 286l-24 24M184 150l-24 24'/%3E%3Cpath d='M104 151 119 169 142 160 149 184 173 191 164 214 182 230 164 246 173 269 149 276 142 300 119 291 104 309 89 291 66 300 59 276 35 269 44 246 26 230 44 214 35 191 59 184 66 160 89 169Z'/%3E%3C/g%3E%3Cg stroke='%23c79947' stroke-opacity='.12' stroke-width='1'%3E%3Ccircle cx='400' cy='86' r='42'/%3E%3Ccircle cx='400' cy='86' r='20'/%3E%3Cpath d='M400 31v-23M400 164v-23M345 86h-23M478 86h-23M361 47l-16-16M455 141l-16-16M361 125l-16 16M455 31l-16 16'/%3E%3Cpath d='M400 31 413 48 433 42 438 63 458 70 448 88 458 106 438 113 433 134 413 128 400 145 387 128 367 134 362 113 342 106 352 88 342 70 362 63 367 42 387 48Z'/%3E%3C/g%3E%3Cg stroke='%23232829' stroke-opacity='.08' stroke-width='1'%3E%3Cpath d='M0 96h520M0 194h520M0 292h520M72 0v420M208 0v420M344 0v420M480 0v420'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
-    radial-gradient(circle at 82% 12%, rgba(199, 153, 71, 0.12), transparent 26%);
-  background-size: 520px 420px, auto;
-  opacity: 0.38;
-  content: "";
+  display: none;
 }
 
 a {
@@ -5154,46 +5143,26 @@ body:has(.product-not-found-page)::before {
 .homepage-board,
 .product-detail-page {
   position: relative;
-  width: min(calc(100% - 40px), 1320px);
-  margin: clamp(26px, 4vw, 54px) auto;
-  overflow: hidden;
-  border: 1px solid rgba(255, 250, 241, 0.16);
-  border-radius: 8px;
-  background: var(--iron-board-surface);
-  background-color: var(--iron-board-base);
-  background-position: center;
-  background-repeat: repeat;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: rgba(255, 250, 241, 0.82);
-  padding: clamp(20px, 3.4vw, 46px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 250, 241, 0.16),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.58),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.4),
-    0 22px 68px rgba(8, 10, 8, 0.18);
+  padding: clamp(28px, 4vw, 58px) max(40px, calc((100vw - 1320px) / 2));
+  box-shadow: none;
 }
 
 .homepage-board::before,
 .product-detail-page::before {
-  position: absolute;
-  inset: 0;
-  background: var(--iron-board-overlay);
-  content: "";
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 .homepage-board::after,
 .product-detail-page::after {
-  position: absolute;
-  inset: 0;
-  background:
-    url("/assets/iron-board/iron-board-slotted-bolt.png") left 10px top 10px / 24px 24px no-repeat,
-    url("/assets/iron-board/iron-board-slotted-bolt.png") right 10px top 10px / 24px 24px no-repeat,
-    url("/assets/iron-board/iron-board-slotted-bolt.png") left 10px bottom 10px / 24px 24px no-repeat,
-    url("/assets/iron-board/iron-board-slotted-bolt.png") right 10px bottom 10px / 24px 24px no-repeat;
-  content: "";
-  pointer-events: none;
-  z-index: 1;
+  display: none;
 }
 
 .homepage-board > *,
@@ -5619,32 +5588,12 @@ body:has(.product-not-found-page)::before {
 }
 
 body {
-  background:
-    var(--iron-board-overlay),
-    var(--iron-board-surface);
-  background-color: var(--iron-board-base);
-  background-attachment: fixed;
-  background-position: center top;
-  background-repeat: repeat;
+  background: #000;
   color: var(--paper-soft);
 }
 
 body::before {
-  background:
-    url("/assets/iron-board/iron-board-slotted-bolt.png") left 14px top 148px / 24px 24px no-repeat,
-    url("/assets/iron-board/iron-board-slotted-bolt.png") right 14px top 148px / 24px 24px no-repeat,
-    url("/assets/iron-board/iron-board-slotted-bolt.png") left 14px bottom 14px / 24px 24px no-repeat,
-    url("/assets/iron-board/iron-board-slotted-bolt.png") right 14px bottom 14px / 24px 24px no-repeat,
-    linear-gradient(90deg, rgba(255, 250, 241, 0.08), transparent 8%, transparent 92%, rgba(255, 250, 241, 0.08)),
-    linear-gradient(180deg, rgba(255, 250, 241, 0.06), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.3));
-  background-size:
-    24px 24px,
-    24px 24px,
-    24px 24px,
-    24px 24px,
-    auto,
-    auto;
-  opacity: 1;
+  display: none;
 }
 
 body:has(.commerce-flow-page.basket-route),
@@ -5662,20 +5611,11 @@ body:has(.checkout-result-page)::before {
 
 .homepage-board,
 .product-detail-page {
-  width: min(calc(100% - 48px), 1320px);
-  overflow: visible;
-  border: 0;
-  background: transparent;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   color: rgba(255, 250, 241, 0.84);
-  padding: clamp(28px, 4vw, 58px) 0;
-  box-shadow: none;
-}
-
-.homepage-board::before,
-.homepage-board::after,
-.product-detail-page::before,
-.product-detail-page::after {
-  display: none;
+  padding: clamp(28px, 4vw, 58px) max(40px, calc((100vw - 1320px) / 2));
 }
 
 .homepage-board .category-strip {
@@ -5921,13 +5861,8 @@ body:has(.checkout-result-page)::before {
 html,
 body,
 .page-frame {
-  background:
-    var(--iron-board-surface);
-  background-color: var(--iron-board-base);
-  background-attachment: fixed;
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-size: auto, cover;
+  background: #000;
+  background-color: #000;
 }
 
 body::before {
@@ -6070,6 +6005,39 @@ body::before {
   font-size: clamp(30px, 4.2vw, 58px);
   line-height: 1;
   text-transform: uppercase;
+}
+
+.homepage-section-heading {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.homepage-section-heading .eyebrow {
+  margin-bottom: 0;
+}
+
+.section-heading-art {
+  width: min(760px, 100%);
+  max-width: min(760px, 100%);
+  max-height: clamp(112px, 12vw, 172px);
+  object-fit: contain;
+  object-position: left center;
+  filter:
+    brightness(1.18)
+    contrast(1.08)
+    saturate(1.04)
+    drop-shadow(0 18px 26px rgba(0, 0, 0, 0.62));
+}
+
+.section-heading-art--scale {
+  max-height: clamp(104px, 10vw, 150px);
+  filter:
+    brightness(1.32)
+    contrast(1.12)
+    saturate(1.08)
+    drop-shadow(0 18px 26px rgba(0, 0, 0, 0.62));
 }
 
 .homepage-board .brand-carousel h2 {
@@ -6616,40 +6584,17 @@ body::before {
 /* Batch 2 PDP consolidation: one machined product surface with internal splits. */
 .product-unified-panel {
   position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(3, 4, 3, 0.98);
-  border-radius: 10px;
-  background:
-    linear-gradient(180deg, rgba(88, 94, 86, 0.44), rgba(14, 16, 14, 0.96) 18%, rgba(4, 5, 4, 0.99) 76%, #010101),
-    linear-gradient(135deg, rgba(255, 250, 241, 0.08), transparent 30%, rgba(0, 0, 0, 0.56) 68%, rgba(184, 112, 31, 0.36)),
-    repeating-linear-gradient(0deg, rgba(255, 250, 241, 0.03) 0 1px, transparent 1px 7px),
-    repeating-linear-gradient(90deg, rgba(255, 250, 241, 0.018) 0 1px, transparent 1px 11px);
-  background-color: #10130f;
-  background-blend-mode: normal, overlay, soft-light, soft-light;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: rgba(255, 250, 241, 0.82);
-  padding: clamp(20px, 3vw, 38px);
-  box-shadow:
-    0 1px 0 rgba(255, 250, 241, 0.14),
-    0 0 0 1px rgba(190, 122, 37, 0.48),
-    0 0 0 3px rgba(0, 0, 0, 0.9),
-    inset 0 1px 0 rgba(255, 250, 241, 0.14),
-    inset 1px 0 0 rgba(255, 250, 241, 0.05),
-    inset -1px 0 0 rgba(0, 0, 0, 0.72),
-    inset 0 0 0 1px rgba(184, 112, 31, 0.3),
-    0 22px 42px rgba(0, 0, 0, 0.34);
+  padding: 0;
+  box-shadow: none;
 }
 
 .product-unified-panel::before {
-  position: absolute;
-  inset: 0;
-  border-radius: 9px;
-  box-shadow:
-    inset 0 0 0 1px rgba(190, 122, 37, 0.3),
-    inset 0 0 0 3px rgba(0, 0, 0, 0.64),
-    inset 0 1px 0 rgba(255, 250, 241, 0.12);
-  content: "";
-  pointer-events: none;
-  z-index: 0;
+  content: none;
 }
 
 .product-unified-panel > * {
@@ -7795,7 +7740,13 @@ body:has(.homepage-brand-carousel) .trust-workshop-band {
   }
 
   .homepage-board .section-head.split {
+    align-items: flex-start;
+    flex-wrap: wrap;
     gap: 12px;
+  }
+
+  .homepage-board .homepage-section-heading {
+    flex: 1 1 100%;
   }
 
   .homepage-board .section-head h2 {
