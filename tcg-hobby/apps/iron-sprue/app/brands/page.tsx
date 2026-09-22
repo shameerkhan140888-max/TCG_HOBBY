@@ -12,7 +12,7 @@ export default function BrandsPage() {
         <div>
           <p className="eyebrow">Brands</p>
           <h1>Brands we stock</h1>
-          <p className="lead">Browse stocked makers and authorised product ranges. More brands can be added as official logo assets and product imagery are approved.</p>
+          <p className="lead">Explore the official model kit, puzzle, tool and finishing brands currently available from Iron Sprue.</p>
         </div>
         <a className="button secondary" href="/shop">Back to shop</a>
       </div>

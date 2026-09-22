@@ -8826,14 +8826,14 @@ body:has(.product-detail-page) .payment-trust-banner {
   margin: 0 calc(50% - 50vw);
   border-block: 0;
   border-radius: 0;
-  background: var(--paper-soft);
-  color: var(--ink);
+  background: transparent;
+  color: var(--paper-soft);
   box-shadow: none;
   padding: clamp(24px, 4vw, 42px) clamp(20px, 5vw, 72px);
 }
 
 .homepage-brand-carousel h2 {
-  color: var(--ink);
+  color: var(--paper-soft);
   text-shadow: none;
 }
 
@@ -8857,16 +8857,14 @@ body:has(.product-detail-page) .payment-trust-banner {
 
 .homepage-brand-carousel .brand-feature {
   position: absolute;
-  inset: 0 max(16px, calc(50% - 210px));
+  inset: 0 max(16px, calc(50% - 250px));
   display: grid;
   place-items: center;
   padding: 14px 22px;
-  border: 1px solid rgba(211, 160, 74, 0.36);
-  border-radius: 8px;
-  background: #fff;
-  box-shadow:
-    0 0 0 2px rgba(0, 0, 0, 0.72),
-    inset 0 1px 0 rgba(255, 250, 241, 0.9);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   opacity: 0;
   transform: translateX(18px);
   animation: homepageBrandCarousel calc(var(--brand-count, 7) * 4s) infinite;
@@ -8874,15 +8872,16 @@ body:has(.product-detail-page) .payment-trust-banner {
 }
 
 .homepage-brand-carousel .brand-feature img {
-  width: min(280px, 58vw);
-  max-height: 82px;
+  width: min(380px, 70vw);
+  max-height: 108px;
   object-fit: contain;
   mix-blend-mode: normal;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.38));
 }
 
 .homepage-brand-carousel .carousel-dots li,
 .homepage-brand-carousel .carousel-dots button {
-  background: rgba(3, 4, 3, 0.28);
+  background: rgba(255, 250, 241, 0.28);
 }
 
 .homepage-brand-carousel .carousel-dots li[aria-current="true"],
