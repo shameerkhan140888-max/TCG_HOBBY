@@ -8826,14 +8826,14 @@ body:has(.product-detail-page) .payment-trust-banner {
   margin: 0 calc(50% - 50vw);
   border-block: 0;
   border-radius: 0;
-  background: transparent;
-  color: var(--paper-soft);
+  background: var(--paper-soft);
+  color: var(--ink);
   box-shadow: none;
   padding: clamp(24px, 4vw, 42px) clamp(20px, 5vw, 72px);
 }
 
 .homepage-brand-carousel h2 {
-  color: var(--paper-soft);
+  color: var(--ink);
   text-shadow: none;
 }
 
@@ -8881,7 +8881,7 @@ body:has(.product-detail-page) .payment-trust-banner {
 
 .homepage-brand-carousel .carousel-dots li,
 .homepage-brand-carousel .carousel-dots button {
-  background: rgba(255, 250, 241, 0.28);
+  background: rgba(3, 4, 3, 0.28);
 }
 
 .homepage-brand-carousel .carousel-dots li[aria-current="true"],
