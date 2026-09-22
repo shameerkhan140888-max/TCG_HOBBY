@@ -21,7 +21,7 @@ export const categoryNavigation = [
     label: 'Paints & Weathering',
     href: '/shop/paints-weathering',
     badge: 'Coming soon',
-    badgeImage: '/assets/category-banners/paints-weathering-coming-soon.png',
+    badgeImage: '/assets/category-banners/paints-weathering-coming-soon-transparent.png',
   },
 ] as const;
 

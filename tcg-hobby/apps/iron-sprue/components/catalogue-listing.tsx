@@ -313,7 +313,7 @@ export async function CatalogueListing({
           <div className="coming-soon-range-visual" aria-hidden="true">
             <img
               className="coming-soon-range-art"
-              src="/assets/category-banners/paints-weathering-coming-soon.png"
+              src="/assets/category-banners/paints-weathering-coming-soon-transparent.png"
               alt=""
               loading="eager"
               decoding="async"
