@@ -31,6 +31,7 @@ import type {
   PublicStockState,
   ShippingMethod,
 } from '@capital-hobby/types';
+import { IRON_SPRUE_UNDELIVERABLE_ADDRESS_MESSAGE } from '@capital-hobby/types';
 import { AuthService } from './auth.service.js';
 
 function publicStockState(line: { inStock: boolean }): PublicStockState {
@@ -66,6 +67,7 @@ function requireAddress(input: CheckoutAddress): CheckoutAddress {
 function isCustomerCheckoutError(message: string) {
   return (
     message === 'Complete the delivery address before continuing.' ||
+    message === IRON_SPRUE_UNDELIVERABLE_ADDRESS_MESSAGE ||
     message === 'Selected delivery method is not available for this address.' ||
     message === 'Product is not available.' ||
     message === 'Quantity must be at least 1.' ||

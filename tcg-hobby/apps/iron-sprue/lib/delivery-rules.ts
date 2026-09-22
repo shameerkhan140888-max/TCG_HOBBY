@@ -5,6 +5,7 @@ import {
   ironSprueDeliveryCarrierAssessedAreas,
   ironSprueDeliveryPostcodeTerritoryExclusions,
   IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR,
+  IRON_SPRUE_UNDELIVERABLE_ADDRESS_MESSAGE,
 } from '@capital-hobby/types';
 import type { ShippingMethodCode } from '@capital-hobby/types';
 
@@ -15,6 +16,7 @@ export {
   ironSprueDeliveryCarrierAssessedAreas,
   ironSprueDeliveryPostcodeTerritoryExclusions,
   IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR,
+  IRON_SPRUE_UNDELIVERABLE_ADDRESS_MESSAGE,
 };
 
 export function formatIronSprueDeliveryPrice(minor: number) {
@@ -33,5 +35,5 @@ export function ironSprueStandardDeliverySummary() {
 }
 
 export function ironSprueUndeliverableAddressMessage() {
-  return "Sorry, we don't currently deliver to this address. Please choose another delivery address to continue.";
+  return IRON_SPRUE_UNDELIVERABLE_ADDRESS_MESSAGE;
 }

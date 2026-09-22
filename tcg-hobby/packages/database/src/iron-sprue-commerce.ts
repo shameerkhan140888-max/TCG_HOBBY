@@ -11,7 +11,7 @@ import type {
   ShippingMethod,
   ShippingMethodCode,
 } from '@capital-hobby/types';
-import { getIronSprueDeliveryChargeMinor, isIronSprueDeliveryAddressDeliverable } from '@capital-hobby/types';
+import { getIronSprueDeliveryChargeMinor, IRON_SPRUE_UNDELIVERABLE_ADDRESS_MESSAGE, isIronSprueDeliveryAddressDeliverable } from '@capital-hobby/types';
 import type { IronSprueVatInvoice, IronSprueVatInvoiceLine, Prisma } from '@prisma/client';
 import { getIronSprueAdminPrisma } from './client.js';
 import {
@@ -837,7 +837,7 @@ async function createIronSpruePendingCheckoutOrder(input: CreateIronSprueCheckou
   const shippingAddress = requireCheckoutAddress(input.shippingAddress);
   const subtotalMinor = input.cart.subtotalMinor;
   if (!isIronSprueDeliveryAddressDeliverable(shippingAddress.country, shippingAddress.postalCode)) {
-    throw new Error("Sorry, we don't currently deliver to this address. Please choose another delivery address to continue.");
+    throw new Error(IRON_SPRUE_UNDELIVERABLE_ADDRESS_MESSAGE);
   }
   const shippingMethod = getIronSprueShippingMethodByCode(input.shippingMethodCode, shippingAddress.country, subtotalMinor);
   if (!shippingMethod) throw new Error('Selected delivery method is not available for this address.');

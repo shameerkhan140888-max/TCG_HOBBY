@@ -413,6 +413,8 @@ export const ironSprueDeliveryPostcodeTerritoryExclusions = [
   { area: 'ZE', label: 'Shetland Islands' },
 ] as const;
 
+export const IRON_SPRUE_UNDELIVERABLE_ADDRESS_MESSAGE = "Sorry, we don't currently deliver to this address. Please choose another delivery address to continue.";
+
 export const ironSprueDeliveryCarrierAssessedAreas = ['IV', 'KA', 'KW', 'PA', 'PH'] as const;
 
 export function isIronSprueUkCountry(country: string) {
