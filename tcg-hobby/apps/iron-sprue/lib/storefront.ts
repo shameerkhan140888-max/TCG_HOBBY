@@ -55,7 +55,7 @@ export const heroSlides = [
     title: 'Bundle savings for display builds.',
     script: 'Three-piece sets, better value.',
     copy: 'Selected Iron Sprue bundles group display builds and bench additions into better-value projects.',
-    image: '/assets/promo-bundle-savings.webp',
+    image: '/assets/hero-campaigns/promo-bundle-savings-hero-v2.png',
     sourceProductSlug: 'cubicfun-landmark-trio',
     brandName: 'Iron Sprue',
     alt: 'Grouped 3D puzzle and display-build boxes arranged as a bundle offer',

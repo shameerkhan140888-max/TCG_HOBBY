@@ -63,6 +63,12 @@ type CheckoutAddressValidationState = {
   address: CheckoutAddress | null;
 };
 
+type SelectedAddressRoute = {
+  label: string;
+  searchInput: string;
+  completion: 'premise' | 'street-premise';
+};
+
 type StripePaymentElement = {
   mount(selector: string): void;
   unmount(): void;
@@ -545,6 +551,19 @@ function createAddressSessionToken() {
   return `iron-sprue-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+function addressTextStartsWithPremise(value: string) {
+  return /^(?:flat|apartment|unit|suite|room)\s+[a-z0-9]+(?:\b|,)|^(?:[a-z]?\d+[a-z]?|\d+[a-z]?[-/]\d+[a-z]?)\s+/i.test(value.trim());
+}
+
+function addressTextIncludesStreet(value: string) {
+  return /\b(?:street|st|road|rd|lane|ln|avenue|ave|drive|dr|way|close|cl|court|ct|place|pl|terrace|mews|gardens?|grove|crescent|walk|row|hill|yard|square|parade|commercial)\b/i.test(value);
+}
+
+function addressSuggestionCompletionMode(suggestion: IronSprueAddressSuggestion): SelectedAddressRoute['completion'] {
+  const text = [suggestion.label, suggestion.mainText, suggestion.secondaryText].filter(Boolean).join(' ');
+  return addressTextIncludesStreet(text) ? 'premise' : 'street-premise';
+}
+
 function mergeContactIntoAddress(nextAddress: CheckoutAddress, currentAddress: CheckoutAddress): CheckoutAddress {
   return {
     ...nextAddress,
@@ -563,6 +582,8 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   const [addressSearch, setAddressSearch] = useState('');
   const [addressSuggestions, setAddressSuggestions] = useState<IronSprueAddressSuggestion[]>([]);
   const [addressSearchMessage, setAddressSearchMessage] = useState('');
+  const [selectedAddressRoute, setSelectedAddressRoute] = useState<SelectedAddressRoute | null>(null);
+  const [selectedAddressPremise, setSelectedAddressPremise] = useState('');
   const [addressSessionToken, setAddressSessionToken] = useState(createAddressSessionToken);
   const [isAddressSearching, setIsAddressSearching] = useState(false);
   const [isAddressValidating, setIsAddressValidating] = useState(false);
@@ -757,6 +778,8 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   function updateAddressField<Key extends keyof CheckoutAddress>(key: Key, value: CheckoutAddress[Key]) {
     setAddress((current) => ({ ...current, [key]: value }));
     if (key !== 'fullName' && key !== 'email') {
+      setSelectedAddressRoute(null);
+      setSelectedAddressPremise('');
       setAddressValidation({ status: 'empty', key: null, message: '', address: null });
       setCheckoutPaymentIntent(null);
     }
@@ -821,6 +844,8 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
       const nextAddress = mergeContactIntoAddress(payload.address, address);
       const key = checkoutAddressDeliveryKey(nextAddress);
       setAddress(nextAddress);
+      setSelectedAddressRoute(null);
+      setSelectedAddressPremise('');
       setAddressSearch(payload.formattedAddress ?? selectedAddressText ?? [
         nextAddress.line1,
         nextAddress.line2,
@@ -883,7 +908,39 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     setAddressSearch(suggestion.label);
     setAddressSuggestions([]);
     setAddressMode('search');
+    setSelectedAddressPremise('');
+    if (!addressTextStartsWithPremise(suggestion.label) && !addressTextStartsWithPremise(searchInput)) {
+      const completion = addressSuggestionCompletionMode(suggestion);
+      const message = completion === 'premise'
+        ? 'Add the house or building number for this street.'
+        : 'Add the street and house or building number for this postcode area.';
+      setSelectedAddressRoute({ label: suggestion.label, searchInput, completion });
+      setAddressSearchMessage(message);
+      setAddressValidation({
+        status: 'invalid',
+        key: null,
+        message,
+        address: null,
+      });
+      setStatus('');
+      return;
+    }
+    setSelectedAddressRoute(null);
     await validateCurrentCheckoutAddress(suggestion.label, searchInput);
+  }
+
+  async function validateSelectedRouteWithPremise() {
+    const premise = selectedAddressPremise.trim();
+    if (!selectedAddressRoute || !premise) {
+      setAddressSearchMessage(selectedAddressRoute?.completion === 'street-premise'
+        ? 'Enter the street and house or building number before continuing.'
+        : 'Enter the house or building number before continuing.');
+      return false;
+    }
+    const selectedAddressText = `${premise} ${selectedAddressRoute.label}`;
+    setAddressSearch(selectedAddressText);
+    setAddressSearchMessage('');
+    return validateCurrentCheckoutAddress(selectedAddressText, selectedAddressText);
   }
 
   function confirmStandardisedAddress() {
@@ -1281,6 +1338,8 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
                       setAddressMode('search');
                       setAddressSearch(event.target.value);
                       setAddressSearchMessage('');
+                      setSelectedAddressRoute(null);
+                      setSelectedAddressPremise('');
                     }}
                     aria-controls="checkout-address-suggestions"
                     aria-expanded={addressSuggestions.length > 0}
@@ -1300,10 +1359,38 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
                     ))}
                   </ul>
                 ) : null}
+                {selectedAddressRoute ? (
+                  <div className="address-premise-panel">
+                    <label htmlFor="checkout-address-premise">
+                      {selectedAddressRoute.completion === 'street-premise' ? 'Street and house/building number' : 'House or building number'}
+                      <input
+                        id="checkout-address-premise"
+                        value={selectedAddressPremise}
+                        onChange={(event) => {
+                          setSelectedAddressPremise(event.target.value);
+                          setAddressSearchMessage('');
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.preventDefault();
+                            void validateSelectedRouteWithPremise();
+                          }
+                        }}
+                        placeholder={selectedAddressRoute.completion === 'street-premise' ? 'e.g. 12 Commercial Street' : 'e.g. 12'}
+                      />
+                    </label>
+                    <p>{selectedAddressRoute.label}</p>
+                    <button type="button" className="secondary" disabled={isAddressValidating} onClick={() => void validateSelectedRouteWithPremise()}>
+                      {isAddressValidating ? 'Checking address...' : 'Use this address'}
+                    </button>
+                  </div>
+                ) : null}
                 <button type="button" className="text-button address-manual-toggle" onClick={() => {
                   setAddressMode('manual');
                   setAddressSuggestions([]);
                   setAddressSearchMessage('');
+                  setSelectedAddressRoute(null);
+                  setSelectedAddressPremise('');
                 }}>Enter address manually</button>
               </div>
               {(addressMode === 'manual' || address.line1 || addressValidation.status === 'valid' || addressValidation.status === 'confirm') ? (
