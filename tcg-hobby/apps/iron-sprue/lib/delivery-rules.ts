@@ -1,5 +1,7 @@
 import {
   getIronSprueDeliveryChargeMinor,
+  getIronSprueExcludedPostcodeTerritory,
+  isIronSprueDeliveryAddressDeliverable,
   ironSprueDeliveryCarrierAssessedAreas,
   ironSprueDeliveryPostcodeTerritoryExclusions,
   IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR,
@@ -8,6 +10,8 @@ import type { ShippingMethodCode } from '@capital-hobby/types';
 
 export {
   getIronSprueDeliveryChargeMinor,
+  getIronSprueExcludedPostcodeTerritory,
+  isIronSprueDeliveryAddressDeliverable,
   ironSprueDeliveryCarrierAssessedAreas,
   ironSprueDeliveryPostcodeTerritoryExclusions,
   IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR,
@@ -26,4 +30,8 @@ export function ironSprueStandardDeliverySummary() {
   const standard = ironSprueDeliveryChargeLabel('UK_STANDARD');
   const threshold = formatIronSprueDeliveryPrice(IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR);
   return `UK standard delivery is ${standard}, with free UK standard delivery over ${threshold} qualifying spend.`;
+}
+
+export function ironSprueUndeliverableAddressMessage() {
+  return "Sorry, we don't currently deliver to this address. Please choose another delivery address to continue.";
 }

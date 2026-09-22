@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       address?: unknown;
       sessionToken?: unknown;
       selectedAddressText?: unknown;
+      searchInput?: unknown;
     };
     const address = checkoutAddressFromBody(body.address);
     if (!address) {
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
       address,
       sessionToken: typeof body.sessionToken === 'string' ? body.sessionToken : null,
       selectedAddressText: typeof body.selectedAddressText === 'string' ? body.selectedAddressText : null,
+      searchInput: typeof body.searchInput === 'string' ? body.searchInput : null,
     });
     return NextResponse.json(result);
   } catch {

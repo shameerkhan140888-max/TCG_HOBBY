@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   getIronSprueDeliveryChargeMinor,
+  getIronSprueExcludedPostcodeTerritory,
+  isIronSprueDeliveryAddressDeliverable,
   ironSprueDeliveryCarrierAssessedAreas,
   ironSprueDeliveryPostcodeTerritoryExclusions,
+  ironSprueUndeliverableAddressMessage,
   ironSprueStandardDeliverySummary,
 } from './delivery-rules';
 
@@ -22,5 +25,16 @@ describe('Iron Sprue delivery rules', () => {
   it('keeps remote territory and carrier-assessed areas in one exported rule set', () => {
     expect(areaCodes(ironSprueDeliveryPostcodeTerritoryExclusions)).toEqual(['BT', 'GY', 'JE', 'IM', 'HS', 'ZE']);
     expect(areaCodes(ironSprueDeliveryCarrierAssessedAreas)).toEqual(['IV', 'KA', 'KW', 'PA', 'PH']);
+  });
+
+  it('rejects excluded postcode territories from the shared checkout eligibility rule', () => {
+    expect(getIronSprueExcludedPostcodeTerritory('BT1 1AA')?.label).toBe('Northern Ireland');
+    expect(getIronSprueExcludedPostcodeTerritory('ZE1 0AA')?.label).toBe('Shetland Islands');
+    expect(isIronSprueDeliveryAddressDeliverable('GB', 'BT1 1AA')).toBe(false);
+    expect(isIronSprueDeliveryAddressDeliverable('GB', 'ZE1 0AA')).toBe(false);
+    expect(isIronSprueDeliveryAddressDeliverable('GB', 'WF13 3EW')).toBe(true);
+    expect(ironSprueUndeliverableAddressMessage()).toBe(
+      "Sorry, we don't currently deliver to this address. Please choose another delivery address to continue.",
+    );
   });
 });

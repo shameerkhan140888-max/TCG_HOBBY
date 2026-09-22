@@ -11,21 +11,22 @@ describe('Iron Sprue payment method presentation', () => {
     expect(markup).toContain('/payments/visa.svg');
     expect(markup).toContain('/payments/mastercard.svg');
     expect(markup).toContain('/payments/american-express.svg');
+    expect(markup).toContain('/payments/paypal.svg');
     expect(markup).not.toContain('/payments/apple-pay.svg');
     expect(markup).not.toContain('/payments/google-pay.svg');
-    expect(markup).not.toContain('PayPal');
     expect(markup).not.toContain('Klarna');
   });
 
-  it('keeps wallet and PayPal methods configured-later while exposing the current card set', () => {
+  it('keeps device-gated wallets out of static strips while exposing PayPal through Stripe', () => {
     expect(getVisibleIronSpruePaymentMethods().map((method) => method.id)).toEqual([
       'visa',
       'mastercard',
       'american-express',
+      'paypal',
     ]);
     expect(ironSpruePaymentMethods.find((method) => method.id === 'paypal')).toMatchObject({
-      enabled: false,
-      status: 'production-configuration-required',
+      enabled: true,
+      status: 'eligible-through-stripe',
     });
     expect(ironSpruePaymentMethods.find((method) => method.id === 'apple-pay')).toMatchObject({
       enabled: false,

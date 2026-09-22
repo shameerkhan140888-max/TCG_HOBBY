@@ -684,8 +684,8 @@ describe('Iron Sprue Stripe commerce', () => {
     expect(body.get('metadata[commerceStore]')).toBe('IRON_SPRUE');
     expect(body.get('metadata[orderNumber]')).toBe(result.orderNumber);
     expect(body.get('metadata[checkoutAttemptId]')).toBe('attempt-integrated-1');
-    expect(body.get('payment_method_types[0]')).toBe('card');
-    expect(body.get('automatic_payment_methods[enabled]')).toBeNull();
+    expect(body.get('payment_method_types[0]')).toBeNull();
+    expect(body.get('automatic_payment_methods[enabled]')).toBe('true');
     expect(db.ironSprueOrder.update).toHaveBeenCalledWith({
       where: { id: 'order-1' },
       data: {
@@ -693,6 +693,55 @@ describe('Iron Sprue Stripe commerce', () => {
         paymentIntentId: 'pi_iron_integrated_1',
       },
     });
+    fetchSpy.mockRestore();
+  });
+
+  it('rejects excluded Iron Sprue delivery postcodes before creating a Stripe PaymentIntent', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const db = {
+      ironSprueOrder: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      ironSprueAdminInventory: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+    } as any;
+
+    await expect(createIronSpruePaymentIntentCheckout({
+      userId: null,
+      cart: {
+        items: [{
+          id: 'line-1',
+          productId: 'product-1',
+          productName: 'Toyota 2000GT Red',
+          productSlug: 'aoshima-05628-toyota-2000gt-red',
+          quantity: 1,
+          unitPriceMinor: 1999,
+          totalMinor: 1999,
+          inStock: true,
+          imageUrl: null,
+          imageAlt: null,
+          imageStorageKey: null,
+        }],
+        subtotalMinor: 1999,
+        totalItems: 1,
+        currency: 'GBP',
+      },
+      shippingAddress: {
+        fullName: 'Test Customer',
+        email: 'test@example.com',
+        line1: '1 Test Street',
+        line2: null,
+        city: 'Belfast',
+        region: null,
+        postalCode: 'BT1 1AA',
+        country: 'GB',
+      },
+      shippingMethodCode: 'UK_STANDARD',
+      db,
+    })).rejects.toThrow("Sorry, we don't currently deliver to this address.");
+
+    expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
 

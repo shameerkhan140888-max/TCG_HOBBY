@@ -1894,7 +1894,7 @@ p {
   display: grid;
   width: 100%;
   gap: 3px;
-  min-height: 0;
+  min-height: 58px;
   border: 0;
   border-bottom: 1px solid rgba(255, 250, 241, 0.1);
   border-radius: 0;
@@ -1914,11 +1914,15 @@ p {
 .address-suggestion-list strong {
   color: var(--paper-soft);
   font-size: 14px;
+  line-height: 1.25;
+  text-align: left;
 }
 
 .address-suggestion-list span {
   color: rgba(255, 250, 241, 0.64);
   font-size: 12px;
+  line-height: 1.3;
+  text-align: left;
 }
 
 .address-manual-toggle {

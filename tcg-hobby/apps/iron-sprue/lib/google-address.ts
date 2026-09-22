@@ -18,6 +18,7 @@ export type IronSprueAddressValidationResult = {
 };
 
 type GoogleAddressComponent = {
+  componentName?: { text?: string };
   componentType?: string;
   confirmationLevel?: string;
   inferred?: boolean;
@@ -79,6 +80,61 @@ function requiredAddressFieldsPresent(address: CheckoutAddress) {
   return Boolean(address.line1.trim() && address.city.trim() && address.postalCode.trim() && address.country.trim());
 }
 
+const UK_POSTCODE_PATTERN = /\b([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})\b/i;
+
+function normalizeComparable(value: string) {
+  return clean(value).toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim();
+}
+
+function startsWithPremise(value: string, premise: string) {
+  const normalizedValue = normalizeComparable(value);
+  const normalizedPremise = normalizeComparable(premise);
+  return Boolean(normalizedValue && normalizedPremise && (
+    normalizedValue === normalizedPremise
+    || normalizedValue.startsWith(`${normalizedPremise} `)
+  ));
+}
+
+export function extractIronSprueSearchPremise(input: string) {
+  const query = clean(input);
+  const postcodeMatch = query.match(UK_POSTCODE_PATTERN);
+  if (!postcodeMatch) return null;
+  const beforePostcode = query.slice(0, postcodeMatch.index).replace(/[,\s]+$/g, '').trim();
+  if (!beforePostcode) return null;
+  const premise = beforePostcode.match(/(?:^|\s)([A-Z]?\d+[A-Z]?|\d+[A-Z]?[-/]\d+[A-Z]?|[A-Z][A-Z0-9' -]{2,})$/i)?.[1]?.trim();
+  if (!premise) return null;
+  return {
+    premise,
+    postcode: normalisePostcode(postcodeMatch[1] ?? ''),
+  };
+}
+
+export function buildIronSprueValidationAddressLines(params: {
+  address: CheckoutAddress;
+  selectedAddressText?: string | null;
+  searchInput?: string | null;
+}) {
+  const selectedAddressText = clean(params.selectedAddressText);
+  const searchPremise = extractIronSprueSearchPremise(params.searchInput ?? '');
+  if (selectedAddressText) {
+    if (searchPremise && !startsWithPremise(selectedAddressText, searchPremise.premise)) {
+      const selectedIncludesPostcode = UK_POSTCODE_PATTERN.test(selectedAddressText);
+      return [
+        `${searchPremise.premise} ${selectedAddressText}`,
+        ...(selectedIncludesPostcode ? [] : [searchPremise.postcode]),
+      ];
+    }
+    return [selectedAddressText];
+  }
+  return [
+    params.address.line1,
+    params.address.line2 ?? '',
+    params.address.city,
+    params.address.region ?? '',
+    params.address.postalCode,
+  ].map(clean).filter(Boolean);
+}
+
 export function checkoutAddressDeliveryKey(address: CheckoutAddress) {
   return [
     address.line1,
@@ -115,6 +171,11 @@ export function mapGoogleValidatedAddressForCheckout(
 export function googleAddressValidationDecision(response: GoogleValidationResponse, mappedAddress: CheckoutAddress | null) {
   const verdict = response.result?.verdict;
   const components = response.result?.address?.addressComponents ?? [];
+  const hasPremiseComponent = components.some((component) => {
+    const type = clean(component.componentType).toUpperCase().replace(/[-\s]+/g, '_');
+    return ['STREET_NUMBER', 'PREMISE', 'SUBPREMISE', 'SUB_PREMISE'].includes(type);
+  });
+  const hasPremiseInLine = Boolean(mappedAddress?.line1.match(/\d/));
   const hasMaterialCorrection = Boolean(
     verdict?.hasInferredComponents
     || verdict?.hasReplacedComponents
@@ -128,7 +189,7 @@ export function googleAddressValidationDecision(response: GoogleValidationRespon
       || component.confirmationLevel === 'UNCONFIRMED_AND_SUSPICIOUS'
     )),
   );
-  if (!mappedAddress || !verdict?.addressComplete || hasUnresolvedComponent) return 'invalid' as const;
+  if (!mappedAddress || !verdict?.addressComplete || hasUnresolvedComponent || (!hasPremiseComponent && !hasPremiseInLine)) return 'invalid' as const;
   return hasMaterialCorrection ? 'confirm' as const : 'valid' as const;
 }
 
@@ -181,6 +242,7 @@ export async function validateIronSprueAddress(params: {
   address: CheckoutAddress;
   sessionToken?: string | null;
   selectedAddressText?: string | null;
+  searchInput?: string | null;
 }): Promise<IronSprueAddressValidationResult> {
   const key = googleApiKey();
   if (!key) {
@@ -192,15 +254,7 @@ export async function validateIronSprueAddress(params: {
       message: 'Address validation is temporarily unavailable. Check the address carefully before continuing.',
     };
   }
-  const addressLines = params.selectedAddressText?.trim()
-    ? [params.selectedAddressText.trim()]
-    : [
-        params.address.line1,
-        params.address.line2 ?? '',
-        params.address.city,
-        params.address.region ?? '',
-        params.address.postalCode,
-      ].map(clean).filter(Boolean);
+  const addressLines = buildIronSprueValidationAddressLines(params);
   const response = await fetch('https://addressvalidation.googleapis.com/v1:validateAddress', {
     method: 'POST',
     headers: {
@@ -237,7 +291,7 @@ export async function validateIronSprueAddress(params: {
       status,
       address: mapped,
       formattedAddress: payload.result?.address?.formattedAddress ?? null,
-      message: 'We could not confirm this UK address. Check the postcode, street and town before continuing.',
+      message: 'We could not confirm a complete UK delivery address. Check the house or building number, postcode, street and town before continuing.',
     };
   }
   return {

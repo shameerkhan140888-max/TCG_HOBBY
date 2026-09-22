@@ -18,7 +18,7 @@ export function PaymentMethodStrip({
           <strong>{ironSpruePaymentSummary()}</strong>
         </div>
       ) : null}
-      <ul aria-label="Accepted card payments">
+      <ul aria-label="Accepted payments">
         {visibleMethods.map((method) => (
           <li key={method.id}>
             {method.assetPath ? (

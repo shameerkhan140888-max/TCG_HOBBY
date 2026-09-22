@@ -54,8 +54,8 @@ export const ironSpruePaymentMethods = [
     id: 'paypal',
     label: 'PayPal',
     assetPath: '/payments/paypal.svg',
-    enabled: false,
-    status: 'production-configuration-required',
+    enabled: true,
+    status: 'eligible-through-stripe',
   },
 ] as const satisfies IronSpruePaymentMethodConfig[];
 

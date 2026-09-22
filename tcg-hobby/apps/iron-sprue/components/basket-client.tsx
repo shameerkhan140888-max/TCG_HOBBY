@@ -4,7 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CheckoutAddress, PublicBasket, PublicBasketInputItem, ShippingMethodCode } from '@capital-hobby/types';
 import { trackIronSprueEcommerceEvent } from '../lib/analytics';
 import type { IronSprueProduct } from '../lib/catalogue';
-import { getIronSprueDeliveryChargeMinor, ironSprueStandardDeliverySummary } from '../lib/delivery-rules';
+import {
+  getIronSprueDeliveryChargeMinor,
+  ironSprueStandardDeliverySummary,
+  ironSprueUndeliverableAddressMessage,
+  isIronSprueDeliveryAddressDeliverable,
+} from '../lib/delivery-rules';
 import { checkoutAddressDeliveryKey, type IronSprueAddressSuggestion, type IronSprueAddressValidationResult } from '../lib/google-address';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 import { ProductCard } from './product-card';
@@ -52,7 +57,7 @@ type CheckoutStep = 'details' | 'review' | 'payment';
 type AddressMode = 'search' | 'manual';
 
 type CheckoutAddressValidationState = {
-  status: 'empty' | 'valid' | 'confirm' | 'invalid' | 'manual-unavailable';
+  status: 'empty' | 'valid' | 'confirm' | 'invalid' | 'manual-unavailable' | 'undeliverable';
   key: string | null;
   message: string;
   address: CheckoutAddress | null;
@@ -66,6 +71,7 @@ type StripePaymentElement = {
 
 type StripeElements = {
   create(type: 'payment'): StripePaymentElement;
+  submit?(): Promise<{ error?: { message?: string } }>;
 };
 
 type StripeInstance = {
@@ -467,8 +473,8 @@ function StripePaymentElementForm({
     <section className="payment-element-shell" aria-label="Secure payment">
       <div className="payment-element-head">
         <p className="eyebrow">Secure payment</p>
-        <h3>Pay by card</h3>
-        <p>Card details are handled securely by the payment provider. Iron Sprue does not store card numbers.</p>
+        <h3>Choose payment method</h3>
+        <p>Payments are handled securely by the payment provider. Iron Sprue does not store card or wallet details.</p>
       </div>
       <div id={mountId} className="payment-element-mount" />
       <button
@@ -481,6 +487,10 @@ function StripePaymentElementForm({
           let result: Awaited<ReturnType<StripeInstance['confirmPayment']>>;
           let basketHeldForProcessing = false;
           try {
+            const submitResult = await elements.submit?.();
+            if (submitResult?.error) {
+              throw new Error(submitResult.error.message ?? 'Payment details could not be submitted. Please review and try again.');
+            }
             result = await stripe.confirmPayment({
               elements,
               confirmParams: {
@@ -653,11 +663,20 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     && address.postalCode.trim()
     && address.country.trim(),
   );
+  const deliveryAddressFieldsComplete = Boolean(
+    address.line1.trim()
+    && address.city.trim()
+    && address.postalCode.trim()
+    && address.country.trim(),
+  );
   const currentAddressKey = checkoutAddressDeliveryKey(address);
   const addressReadyForCheckout = requiredDetailsComplete && (
     (addressValidation.status === 'valid' && addressValidation.key === currentAddressKey)
     || (addressValidation.status === 'manual-unavailable' && addressValidation.key === currentAddressKey)
-  );
+  ) && isIronSprueDeliveryAddressDeliverable(address.country || 'GB', address.postalCode);
+  const deliveryEligibilityMessage = deliveryAddressFieldsComplete && !isIronSprueDeliveryAddressDeliverable(address.country || 'GB', address.postalCode)
+    ? ironSprueUndeliverableAddressMessage()
+    : '';
 
   useEffect(() => {
     if (mode !== 'checkout' || checkoutStep !== 'details' || addressMode !== 'search') return;
@@ -743,10 +762,20 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     }
   }
 
-  async function validateCurrentCheckoutAddress(selectedAddressText?: string | null) {
+  async function validateCurrentCheckoutAddress(selectedAddressText?: string | null, searchInput?: string | null) {
     const validatingSelectedAddress = Boolean(selectedAddressText?.trim());
     if (!validatingSelectedAddress && !requiredDetailsComplete) {
       setStatus('Complete the required delivery and contact details before reviewing your order.');
+      return false;
+    }
+    if (!validatingSelectedAddress && deliveryEligibilityMessage) {
+      setAddressValidation({
+        status: 'undeliverable',
+        key: checkoutAddressDeliveryKey(address),
+        message: deliveryEligibilityMessage,
+        address,
+      });
+      setStatus(deliveryEligibilityMessage);
       return false;
     }
     setIsAddressValidating(true);
@@ -755,11 +784,21 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
       const response = await fetch('/api/address/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address, sessionToken: addressSessionToken, selectedAddressText }),
+        body: JSON.stringify({ address, sessionToken: addressSessionToken, selectedAddressText, searchInput }),
       });
       const payload = await response.json() as IronSprueAddressValidationResult;
       if (payload.status === 'unavailable' && addressMode === 'manual') {
         const key = checkoutAddressDeliveryKey(address);
+        if (!isIronSprueDeliveryAddressDeliverable(address.country || 'GB', address.postalCode)) {
+          setAddressValidation({
+            status: 'undeliverable',
+            key,
+            message: ironSprueUndeliverableAddressMessage(),
+            address,
+          });
+          setStatus(ironSprueUndeliverableAddressMessage());
+          return false;
+        }
         setAddressValidation({
           status: 'manual-unavailable',
           key,
@@ -790,6 +829,17 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
       ].filter(Boolean).join(', '));
       setAddressSuggestions([]);
       setAddressMode('manual');
+      if (!isIronSprueDeliveryAddressDeliverable(nextAddress.country || 'GB', nextAddress.postalCode)) {
+        const message = ironSprueUndeliverableAddressMessage();
+        setAddressValidation({
+          status: 'undeliverable',
+          key,
+          message,
+          address: nextAddress,
+        });
+        setStatus(message);
+        return false;
+      }
       if (payload.status === 'confirm') {
         setAddressValidation({
           status: 'confirm',
@@ -829,10 +879,11 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   }
 
   async function selectAddressSuggestion(suggestion: IronSprueAddressSuggestion) {
+    const searchInput = addressSearch;
     setAddressSearch(suggestion.label);
     setAddressSuggestions([]);
     setAddressMode('search');
-    await validateCurrentCheckoutAddress(suggestion.label);
+    await validateCurrentCheckoutAddress(suggestion.label, searchInput);
   }
 
   function confirmStandardisedAddress() {
@@ -1287,6 +1338,9 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             {addressValidation.status === 'valid' && addressValidation.key === currentAddressKey ? (
               <p className="form-status success">Address confirmed.</p>
             ) : null}
+            {deliveryEligibilityMessage || addressValidation.status === 'undeliverable' ? (
+              <p className="form-status error">{deliveryEligibilityMessage || addressValidation.message}</p>
+            ) : null}
           </fieldset>
           <div className="checkout-totals">
             <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>
@@ -1294,7 +1348,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             <span>VAT included estimate</span><strong>{formatPrice(vatIncludedEstimateMinor)}</strong>
             <span>Total</span><strong>{formatPrice(totalMinor)}</strong>
           </div>
-          <button type="submit" disabled={hasUnavailableItems || isAddressValidating}>{isAddressValidating ? 'Checking address...' : 'Continue to review order'}</button>
+          <button type="submit" disabled={hasUnavailableItems || isAddressValidating || Boolean(deliveryEligibilityMessage)}>{isAddressValidating ? 'Checking address...' : 'Continue to review order'}</button>
           {status ? <p className="form-status error">{status}</p> : null}
         </form>
         <section className="checkout-panel checkout-reassurance checkout-reassurance-icons" aria-label="Delivery returns and payment information">

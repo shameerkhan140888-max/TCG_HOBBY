@@ -420,6 +420,19 @@ export function isIronSprueUkCountry(country: string) {
   return normalizedCountry === 'GB' || normalizedCountry === 'UK';
 }
 
+export function ironSpruePostcodeArea(postalCode: string) {
+  return postalCode.trim().toUpperCase().replace(/\s+/g, '').match(/^[A-Z]{1,2}/)?.[0] ?? '';
+}
+
+export function getIronSprueExcludedPostcodeTerritory(postalCode: string) {
+  const area = ironSpruePostcodeArea(postalCode);
+  return ironSprueDeliveryPostcodeTerritoryExclusions.find((territory) => territory.area === area) ?? null;
+}
+
+export function isIronSprueDeliveryAddressDeliverable(country: string, postalCode: string) {
+  return isIronSprueUkCountry(country) && !getIronSprueExcludedPostcodeTerritory(postalCode);
+}
+
 export function getIronSprueDeliveryChargeMinor(methodCode: ShippingMethodCode, country: string, qualifyingSubtotalMinor = 0) {
   if (!isIronSprueUkCountry(country)) return null;
   const qualifiesForFreeStandard = qualifyingSubtotalMinor >= IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR;
