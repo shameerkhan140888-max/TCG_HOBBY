@@ -5,6 +5,7 @@ import { buildTypeOptions, filterIronSprueProducts, isAdhesiveFinishingProduct, 
 import { getIronSprueStorefrontProducts } from '../lib/admin-storefront-controls';
 import {
   brandOptions,
+  categoryNavigation,
   categoryOptions,
   slugForCategory,
 } from '../lib/storefront';
@@ -88,7 +89,7 @@ const shopBanners: Record<string, ShopBanner> = {
     title: 'Cleaner bench control.',
   },
   'adhesives-finishing': {
-    artSrc: '/assets/workshop-remaining-sources/is-dlm-ad22-source.jpg',
+    artSrc: '/assets/category-banners/adhesives-finishing-workbench.webp',
     chips: ['Adhesives', 'Fillers', 'Grip', 'Finishing'],
     eyebrow: 'Adhesives & finishing',
     summary: 'Specialist adhesive and finishing products selected for clean joins, repairs and reliable bench work.',
@@ -117,6 +118,26 @@ function categoryMatches(product: IronSprueProduct, category: string) {
   if (category === 'adhesives-finishing') return isAdhesiveFinishingProduct(product);
   if (category === 'bundles') return isBundleProduct(product);
   return slugForCategory(product.category) === category;
+}
+
+const toolCategorySlugs = [
+  'knives-blades',
+  'magnification',
+  'measuring-tools',
+  'pin-vices-drills',
+  'sanding-files',
+  'tool-sets',
+  'tweezers-pliers',
+];
+
+function catalogueFamilyRank(product: IronSprueProduct) {
+  if (isModelKitProduct(product)) return 0;
+  if (product.brand === 'CubicFun' || product.brand === 'Pintoo') return 1;
+  if (toolCategorySlugs.includes(slugForCategory(product.category))) return 2;
+  if (isAdhesiveFinishingProduct(product)) return 3;
+  if (isBundleProduct(product)) return 4;
+  const navigationIndex = categoryNavigation.findIndex((item) => slugForCategory(item.label) === slugForCategory(product.category));
+  return navigationIndex >= 0 ? navigationIndex : 9;
 }
 
 function ShopRangeBanner({ banner }: { banner: ShopBanner }) {
@@ -178,6 +199,21 @@ export async function CatalogueListing({
   const selectedSort = single(searchParams, 'sort') || 'featured';
   const search = single(searchParams, 'search');
   const isPaintWeatheringComingSoon = selectedCategory === 'paints-weathering';
+  const hasCatalogueScope = Boolean(
+    fixedBrand ||
+    fixedCategory ||
+    selectedBrand ||
+    selectedCategory ||
+    selectedVehicleManufacturer ||
+    selectedScale ||
+    selectedPieceCount ||
+    selectedStructure ||
+    selectedBuildType ||
+    selectedBundles ||
+    selectedAvailability ||
+    selectedOffers ||
+    search,
+  );
   const storefrontProducts = await getIronSprueStorefrontProducts(importedProducts);
   const scopedProducts = storefrontProducts.filter((product) => {
     if (fixedBrand && product.brand !== fixedBrand) return false;
@@ -213,6 +249,12 @@ export async function CatalogueListing({
     if (selectedSort === 'price-asc') return (left.retailPriceMinor ?? left.priceMinor ?? 0) - (right.retailPriceMinor ?? right.priceMinor ?? 0) || left.name.localeCompare(right.name);
     if (selectedSort === 'price-desc') return (right.retailPriceMinor ?? right.priceMinor ?? 0) - (left.retailPriceMinor ?? left.priceMinor ?? 0) || left.name.localeCompare(right.name);
     if (selectedSort === 'newest') return Number(Boolean(right.launchRole || right.merchandisingRole)) - Number(Boolean(left.launchRole || left.merchandisingRole)) || left.name.localeCompare(right.name);
+    if (!hasCatalogueScope) {
+      return catalogueFamilyRank(left) - catalogueFamilyRank(right)
+        || left.brand.localeCompare(right.brand)
+        || slugForCategory(left.category).localeCompare(slugForCategory(right.category))
+        || left.name.localeCompare(right.name);
+    }
     return Number(Boolean(right.merchandisingRole)) - Number(Boolean(left.merchandisingRole)) || left.name.localeCompare(right.name);
   });
   const formAction = fixedBrand
@@ -271,7 +313,7 @@ export async function CatalogueListing({
           <div className="coming-soon-range-visual" aria-hidden="true">
             <img
               className="coming-soon-range-art"
-              src="/assets/category-banners/paints-weathering-coming-soon.webp"
+              src="/assets/category-banners/paints-weathering-coming-soon.png"
               alt=""
               loading="eager"
               decoding="async"

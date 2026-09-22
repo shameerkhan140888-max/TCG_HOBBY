@@ -18,9 +18,8 @@ export default function BrandsPage() {
       </div>
       <div className="brand-rail brand-grid-page" aria-label="Iron Sprue stocked brands">
         {brands.map((brand) => (
-          <a className="brand-tile" href={brand.href} key={brand.slug} aria-label={`${brand.name}, ${brand.productCount} stocked line${brand.productCount === 1 ? '' : 's'}`}>
+          <a className="brand-tile" href={brand.href} key={brand.slug} aria-label={`Shop ${brand.name} products`}>
             <img src={brand.logoUrl} alt="" aria-hidden="true" width="220" height="92" />
-            <small>{brand.productCount} stocked line{brand.productCount === 1 ? '' : 's'}</small>
           </a>
         ))}
       </div>
