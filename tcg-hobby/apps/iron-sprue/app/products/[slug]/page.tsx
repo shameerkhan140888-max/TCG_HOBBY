@@ -236,42 +236,44 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
 
           <div className="product-buy-panel">
-            <p className="eyebrow">{product.brand} / {product.category}</p>
-            <h1>{product.name}</h1>
-            <p className="lead">{lead}</p>
-            <p className="sku-line">SKU {product.sku}{manufacturerReference ? <> / Manufacturer Reference {manufacturerReference}</> : null}</p>
-            <div className="price-row">
-              <strong>{formatPrice(product)}</strong>
-              <span>inc VAT</span>
-            </div>
-            <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
-            <div className="quantity-row">
-              <label htmlFor="quantity">Qty</label>
-              <input id="quantity" type="number" min="1" max={Math.max(1, availableQuantity)} defaultValue="1" disabled={isOutOfStock} />
-            </div>
-            <div className="product-actions">
-              <AddToBasketButton
-                quantityInputId="quantity"
-                item={{
-                  productId: productCommerceId(product),
-                  productName: product.name,
-                  productSlug: product.slug,
-                  unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,
-                  availableQuantity,
-                  imageUrl: galleryImages[0] ?? null,
-                  imageAlt: product.name,
-                }}
-              />
-              <form action={addIronSprueWishlistItemAction}>
-                <input type="hidden" name="sku" value={product.sku} />
-                <input type="hidden" name="slug" value={product.slug} />
-                <button type="submit" className="wishlist-button" aria-label={`Save ${product.name} to wishlist`}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M12 20s-7-4.4-9-9.2C1.7 7.6 3.6 5 6.6 5c1.8 0 3.2 1 4 2.2C11.4 6 12.8 5 14.6 5c3 0 4.9 2.6 3.6 5.8C19 15.6 12 20 12 20Z" />
-                  </svg>
-                  <span className="sr-only">Save to wishlist</span>
-                </button>
-              </form>
+            <div className="product-purchase-panel">
+              <p className="eyebrow">{product.brand} / {product.category}</p>
+              <h1>{product.name}</h1>
+              <p className="lead">{lead}</p>
+              <p className="sku-line">SKU {product.sku}{manufacturerReference ? <> / Manufacturer Reference {manufacturerReference}</> : null}</p>
+              <div className="price-row">
+                <strong>{formatPrice(product)}</strong>
+                <span>inc VAT</span>
+              </div>
+              <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
+              <div className="quantity-row">
+                <label htmlFor="quantity">Qty</label>
+                <input id="quantity" type="number" min="1" max={Math.max(1, availableQuantity)} defaultValue="1" disabled={isOutOfStock} />
+              </div>
+              <div className="product-actions">
+                <AddToBasketButton
+                  quantityInputId="quantity"
+                  item={{
+                    productId: productCommerceId(product),
+                    productName: product.name,
+                    productSlug: product.slug,
+                    unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,
+                    availableQuantity,
+                    imageUrl: galleryImages[0] ?? null,
+                    imageAlt: product.name,
+                  }}
+                />
+                <form action={addIronSprueWishlistItemAction}>
+                  <input type="hidden" name="sku" value={product.sku} />
+                  <input type="hidden" name="slug" value={product.slug} />
+                  <button type="submit" className="wishlist-button" aria-label={`Save ${product.name} to wishlist`}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M12 20s-7-4.4-9-9.2C1.7 7.6 3.6 5 6.6 5c1.8 0 3.2 1 4 2.2C11.4 6 12.8 5 14.6 5c3 0 4.9 2.6 3.6 5.8C19 15.6 12 20 12 20Z" />
+                    </svg>
+                    <span className="sr-only">Save to wishlist</span>
+                  </button>
+                </form>
+              </div>
             </div>
             <section className="service-summary product-reassurance" aria-label="Delivery returns and payment information">
               <p><span className="reassurance-icon" aria-hidden="true"><DeliveryReassuranceIcon /></span><span><strong>Delivery</strong> {ironSprueStandardDeliverySummary()} <a href="/delivery">Delivery information</a></span></p>

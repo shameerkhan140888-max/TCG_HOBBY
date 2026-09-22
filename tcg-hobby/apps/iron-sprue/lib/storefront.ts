@@ -17,7 +17,12 @@ export const categoryNavigation = [
   { label: '3D Puzzles & Builds', href: '/shop/3d-puzzles-and-builds' },
   { label: 'Tools', href: '/shop/tools' },
   { label: 'Adhesives & Finishing', href: '/shop?category=adhesives-finishing' },
-  { label: 'Paints & Weathering', href: '/shop/paints-weathering', badge: 'Coming soon' },
+  {
+    label: 'Paints & Weathering',
+    href: '/shop/paints-weathering',
+    badge: 'Coming soon',
+    badgeImage: '/assets/category-banners/paints-weathering-coming-soon.png',
+  },
 ] as const;
 
 export const featuredNavigation = [

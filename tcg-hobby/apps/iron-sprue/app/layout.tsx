@@ -106,10 +106,15 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                     <h2>Shop the range</h2>
                     {categoryNavigation.map((item) => {
                       const badge = 'badge' in item ? item.badge : '';
+                      const badgeImage = 'badgeImage' in item ? item.badgeImage : '';
                       return (
                         <a className={badge ? 'has-menu-badge' : undefined} key={item.href} href={item.href}>
                           <span>{item.label}</span>
-                          {badge ? <small>{badge}</small> : null}
+                          {badgeImage ? (
+                            <img className="menu-badge-image" src={badgeImage} alt={badge} width="130" height="86" loading="lazy" decoding="async" />
+                          ) : badge ? (
+                            <small>{badge}</small>
+                          ) : null}
                         </a>
                       );
                     })}

@@ -527,6 +527,20 @@ button:disabled {
   white-space: nowrap;
 }
 
+.menu-panel a.has-menu-badge {
+  align-items: center;
+}
+
+.menu-badge-image {
+  width: clamp(84px, 8.2vw, 126px);
+  height: 36px;
+  object-fit: contain;
+  object-position: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 .page-frame {
   min-height: 70vh;
   background: transparent;
@@ -6687,6 +6701,8 @@ body::before {
 /* Batch 2 PDP consolidation: one machined product surface with internal splits. */
 .product-unified-panel {
   position: relative;
+  --pdp-gallery-height: clamp(430px, 34vw, 560px);
+  --pdp-reassurance-start: calc(var(--pdp-gallery-height) + clamp(46px, 4.6vw, 66px));
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -6753,10 +6769,15 @@ body::before {
 .product-unified-panel .product-buy-panel {
   grid-area: buy;
   display: grid;
+  grid-template-rows: var(--pdp-reassurance-start) auto;
   align-content: start;
-  min-height: clamp(590px, 48vw, 690px);
+  min-height: calc(var(--pdp-reassurance-start) + 220px);
   border-left: 1px solid rgba(190, 122, 37, 0.22);
   padding-left: clamp(22px, 3vw, 42px);
+}
+
+.product-unified-panel .product-purchase-panel {
+  min-width: 0;
 }
 
 .product-unified-panel .product-gallery {
@@ -6764,6 +6785,8 @@ body::before {
 }
 
 .product-unified-panel .primary-product-image {
+  height: var(--pdp-gallery-height);
+  aspect-ratio: auto;
   border-color: rgba(3, 4, 3, 0.96);
   padding: 0;
   box-shadow:
@@ -6851,13 +6874,15 @@ body::before {
 .product-unified-panel .product-reassurance {
   grid-template-columns: 1fr;
   gap: 12px;
-  margin-top: auto;
+  align-self: start;
+  margin-top: 0;
   border-top: 1px solid rgba(190, 122, 37, 0.22);
   padding-top: clamp(16px, 2.2vw, 22px);
 }
 
 @media (max-width: 900px) {
   .product-unified-panel .product-buy-panel {
+    display: block;
     min-height: 0;
   }
 
@@ -7184,6 +7209,7 @@ body::before {
   .product-unified-panel .product-gallery-main {
     grid-area: auto;
     min-height: clamp(210px, 60vw, 280px);
+    height: auto;
     aspect-ratio: 1 / 1;
     padding: 0;
     order: 1;
