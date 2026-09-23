@@ -51,7 +51,7 @@ function loadScript(src: string, marker: string) {
 async function initializeGa4(measurementId: string) {
   if (!measurementId || typeof window === 'undefined') return false;
   window.dataLayer = window.dataLayer ?? [];
-  window.gtag = window.gtag ?? function gtag(...args: unknown[]) { window.dataLayer?.push(args); };
+  window.gtag = window.gtag ?? function gtag() { window.dataLayer?.push(arguments); };
   gaScriptPromise = gaScriptPromise ?? loadScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`, 'ga4');
   try {
     await gaScriptPromise;
@@ -69,7 +69,7 @@ async function initializeGa4(measurementId: string) {
 export function updateIronSprueGoogleConsent(consent: IronSprueAnalyticsConsent, command: 'default' | 'update' = 'update') {
   if (typeof window === 'undefined') return;
   window.dataLayer = window.dataLayer ?? [];
-  window.gtag = window.gtag ?? function gtag(...args: unknown[]) { window.dataLayer?.push(args); };
+  window.gtag = window.gtag ?? function gtag() { window.dataLayer?.push(arguments); };
   window.gtag('consent', command, {
     ad_personalization: consent.marketing ? 'granted' : 'denied',
     ad_storage: consent.marketing ? 'granted' : 'denied',

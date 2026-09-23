@@ -8,6 +8,10 @@ import {
   updateIronSprueGoogleConsent,
 } from './analytics-consent';
 
+function queuedGtagCalls() {
+  return (window.dataLayer ?? []).map((entry) => Array.from(entry as ArrayLike<unknown>));
+}
+
 describe('Iron Sprue cookie consent banner', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -34,7 +38,7 @@ describe('Iron Sprue cookie consent banner', () => {
     const consent = initialiseIronSprueGoogleConsentFromStoredPreference();
 
     expect(consent).toEqual({ status: 'saved', analytics: true, marketing: false });
-    expect(window.dataLayer).toEqual([
+    expect(queuedGtagCalls()).toEqual([
       ['consent', 'default', {
         ad_personalization: 'denied',
         ad_storage: 'denied',
@@ -56,7 +60,7 @@ describe('Iron Sprue cookie consent banner', () => {
     updateIronSprueGoogleConsent(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT);
     updateIronSprueGoogleConsent({ status: 'saved', analytics: true, marketing: false });
 
-    expect(window.dataLayer).toEqual([
+    expect(queuedGtagCalls()).toEqual([
       ['consent', 'update', {
         ad_personalization: 'denied',
         ad_storage: 'denied',
