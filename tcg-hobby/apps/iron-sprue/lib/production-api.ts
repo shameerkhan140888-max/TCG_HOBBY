@@ -312,7 +312,7 @@ function heroMerchandisingLabel(value: string | null | undefined) {
 }
 
 export function ironSprueBrandPresentationFromPublic(brand: PublicBrandPresentation): IronSprueBrandRecord | null {
-  const logoUrl = storefrontMediaUrl(brand.logoUrl);
+  const logoUrl = brandLogoRegistry[brand.name] ?? storefrontMediaUrl(brand.logoUrl);
   if (!brand.active || !brand.featured || brand.productCount <= 0 || !logoUrl) return null;
   return {
     name: brand.name,

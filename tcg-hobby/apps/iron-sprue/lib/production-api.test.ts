@@ -420,7 +420,7 @@ describe('Iron Sprue production API client', () => {
         displayOrder: 2,
         active: true,
         approvalStatus: 'LOGO_APPROVED',
-        logoUrl: '/media/iron-sprue/brands/logos/aoshima-approved.webp',
+        logoUrl: '/assets/brands/aoshima.png',
         altText: 'Aoshima approved logo',
       },
     ]);
@@ -490,7 +490,7 @@ describe('Iron Sprue production API client', () => {
         displayOrder: 1,
         active: true,
         approvalStatus: 'LOGO_APPROVED',
-        logoUrl: '/media/iron-sprue/brands/logos/cubicfun-approved.webp',
+        logoUrl: '/assets/brands/cubicfun.png',
         altText: 'CubicFun approved logo',
       },
     ]);

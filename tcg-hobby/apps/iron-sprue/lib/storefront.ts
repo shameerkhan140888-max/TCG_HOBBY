@@ -42,7 +42,7 @@ export const heroSlides = [
     image: '/assets/hero-workshop-car.png',
     sourceProductSlug: 'aoshima-06437-back-to-the-future-part-ii',
     brandName: 'Aoshima',
-    brandLogo: '/media/iron-sprue/brands/logos/aoshima/tasma-approved-111fa1e253bf.png',
+    brandLogo: '/assets/brands/aoshima.png',
     alt: 'Aoshima Back to the Future DeLorean model kit on an Iron Sprue workshop bench',
     ctaHref: '/products/aoshima-06437-back-to-the-future-part-ii',
     ctaLabel: 'Shop now',
@@ -73,7 +73,7 @@ export const heroSlides = [
     image: '/assets/promo-pintoo-vase-workshop.png',
     sourceProductSlug: 'pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus',
     brandName: 'Pintoo',
-    brandLogo: '/media/iron-sprue/brands/logos/pintoo/tasma-approved-cf92df23a7a9.jpg',
+    brandLogo: '/assets/brands/pintoo.png',
     alt: 'Koi carp and lotus vase puzzle object on warm workshop paper',
     ctaHref: '/products/pintoo-s1024-3d-jigsaw-vase-koi-carp-and-lotus',
     ctaLabel: 'Shop now',
@@ -122,13 +122,13 @@ export const categoryTiles = [
 ] as const;
 
 export const brandLogoRegistry: Record<string, string> = {
-  Aoshima: '/media/iron-sprue/brands/logos/aoshima/tasma-approved-111fa1e253bf.png',
-  CubicFun: '/media/iron-sprue/brands/logos/cubicfun/tasma-approved-ea08c2539b22.jpg',
-  'Deluxe Materials': '/media/iron-sprue/brands/logos/deluxe-materials/tasma-approved-446dda60252b.jpg',
-  'Expo Tools': '/media/iron-sprue/brands/logos/expo-tools/tasma-approved-3bb6b3714f0d.jpg',
-  'OcCre Creations': '/media/iron-sprue/brands/logos/occre-creations/tasma-approved-4a5bd843a80f.png',
-  Pintoo: '/media/iron-sprue/brands/logos/pintoo/tasma-approved-cf92df23a7a9.jpg',
-  Tasma: '/media/iron-sprue/brands/logos/tasma/tasma-approved-ddf7687b00ed.jpg',
+  Aoshima: '/assets/brands/aoshima.png',
+  CubicFun: '/assets/brands/cubicfun.png',
+  'Deluxe Materials': '/assets/brands/deluxe-materials.png',
+  'Expo Tools': '/assets/brands/expo-tools.png',
+  'OcCre Creations': '/assets/brands/occre-creations.png',
+  Pintoo: '/assets/brands/pintoo.png',
+  Tasma: '/assets/brands/tasma-products.png',
 };
 
 export function withOfficialBrandLogos(brands: IronSprueBrandRecord[]) {
