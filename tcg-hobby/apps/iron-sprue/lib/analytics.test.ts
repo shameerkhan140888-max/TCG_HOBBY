@@ -9,6 +9,7 @@ import {
   markIronSpruePurchaseTracked,
   normalizeIronSprueAnalyticsConsent,
   setIronSprueAnalyticsConsent,
+  trackIronSprueEcommerceEvent,
 } from './analytics';
 
 describe('Iron Sprue analytics helpers', () => {
@@ -67,5 +68,35 @@ describe('Iron Sprue analytics helpers', () => {
     expect(decodeURIComponent(documentStub.cookie)).toContain(`${IRON_SPRUE_ANALYTICS_CONSENT_COOKIE_NAME}={"analytics":false,"marketing":false}`);
     expect(storage.get(IRON_SPRUE_ANALYTICS_CONSENT_STORAGE_KEY)).toBe('{"analytics":false,"marketing":false}');
     expect(getIronSprueAnalyticsConsent()).toEqual(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT);
+  });
+
+  it('queues ecommerce events until the analytics runtime listener is ready', () => {
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal('window', {
+      __ironSprueEcommerceListenerReady: false,
+      localStorage: {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+      },
+      dispatchEvent,
+    });
+
+    trackIronSprueEcommerceEvent('view_item', {
+      currency: 'GBP',
+      value: 19.99,
+      items: [{ item_id: 'IS-AOS-06459' }],
+    });
+
+    expect(window.__ironSprueEcommerceEventQueue).toEqual([
+      {
+        eventName: 'view_item',
+        parameters: {
+          currency: 'GBP',
+          value: 19.99,
+          items: [{ item_id: 'IS-AOS-06459' }],
+        },
+      },
+    ]);
+    expect(dispatchEvent).toHaveBeenCalledTimes(1);
   });
 });

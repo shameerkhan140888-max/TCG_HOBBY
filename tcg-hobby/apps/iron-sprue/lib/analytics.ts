@@ -3,6 +3,18 @@ export const IRON_SPRUE_ANALYTICS_CONSENT_COOKIE_NAME = 'iron_sprue_cookie_conse
 export const IRON_SPRUE_ANALYTICS_CONSENT_CHANGED_EVENT = 'iron-sprue:analytics-consent-changed';
 export const IRON_SPRUE_ANALYTICS_ECOMMERCE_EVENT = 'iron-sprue:ecommerce-event';
 
+export type IronSprueQueuedEcommerceEvent = {
+  eventName: IronSprueEcommerceEventName;
+  parameters: Record<string, unknown>;
+};
+
+declare global {
+  interface Window {
+    __ironSprueEcommerceEventQueue?: IronSprueQueuedEcommerceEvent[];
+    __ironSprueEcommerceListenerReady?: boolean;
+  }
+}
+
 export type IronSprueAnalyticsConsent =
   | { status: 'unknown'; analytics: false; marketing: false }
   | { status: 'saved'; analytics: boolean; marketing: boolean };
@@ -105,6 +117,10 @@ export type IronSprueEcommerceEventName =
 
 export function trackIronSprueEcommerceEvent(eventName: IronSprueEcommerceEventName, parameters: Record<string, unknown>) {
   if (typeof window === 'undefined') return;
+  if (!window.__ironSprueEcommerceListenerReady) {
+    window.__ironSprueEcommerceEventQueue = window.__ironSprueEcommerceEventQueue ?? [];
+    window.__ironSprueEcommerceEventQueue.push({ eventName, parameters });
+  }
   window.dispatchEvent(new CustomEvent(IRON_SPRUE_ANALYTICS_ECOMMERCE_EVENT, { detail: { eventName, parameters } }));
 }
 

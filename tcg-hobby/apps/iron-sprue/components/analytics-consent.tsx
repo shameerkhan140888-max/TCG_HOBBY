@@ -12,6 +12,7 @@ import {
   clearIronSprueAnalyticsConsent,
   getIronSprueAnalyticsConsent,
   setIronSprueAnalyticsConsent,
+  type IronSprueQueuedEcommerceEvent,
   type IronSprueAnalyticsConsent,
 } from '../lib/analytics';
 
@@ -153,10 +154,9 @@ function IronSprueAnalyticsRuntime({ ga4Id, metaPixelId: pixelId }: { ga4Id: str
   }, [consent, ga4Id, pathname, pixelId, searchParams]);
 
   useEffect(() => {
-    function handleEcommerceEvent(event: Event) {
+    function trackEcommerceDetail(detail: { eventName?: string; parameters?: Record<string, unknown> }) {
       const currentConsent = getIronSprueAnalyticsConsent();
       if (!currentConsent.analytics && !currentConsent.marketing) return;
-      const detail = (event as CustomEvent<{ eventName?: string; parameters?: Record<string, unknown> }>).detail;
       if (!detail?.eventName) return;
       if (currentConsent.analytics) {
         void initializeGa4(ga4Id ?? '').then((loaded) => {
@@ -173,8 +173,20 @@ function IronSprueAnalyticsRuntime({ ga4Id, metaPixelId: pixelId }: { ga4Id: str
         });
       }
     }
+
+    function handleEcommerceEvent(event: Event) {
+      trackEcommerceDetail((event as CustomEvent<{ eventName?: string; parameters?: Record<string, unknown> }>).detail);
+    }
+
     window.addEventListener(IRON_SPRUE_ANALYTICS_ECOMMERCE_EVENT, handleEcommerceEvent);
-    return () => window.removeEventListener(IRON_SPRUE_ANALYTICS_ECOMMERCE_EVENT, handleEcommerceEvent);
+    window.__ironSprueEcommerceListenerReady = true;
+    const queuedEvents = window.__ironSprueEcommerceEventQueue ?? [];
+    window.__ironSprueEcommerceEventQueue = [];
+    queuedEvents.forEach((event: IronSprueQueuedEcommerceEvent) => trackEcommerceDetail(event));
+    return () => {
+      window.__ironSprueEcommerceListenerReady = false;
+      window.removeEventListener(IRON_SPRUE_ANALYTICS_ECOMMERCE_EVENT, handleEcommerceEvent);
+    };
   }, [ga4Id, pixelId]);
 
   return null;
