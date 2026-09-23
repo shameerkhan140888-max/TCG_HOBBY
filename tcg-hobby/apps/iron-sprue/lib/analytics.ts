@@ -91,7 +91,19 @@ export function clearIronSprueAnalyticsConsent() {
   }
 }
 
-export function trackIronSprueEcommerceEvent(eventName: 'add_to_cart' | 'begin_checkout' | 'purchase', parameters: Record<string, unknown>) {
+export type IronSprueEcommerceEventName =
+  | 'add_payment_info'
+  | 'add_shipping_info'
+  | 'add_to_cart'
+  | 'begin_checkout'
+  | 'purchase'
+  | 'remove_from_cart'
+  | 'search'
+  | 'view_cart'
+  | 'view_item'
+  | 'view_item_list';
+
+export function trackIronSprueEcommerceEvent(eventName: IronSprueEcommerceEventName, parameters: Record<string, unknown>) {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(IRON_SPRUE_ANALYTICS_ECOMMERCE_EVENT, { detail: { eventName, parameters } }));
 }

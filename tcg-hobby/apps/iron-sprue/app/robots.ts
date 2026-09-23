@@ -9,7 +9,24 @@ export default function robots(): MetadataRoute.Robots {
   }
 
   return {
-    rules: [{ userAgent: '*', allow: '/' }],
-    sitemap: `${ironSprueBrand.siteUrl}/sitemap.xml`,
+    rules: [{
+      userAgent: '*',
+      allow: '/',
+      disallow: [
+        '/account',
+        '/admin',
+        '/api',
+        '/basket',
+        '/checkout',
+        '/dev',
+        '/login',
+        '/register',
+        '/reset-password',
+        '/forgot-password',
+        '/typography-showcase',
+        '/wishlist',
+      ],
+    }],
+    sitemap: `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/sitemap.xml`,
   };
 }

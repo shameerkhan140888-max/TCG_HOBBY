@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { ironSprueBrand } from '../../lib/brand';
 import {
   formatIronSprueDeliveryPrice,
@@ -6,6 +7,12 @@ import {
   ironSprueDeliveryPostcodeTerritoryExclusions,
   IRON_SPRUE_FREE_STANDARD_DELIVERY_THRESHOLD_MINOR,
 } from '../../lib/delivery-rules';
+
+export const metadata: Metadata = {
+  title: 'Delivery information',
+  description: 'Iron Sprue UK delivery services, delivery charges, dispatch, tracking and delivery-area information.',
+  alternates: { canonical: `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/delivery` },
+};
 
 export default function DeliveryPage() {
   const standardDelivery = formatIronSprueDeliveryPrice(getIronSprueDeliveryChargeMinor('UK_STANDARD', 'GB') ?? 0);

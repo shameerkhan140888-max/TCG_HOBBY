@@ -1,5 +1,12 @@
+import type { Metadata } from 'next';
 import { ironSprueBrand } from '../../lib/brand';
 import { IronSprueCookiePreferenceButton } from '../../components/analytics-consent';
+
+export const metadata: Metadata = {
+  title: 'Cookie policy',
+  description: 'How Iron Sprue uses strictly necessary cookies and optional analytics or marketing technologies.',
+  alternates: { canonical: `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/cookies` },
+};
 
 const storageInventory = [
   {

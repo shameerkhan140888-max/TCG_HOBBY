@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import { ironSprueBrand } from '../../lib/brand';
+
+export const metadata: Metadata = {
+  title: 'Contact Iron Sprue',
+  description: 'Contact Iron Sprue for customer support, order questions, supplier enquiries and account help.',
+  alternates: { canonical: `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/contact` },
+};
 
 export default function ContactPage() {
   return (

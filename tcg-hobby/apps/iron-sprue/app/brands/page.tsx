@@ -1,9 +1,24 @@
+import type { Metadata } from 'next';
 import launchProducts from '../../data/launch-products.json';
+import { ironSprueBrand } from '../../lib/brand';
 import { deriveBrandsWeStock, type IronSprueProduct } from '../../lib/catalogue';
 import { withOfficialBrandLogos } from '../../lib/storefront';
 
 const products = launchProducts as IronSprueProduct[];
 const brands = withOfficialBrandLogos(deriveBrandsWeStock(products.map((product) => ({ ...product, published: true }))));
+const canonicalUrl = `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/brands`;
+
+export const metadata: Metadata = {
+  title: 'Brands we stock',
+  description: 'Browse the official model kit, 3D puzzle, tool and finishing brands stocked by Iron Sprue.',
+  alternates: { canonical: canonicalUrl },
+  openGraph: {
+    title: 'Brands we stock | Iron Sprue',
+    description: 'Browse the stocked brands available from Iron Sprue.',
+    url: canonicalUrl,
+    type: 'website',
+  },
+};
 
 export default function BrandsPage() {
   return (

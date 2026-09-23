@@ -63,10 +63,42 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   ]);
   const ga4Id = process.env.NEXT_PUBLIC_IRON_SPRUE_GA4_MEASUREMENT_ID?.trim() || null;
   const metaPixelId = process.env.NEXT_PUBLIC_IRON_SPRUE_META_PIXEL_ID?.trim() || null;
+  const siteUrl = ironSprueBrand.siteUrl.replace(/\/$/, '');
+  const siteStructuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${siteUrl}/#organization`,
+        name: ironSprueBrand.legalEntity,
+        alternateName: ironSprueBrand.name,
+        url: siteUrl,
+        logo: new URL(ironSprueBrand.logoPath, `${siteUrl}/`).toString(),
+        email: ironSprueBrand.contactEmail,
+        sameAs: [ironSprueBrand.instagramUrl],
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        name: ironSprueBrand.name,
+        url: siteUrl,
+        publisher: { '@id': `${siteUrl}/#organization` },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: `${siteUrl}/shop?search={search_term_string}`,
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ],
+  };
 
   return (
     <html lang="en-GB" style={ironSprueTypographyCustomProperties(typographySettings) as CSSProperties}>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData) }}
+        />
         <IronSprueAnalyticsProvider ga4Id={ga4Id} metaPixelId={metaPixelId} />
         <header className="site-header">
           <div className="header-main">

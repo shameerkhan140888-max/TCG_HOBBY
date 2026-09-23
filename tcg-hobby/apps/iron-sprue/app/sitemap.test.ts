@@ -6,9 +6,15 @@ describe('Iron Sprue sitemap', () => {
     const urls = (await sitemap()).map((entry) => entry.url);
 
     expect(urls.some((url) => url.endsWith('/shop'))).toBe(true);
+    expect(urls.some((url) => url.endsWith('/bundles'))).toBe(true);
+    expect(urls.some((url) => url.endsWith('/brands'))).toBe(true);
+    expect(urls.some((url) => url.endsWith('/shop/model-kits'))).toBe(true);
     expect(urls.some((url) => url.endsWith('/about'))).toBe(true);
     expect(urls.some((url) => url.endsWith('/delivery'))).toBe(true);
     expect(urls.some((url) => url.endsWith('/returns'))).toBe(true);
+    expect(urls.some((url) => url.endsWith('/contact'))).toBe(true);
     expect(urls.some((url) => url.includes('/products/'))).toBe(true);
+    expect(urls.every((url) => !url.includes('?'))).toBe(true);
+    expect((await sitemap()).every((entry) => !('lastModified' in entry))).toBe(true);
   });
 });

@@ -1,14 +1,17 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { CatalogueListing } from '../../../components/catalogue-listing';
 import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-controls';
 import launchProducts from '../../../data/launch-products.json';
 import { type IronSprueProduct } from '../../../lib/catalogue';
+import { ironSprueBrand } from '../../../lib/brand';
 import { slugForCategory } from '../../../lib/storefront';
 
 export const dynamic = 'force-dynamic';
 
 const products = launchProducts as IronSprueProduct[];
+const canonicalHost = ironSprueBrand.siteUrl.replace(/\/$/, '');
 
 const showcaseRoutes: Record<string, {
   eyebrow: string;
@@ -65,6 +68,38 @@ const showcaseRoutes: Record<string, {
     title: 'Pintoo puzzle objects',
   },
 };
+
+function hasIndexableQuery(searchParams: Record<string, string | string[] | undefined>) {
+  return Object.values(searchParams).some((value) => (
+    Array.isArray(value) ? value.some(Boolean) : Boolean(value)
+  ));
+}
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const route = showcaseRoutes[slug] ?? await categoryRouteForSlug(slug);
+  if (!route) return { title: 'Shop range unavailable' };
+  const canonical = `${canonicalHost}/shop/${slug}`;
+  const hasQuery = hasIndexableQuery(await searchParams);
+  return {
+    title: route.title,
+    description: route.lead,
+    alternates: { canonical },
+    robots: hasQuery ? { index: false, follow: true } : undefined,
+    openGraph: {
+      title: `${route.title} | Iron Sprue`,
+      description: route.lead,
+      url: canonical,
+      type: 'website',
+    },
+  };
+}
 
 export default async function ShopShowcasePage({
   params,

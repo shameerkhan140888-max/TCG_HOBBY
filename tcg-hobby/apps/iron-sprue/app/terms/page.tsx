@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import { ironSprueBrand } from '../../lib/brand';
+
+export const metadata: Metadata = {
+  title: 'Terms and conditions',
+  description: 'Terms applying to Iron Sprue purchases, product availability, payment, delivery, returns and website use.',
+  alternates: { canonical: `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/terms` },
+};
 
 export default function TermsPage() {
   return (
@@ -23,7 +30,7 @@ export default function TermsPage() {
           </section>
           <section>
             <h2>Availability</h2>
-            <p>All products are subject to availability. Placing an item in your basket does not reserve it indefinitely.</p>
+            <p>All products are subject to availability. Placing an item in your basket or starting checkout does not reserve stock.</p>
             <p>If an item becomes unavailable after you place an order, we will contact you and refund any amount paid for goods we cannot supply.</p>
           </section>
           <section>

@@ -15,7 +15,6 @@ import { getIronSprueDeliveryChargeMinor, IRON_SPRUE_UNDELIVERABLE_ADDRESS_MESSA
 import type { IronSprueVatInvoice, IronSprueVatInvoiceLine, Prisma } from '@prisma/client';
 import { getIronSprueAdminPrisma } from './client.js';
 import {
-  buildCartReservationExpiry,
   calculateCartSubtotal,
   calculatePromotionalShippingMinor,
   calculateVatEstimateMinor,
@@ -872,10 +871,6 @@ async function createIronSpruePendingCheckoutOrder(input: CreateIronSprueCheckou
         if (!inventory) throw new Error('Product is not available.');
         const check = validateQuantityAgainstAvailability(reservationLine.quantity, Math.max(inventory.availableStock - inventory.reservedStock, 0));
         if (!check.ok) throw new Error(check.message);
-        await tx.ironSprueAdminInventory.update({
-          where: { productId: reservationLine.productId },
-          data: { reservedStock: { increment: reservationLine.quantity } },
-        });
       }
     }
     return tx.ironSprueOrder.create({
@@ -902,7 +897,7 @@ async function createIronSpruePendingCheckoutOrder(input: CreateIronSprueCheckou
         shippingRegion: shippingAddress.region?.trim() || null,
         shippingPostalCode: shippingAddress.postalCode.trim(),
         shippingCountry: shippingAddress.country,
-        reservationExpiresAt: buildCartReservationExpiry(),
+        reservationExpiresAt: null,
         items: {
           create: input.cart.items.map((item) => ({
             productId: item.productId,
@@ -1756,6 +1751,8 @@ export async function finalizePaidIronSprueCheckoutOrder(input: { orderId: strin
       for (const reservationLine of await reservationLinesForOrderItem(tx, item)) {
         const inventory = await tx.ironSprueAdminInventory.findUnique({ where: { productId: reservationLine.productId } });
         if (!inventory) throw new Error('IRON_SPRUE_INVENTORY_NOT_FOUND');
+        const check = validateQuantityAgainstAvailability(reservationLine.quantity, Math.max(inventory.availableStock - inventory.reservedStock, 0));
+        if (!check.ok) throw new Error('IRON_SPRUE_STOCK_UNAVAILABLE_AFTER_PAYMENT');
         await tx.ironSprueAdminInventory.update({
           where: { productId: reservationLine.productId },
           data: {

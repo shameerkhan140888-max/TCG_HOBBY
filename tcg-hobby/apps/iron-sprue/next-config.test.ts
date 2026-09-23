@@ -10,6 +10,8 @@ describe('Iron Sprue Cloudflare production headers', () => {
     expect(csp).toContain('https://considerate-unity-production-b734.up.railway.app');
     expect(csp).toContain('https://api.stripe.com');
     expect(csp).toContain('https://js.stripe.com');
+    expect(csp).toContain('https://www.googletagmanager.com');
+    expect(csp).toContain('https://www.google-analytics.com');
     expect(csp).toContain("img-src 'self' data: https:");
   });
 });

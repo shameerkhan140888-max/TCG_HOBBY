@@ -3,6 +3,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { AddonCarousel } from '../../../components/addon-carousel';
 import { ProductGallery } from '../../../components/product-gallery';
+import { ProductAnalyticsEvent } from '../../../components/product-analytics-event';
 import { PaymentMethodStrip } from '../../../components/payment-method-strip';
 import { DeliveryReassuranceIcon, ReturnsReassuranceIcon, SecurePaymentReassuranceIcon } from '../../../components/reassurance-icons';
 import { ironSprueBrand } from '../../../lib/brand';
@@ -11,7 +12,7 @@ import { getIronSprueStorefrontProducts } from '../../../lib/admin-storefront-co
 import { type IronSprueProduct } from '../../../lib/catalogue';
 import { ironSprueStandardDeliverySummary } from '../../../lib/delivery-rules';
 import { getIronSprueProductionApiProduct, shouldUseIronSprueProductionApi } from '../../../lib/production-api';
-import { conciseProductLead, customerProductDescription, formatPrice, productAvailability, productAvailabilityClass, productCommerceId, productDetailAddons, productGalleryImages, productImage, productSellableQuantity } from '../../../lib/storefront';
+import { conciseProductLead, customerProductDescription, formatPrice, productAvailability, productAvailabilityClass, productCommerceId, productDetailAddons, productGalleryImages, productImage, productSellableQuantity, slugForCategory } from '../../../lib/storefront';
 import { addIronSprueWishlistItemAction } from '../../../lib/wishlist-actions';
 
 const products = launchProducts as IronSprueProduct[];
@@ -129,6 +130,47 @@ function customerFacingFeatures(product: IronSprueProduct, specifications: Retur
     });
 }
 
+function absoluteIronSprueUrl(pathOrUrl: string) {
+  return new URL(pathOrUrl, `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/`).toString();
+}
+
+function productStructuredData(product: IronSprueProduct, description: string, image: string | null, priceMinor: number, availableQuantity: number) {
+  const canonicalUrl = `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/products/${product.slug}`;
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: ironSprueBrand.siteUrl },
+          { '@type': 'ListItem', position: 2, name: 'Shop', item: absoluteIronSprueUrl('/shop') },
+          { '@type': 'ListItem', position: 3, name: product.category, item: absoluteIronSprueUrl(`/shop/${slugForCategory(product.category)}`) },
+          { '@type': 'ListItem', position: 4, name: product.name, item: canonicalUrl },
+        ],
+      },
+      {
+        '@type': 'Product',
+        name: product.name,
+        description,
+        image: image ? [absoluteIronSprueUrl(image)] : undefined,
+        sku: product.sku,
+        brand: {
+          '@type': 'Brand',
+          name: product.brand,
+        },
+        offers: {
+          '@type': 'Offer',
+          url: canonicalUrl,
+          priceCurrency: 'GBP',
+          price: (priceMinor / 100).toFixed(2),
+          availability: availableQuantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+          itemCondition: 'https://schema.org/NewCondition',
+        },
+      },
+    ],
+  };
+}
+
 export function generateStaticParams() {
   if (shouldUseIronSprueProductionApi()) return [];
   return products.map((product) => ({ slug: product.slug }));
@@ -197,9 +239,24 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const lead = conciseProductLead(product);
   const description = customerProductDescription(product);
   const manufacturerReference = (product.manufacturerReference ?? product.supplierSku ?? '').trim();
+  const commerceId = productCommerceId(product);
+  const priceMinor = product.priceMinor ?? product.retailPriceMinor ?? 0;
+  const primaryImage = galleryImages[0] ?? productImage(product);
+  const structuredData = productStructuredData(product, description, primaryImage, priceMinor, availableQuantity);
 
   return (
     <section className="section-block product-detail-page">
+      <ProductAnalyticsEvent
+        brand={product.brand}
+        category={product.category}
+        id={commerceId}
+        name={product.name}
+        price={priceMinor / 100}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <article className="product-unified-panel">
         <div className="product-detail product-unified-grid">
           <div className="product-story-panel">
@@ -254,10 +311,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <AddToBasketButton
                   quantityInputId="quantity"
                   item={{
-                    productId: productCommerceId(product),
+                    productId: commerceId,
                     productName: product.name,
                     productSlug: product.slug,
-                    unitPriceMinor: product.priceMinor ?? product.retailPriceMinor ?? 0,
+                    unitPriceMinor: priceMinor,
                     availableQuantity,
                     imageUrl: galleryImages[0] ?? null,
                     imageAlt: product.name,

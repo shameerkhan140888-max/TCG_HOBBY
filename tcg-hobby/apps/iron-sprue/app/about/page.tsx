@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import { ironSprueBrand } from '../../lib/brand';
+
+export const metadata: Metadata = {
+  title: 'About Iron Sprue',
+  description: 'Learn about Iron Sprue, the model-kit and workshop-products storefront from Capital Hobby Group Ltd.',
+  alternates: { canonical: `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/about` },
+};
 
 export default function AboutPage() {
   return (

@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import { ironSprueBrand } from '../../lib/brand';
+
+export const metadata: Metadata = {
+  title: 'Returns and refunds',
+  description: 'How Iron Sprue handles cancellations, changed-mind returns, faulty or damaged goods, incorrect items and refunds.',
+  alternates: { canonical: `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/returns` },
+};
 
 export default function ReturnsPage() {
   return (

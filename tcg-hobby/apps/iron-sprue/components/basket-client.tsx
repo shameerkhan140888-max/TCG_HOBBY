@@ -395,14 +395,27 @@ function basketLineWarning(item: StoredBasketItem & { inStock?: boolean }) {
   return '';
 }
 
+function analyticsItemsForBasket(items: StoredBasketItem[]) {
+  return items.map((item) => ({
+    item_id: item.productId,
+    item_name: item.productName,
+    quantity: item.quantity,
+    price: item.unitPriceMinor / 100,
+  }));
+}
+
 function isPaymentElementUnavailableMessage(message: string) {
   return /could not be loaded|could not retrieve data from the specified element|element.*mounted|ready event/i.test(message);
 }
 
 function StripePaymentElementForm({
+  analyticsPayload,
+  onPaymentSubmit,
   paymentIntent,
   onUnavailable,
 }: {
+  analyticsPayload: Record<string, unknown>;
+  onPaymentSubmit: (payload: Record<string, unknown>) => void;
   paymentIntent: CheckoutPaymentIntent;
   onUnavailable: (message?: string) => void;
 }) {
@@ -497,6 +510,7 @@ function StripePaymentElementForm({
             if (submitResult?.error) {
               throw new Error(submitResult.error.message ?? 'Payment details could not be submitted. Please review and try again.');
             }
+            onPaymentSubmit(analyticsPayload);
             result = await stripe.confirmPayment({
               elements,
               confirmParams: {
@@ -599,6 +613,9 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutPaymentIntent, setCheckoutPaymentIntent] = useState<CheckoutPaymentIntent | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>('details');
+  const trackedViewCartKey = useRef<string | null>(null);
+  const trackedBeginCheckoutKey = useRef<string | null>(null);
+  const trackedShippingInfoKey = useRef<string | null>(null);
 
   useEffect(() => {
     const refresh = () => setItems(readBasket());
@@ -676,6 +693,13 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   }, [address.country, shippingMethodCode, subtotalMinor]);
   const totalMinor = checkoutPaymentIntent?.totalMinor ?? subtotalMinor + deliveryMinor;
   const vatIncludedEstimateMinor = Math.round(totalMinor / 6);
+  const analyticsBasketPayload = useMemo(() => ({
+    currency: 'GBP',
+    value: totalMinor / 100,
+    shipping: deliveryMinor / 100,
+    coupon: discountCode.trim() || undefined,
+    items: analyticsItemsForBasket(basketLineItems),
+  }), [basketLineItems, deliveryMinor, discountCode, totalMinor]);
   const requiredDetailsComplete = Boolean(
     address.fullName.trim()
     && address.email.trim()
@@ -698,6 +722,22 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   const deliveryEligibilityMessage = deliveryAddressFieldsComplete && !isIronSprueDeliveryAddressDeliverable(address.country || 'GB', address.postalCode)
     ? ironSprueUndeliverableAddressMessage()
     : '';
+
+  useEffect(() => {
+    if (mode !== 'basket' || !basketLineItems.length) return;
+    const key = JSON.stringify(analyticsBasketPayload);
+    if (trackedViewCartKey.current === key) return;
+    trackedViewCartKey.current = key;
+    trackIronSprueEcommerceEvent('view_cart', analyticsBasketPayload);
+  }, [analyticsBasketPayload, basketLineItems.length, mode]);
+
+  useEffect(() => {
+    if (mode !== 'checkout' || !basketLineItems.length) return;
+    const key = JSON.stringify(analyticsBasketPayload);
+    if (trackedBeginCheckoutKey.current === key) return;
+    trackedBeginCheckoutKey.current = key;
+    trackIronSprueEcommerceEvent('begin_checkout', analyticsBasketPayload);
+  }, [analyticsBasketPayload, basketLineItems.length, mode]);
 
   useEffect(() => {
     if (mode !== 'checkout' || checkoutStep !== 'details' || addressMode !== 'search') return;
@@ -988,17 +1028,18 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
       setCheckoutPaymentIntent(payload as CheckoutPaymentIntent);
       setCheckoutStep('payment');
       setStatus('');
-      trackIronSprueEcommerceEvent('begin_checkout', {
+      const shippingInfoPayload = {
         currency: 'GBP',
         value: (payload.totalMinor ?? subtotalMinor + deliveryMinor) / 100,
+        shipping_tier: shippingMethodCode,
         coupon: discountCode.trim() || undefined,
-        items: basketLineItems.map((item) => ({
-          item_id: item.productId,
-          item_name: item.productName,
-          quantity: item.quantity,
-          price: item.unitPriceMinor / 100,
-        })),
-      });
+        items: analyticsItemsForBasket(basketLineItems),
+      };
+      const shippingInfoKey = JSON.stringify(shippingInfoPayload);
+      if (trackedShippingInfoKey.current !== shippingInfoKey) {
+        trackedShippingInfoKey.current = shippingInfoKey;
+        trackIronSprueEcommerceEvent('add_shipping_info', shippingInfoPayload);
+      }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Checkout could not be started.');
     } finally {
@@ -1101,6 +1142,11 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
               const next = items.filter((candidate) => candidate.productId !== item.productId);
               setItems(next);
               writeBasket(next);
+              trackIronSprueEcommerceEvent('remove_from_cart', {
+                currency: 'GBP',
+                value: (item.unitPriceMinor * item.quantity) / 100,
+                items: analyticsItemsForBasket([item]),
+              });
             }}
           >
             Remove
@@ -1283,7 +1329,12 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
             <p><strong>Order reference</strong> {checkoutPaymentIntent.orderNumber}</p>
           </div>
           <PaymentMethodStrip compact />
-          <StripePaymentElementForm paymentIntent={checkoutPaymentIntent} onUnavailable={handlePaymentElementUnavailable} />
+          <StripePaymentElementForm
+            analyticsPayload={analyticsBasketPayload}
+            onPaymentSubmit={(payload) => trackIronSprueEcommerceEvent('add_payment_info', payload)}
+            paymentIntent={checkoutPaymentIntent}
+            onUnavailable={handlePaymentElementUnavailable}
+          />
           <button type="button" className="button secondary" onClick={() => setCheckoutStep('review')}>Back to order review</button>
         </section>
       </div>

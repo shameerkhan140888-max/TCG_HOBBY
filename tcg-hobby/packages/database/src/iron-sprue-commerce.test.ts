@@ -283,6 +283,29 @@ describe('Iron Sprue Stripe commerce', () => {
     }));
   });
 
+  it('does not finalise a paid event when stock has already sold to another customer', async () => {
+    const db = databaseMock();
+    db.ironSprueAdminInventory.findUnique.mockResolvedValue({ productId: 'product-1', availableStock: 0, reservedStock: 0 });
+    db.$transaction = vi.fn(async (callback) => callback(db));
+
+    await expect(processIronSprueStripeWebhookEvent(stripeEvent('checkout.session.completed', {
+      id: 'cs_iron_1',
+      payment_status: 'paid',
+      payment_intent: 'pi_iron_1',
+      amount_total: 5298,
+      currency: 'gbp',
+      metadata: { commerceStore: 'IRON_SPRUE', orderId: 'order-1' },
+    }, 'evt_iron_paid_sold_out'), db)).rejects.toThrow('IRON_SPRUE_STOCK_UNAVAILABLE_AFTER_PAYMENT');
+
+    expect(db.ironSprueOrder.update).not.toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        status: 'PAID',
+        paymentStatus: 'SUCCEEDED',
+      }),
+    }));
+    expect(db.ironSprueAdminInventory.update).not.toHaveBeenCalled();
+  });
+
   it('finalises a succeeded PaymentIntent by checkout attempt metadata when the order has no payment intent yet', async () => {
     const db = databaseMock();
     const order = {
@@ -591,6 +614,12 @@ describe('Iron Sprue Stripe commerce', () => {
         metadata: { store: 'IRON_SPRUE', orderId: 'order-1' },
       }),
     } as Response);
+    const txInventoryUpdate = vi.fn().mockResolvedValue({});
+    const txOrderCreate = vi.fn().mockResolvedValue({
+      id: 'order-1',
+      orderNumber: 'IS-20260812-ABC123',
+      items: [],
+    });
     const db = {
       ironSprueOrder: {
         findMany: vi.fn().mockResolvedValue([]),
@@ -619,14 +648,10 @@ describe('Iron Sprue Stripe commerce', () => {
           }),
         },
         ironSprueAdminInventory: {
-          update: vi.fn().mockResolvedValue({}),
+          update: txInventoryUpdate,
         },
         ironSprueOrder: {
-          create: vi.fn().mockResolvedValue({
-            id: 'order-1',
-            orderNumber: 'IS-20260812-ABC123',
-            items: [],
-          }),
+          create: txOrderCreate,
         },
       })),
     } as any;
@@ -686,6 +711,13 @@ describe('Iron Sprue Stripe commerce', () => {
     expect(body.get('metadata[checkoutAttemptId]')).toBe('attempt-integrated-1');
     expect(body.get('payment_method_types[0]')).toBeNull();
     expect(body.get('automatic_payment_methods[enabled]')).toBe('true');
+    expect(txInventoryUpdate).not.toHaveBeenCalled();
+    expect(txOrderCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        reservationExpiresAt: null,
+      }),
+      include: { items: true },
+    }));
     expect(db.ironSprueOrder.update).toHaveBeenCalledWith({
       where: { id: 'order-1' },
       data: {

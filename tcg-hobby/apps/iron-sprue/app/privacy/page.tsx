@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import { ironSprueBrand } from '../../lib/brand';
+
+export const metadata: Metadata = {
+  title: 'Privacy policy',
+  description: 'How Capital Hobby Group Ltd collects and uses personal information through the Iron Sprue storefront.',
+  alternates: { canonical: `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/privacy` },
+};
 
 export default function PrivacyPage() {
   return (

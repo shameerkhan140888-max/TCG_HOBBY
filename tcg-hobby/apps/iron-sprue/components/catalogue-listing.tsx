@@ -9,6 +9,7 @@ import {
   categoryOptions,
   slugForCategory,
 } from '../lib/storefront';
+import { CatalogueAnalyticsEvents } from './catalogue-analytics-events';
 import { CatalogueFilterShell } from './catalogue-filter-shell';
 import { ProductCard } from './product-card';
 
@@ -293,6 +294,13 @@ export async function CatalogueListing({
           ? 'offers'
           : selectedCategory || (fixedCategory ?? fixedBrand ? '' : 'shop');
   const shopBanner = shopBanners[bannerKey];
+  const analyticsListId = fixedBrand
+    ? `brand-${fixedBrand.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+    : fixedCategory
+      ? `category-${fixedCategory}`
+      : selectedCategory
+        ? `category-${selectedCategory}`
+        : 'shop';
 
   if (isPaintWeatheringComingSoon) {
     return (
@@ -419,6 +427,7 @@ export async function CatalogueListing({
 
   return (
     <section className="section-block catalogue-page">
+      <CatalogueAnalyticsEvents listId={analyticsListId} products={products} searchTerm={search || undefined} />
       {shopBanner ? (
         <ShopRangeBanner banner={shopBanner} />
       ) : (

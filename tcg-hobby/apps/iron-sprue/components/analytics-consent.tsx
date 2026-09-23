@@ -30,6 +30,7 @@ declare global {
 let metaPixelId: string | null = null;
 let metaScriptPromise: Promise<void> | null = null;
 let gaScriptPromise: Promise<void> | null = null;
+let ga4ConfiguredIds = new Set<string>();
 
 function loadScript(src: string, marker: string) {
   if (typeof window === 'undefined') return Promise.resolve();
@@ -53,12 +54,27 @@ async function initializeGa4(measurementId: string) {
   gaScriptPromise = gaScriptPromise ?? loadScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`, 'ga4');
   try {
     await gaScriptPromise;
-    window.gtag('js', new Date());
-    window.gtag('config', measurementId, { send_page_view: false });
+    if (!ga4ConfiguredIds.has(measurementId)) {
+      window.gtag('js', new Date());
+      window.gtag('config', measurementId, { send_page_view: false });
+      ga4ConfiguredIds.add(measurementId);
+    }
     return true;
   } catch {
     return false;
   }
+}
+
+function updateGoogleConsent(consent: IronSprueAnalyticsConsent, command: 'default' | 'update' = 'update') {
+  if (typeof window === 'undefined') return;
+  window.dataLayer = window.dataLayer ?? [];
+  window.gtag = window.gtag ?? function gtag(...args: unknown[]) { window.dataLayer?.push(args); };
+  window.gtag('consent', command, {
+    ad_personalization: consent.marketing ? 'granted' : 'denied',
+    ad_storage: consent.marketing ? 'granted' : 'denied',
+    ad_user_data: consent.marketing ? 'granted' : 'denied',
+    analytics_storage: consent.analytics ? 'granted' : 'denied',
+  });
 }
 
 async function initializeMeta(pixelId: string) {
@@ -85,12 +101,6 @@ async function initializeMeta(pixelId: string) {
   }
 }
 
-function eventNameForPath(pathname: string) {
-  if (pathname.startsWith('/products/')) return 'view_item';
-  if (pathname === '/checkout') return 'begin_checkout';
-  return 'page_view';
-}
-
 function metaEventName(eventName: string) {
   if (eventName === 'view_item') return 'ViewContent';
   if (eventName === 'begin_checkout') return 'InitiateCheckout';
@@ -106,9 +116,12 @@ function IronSprueAnalyticsRuntime({ ga4Id, metaPixelId: pixelId }: { ga4Id: str
   const lastEventKey = useRef<string | null>(null);
 
   useEffect(() => {
+    updateGoogleConsent(UNKNOWN_IRON_SPRUE_ANALYTICS_CONSENT, 'default');
     setConsent(getIronSprueAnalyticsConsent());
     function handleConsentChange() {
-      setConsent(getIronSprueAnalyticsConsent());
+      const nextConsent = getIronSprueAnalyticsConsent();
+      updateGoogleConsent(nextConsent);
+      setConsent(nextConsent);
     }
     window.addEventListener(IRON_SPRUE_ANALYTICS_CONSENT_CHANGED_EVENT, handleConsentChange);
     window.addEventListener('storage', handleConsentChange);
@@ -123,19 +136,17 @@ function IronSprueAnalyticsRuntime({ ga4Id, metaPixelId: pixelId }: { ga4Id: str
     const key = `${pathname}?${searchParams.toString()}`;
     if (lastEventKey.current === key) return;
     lastEventKey.current = key;
-    const eventName = eventNameForPath(pathname);
-
     if (consent.analytics) {
       void initializeGa4(ga4Id ?? '').then((loaded) => {
         if (loaded && getIronSprueAnalyticsConsent().analytics) {
-          window.gtag?.('event', eventName, { page_path: pathname, page_location: window.location.href });
+          window.gtag?.('event', 'page_view', { page_path: pathname, page_location: window.location.href });
         }
       });
     }
     if (consent.marketing) {
       void initializeMeta(pixelId ?? '').then((loaded) => {
         if (loaded && getIronSprueAnalyticsConsent().marketing) {
-          window.fbq?.('track', metaEventName(eventName));
+          window.fbq?.('track', 'PageView');
         }
       });
     }
