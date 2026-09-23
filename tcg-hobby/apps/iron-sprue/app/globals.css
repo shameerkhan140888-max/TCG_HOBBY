@@ -2996,49 +2996,39 @@ p {
 
 .cookie-consent {
   position: fixed;
-  inset: auto 14px 14px;
+  right: auto;
+  bottom: 24px;
+  left: 50%;
+  width: min(calc(100vw - 48px), 1120px);
+  transform: translateX(-50%);
   z-index: 90;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  max-width: 880px;
-  margin-inline: auto;
-  padding: 12px 14px;
-  border: 1px solid rgba(255, 250, 241, 0.16);
+  gap: 18px;
+  max-width: none;
+  margin-inline: 0;
+  padding: 18px 20px;
+  border: 1px solid rgba(17, 17, 15, 0.18);
   border-radius: 8px;
-  background: var(--iron-board-surface);
-  background-color: var(--iron-board-base);
+  background: #fff;
+  background-color: #fff;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  color: var(--paper-soft);
+  color: var(--ink);
   box-shadow:
-    inset 0 1px 0 rgba(255, 250, 241, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
-    0 24px 80px rgba(0, 0, 0, 0.4);
+    0 1px 0 rgba(255, 255, 255, 0.9),
+    0 18px 54px rgba(0, 0, 0, 0.46);
 }
 
 .cookie-consent::before {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 18% 0%, rgba(255, 250, 241, 0.08), transparent 34%),
-    radial-gradient(ellipse at 82% 100%, rgba(0, 0, 0, 0.38), transparent 38%);
-  content: "";
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 .cookie-consent::after {
-  position: absolute;
-  inset: 8px;
-  border: 1px solid rgba(255, 250, 241, 0.08);
-  border-radius: 6px;
-  content: "";
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 .cookie-consent > * {
@@ -3048,14 +3038,14 @@ p {
 
 .cookie-consent h2 {
   margin: 0 0 4px;
-  color: var(--brass);
+  color: var(--ink);
   font-size: 14px;
 }
 
 .cookie-consent p {
   margin: 0;
   max-width: 610px;
-  color: rgba(255, 248, 235, 0.78);
+  color: rgba(17, 17, 15, 0.72);
   font-size: 12px;
   line-height: 1.42;
 }
@@ -3064,7 +3054,7 @@ p {
   display: grid;
   gap: 8px;
   margin-top: 10px;
-  border-top: 1px solid rgba(255, 250, 241, 0.12);
+  border-top: 1px solid rgba(17, 17, 15, 0.14);
   padding-top: 10px;
 }
 
@@ -3073,14 +3063,14 @@ p {
 }
 
 .cookie-preference-panel strong {
-  color: var(--paper-soft);
+  color: var(--ink);
 }
 
 .cookie-preference-panel label {
   display: flex;
   gap: 8px;
   align-items: center;
-  color: rgba(255, 248, 235, 0.9);
+  color: rgba(17, 17, 15, 0.82);
   font-size: 12px;
   font-weight: 800;
 }
@@ -3100,9 +3090,9 @@ p {
 }
 
 .cookie-consent-actions button {
-  border: 1px solid rgba(255, 248, 235, 0.18);
-  background: transparent;
-  color: inherit;
+  border: 1px solid rgba(17, 17, 15, 0.22);
+  background: #fff;
+  color: var(--ink);
   cursor: pointer;
   font: inherit;
 }
@@ -7251,7 +7241,7 @@ body::before {
     height: auto;
     aspect-ratio: 1 / 1;
     padding: 0;
-    order: 1;
+    order: -30;
   }
 
   .product-unified-panel .product-gallery-main img {
@@ -7266,7 +7256,7 @@ body::before {
     overflow-x: auto;
     overflow-y: hidden;
     padding: 4px 4px 8px;
-    order: 2;
+    order: -20;
     scroll-padding-inline: 4px;
     scroll-snap-type: x proximity;
     scrollbar-width: thin;
@@ -7282,7 +7272,7 @@ body::before {
   }
 
   .product-unified-panel .product-buy-panel {
-    order: 3;
+    order: 10;
     border-top: 1px solid rgba(190, 122, 37, 0.22);
     border-left: 0;
     padding-top: 16px;
@@ -8468,6 +8458,8 @@ body:has(.product-detail-page) .payment-trust-banner {
 @media (max-width: 700px) {
   .cookie-consent {
     inset: auto 8px max(8px, env(safe-area-inset-bottom)) 8px;
+    width: auto;
+    transform: none;
     max-height: min(48vh, 310px);
     gap: 8px;
     padding: 10px;
@@ -9030,6 +9022,7 @@ body:has(.product-detail-page) .payment-trust-banner {
   }
 
   .footer-company {
+    grid-column: auto;
     justify-self: stretch;
     max-width: none;
     justify-items: end;
