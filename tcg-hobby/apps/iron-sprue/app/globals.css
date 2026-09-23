@@ -7232,7 +7232,9 @@ body::before {
   }
 
   .product-unified-panel .product-gallery {
-    display: contents;
+    display: grid;
+    gap: 10px;
+    order: -30;
   }
 
   .product-unified-panel .product-gallery-main {
@@ -7241,7 +7243,7 @@ body::before {
     height: auto;
     aspect-ratio: 1 / 1;
     padding: 0;
-    order: -30;
+    order: 0;
   }
 
   .product-unified-panel .product-gallery-main img {
@@ -7256,7 +7258,7 @@ body::before {
     overflow-x: auto;
     overflow-y: hidden;
     padding: 4px 4px 8px;
-    order: -20;
+    order: 1;
     scroll-padding-inline: 4px;
     scroll-snap-type: x proximity;
     scrollbar-width: thin;
