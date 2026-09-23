@@ -1940,7 +1940,7 @@ export async function getIronSprueOrderByStripePaymentIntentId(paymentIntentId: 
 
 export async function getIronSprueCustomerOrders(userId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const orders = await db.ironSprueOrder.findMany({
-    where: { storeCode: IRON_SPRUE_STORE_CODE, userId },
+    where: { storeCode: IRON_SPRUE_STORE_CODE, userId, paymentStatus: { not: 'REQUIRES_PAYMENT' } },
     include: { items: true },
     orderBy: { createdAt: 'desc' },
   });

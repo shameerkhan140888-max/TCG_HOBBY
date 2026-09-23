@@ -8,6 +8,7 @@ import {
   createIronSpruePaymentIntentCheckout,
   generateIronSprueOrderNumber,
   getIronSprueAvailableShippingMethods,
+  getIronSprueCustomerOrders,
   processIronSprueStripeWebhookEvent,
   reconcileIronSpruePaymentIntentCheckout,
   reconcileIronSprueReservedStock,
@@ -208,6 +209,21 @@ describe('Iron Sprue Stripe commerce', () => {
     expect(underThreshold.find((method) => method.code === 'UK_EXPRESS')?.amountMinor).toBe(599);
     expect(overThreshold.find((method) => method.code === 'UK_STANDARD')?.amountMinor).toBe(0);
     expect(overThreshold.find((method) => method.code === 'UK_EXPRESS')?.amountMinor).toBe(399);
+  });
+
+  it('does not expose unresolved payment attempts in customer order history', async () => {
+    const findMany = vi.fn().mockResolvedValue([]);
+    const db = { ironSprueOrder: { findMany } };
+
+    await getIronSprueCustomerOrders('user-1', db as never);
+
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        storeCode: 'IRON_SPRUE',
+        userId: 'user-1',
+        paymentStatus: { not: 'REQUIRES_PAYMENT' },
+      }),
+    }));
   });
 
   it('ignores a successful session for the wrong store before finalising inventory', async () => {

@@ -1533,6 +1533,7 @@ export async function listIronSprueAdminOrders(filters: { search?: string } = {}
   return client.ironSprueOrder.findMany({
     where: {
       storeCode: IRON_SPRUE_STORE_CODE,
+      paymentStatus: { not: 'REQUIRES_PAYMENT' },
       ...(search
         ? {
           OR: [

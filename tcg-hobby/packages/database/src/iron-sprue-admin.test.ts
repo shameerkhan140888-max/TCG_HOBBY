@@ -14,6 +14,7 @@ import {
   getIronSprueAdminDashboard,
   getIronSprueAdminPermissionMatrix,
   isIronSprueDisplayableImageAsset,
+  listIronSprueAdminOrders,
   listIronSprueAdminProducts,
   receiveIronSprueStock,
   reconcileIronSprueR2ProductMedia,
@@ -794,6 +795,23 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     expect(client.ironSprueAdminProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ storeCode: 'IRON_SPRUE' }),
       take: 10,
+    }));
+  });
+
+  it('does not list unresolved payment attempts as admin orders', async () => {
+    const client = {
+      ironSprueOrder: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+    };
+
+    await listIronSprueAdminOrders({}, client as never);
+
+    expect(client.ironSprueOrder.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        storeCode: 'IRON_SPRUE',
+        paymentStatus: { not: 'REQUIRES_PAYMENT' },
+      }),
     }));
   });
 
