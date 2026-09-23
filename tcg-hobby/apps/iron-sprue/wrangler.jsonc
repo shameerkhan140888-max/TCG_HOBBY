@@ -55,6 +55,7 @@
     "IRON_SPRUE_R2_REGION": "auto",
     "IRON_SPRUE_R2_PUBLIC_BASE_URL": "https://media.ironsprue.co.uk",
     "IRON_SPRUE_CHECKOUT_SUCCESS_URL": "https://ironsprue.co.uk/checkout/success?session_id={CHECKOUT_SESSION_ID}",
-    "IRON_SPRUE_CHECKOUT_CANCEL_URL": "https://ironsprue.co.uk/checkout/cancel"
+    "IRON_SPRUE_CHECKOUT_CANCEL_URL": "https://ironsprue.co.uk/checkout/cancel",
+    "NEXT_PUBLIC_IRON_SPRUE_GA4_MEASUREMENT_ID": "G-4G1XQ0MV8Y"
   }
 }
