@@ -66,7 +66,7 @@ async function initializeGa4(measurementId: string) {
   }
 }
 
-function updateGoogleConsent(consent: IronSprueAnalyticsConsent, command: 'default' | 'update' = 'update') {
+export function updateIronSprueGoogleConsent(consent: IronSprueAnalyticsConsent, command: 'default' | 'update' = 'update') {
   if (typeof window === 'undefined') return;
   window.dataLayer = window.dataLayer ?? [];
   window.gtag = window.gtag ?? function gtag(...args: unknown[]) { window.dataLayer?.push(args); };
@@ -76,6 +76,13 @@ function updateGoogleConsent(consent: IronSprueAnalyticsConsent, command: 'defau
     ad_user_data: consent.marketing ? 'granted' : 'denied',
     analytics_storage: consent.analytics ? 'granted' : 'denied',
   });
+}
+
+export function initialiseIronSprueGoogleConsentFromStoredPreference() {
+  updateIronSprueGoogleConsent(UNKNOWN_IRON_SPRUE_ANALYTICS_CONSENT, 'default');
+  const storedConsent = getIronSprueAnalyticsConsent();
+  updateIronSprueGoogleConsent(storedConsent, 'update');
+  return storedConsent;
 }
 
 async function initializeMeta(pixelId: string) {
@@ -117,11 +124,10 @@ function IronSprueAnalyticsRuntime({ ga4Id, metaPixelId: pixelId }: { ga4Id: str
   const lastEventKey = useRef<string | null>(null);
 
   useEffect(() => {
-    updateGoogleConsent(UNKNOWN_IRON_SPRUE_ANALYTICS_CONSENT, 'default');
-    setConsent(getIronSprueAnalyticsConsent());
+    setConsent(initialiseIronSprueGoogleConsentFromStoredPreference());
     function handleConsentChange() {
       const nextConsent = getIronSprueAnalyticsConsent();
-      updateGoogleConsent(nextConsent);
+      updateIronSprueGoogleConsent(nextConsent);
       setConsent(nextConsent);
     }
     window.addEventListener(IRON_SPRUE_ANALYTICS_CONSENT_CHANGED_EVENT, handleConsentChange);
@@ -207,6 +213,12 @@ export function IronSprueCookieConsentBanner() {
   const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
   const [marketingEnabled, setMarketingEnabled] = useState(false);
 
+  function saveConsent(nextConsent: Extract<IronSprueAnalyticsConsent, { status: 'saved' }>) {
+    updateIronSprueGoogleConsent(nextConsent);
+    setIronSprueAnalyticsConsent(nextConsent);
+    setConsent(nextConsent);
+  }
+
   useEffect(() => {
     setConsent(getIronSprueAnalyticsConsent());
     setCheckedStoredConsent(true);
@@ -248,15 +260,14 @@ export function IronSprueCookieConsentBanner() {
         ) : null}
       </div>
       <div className="cookie-consent-actions">
-        <button type="button" aria-label="Use necessary cookies only" onClick={() => { setIronSprueAnalyticsConsent(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT); setConsent(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT); }}>Necessary</button>
+        <button type="button" aria-label="Use necessary cookies only" onClick={() => saveConsent(NECESSARY_IRON_SPRUE_ANALYTICS_CONSENT)}>Necessary</button>
         {showPreferences ? (
           <button
             type="button"
             aria-label="Save cookie preferences"
             onClick={() => {
               const nextConsent = { status: 'saved' as const, analytics: analyticsEnabled, marketing: marketingEnabled };
-              setIronSprueAnalyticsConsent(nextConsent);
-              setConsent(nextConsent);
+              saveConsent(nextConsent);
             }}
           >
             Save
@@ -266,8 +277,7 @@ export function IronSprueCookieConsentBanner() {
         )}
         <button type="button" className="button" aria-label="Accept all cookies" onClick={() => {
           const nextConsent = { status: 'saved' as const, analytics: true, marketing: true };
-          setIronSprueAnalyticsConsent(nextConsent);
-          setConsent(nextConsent);
+          saveConsent(nextConsent);
         }}>Accept all</button>
       </div>
     </section>
@@ -275,9 +285,9 @@ export function IronSprueCookieConsentBanner() {
 }
 
 export function IronSprueCookiePreferenceLink() {
-  return <button type="button" className="footer-link-button" onClick={() => clearIronSprueAnalyticsConsent()}>Cookie preferences</button>;
+  return <button type="button" className="footer-link-button" onClick={() => { updateIronSprueGoogleConsent(UNKNOWN_IRON_SPRUE_ANALYTICS_CONSENT); clearIronSprueAnalyticsConsent(); }}>Cookie preferences</button>;
 }
 
 export function IronSprueCookiePreferenceButton() {
-  return <button type="button" className="button cookie-preferences-button" onClick={() => clearIronSprueAnalyticsConsent()}>Manage cookie preferences</button>;
+  return <button type="button" className="button cookie-preferences-button" onClick={() => { updateIronSprueGoogleConsent(UNKNOWN_IRON_SPRUE_ANALYTICS_CONSENT); clearIronSprueAnalyticsConsent(); }}>Manage cookie preferences</button>;
 }
