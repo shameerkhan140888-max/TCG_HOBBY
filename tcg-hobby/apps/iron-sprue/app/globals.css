@@ -7897,9 +7897,18 @@ body:has(.homepage-brand-carousel) .trust-workshop-band {
     flex: 1 1 100%;
   }
 
+  .homepage-board .homepage-section-heading h2.sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    white-space: normal;
+  }
+
   .homepage-board .section-heading-art {
-    width: min(94vw, 100%);
-    max-height: clamp(118px, 30vw, 184px);
+    display: none;
   }
 
   .homepage-board .section-head h2 {
