@@ -11,7 +11,10 @@ const siteUrl = ironSprueBrand.siteUrl.replace(/\/$/, '');
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (process.env.STOREFRONT_ACCESS_MODE === 'protected') return [];
   const storefrontProducts = await getIronSprueStorefrontProducts(products);
-  const categoryUrls = categoryNavigation.map((item) => `${siteUrl}/shop/${slugForCategory(item.label)}`);
+  const categoryUrls = categoryNavigation.map((item) => {
+    if (item.href.startsWith('/shop/') && !item.href.includes('?')) return `${siteUrl}${item.href}`;
+    return `${siteUrl}/shop/${slugForCategory(item.label)}`;
+  });
   const productUrls = storefrontProducts
     .filter((product) => product.storeCode === 'IRON_SPRUE')
     .map((product) => `${siteUrl}/products/${product.slug}`);

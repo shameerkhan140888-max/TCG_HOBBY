@@ -1,8 +1,10 @@
 import type { MetadataRoute } from 'next';
+import { headers } from 'next/headers';
 import { ironSprueBrand } from '../lib/brand';
+import { shouldNoindexStorefrontHost } from '../lib/staging-access';
 
-export default function robots(): MetadataRoute.Robots {
-  if (process.env.STOREFRONT_ACCESS_MODE === 'protected') {
+export function robotsForHost(hostname: string): MetadataRoute.Robots {
+  if (shouldNoindexStorefrontHost(hostname)) {
     return {
       rules: [{ userAgent: '*', disallow: '/' }],
     };
@@ -29,4 +31,10 @@ export default function robots(): MetadataRoute.Robots {
     }],
     sitemap: `${ironSprueBrand.siteUrl.replace(/\/$/, '')}/sitemap.xml`,
   };
+}
+
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const headerStore = await headers();
+  const host = headerStore.get('host')?.split(':')[0] || 'localhost';
+  return robotsForHost(host);
 }

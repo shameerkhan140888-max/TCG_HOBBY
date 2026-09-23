@@ -10,8 +10,27 @@ const attempts = new Map<string, { count: number; resetAt: number }>();
 export type AccessMode = 'protected' | 'public';
 export type AccessEnv = Partial<Record<string, string | undefined>>;
 
+export const IRON_SPRUE_CANONICAL_HOST = 'ironsprue.co.uk';
+export const IRON_SPRUE_REDIRECT_HOSTS = new Set(['www.ironsprue.co.uk']);
+
 export function storefrontAccessMode(env: AccessEnv = process.env): AccessMode {
   return env.STOREFRONT_ACCESS_MODE === 'protected' ? 'protected' : 'public';
+}
+
+export function isCanonicalStorefrontHost(hostname: string) {
+  return hostname.toLowerCase() === IRON_SPRUE_CANONICAL_HOST;
+}
+
+export function isRedirectStorefrontHost(hostname: string) {
+  return IRON_SPRUE_REDIRECT_HOSTS.has(hostname.toLowerCase());
+}
+
+export function shouldNoindexStorefrontHost(hostname: string, env: AccessEnv = process.env) {
+  if (storefrontAccessMode(env) === 'protected') return true;
+  const normalizedHost = hostname.toLowerCase();
+  if (isCanonicalStorefrontHost(normalizedHost) || isRedirectStorefrontHost(normalizedHost)) return false;
+  if (normalizedHost === 'localhost' || normalizedHost === '127.0.0.1') return false;
+  return true;
 }
 
 export function noindexHeaders() {

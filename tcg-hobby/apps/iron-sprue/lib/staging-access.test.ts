@@ -5,6 +5,7 @@ import {
   createAccessCookieValue,
   isAccessExemptPath,
   resetPasswordAttemptLimitForTests,
+  shouldNoindexStorefrontHost,
   storefrontAccessMode,
   verifyAccessCookieValue,
   verifyStagingPassword,
@@ -17,6 +18,13 @@ describe('Iron Sprue staging access', () => {
     expect(storefrontAccessMode({})).toBe('public');
     expect(storefrontAccessMode({ STOREFRONT_ACCESS_MODE: 'public' })).toBe('public');
     expect(storefrontAccessMode({ STOREFRONT_ACCESS_MODE: 'protected' })).toBe('protected');
+  });
+
+  it('marks non-canonical public hosts as noindex while leaving production indexable', () => {
+    expect(shouldNoindexStorefrontHost('ironsprue.co.uk', {})).toBe(false);
+    expect(shouldNoindexStorefrontHost('www.ironsprue.co.uk', {})).toBe(false);
+    expect(shouldNoindexStorefrontHost('iron-sprue-storefront-staging.shameerkhan140888.workers.dev', {})).toBe(true);
+    expect(shouldNoindexStorefrontHost('ironsprue.co.uk', { STOREFRONT_ACCESS_MODE: 'protected' })).toBe(true);
   });
 
   it('validates a server-side password secret without exposing it to client code', async () => {
