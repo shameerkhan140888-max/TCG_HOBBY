@@ -2073,6 +2073,39 @@ p {
   min-height: 96px;
 }
 
+.express-checkout-shell {
+  display: grid;
+  gap: 8px;
+}
+
+.express-checkout-shell--empty {
+  display: none;
+}
+
+.express-checkout-mount {
+  min-height: 48px;
+}
+
+.payment-element-divider {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: rgba(255, 250, 241, 0.66);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.payment-element-divider::before,
+.payment-element-divider::after {
+  height: 1px;
+  background: rgba(190, 122, 37, 0.32);
+  content: "";
+}
+
 .checkout-order-review {
   display: grid;
   gap: 14px;
@@ -8305,6 +8338,24 @@ body:has(.product-detail-page) .payment-trust-banner {
     0 0 0 2px rgba(0, 0, 0, 0.72),
     inset 0 1px 0 rgba(255, 250, 241, 0.22),
     inset 0 -1px 0 rgba(67, 35, 6, 0.5);
+  color: var(--ink);
+}
+
+.checkout-panel button:not(.secondary):not(.text-button):not(.quantity-stepper):not(:disabled),
+.checkout-step-actions .button:not(.secondary):not(:disabled),
+.basket-review-panel > .button:not(:disabled),
+.payment-element-shell > button:not(:disabled) {
+  border-color: rgba(79, 44, 9, 0.86);
+  background:
+    linear-gradient(180deg, #e4b357, #c99131 56%, #865319),
+    linear-gradient(135deg, rgba(255, 250, 241, 0.18), transparent 42%, rgba(76, 40, 7, 0.24)),
+    repeating-linear-gradient(0deg, rgba(255, 250, 241, 0.08) 0 1px, transparent 1px 7px);
+  box-shadow:
+    0 1px 0 rgba(255, 250, 241, 0.16),
+    0 0 0 1px rgba(79, 44, 9, 0.82),
+    0 0 0 2px rgba(0, 0, 0, 0.74),
+    inset 0 1px 0 rgba(255, 250, 241, 0.26),
+    inset 0 -1px 0 rgba(67, 35, 6, 0.55);
   color: var(--ink);
 }
 

@@ -75,8 +75,17 @@ type StripePaymentElement = {
   on?(event: 'ready' | 'loaderror', handler: (event?: { error?: { message?: string } }) => void): void;
 };
 
+type StripeExpressCheckoutElement = {
+  mount(selector: string): void;
+  unmount(): void;
+  on?(event: 'ready', handler: (event?: { availablePaymentMethods?: Record<string, boolean> | null }) => void): void;
+  on?(event: 'confirm', handler: (event?: { paymentFailed?: (payload?: { reason?: string }) => void }) => void | Promise<void>): void;
+  on?(event: 'loaderror', handler: (event?: { error?: { message?: string } }) => void): void;
+};
+
 type StripeElements = {
   create(type: 'payment'): StripePaymentElement;
+  create(type: 'expressCheckout', options?: Record<string, unknown>): StripeExpressCheckoutElement;
   submit?(): Promise<{ error?: { message?: string } }>;
 };
 
@@ -423,11 +432,64 @@ function StripePaymentElementForm({
   const [elements, setElements] = useState<StripeElements | null>(null);
   const [paymentStatus, setPaymentStatus] = useState('');
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+  const [hasExpressCheckout, setHasExpressCheckout] = useState<boolean | null>(null);
   const mountId = `iron-sprue-payment-element-${paymentIntent.paymentIntentId}`;
+  const expressMountId = `iron-sprue-express-checkout-${paymentIntent.paymentIntentId}`;
+
+  const confirmStripePayment = useCallback(async (
+    stripeInstance: StripeInstance,
+    stripeElements: StripeElements,
+    options: { submitElements: boolean; onWalletFailed?: () => void },
+  ) => {
+    setIsSubmittingPayment(true);
+    setPaymentStatus('Confirming payment...');
+    let result: Awaited<ReturnType<StripeInstance['confirmPayment']>>;
+    let basketHeldForProcessing = false;
+    try {
+      if (options.submitElements) {
+        const submitResult = await stripeElements.submit?.();
+        if (submitResult?.error) {
+          throw new Error(submitResult.error.message ?? 'Payment details could not be submitted. Please review and try again.');
+        }
+      }
+      onPaymentSubmit(analyticsPayload);
+      result = await stripeInstance.confirmPayment({
+        elements: stripeElements,
+        confirmParams: {
+          return_url: `${window.location.origin}/checkout/success?payment_intent=${encodeURIComponent(paymentIntent.paymentIntentId)}`,
+        },
+        redirect: 'if_required',
+      });
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : 'Payment could not be completed. Please review the payment details and try again.';
+      if (basketHeldForProcessing) restoreIronSprueBasketAfterFailedPayment();
+      options.onWalletFailed?.();
+      setPaymentStatus(message);
+      setIsSubmittingPayment(false);
+      if (isPaymentElementUnavailableMessage(message)) onUnavailable(message);
+      return;
+    }
+    if (result.error) {
+      const message = result.error.message ?? 'Payment could not be completed. Please review the payment details and try again.';
+      if (basketHeldForProcessing) restoreIronSprueBasketAfterFailedPayment();
+      options.onWalletFailed?.();
+      setPaymentStatus(message);
+      setIsSubmittingPayment(false);
+      if (isPaymentElementUnavailableMessage(message)) onUnavailable(message);
+      return;
+    }
+    const confirmedPaymentIntentId = result.paymentIntent?.id ?? paymentIntent.paymentIntentId;
+    holdIronSprueBasketForPendingPayment();
+    basketHeldForProcessing = true;
+    window.location.assign(`/checkout/success?payment_intent=${encodeURIComponent(confirmedPaymentIntentId)}`);
+  }, [analyticsPayload, onPaymentSubmit, onUnavailable, paymentIntent.paymentIntentId]);
 
   useEffect(() => {
     let cancelled = false;
     let mountedElement: StripePaymentElement | null = null;
+    let mountedExpressElement: StripeExpressCheckoutElement | null = null;
     let readyTimeout: ReturnType<typeof setTimeout> | null = null;
     let reportedUnavailable = false;
     const reportUnavailable = (message?: string) => {
@@ -440,6 +502,7 @@ function StripePaymentElementForm({
     setPaymentStatus('Loading secure payment form...');
     setStripe(null);
     setElements(null);
+    setHasExpressCheckout(null);
 
     void loadStripeScript()
       .then(() => {
@@ -460,6 +523,33 @@ function StripePaymentElementForm({
             },
           },
         });
+        mountedExpressElement = nextElements.create('expressCheckout', {
+          buttonTheme: {
+            applePay: 'black',
+            googlePay: 'black',
+            paypal: 'gold',
+            amazonPay: 'dark',
+          },
+          buttonType: {
+            applePay: 'buy',
+            googlePay: 'buy',
+            paypal: 'paypal',
+          },
+        });
+        mountedExpressElement.on?.('ready', (event) => {
+          if (cancelled) return;
+          setHasExpressCheckout(Boolean(Object.values(event?.availablePaymentMethods ?? {}).some(Boolean)));
+        });
+        mountedExpressElement.on?.('confirm', (event) => {
+          void confirmStripePayment(stripeInstance, nextElements, {
+            submitElements: false,
+            onWalletFailed: () => event?.paymentFailed?.({ reason: 'fail' }),
+          });
+        });
+        mountedExpressElement.on?.('loaderror', () => {
+          if (!cancelled) setHasExpressCheckout(false);
+        });
+        mountedExpressElement.mount(`#${expressMountId}`);
         mountedElement = nextElements.create('payment');
         mountedElement.on?.('ready', () => {
           if (cancelled || reportedUnavailable) return;
@@ -484,9 +574,10 @@ function StripePaymentElementForm({
     return () => {
       cancelled = true;
       if (readyTimeout) clearTimeout(readyTimeout);
+      mountedExpressElement?.unmount();
       mountedElement?.unmount();
     };
-  }, [mountId, onUnavailable, paymentIntent.clientSecret, paymentIntent.publishableKey]);
+  }, [confirmStripePayment, expressMountId, mountId, onUnavailable, paymentIntent.clientSecret, paymentIntent.publishableKey]);
 
   return (
     <section className="payment-element-shell" aria-label="Secure payment">
@@ -495,51 +586,17 @@ function StripePaymentElementForm({
         <h3>Choose payment method</h3>
         <p>Payments are handled securely by the payment provider. Iron Sprue does not store card or wallet details.</p>
       </div>
+      <div className={`express-checkout-shell${hasExpressCheckout === false ? ' express-checkout-shell--empty' : ''}`} aria-label="Express checkout">
+        <div id={expressMountId} className="express-checkout-mount" />
+      </div>
+      {hasExpressCheckout === true ? <p className="payment-element-divider"><span>or pay another way</span></p> : null}
       <div id={mountId} className="payment-element-mount" />
       <button
         type="button"
         disabled={!stripe || !elements || isSubmittingPayment}
-        onClick={async () => {
+        onClick={() => {
           if (!stripe || !elements) return;
-          setIsSubmittingPayment(true);
-          setPaymentStatus('Confirming payment...');
-          let result: Awaited<ReturnType<StripeInstance['confirmPayment']>>;
-          let basketHeldForProcessing = false;
-          try {
-            const submitResult = await elements.submit?.();
-            if (submitResult?.error) {
-              throw new Error(submitResult.error.message ?? 'Payment details could not be submitted. Please review and try again.');
-            }
-            onPaymentSubmit(analyticsPayload);
-            result = await stripe.confirmPayment({
-              elements,
-              confirmParams: {
-                return_url: `${window.location.origin}/checkout/success?payment_intent=${encodeURIComponent(paymentIntent.paymentIntentId)}`,
-              },
-              redirect: 'if_required',
-            });
-          } catch (error) {
-            const message = error instanceof Error
-              ? error.message
-              : 'Payment could not be completed. Please review the payment details and try again.';
-            if (basketHeldForProcessing) restoreIronSprueBasketAfterFailedPayment();
-            setPaymentStatus(message);
-            setIsSubmittingPayment(false);
-            if (isPaymentElementUnavailableMessage(message)) onUnavailable(message);
-            return;
-          }
-          if (result.error) {
-            const message = result.error.message ?? 'Payment could not be completed. Please review the payment details and try again.';
-            if (basketHeldForProcessing) restoreIronSprueBasketAfterFailedPayment();
-            setPaymentStatus(message);
-            setIsSubmittingPayment(false);
-            if (isPaymentElementUnavailableMessage(message)) onUnavailable(message);
-            return;
-          }
-          const confirmedPaymentIntentId = result.paymentIntent?.id ?? paymentIntent.paymentIntentId;
-          holdIronSprueBasketForPendingPayment();
-          basketHeldForProcessing = true;
-          window.location.assign(`/checkout/success?payment_intent=${encodeURIComponent(confirmedPaymentIntentId)}`);
+          void confirmStripePayment(stripe, elements, { submitElements: true });
         }}
       >
         {isSubmittingPayment ? 'Processing payment...' : `Pay ${formatPrice(paymentIntent.totalMinor)}`}

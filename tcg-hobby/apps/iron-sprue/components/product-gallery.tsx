@@ -54,11 +54,6 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
     };
   }, [enlarged]);
 
-  function resetLightboxView() {
-    setLightboxZoom(1);
-    setLightboxOffset({ x: 0, y: 0 });
-  }
-
   function updateLightboxZoom(nextZoom: number) {
     const clampedZoom = Math.min(2.8, Math.max(1, nextZoom));
     setLightboxZoom(clampedZoom);
@@ -107,10 +102,11 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
     }
     const start = panStartRef.current;
     if (!start || start.pointerId !== event.pointerId || lightboxZoom <= 1) return;
-    const movementLimit = 46 * lightboxZoom;
+    const movementLimitX = Math.max(180, window.innerWidth * 0.42) * lightboxZoom;
+    const movementLimitY = Math.max(240, window.innerHeight * 0.56) * lightboxZoom;
     setLightboxOffset({
-      x: Math.max(-movementLimit, Math.min(movementLimit, start.offsetX + event.clientX - start.x)),
-      y: Math.max(-movementLimit, Math.min(movementLimit, start.offsetY + event.clientY - start.y)),
+      x: Math.max(-movementLimitX, Math.min(movementLimitX, start.offsetX + event.clientX - start.x)),
+      y: Math.max(-movementLimitY, Math.min(movementLimitY, start.offsetY + event.clientY - start.y)),
     });
   }
 
@@ -205,7 +201,6 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
             </div>
             <div className="product-image-lightbox__tools" aria-label="Image zoom controls">
               <button type="button" onClick={() => updateLightboxZoom(lightboxZoom - 0.25)} aria-label="Zoom out">-</button>
-              <button type="button" onClick={resetLightboxView}>Reset</button>
               <button type="button" onClick={() => updateLightboxZoom(lightboxZoom + 0.25)} aria-label="Zoom in">+</button>
             </div>
           </div>
