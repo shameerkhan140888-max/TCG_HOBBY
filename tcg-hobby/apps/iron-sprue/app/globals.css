@@ -6856,6 +6856,23 @@ body::before {
   line-height: 1.08;
 }
 
+.product-description-subheading {
+  margin: 14px 0 8px;
+  color: var(--brass);
+  font-size: clamp(18px, 1.5vw, 22px);
+  line-height: 1.16;
+}
+
+.product-description-feature {
+  margin: 0 0 12px;
+  line-height: 1.58;
+}
+
+.product-description-feature strong {
+  color: #fffaf1;
+  font-weight: 800;
+}
+
 .product-description-panel p,
 .product-specification-list,
 .product-key-details,

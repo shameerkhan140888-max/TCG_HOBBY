@@ -171,6 +171,34 @@ function productStructuredData(product: IronSprueProduct, description: string, i
   };
 }
 
+function plainProductDescription(description: string) {
+  return description
+    .replace(/^##\s+/gm, '')
+    .replace(/^\s*[-*]\s+/gm, '')
+    .replace(/\*\*/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function renderProductDescription(description: string) {
+  return description.split(/\n{2,}/).map((block, index) => {
+    const trimmed = block.trim();
+    const heading = trimmed.match(/^##\s+(.+)$/);
+    if (heading) return <h3 key={`${index}-${trimmed}`} className="product-description-subheading">{heading[1]}</h3>;
+
+    const bullet = trimmed.match(/^[-*]\s+(?:\*\*)?(.+?)(?:\*\*)?:\s+(.+)$/s);
+    if (bullet) {
+      return (
+        <p key={`${index}-${trimmed}`} className="product-description-feature">
+          <strong>{bullet[1]}:</strong> {(bullet[2] ?? '').replace(/\s+/g, ' ').trim()}
+        </p>
+      );
+    }
+
+    return <p key={`${index}-${trimmed}`}>{trimmed.replace(/\*\*/g, '')}</p>;
+  });
+}
+
 export function generateStaticParams() {
   if (shouldUseIronSprueProductionApi()) return [];
   return products.map((product) => ({ slug: product.slug }));
@@ -242,7 +270,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const commerceId = productCommerceId(product);
   const priceMinor = product.priceMinor ?? product.retailPriceMinor ?? 0;
   const primaryImage = galleryImages[0] ?? productImage(product);
-  const structuredData = productStructuredData(product, description, primaryImage, priceMinor, availableQuantity);
+  const structuredData = productStructuredData(product, plainProductDescription(description), primaryImage, priceMinor, availableQuantity);
 
   return (
     <section className="section-block product-detail-page">
@@ -264,7 +292,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <div className="product-pdp-info-grid">
               <section className="product-description-panel" aria-labelledby="product-description-heading">
                 <h2 id="product-description-heading">Description</h2>
-                {description.split(/\n{2,}/).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+                {renderProductDescription(description)}
               </section>
 
               <section className="product-specification-zone" aria-labelledby="product-build-information-heading">
