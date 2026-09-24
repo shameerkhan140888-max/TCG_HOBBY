@@ -459,6 +459,28 @@ function bundleAvailability(product: IronSprueCatalogueProductRow, availabilityB
   return Number.isFinite(availableBundles) ? Math.max(availableBundles, 0) : 0;
 }
 
+function specificationMinorValue(product: IronSprueCatalogueProductRow, key: string) {
+  const specifications = product.specifications && typeof product.specifications === 'object' && !Array.isArray(product.specifications)
+    ? product.specifications as Record<string, unknown>
+    : {};
+  const value = specifications[key];
+  if (typeof value === 'number' && Number.isFinite(value)) return Math.round(value);
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number.parseInt(value.trim(), 10);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function compareAtMinor(product: IronSprueCatalogueProductRow) {
+  const current = product.grossPriceMinor ?? 0;
+  const individualTotal = specificationMinorValue(product, 'individualTotalMinor');
+  if (individualTotal != null && individualTotal > current) return individualTotal;
+  const bundleSaving = specificationMinorValue(product, 'bundleSavingMinor');
+  if (bundleSaving != null && bundleSaving > 0) return current + bundleSaving;
+  return null;
+}
+
 async function buildBundleAvailabilityByProductId(products: IronSprueCatalogueProductRow[], db: DatabaseClient) {
   const skuSet = new Set<string>();
   for (const product of products) {
@@ -507,6 +529,7 @@ function mapProduct(
       amountMinor: product.grossPriceMinor ?? 0,
       currency: product.currency as CatalogueProduct['price']['currency'],
     },
+    compareAtPriceMinor: compareAtMinor(product),
     featured: product.featured,
     homepagePriority: product.featured ? 0 : null,
     heroFeatured: product.featured,

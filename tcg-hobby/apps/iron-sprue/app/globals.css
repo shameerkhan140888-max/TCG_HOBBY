@@ -868,6 +868,12 @@ p {
   object-fit: contain;
 }
 
+.hero-savings-badge img {
+  width: min(250px, 30vw);
+  max-height: 106px;
+  filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.45));
+}
+
 .hero-dots,
 .carousel-dots {
   display: flex;
@@ -7774,6 +7780,11 @@ body:has(.homepage-brand-carousel) .trust-workshop-band {
     max-height: 42px;
   }
 
+  .hero-savings-badge img {
+    width: min(136px, 34vw);
+    max-height: 58px;
+  }
+
   .hero-dots {
     bottom: 26px;
   }
@@ -8983,6 +8994,11 @@ body:has(.product-detail-page) .payment-trust-banner {
     max-height: 48px;
   }
 
+  .hero-savings-badge img {
+    width: min(146px, 36vw);
+    max-height: 62px;
+  }
+
   .hero-dots {
     bottom: 20px;
   }
@@ -9158,6 +9174,78 @@ body:has(.product-detail-page) .payment-trust-banner {
     0 2px 0 rgba(64, 37, 8, 0.98),
     0 0 18px rgba(216, 148, 39, 0.32);
   white-space: nowrap;
+}
+
+.product-card .product-card-offer-ribbon,
+.product-image .product-card-offer-ribbon {
+  position: absolute;
+  top: 9px;
+  right: 8px;
+  z-index: 2;
+  display: block;
+  width: min(46%, 148px);
+  max-width: none;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  pointer-events: none;
+  transform: rotate(-2deg);
+}
+
+.product-card .product-image .product-card-offer-ribbon img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: none;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.28));
+}
+
+.product-card .product-card-price-stack,
+.homepage-board .product-card .product-card-price-stack,
+.catalogue-grid .product-card .product-card-price-stack,
+.product-grid .product-card .product-card-price-stack,
+.product-detail-page .pdp-addon-carousel-track .product-card .product-card-price-stack,
+.basket-route .pdp-addon-carousel-track .product-card .product-card-price-stack,
+.basket-upsell-grid .product-card .product-card-price-stack {
+  grid-area: price;
+  align-self: end;
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 1px;
+  min-width: 74px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.product-card .product-card-price-was {
+  display: block;
+  color: #e22a20;
+  font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1;
+  text-decoration: line-through;
+  text-decoration-color: #ff746b;
+  text-decoration-thickness: 2px;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.92),
+    0 0 8px rgba(226, 42, 32, 0.24);
+}
+
+.product-card .product-card-price-stack .product-card-price-now {
+  grid-area: auto;
+  align-self: auto;
+  justify-self: auto;
+  display: block;
+  line-height: 1.02;
 }
 
 .product-card .product-actions,

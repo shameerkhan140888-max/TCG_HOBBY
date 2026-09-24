@@ -391,8 +391,8 @@ export function customerProductDescription(product: IronSprueProduct): string {
 
 export function productCardFacts(product: IronSprueProduct) {
   const facts = [
-    productScale(product),
     productPieceCount(product) ? `${productPieceCount(product)} pieces` : '',
+    productScale(product),
     productSize(product),
   ].filter((value): value is string => Boolean(String(value ?? '').trim()));
 
@@ -527,6 +527,35 @@ export function brandOptions(products: IronSprueProduct[]) {
 
 export function formatPrice(product: IronSprueProduct) {
   return `£${(productPriceMinor(product) / 100).toFixed(2)}`;
+}
+
+export function formatMinorPrice(amountMinor: number) {
+  return `£${(amountMinor / 100).toFixed(2)}`;
+}
+
+function isMagicBoxIntroOffer(product: IronSprueProduct) {
+  const searchable = `${product.sku} ${product.slug} ${product.name} ${product.category} ${product.productType}`.toLowerCase();
+  return product.brand === 'CubicFun'
+    && searchable.includes('magic box')
+    && productPriceMinor(product) === 699;
+}
+
+export function productCardOffer(product: IronSprueProduct) {
+  const currentPriceMinor = productPriceMinor(product);
+  const compareAtPriceMinor = product.compareAtPriceMinor && product.compareAtPriceMinor > currentPriceMinor
+    ? product.compareAtPriceMinor
+    : isMagicBoxIntroOffer(product)
+      ? 1049
+      : null;
+  if (!compareAtPriceMinor || compareAtPriceMinor <= currentPriceMinor) return null;
+
+  const savingMinor = compareAtPriceMinor - currentPriceMinor;
+  return {
+    currentPrice: formatMinorPrice(currentPriceMinor),
+    compareAtPrice: formatMinorPrice(compareAtPriceMinor),
+    saving: formatMinorPrice(savingMinor),
+    label: `Save ${formatMinorPrice(savingMinor)}`,
+  };
 }
 
 export function slugForCategory(category: string) {

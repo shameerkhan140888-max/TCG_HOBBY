@@ -67,11 +67,13 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
     >
       {labelledSlides.map((slide, index) => {
         const isActive = index === activeIndex;
+        const heroStyle = heroStyleForSlide(slide);
+        const savingsBadge = heroStyle === 'night-box' ? '/assets/promo-save-33-banner.png' : null;
         return (
           <article
             className={`hero-slide${isActive ? ' is-active' : ''}`}
             data-fit="cover"
-            data-hero-style={heroStyleForSlide(slide)}
+            data-hero-style={heroStyle}
             style={{ '--slide-index': index } as CSSProperties}
             key={`${slide.id ?? slide.image}-${slide.title}`}
             aria-hidden={isActive ? undefined : true}
@@ -89,7 +91,11 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                 decoding={index === 0 ? 'sync' : 'async'}
               />
             </a>
-            {slide.brandLogo ? (
+            {savingsBadge ? (
+              <div className="hero-brand hero-savings-badge">
+                <img src={savingsBadge} alt="Save 33%" width="360" height="153" />
+              </div>
+            ) : slide.brandLogo ? (
               <div className="hero-brand">
                 <img src={slide.brandLogo} alt={`${slide.brandName ?? 'Brand'} logo`} width="180" height="70" />
               </div>

@@ -59,6 +59,12 @@ describe('public commerce projection', () => {
     expect(result).not.toHaveProperty('supplierName');
   });
 
+  it('preserves public compare-at pricing for storefront offer display', () => {
+    const result = toPublicProductSummary(product({ compareAtPriceMinor: 1049 }));
+
+    expect(result.compareAtPriceMinor).toBe(1049);
+  });
+
   it('serves Iron Sprue product media through the same-origin storefront media route', () => {
     process.env.PUBLIC_COMMERCE_STORE_CODE = 'IRON_SPRUE';
     process.env.PUBLIC_STOREFRONT_URL = 'https://staging.ironsprue.co.uk';

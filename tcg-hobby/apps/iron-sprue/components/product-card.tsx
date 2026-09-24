@@ -5,6 +5,7 @@ import {
   formatPrice,
   productAvailability,
   productAvailabilityClass,
+  productCardOffer,
   productCardMobileFact,
   productCommerceId,
   productImage,
@@ -18,12 +19,22 @@ type ProductCardProps = {
   product: IronSprueProduct;
 };
 
+const offerBadgeBySaving: Record<string, string> = {
+  '£3.00': '/assets/promo-save-3-00-banner.png',
+  '£3.50': '/assets/promo-save-banner.png',
+  '£3.78': '/assets/promo-save-3-78-banner.png',
+  '£3.98': '/assets/promo-save-3-98-banner.png',
+  '£4.99': '/assets/promo-save-4-99-banner.png',
+};
+
 export function ProductCard({ detailsLabel = 'Details', headingLevel = 3, product }: ProductCardProps) {
   const imageUrl = productImage(product);
   const availableQuantity = productSellableQuantity(product);
   const isOutOfStock = availableQuantity <= 0;
   const availabilityClass = productAvailabilityClass(product);
   const mobileFact = productCardMobileFact(product);
+  const offer = productCardOffer(product);
+  const offerBadgeSrc = offer ? offerBadgeBySaving[offer.saving] ?? null : null;
   const HeadingTag = headingLevel === 2 ? 'h2' : 'h3';
 
   const cardClassName = [
@@ -48,6 +59,11 @@ export function ProductCard({ detailsLabel = 'Details', headingLevel = 3, produc
               decoding="async"
             />
           ) : <span>{product.brand}</span>}
+          {offerBadgeSrc && offer ? (
+            <span className="product-card-offer-ribbon" aria-label={offer.label}>
+              <img src={offerBadgeSrc} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+            </span>
+          ) : null}
         </a>
         <div className="product-card-body">
           <p className="product-brand">{product.brand}</p>
@@ -60,7 +76,14 @@ export function ProductCard({ detailsLabel = 'Details', headingLevel = 3, produc
             </ul>
           ) : null}
           <span className={`stock-badge ${availabilityClass}`}>{productAvailability(product)}</span>
-          <strong>{formatPrice(product)}</strong>
+          {offer ? (
+            <span className="product-card-price-stack" aria-label={`Was ${offer.compareAtPrice}, now ${offer.currentPrice}. ${offer.label}.`}>
+              <span className="product-card-price-was">{offer.compareAtPrice}</span>
+              <strong className="product-card-price-now">{offer.currentPrice}</strong>
+            </span>
+          ) : (
+            <strong>{formatPrice(product)}</strong>
+          )}
           <div className="product-actions">
             <a href={`/products/${product.slug}`}>{detailsLabel}</a>
             <AddToBasketButton

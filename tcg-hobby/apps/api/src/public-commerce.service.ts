@@ -123,6 +123,7 @@ export function toPublicProductSummary(product: CatalogueProduct): PublicProduct
     category: { name: product.categoryName, slug: product.categorySlug },
     productType: product.productType ?? null,
     price: product.price,
+    compareAtPriceMinor: product.compareAtPriceMinor ?? null,
     stockState,
     availableQuantity: available,
     purchasable: stockState !== 'OUT_OF_STOCK' && (product.releaseStatus ?? 'RELEASED') === 'RELEASED',

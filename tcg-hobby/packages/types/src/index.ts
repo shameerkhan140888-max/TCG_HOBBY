@@ -66,6 +66,7 @@ export type CatalogueProduct = {
   categoryName: string;
   categorySlug: string;
   price: Money;
+  compareAtPriceMinor?: number | null;
   featured: boolean;
   homepagePriority?: number | null;
   heroFeatured?: boolean;
@@ -164,6 +165,7 @@ export type PublicProductSummary = {
   category: { name: string; slug: string };
   productType: string | null;
   price: Money;
+  compareAtPriceMinor?: number | null;
   stockState: PublicStockState;
   availableQuantity?: number;
   purchasable: boolean;

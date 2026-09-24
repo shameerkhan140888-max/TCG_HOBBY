@@ -146,6 +146,7 @@ export function ironSprueProductFromPublicSummary(product: PublicProductSummary)
     availableQuantity: quantity,
     priceMinor: product.price.amountMinor,
     retailPriceMinor: product.price.amountMinor,
+    compareAtPriceMinor: product.compareAtPriceMinor ?? null,
     shortDescription: product.availabilityMessage ?? product.category.name,
     imageReferences: product.image ? [storefrontMediaUrl(product.image.url)].filter((url): url is string => Boolean(url)) : [],
     publicationState: 'PUBLISHED',
