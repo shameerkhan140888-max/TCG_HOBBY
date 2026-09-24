@@ -1240,7 +1240,7 @@ export async function cancelIronSprueCheckoutSession(sessionId: string, db: Data
   return releaseIronSprueCheckoutOrderReservation(order.id, db, 'CANCELED');
 }
 
-export async function cancelIronSpruePaymentIntentCheckout(paymentIntentId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
+export async function cancelIronSpruePaymentIntentCheckout(paymentIntentId: string, environment?: CommerceEnvironment, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const normalizedPaymentIntentId = paymentIntentId.trim();
   if (!normalizedPaymentIntentId) return null;
   const order = await db.ironSprueOrder.findUnique({
@@ -1251,7 +1251,7 @@ export async function cancelIronSpruePaymentIntentCheckout(paymentIntentId: stri
   if (order.paymentStatus === 'SUCCEEDED' || order.paymentStatus === 'REFUNDED') return mapOrderRecord(order);
 
   await releaseIronSprueCheckoutOrderReservation(order.id, db, 'CANCELED');
-  const config = getStoreStripeConfig({ store: IRON_SPRUE_STORE_CODE });
+  const config = getStoreStripeConfig({ store: IRON_SPRUE_STORE_CODE, ...(environment ? { environment } : {}) });
   try {
     await stripeRequest<StripePaymentIntentSnapshot>(config.secretKey, `payment_intents/${encodeURIComponent(normalizedPaymentIntentId)}/cancel`, new URLSearchParams());
   } catch (error) {
@@ -1261,7 +1261,7 @@ export async function cancelIronSpruePaymentIntentCheckout(paymentIntentId: stri
   return getIronSprueOrderByStripePaymentIntentId(normalizedPaymentIntentId, db);
 }
 
-export async function reconcileIronSpruePaymentIntentCheckout(paymentIntentId: string, db: DatabaseClient = getIronSprueCommercePrisma()) {
+export async function reconcileIronSpruePaymentIntentCheckout(paymentIntentId: string, environment?: CommerceEnvironment, db: DatabaseClient = getIronSprueCommercePrisma()) {
   const normalizedPaymentIntentId = paymentIntentId.trim();
   if (!normalizedPaymentIntentId) return null;
   const order = await db.ironSprueOrder.findUnique({
@@ -1271,7 +1271,7 @@ export async function reconcileIronSpruePaymentIntentCheckout(paymentIntentId: s
   if (!order) return null;
   if (order.paymentStatus === 'SUCCEEDED' || order.paymentStatus === 'REFUNDED') return mapOrderRecord(order);
 
-  const config = getStoreStripeConfig({ store: IRON_SPRUE_STORE_CODE });
+  const config = getStoreStripeConfig({ store: IRON_SPRUE_STORE_CODE, ...(environment ? { environment } : {}) });
   const intent = await retrieveIronSprueStripePaymentIntent(config.secretKey, normalizedPaymentIntentId);
   assertIronSprueStripeMetadata(intent.metadata);
 

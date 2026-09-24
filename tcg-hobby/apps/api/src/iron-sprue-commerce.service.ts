@@ -335,7 +335,7 @@ export class IronSprueCommerceService {
 
   async checkoutPaymentStatus(headers: Record<string, string | string[] | undefined>, paymentIntentId: string): Promise<PublicOrderDetail> {
     requireIronSprueProxy(headers);
-    const order = await reconcileIronSpruePaymentIntentCheckout(paymentIntentId)
+    const order = await reconcileIronSpruePaymentIntentCheckout(paymentIntentId, ironSprueCommerceEnvironmentFromProxy(headers))
       ?? await getIronSprueOrderByStripePaymentIntentId(paymentIntentId);
     if (!order) throw new NotFoundException('Order not found.');
     if (order.paymentStatus === 'SUCCEEDED') {
@@ -368,7 +368,7 @@ export class IronSprueCommerceService {
 
   async cancelCheckoutPaymentIntent(headers: Record<string, string | string[] | undefined>, paymentIntentId: string) {
     requireIronSprueProxy(headers);
-    await cancelIronSpruePaymentIntentCheckout(paymentIntentId);
+    await cancelIronSpruePaymentIntentCheckout(paymentIntentId, ironSprueCommerceEnvironmentFromProxy(headers));
     return { ok: true };
   }
 
