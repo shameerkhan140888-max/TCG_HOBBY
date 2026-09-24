@@ -169,7 +169,12 @@ function requireIronSprueProxy(headers: Record<string, string | string[] | undef
   const signature = headerValue(headers, 'x-iron-sprue-internal-signature');
   const expectedKeyId = process.env.IRON_SPRUE_INTERNAL_API_KEY_ID?.trim();
   const secret = process.env.IRON_SPRUE_INTERNAL_API_SECRET?.trim();
-  const expectedEnvironment = process.env.IRON_SPRUE_ENVIRONMENT?.trim() || process.env.NODE_ENV || 'production';
+  const expectedEnvironment = (
+    process.env.IRON_SPRUE_INTERNAL_PROXY_ENVIRONMENT
+    ?? process.env.IRON_SPRUE_ENVIRONMENT
+    ?? process.env.NODE_ENV
+    ?? 'production'
+  ).trim();
   if (
     store !== 'IRON_SPRUE'
     || !expectedKeyId
