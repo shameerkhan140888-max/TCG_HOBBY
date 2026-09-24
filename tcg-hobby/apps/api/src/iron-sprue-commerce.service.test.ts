@@ -24,7 +24,7 @@ const databaseMocks = vi.hoisted(() => ({
 
 vi.mock('@capital-hobby/database', () => databaseMocks);
 
-function signedInternalHeaders(input: { method: string; pathname: string; query?: string; body?: string }) {
+function signedInternalHeaders(input: { method: string; pathname: string; query?: string; body?: string; commerceEnvironment?: 'test' | 'live' }) {
   const timestamp = new Date().toISOString();
   const bodyDigest = createHash('sha256').update(input.body ?? '').digest('hex');
   const values = {
@@ -59,6 +59,7 @@ function signedInternalHeaders(input: { method: string; pathname: string; query?
     'x-iron-sprue-internal-store': values.store,
     'x-iron-sprue-internal-environment': values.environment,
     'x-iron-sprue-internal-key-id': values.keyId,
+    ...(input.commerceEnvironment ? { 'x-iron-sprue-internal-commerce-environment': input.commerceEnvironment } : {}),
     'x-iron-sprue-internal-signature': createHmac('sha256', 'test-secret').update(canonical).digest('hex'),
   };
 }
@@ -100,6 +101,37 @@ const order = {
   ],
 };
 
+const checkoutAddress = {
+  fullName: 'Iron Sprue Customer',
+  email: 'customer@example.com',
+  line1: '1 Workshop Road',
+  line2: null,
+  city: 'Dewsbury',
+  region: null,
+  postalCode: 'WF13 3EW',
+  country: 'GB',
+};
+
+const checkoutCart = {
+  items: [{
+    id: 'line-1',
+    productId: 'product-1',
+    productName: 'Toyota 2000GT Red',
+    productSlug: 'aoshima-05628-toyota-2000gt-red',
+    quantity: 1,
+    unitPriceMinor: 1999,
+    totalMinor: 1999,
+    inStock: true,
+    availableQuantity: 2,
+    freeUkStandardShipping: false,
+    imageUrl: null,
+    imageAlt: null,
+  }],
+  subtotalMinor: 1999,
+  currency: 'GBP',
+  totalItems: 1,
+};
+
 describe('IronSprueCommerceService payment status reconciliation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -120,6 +152,57 @@ describe('IronSprueCommerceService payment status reconciliation', () => {
 
     expect(result.orderNumber).toBe('IS-TEST-1');
     expect(databaseMocks.sendIronSprueOrderConfirmationEmail).toHaveBeenCalledWith('order-1');
+  });
+
+  it('passes live commerce environment into payment-intent checkout for production requests', async () => {
+    databaseMocks.resolveIronSprueGuestCart.mockResolvedValue(checkoutCart);
+    databaseMocks.createIronSpruePaymentIntentCheckout.mockResolvedValue({
+      orderNumber: 'IS-TEST-1',
+      paymentIntentId: 'pi_live_1',
+      clientSecret: 'pi_live_1_secret',
+      publishableKey: 'pk_live_redacted',
+      totalMinor: 1999,
+      currency: 'GBP',
+    });
+    const service = new IronSprueCommerceService({ getOptionalUser: vi.fn().mockResolvedValue(null) } as never);
+
+    await service.checkoutPaymentIntent(
+      signedInternalHeaders({
+        method: 'POST',
+        pathname: '/api/checkout/payment-intent',
+        body: '{}',
+        commerceEnvironment: 'live',
+      }),
+      undefined,
+      { guestItems: [{ productId: 'product-1', quantity: 1 }], shippingAddress: checkoutAddress, shippingMethodCode: 'UK_STANDARD' },
+    );
+
+    expect(databaseMocks.createIronSpruePaymentIntentCheckout).toHaveBeenCalledWith(expect.objectContaining({
+      environment: 'live',
+    }));
+  });
+
+  it('defaults payment-intent checkout to test commerce environment for staging requests', async () => {
+    databaseMocks.resolveIronSprueGuestCart.mockResolvedValue(checkoutCart);
+    databaseMocks.createIronSpruePaymentIntentCheckout.mockResolvedValue({
+      orderNumber: 'IS-TEST-1',
+      paymentIntentId: 'pi_test_1',
+      clientSecret: 'pi_test_1_secret',
+      publishableKey: 'pk_test_redacted',
+      totalMinor: 1999,
+      currency: 'GBP',
+    });
+    const service = new IronSprueCommerceService({ getOptionalUser: vi.fn().mockResolvedValue(null) } as never);
+
+    await service.checkoutPaymentIntent(
+      signedInternalHeaders({ method: 'POST', pathname: '/api/checkout/payment-intent', body: '{}' }),
+      undefined,
+      { guestItems: [{ productId: 'product-1', quantity: 1 }], shippingAddress: checkoutAddress, shippingMethodCode: 'UK_STANDARD' },
+    );
+
+    expect(databaseMocks.createIronSpruePaymentIntentCheckout).toHaveBeenCalledWith(expect.objectContaining({
+      environment: 'test',
+    }));
   });
 
   it('rewrites Iron Sprue media-host URLs in basket payloads to the storefront media route', () => {

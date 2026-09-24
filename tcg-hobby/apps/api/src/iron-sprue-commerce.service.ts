@@ -120,6 +120,7 @@ function toPublicOrderDetail(order: Awaited<ReturnType<typeof getIronSprueOrderB
 
 const INTERNAL_SIGNATURE_WINDOW_MS = 5 * 60 * 1000;
 const HEX_SHA256_PATTERN = /^[a-f0-9]{64}$/;
+type IronSprueCommerceEnvironment = 'test' | 'live';
 
 function headerValue(headers: Record<string, string | string[] | undefined>, name: string) {
   const value = headers[name.toLowerCase()] ?? headers[name];
@@ -206,6 +207,11 @@ function requireIronSprueProxy(headers: Record<string, string | string[] | undef
   }
 }
 
+function ironSprueCommerceEnvironmentFromProxy(headers: Record<string, string | string[] | undefined>): IronSprueCommerceEnvironment {
+  const value = headerValue(headers, 'x-iron-sprue-internal-commerce-environment')?.trim().toLowerCase();
+  return value === 'live' ? 'live' : 'test';
+}
+
 @Injectable()
 export class IronSprueCommerceService {
   constructor(@Inject(AuthService) private readonly auth: AuthService) {}
@@ -278,6 +284,7 @@ export class IronSprueCommerceService {
         cart,
         shippingAddress: requireAddress(input.shippingAddress),
         shippingMethodCode: input.shippingMethodCode,
+        environment: ironSprueCommerceEnvironmentFromProxy(headers),
         ...(input.discountCode ? { discountCode: input.discountCode } : {}),
         ...(input.checkoutAttemptId ? { checkoutAttemptId: input.checkoutAttemptId } : {}),
       });
@@ -304,6 +311,7 @@ export class IronSprueCommerceService {
         cart,
         shippingAddress: requireAddress(input.shippingAddress),
         shippingMethodCode: input.shippingMethodCode,
+        environment: ironSprueCommerceEnvironmentFromProxy(headers),
         ...(input.discountCode ? { discountCode: input.discountCode } : {}),
         ...(input.checkoutAttemptId ? { checkoutAttemptId: input.checkoutAttemptId } : {}),
       });

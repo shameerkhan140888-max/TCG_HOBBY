@@ -44,6 +44,7 @@ function loadLocalProxyEnvFallback() {
 
 export const IRON_SPRUE_STORE_CODE = 'IRON_SPRUE';
 export const IRON_SPRUE_ENVIRONMENT = process.env.IRON_SPRUE_ENVIRONMENT?.trim() || process.env.NODE_ENV || 'development';
+export type IronSprueCommerceEnvironment = 'test' | 'live';
 
 export const allowedProxyRoutes = [
   { method: 'POST', pattern: /^\/api\/customer\/register$/ },
@@ -147,6 +148,12 @@ export function copyProxyRequestHeaders(source: Headers) {
     headers.set(key, value);
   });
   return headers;
+}
+
+export function commerceEnvironmentForRequest(source: Headers): IronSprueCommerceEnvironment {
+  const host = ((source.get('x-forwarded-host') ?? source.get('host') ?? '').split(',')[0] ?? '').trim().toLowerCase();
+  const hostname = host.replace(/:\d+$/, '');
+  return hostname === 'ironsprue.co.uk' || hostname === 'www.ironsprue.co.uk' ? 'live' : 'test';
 }
 
 export function requireInternalSigningConfig() {

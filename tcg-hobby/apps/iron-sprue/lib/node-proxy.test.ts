@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { canonicalizeInternalRequest, copyProxyRequestHeaders, getNodeApiOrigin, isAllowedProxyRoute, signInternalRequest } from './node-proxy';
+import { canonicalizeInternalRequest, commerceEnvironmentForRequest, copyProxyRequestHeaders, getNodeApiOrigin, isAllowedProxyRoute, signInternalRequest } from './node-proxy';
 
 const originalProductionApiBaseUrl = process.env.IRON_SPRUE_PRODUCTION_API_BASE_URL;
 const originalNodeApiOrigin = process.env.IRON_SPRUE_NODE_API_ORIGIN;
@@ -50,6 +50,13 @@ describe('Iron Sprue Node proxy contract', () => {
     expect(headers.has('sec-ch-ua-platform')).toBe(false);
     expect(headers.has('x-iron-sprue-internal-signature')).toBe(false);
     expect(headers.has('x-iron-sprue-internal-key-id')).toBe(false);
+  });
+
+  it('uses live Stripe mode only for the production apex host', () => {
+    expect(commerceEnvironmentForRequest(new Headers({ host: 'ironsprue.co.uk' }))).toBe('live');
+    expect(commerceEnvironmentForRequest(new Headers({ host: 'www.ironsprue.co.uk' }))).toBe('live');
+    expect(commerceEnvironmentForRequest(new Headers({ host: 'iron-sprue-storefront-staging.shameerkhan140888.workers.dev' }))).toBe('test');
+    expect(commerceEnvironmentForRequest(new Headers({ host: 'localhost:3004' }))).toBe('test');
   });
 
   it('canonicalizes method, route, query, body hash, timestamp, nonce, key, store and environment', async () => {

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { NextResponse, type NextRequest } from 'next/server';
 import {
   copyProxyRequestHeaders,
+  commerceEnvironmentForRequest,
   digestInternalRequestBody,
   getNodeApiOrigin,
   isAllowedProxyRoute,
@@ -45,6 +46,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   headers.set('x-iron-sprue-internal-key-id', signingConfig.keyId);
   headers.set('x-iron-sprue-internal-store', signingConfig.store);
   headers.set('x-iron-sprue-internal-environment', signingConfig.environment);
+  headers.set('x-iron-sprue-internal-commerce-environment', commerceEnvironmentForRequest(request.headers));
   headers.set('x-iron-sprue-internal-signature', await signInternalRequest({
     method: request.method,
     pathname,
