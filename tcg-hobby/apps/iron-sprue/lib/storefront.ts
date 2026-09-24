@@ -354,6 +354,18 @@ function stripInternalProductCopy(value: string) {
 export function customerProductDescription(product: IronSprueProduct): string {
   const source = stripInternalProductCopy(product.description || product.shortDescription || conciseProductLead(product));
   const size = productSize(product);
+  const withFinishedSize = (description: string) => {
+    if (!size) return description;
+    const normalisedDescription = normalisePublicCopy(description);
+    const normalisedSize = normalisePublicCopy(size);
+    if (!normalisedSize || normalisedDescription.includes(normalisedSize)) return description;
+    return `${description}\n\nFinished size: ${size}.`;
+  };
+
+  if (/^##\s+/m.test(source) && /^\s*[-*]\s+/m.test(source)) {
+    return withFinishedSize(source);
+  }
+
   const shortDescription = normalisePublicCopy(product.shortDescription || '');
   const seen = new Set<string>();
   const paragraphs = source
@@ -370,13 +382,6 @@ export function customerProductDescription(product: IronSprueProduct): string {
     });
 
   if (!paragraphs.length) return conciseProductLead(product);
-  const withFinishedSize = (description: string) => {
-    if (!size) return description;
-    const normalisedDescription = normalisePublicCopy(description);
-    const normalisedSize = normalisePublicCopy(size);
-    if (!normalisedSize || normalisedDescription.includes(normalisedSize)) return description;
-    return `${description}\n\nFinished size: ${size}.`;
-  };
   if (paragraphs.length === 1) return withFinishedSize(paragraphs[0] ?? conciseProductLead(product));
 
   const [first, ...rest] = paragraphs;

@@ -176,27 +176,55 @@ function plainProductDescription(description: string) {
     .replace(/^##\s+/gm, '')
     .replace(/^\s*[-*]\s+/gm, '')
     .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 
-function renderProductDescription(description: string) {
-  return description.split(/\n{2,}/).map((block, index) => {
-    const trimmed = block.trim();
-    const heading = trimmed.match(/^##\s+(.+)$/);
-    if (heading) return <h3 key={`${index}-${trimmed}`} className="product-description-subheading">{heading[1]}</h3>;
+function renderInlineDescription(value: string) {
+  const parts = value.split(/(\*[^*]+\*)/g).filter(Boolean);
+  return parts.map((part, index) => {
+    const emphasis = part.match(/^\*([^*]+)\*$/);
+    if (emphasis) return <em key={`${index}-${part}`}>{emphasis[1]}</em>;
+    return <React.Fragment key={`${index}-${part}`}>{part}</React.Fragment>;
+  });
+}
 
-    const bullet = trimmed.match(/^[-*]\s+(?:\*\*)?(.+?)(?:\*\*)?:\s+(.+)$/s);
-    if (bullet) {
-      return (
-        <p key={`${index}-${trimmed}`} className="product-description-feature">
-          <strong>{bullet[1]}:</strong> {(bullet[2] ?? '').replace(/\s+/g, ' ').trim()}
-        </p>
-      );
+function renderProductDescription(description: string) {
+  const lines = description.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const elements: React.ReactNode[] = [];
+  let bulletItems: React.ReactNode[] = [];
+
+  const flushBullets = () => {
+    if (!bulletItems.length) return;
+    elements.push(<ul key={`features-${elements.length}`} className="product-description-features">{bulletItems}</ul>);
+    bulletItems = [];
+  };
+
+  lines.forEach((line, index) => {
+    const heading = line.match(/^##\s+(.+)$/);
+    if (heading) {
+      flushBullets();
+      elements.push(<h3 key={`${index}-${line}`} className="product-description-subheading">{(heading[1] ?? '').replace(/\*\*/g, '')}</h3>);
+      return;
     }
 
-    return <p key={`${index}-${trimmed}`}>{trimmed.replace(/\*\*/g, '')}</p>;
+    const bullet = line.match(/^[-*]\s+(?:\*\*)?(.+?)(?:\*\*)?:\s+(.+)$/);
+    if (bullet) {
+      bulletItems.push(
+        <li key={`${index}-${line}`} className="product-description-feature">
+          <strong>{bullet[1] ?? ''}:</strong> {renderInlineDescription((bullet[2] ?? '').replace(/\*\*/g, '').trim())}
+        </li>,
+      );
+      return;
+    }
+
+    flushBullets();
+    elements.push(<p key={`${index}-${line}`}>{renderInlineDescription(line.replace(/\*\*/g, ''))}</p>);
   });
+
+  flushBullets();
+  return elements;
 }
 
 export function generateStaticParams() {
