@@ -4,7 +4,8 @@ export type IronSpruePaymentMethodId =
   | 'american-express'
   | 'apple-pay'
   | 'google-pay'
-  | 'paypal';
+  | 'paypal'
+  | 'amazon-pay';
 
 export type IronSpruePaymentMethodConfig = {
   id: IronSpruePaymentMethodId;
@@ -40,20 +41,27 @@ export const ironSpruePaymentMethods = [
     id: 'apple-pay',
     label: 'Apple Pay',
     assetPath: '/payments/apple-pay.svg',
-    enabled: false,
-    status: 'production-configuration-required',
+    enabled: true,
+    status: 'eligible-through-stripe',
   },
   {
     id: 'google-pay',
     label: 'Google Pay',
     assetPath: '/payments/google-pay.svg',
-    enabled: false,
-    status: 'production-configuration-required',
+    enabled: true,
+    status: 'eligible-through-stripe',
   },
   {
     id: 'paypal',
     label: 'PayPal',
     assetPath: '/payments/paypal.svg',
+    enabled: true,
+    status: 'eligible-through-stripe',
+  },
+  {
+    id: 'amazon-pay',
+    label: 'Amazon Pay',
+    assetPath: '/payments/amazon-pay.svg',
     enabled: true,
     status: 'eligible-through-stripe',
   },

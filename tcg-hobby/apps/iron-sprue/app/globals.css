@@ -1807,6 +1807,12 @@ p {
   overflow: visible;
 }
 
+.payment-method-strip.compact li[data-payment-method="amazon-pay"] {
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 3px 6px;
+}
+
 .payment-method-strip img {
   display: block;
   max-width: 68px;
@@ -1834,6 +1840,12 @@ p {
   max-width: 62px;
   max-height: 30px;
   object-fit: contain;
+}
+
+.payment-method-strip.compact img[src*="amazon-pay"] {
+  width: 76px;
+  max-width: 76px;
+  max-height: 24px;
 }
 
 .checkout-grid {

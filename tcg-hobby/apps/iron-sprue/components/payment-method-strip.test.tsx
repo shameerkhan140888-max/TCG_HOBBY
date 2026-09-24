@@ -11,30 +11,39 @@ describe('Iron Sprue payment method presentation', () => {
     expect(markup).toContain('/payments/visa.svg');
     expect(markup).toContain('/payments/mastercard.svg');
     expect(markup).toContain('/payments/american-express.svg');
+    expect(markup).toContain('/payments/apple-pay.svg');
+    expect(markup).toContain('/payments/google-pay.svg');
     expect(markup).toContain('/payments/paypal.svg');
-    expect(markup).not.toContain('/payments/apple-pay.svg');
-    expect(markup).not.toContain('/payments/google-pay.svg');
+    expect(markup).toContain('/payments/amazon-pay.svg');
     expect(markup).not.toContain('Klarna');
+    expect(markup).not.toContain('Revolut');
   });
 
-  it('keeps device-gated wallets out of static strips while exposing PayPal through Stripe', () => {
+  it('shows only the live Stripe methods that Iron Sprue advertises', () => {
     expect(getVisibleIronSpruePaymentMethods().map((method) => method.id)).toEqual([
       'visa',
       'mastercard',
       'american-express',
+      'apple-pay',
+      'google-pay',
       'paypal',
+      'amazon-pay',
     ]);
     expect(ironSpruePaymentMethods.find((method) => method.id === 'paypal')).toMatchObject({
       enabled: true,
       status: 'eligible-through-stripe',
     });
     expect(ironSpruePaymentMethods.find((method) => method.id === 'apple-pay')).toMatchObject({
-      enabled: false,
-      status: 'production-configuration-required',
+      enabled: true,
+      status: 'eligible-through-stripe',
     });
     expect(ironSpruePaymentMethods.find((method) => method.id === 'google-pay')).toMatchObject({
-      enabled: false,
-      status: 'production-configuration-required',
+      enabled: true,
+      status: 'eligible-through-stripe',
+    });
+    expect(ironSpruePaymentMethods.find((method) => method.id === 'amazon-pay')).toMatchObject({
+      enabled: true,
+      status: 'eligible-through-stripe',
     });
   });
 

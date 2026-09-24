@@ -20,7 +20,7 @@ export function PaymentMethodStrip({
       ) : null}
       <ul aria-label="Accepted payments">
         {visibleMethods.map((method) => (
-          <li key={method.id}>
+          <li key={method.id} data-payment-method={method.id}>
             {method.assetPath ? (
               <img src={method.assetPath} alt={method.label} width="76" height="32" />
             ) : (
