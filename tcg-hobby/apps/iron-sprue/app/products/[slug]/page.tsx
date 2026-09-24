@@ -74,6 +74,7 @@ function customerFacingSpecifications(product: IronSprueProduct) {
   const buildType = normaliseSpecificationValue(raw.buildType ?? '');
   const category = normaliseSpecificationValue(raw.category ?? product.category ?? '');
   const productType = normaliseSpecificationValue(raw.productType ?? '');
+  const pieceCount = normaliseSpecificationValue(raw.pieceCount ?? raw.pieces ?? '');
   const seenKeys = new Set<string>();
   const seenValues = new Set<string>();
 
@@ -85,6 +86,7 @@ function customerFacingSpecifications(product: IronSprueProduct) {
       const canonicalKey = key === 'size' ? 'dimensions' : key === 'pieces' ? 'pieceCount' : key;
       if ((key === 'structure' || key === 'productType') && normalisedValue === category) return false;
       if (canonicalKey === 'productType' && normalisedValue === buildType) return false;
+      if (canonicalKey === 'contents' && pieceCount && normalisedValue === `${pieceCount} piece`) return false;
       if (seenKeys.has(canonicalKey) || seenValues.has(normalisedValue)) return false;
       seenKeys.add(canonicalKey);
       seenValues.add(normalisedValue);

@@ -214,7 +214,7 @@ describe('Iron Sprue public catalogue copy', () => {
     expect(description).not.toContain('stay on show');
   });
 
-  it('lists known finished dimensions in rendered PDP descriptions', () => {
+  it('keeps finished dimensions out of rendered PDP descriptions', () => {
     const description = customerProductDescription({
       name: 'Magic Box  London at Night',
       brand: 'CubicFun',
@@ -230,6 +230,7 @@ describe('Iron Sprue public catalogue copy', () => {
       },
     } as IronSprueProduct);
 
-    expect(description).toContain('Finished size: 16cm x 16cm x 26cm.');
+    expect(description).toBe('London at Night uses the Magic Box format for a compact city-atmosphere display.');
+    expect(description).not.toContain('Finished size:');
   });
 });

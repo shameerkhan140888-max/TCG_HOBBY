@@ -23,6 +23,12 @@ vi.mock('../../../lib/admin-storefront-controls', () => ({
           specifications: { ...(product.specifications ?? {}), category: 'Vases', pieces: '160', structure: 'Vase' },
         };
       }
+      if (product.sku === 'IS-CUB-OM3606') {
+        return {
+          ...product,
+          specifications: { ...(product.specifications ?? {}), pieces: '27', pieceCount: '27', contents: '27 pieces' },
+        };
+      }
       return product;
     }),
   ),
@@ -80,6 +86,15 @@ describe('Iron Sprue product detail page', () => {
     expect(markup).toContain('Build information');
     expect(markup).toContain('<dt>Category</dt><dd>Architecture</dd>');
     expect(markup).not.toContain('<dt>Structure</dt><dd>Architecture</dd>');
+  });
+
+  it('does not repeat piece count as contents in build information', async () => {
+    const markup = renderToStaticMarkup(await ProductPage({
+      params: Promise.resolve({ slug: 'cubicfun-om3606-magic-box-london-at-night' }),
+    }));
+
+    expect(markup).toContain('<dt>Piece count</dt><dd>27</dd>');
+    expect(markup).not.toContain('<dt>Contents</dt><dd>27 pieces</dd>');
   });
 
   it('renders configured add-ons with their resolved product images', async () => {
