@@ -8408,6 +8408,18 @@ body:has(.product-detail-page) .payment-trust-banner {
   margin-top: 6px;
 }
 
+@media (max-width: 1380px) {
+  .basket-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .basket-review-panel {
+    position: static;
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
 @media (max-width: 920px) {
   .commerce-flow-page,
   .checkout-result-page {
