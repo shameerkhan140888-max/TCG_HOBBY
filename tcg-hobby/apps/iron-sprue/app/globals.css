@@ -3285,13 +3285,14 @@ p {
   gap: 18px;
   align-items: center;
   width: 100%;
-  border-top: 1px solid rgba(8, 10, 8, 0.1);
-  background: var(--paper-soft);
+  border-top: 1px solid rgba(255, 250, 241, 0.08);
+  border-bottom: 1px solid rgba(255, 250, 241, 0.08);
+  background: var(--graphite);
   padding: 14px clamp(20px, 5vw, 72px);
 }
 
 .payment-trust-banner > strong {
-  color: var(--ink);
+  color: var(--paper-soft);
   text-align: center;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -3299,8 +3300,8 @@ p {
 }
 
 .payment-trust-banner .payment-method-strip {
-  border-color: rgba(19, 21, 19, 0.12);
-  background: rgba(19, 21, 19, 0.04);
+  border-color: rgba(255, 250, 241, 0.12);
+  background: rgba(255, 250, 241, 0.04);
 }
 
 .payment-trust-banner .payment-method-strip.compact {
@@ -3311,7 +3312,7 @@ p {
 
 .payment-trust-banner .payment-method-strip span,
 .payment-trust-banner .payment-method-strip strong {
-  color: var(--ink);
+  color: var(--paper-soft);
 }
 
 .payment-trust-banner .payment-method-strip strong {
@@ -8931,13 +8932,6 @@ body:has(.product-detail-page) .payment-trust-banner {
 
 .payment-trust-banner {
   grid-template-columns: minmax(160px, 0.28fr) minmax(0, 1fr);
-  border-top-color: rgba(255, 250, 241, 0.08);
-  border-bottom: 1px solid rgba(255, 250, 241, 0.08);
-  background: var(--graphite);
-}
-
-.payment-trust-banner > strong {
-  color: var(--paper-soft);
 }
 
 .payment-trust-banner .payment-method-strip.compact {
