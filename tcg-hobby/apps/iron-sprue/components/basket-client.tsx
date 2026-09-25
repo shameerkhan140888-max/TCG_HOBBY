@@ -537,7 +537,6 @@ function StripePaymentElementForm({
           paymentMethodOrder: ['apple_pay', 'paypal', 'amazon_pay', 'google_pay'],
           paymentMethods: {
             applePay: 'always',
-            googlePay: 'always',
           },
           buttonTheme: {
             applePay: 'black',
