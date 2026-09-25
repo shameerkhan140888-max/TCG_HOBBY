@@ -8131,6 +8131,7 @@ body:has(.product-detail-page) .payment-trust-banner {
 .checkout-processing-card,
 .commerce-flow-page .empty-state {
   position: relative;
+  box-sizing: border-box;
   overflow: hidden;
   border: 1px solid rgba(3, 4, 3, 0.98);
   border-radius: 9px;
