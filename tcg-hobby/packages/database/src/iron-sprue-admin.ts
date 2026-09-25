@@ -1608,13 +1608,13 @@ export type IronSprueManualOrderInput = {
   placedAt?: Date | null;
   shippingMinor?: number | null;
   shippingMethodName?: string | null;
-  shippingFullName: string;
-  shippingEmail: string;
-  shippingLine1: string;
+  shippingFullName?: string | null;
+  shippingEmail?: string | null;
+  shippingLine1?: string | null;
   shippingLine2?: string | null;
-  shippingCity: string;
+  shippingCity?: string | null;
   shippingRegion?: string | null;
-  shippingPostalCode: string;
+  shippingPostalCode?: string | null;
   shippingCountry?: string | null;
   lines: IronSprueManualOrderLineInput[];
 };
@@ -1650,12 +1650,13 @@ export async function createIronSprueManualOrder(
   client = getIronSprueAdminPrisma(),
 ) {
   const sourceChannel = sanitizeManualOrderText(input.sourceChannel, 'MANUAL').toUpperCase().replace(/\s+/g, '_');
+  const isFaceToFaceSale = sourceChannel === 'FACE_TO_FACE';
   const paymentMethodLabel = sanitizeManualOrderText(input.paymentMethodLabel, 'Manual payment');
-  const shippingFullName = sanitizeManualOrderText(input.shippingFullName);
-  const shippingEmail = sanitizeManualOrderText(input.shippingEmail).toLowerCase();
-  const shippingLine1 = sanitizeManualOrderText(input.shippingLine1);
-  const shippingCity = sanitizeManualOrderText(input.shippingCity);
-  const shippingPostalCode = sanitizeManualOrderText(input.shippingPostalCode);
+  const shippingFullName = isFaceToFaceSale ? sanitizeManualOrderText(input.shippingFullName, 'Face-to-face customer') : sanitizeManualOrderText(input.shippingFullName);
+  const shippingEmail = isFaceToFaceSale ? sanitizeManualOrderText(input.shippingEmail, 'face-to-face-sale@ironsprue.local').toLowerCase() : sanitizeManualOrderText(input.shippingEmail).toLowerCase();
+  const shippingLine1 = isFaceToFaceSale ? sanitizeManualOrderText(input.shippingLine1, 'Face-to-face sale') : sanitizeManualOrderText(input.shippingLine1);
+  const shippingCity = isFaceToFaceSale ? sanitizeManualOrderText(input.shippingCity, 'In person') : sanitizeManualOrderText(input.shippingCity);
+  const shippingPostalCode = isFaceToFaceSale ? sanitizeManualOrderText(input.shippingPostalCode, 'N/A') : sanitizeManualOrderText(input.shippingPostalCode);
   const shippingCountry = sanitizeManualOrderText(input.shippingCountry, 'GB').toUpperCase();
   const placedAt = input.placedAt && !Number.isNaN(input.placedAt.getTime()) ? input.placedAt : new Date();
   const shippingMinor = Math.max(0, Math.trunc(input.shippingMinor ?? 0));
@@ -1742,7 +1743,7 @@ export async function createIronSprueManualOrder(
         totalMinor,
         currency: 'GBP',
         shippingMethodCode: 'manual',
-        shippingMethodName: cleanNullable(input.shippingMethodName) ?? 'Manual delivery',
+        shippingMethodName: cleanNullable(input.shippingMethodName) ?? (isFaceToFaceSale ? 'Face-to-face handover' : 'Manual delivery'),
         shippingMethodAmountMinor: shippingMinor,
         shippingFullName,
         shippingEmail,

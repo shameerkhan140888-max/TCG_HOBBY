@@ -212,6 +212,15 @@ describe('Iron Sprue transactional email sending', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it('does not send transactional emails to internal face-to-face placeholder recipients', async () => {
+    const db = createDb(sampleOrder({ shippingEmail: 'face-to-face-sale@ironsprue.local' }));
+
+    await expect(sendIronSprueOrderConfirmationEmail('order-1', db as never))
+      .resolves.toEqual({ outcome: 'missing_recipient' });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(db.ironSprueTransactionalEmailDelivery.upsert).not.toHaveBeenCalled();
+  });
+
   it('fails closed when Iron Sprue provider config is missing even if TCG email config exists', async () => {
     vi.stubEnv('IRON_SPRUE_RESEND_API_KEY', '');
     vi.stubEnv('IRON_SPRUE_EMAIL_FROM', '');

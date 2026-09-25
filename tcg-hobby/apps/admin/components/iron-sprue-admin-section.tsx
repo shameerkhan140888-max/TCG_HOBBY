@@ -3027,6 +3027,7 @@ function ManualOrderForm({ products }: { products: Awaited<ReturnType<typeof lis
           <Field label="Sales channel">
             <select name="sourceChannel" className={fieldClass} defaultValue="MANUAL">
               <option value="MANUAL">Manual Admin</option>
+              <option value="FACE_TO_FACE">Face-to-face sale</option>
               <option value="PHONE">Phone</option>
               <option value="EVENT">Event / show</option>
               <option value="EMAIL">Email</option>
@@ -3057,14 +3058,17 @@ function ManualOrderForm({ products }: { products: Awaited<ReturnType<typeof lis
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
-          <Field label="Full name"><input name="shippingFullName" className={fieldClass} required /></Field>
-          <Field label="Email"><input name="shippingEmail" type="email" className={fieldClass} required /></Field>
-          <Field label="Address line 1"><input name="shippingLine1" className={fieldClass} required /></Field>
+          <p className="md:col-span-2 text-xs text-neutral-500">
+            Customer details are required for delivery/remote manual orders. For face-to-face sales, leave them blank unless the customer wants an email receipt or invoice.
+          </p>
+          <Field label="Full name"><input name="shippingFullName" className={fieldClass} /></Field>
+          <Field label="Email"><input name="shippingEmail" type="email" className={fieldClass} placeholder="Optional for face-to-face receipts" /></Field>
+          <Field label="Address line 1"><input name="shippingLine1" className={fieldClass} /></Field>
           <Field label="Address line 2"><input name="shippingLine2" className={fieldClass} /></Field>
-          <Field label="Town / city"><input name="shippingCity" className={fieldClass} required /></Field>
+          <Field label="Town / city"><input name="shippingCity" className={fieldClass} /></Field>
           <Field label="Region"><input name="shippingRegion" className={fieldClass} /></Field>
-          <Field label="Postcode"><input name="shippingPostalCode" className={fieldClass} required /></Field>
-          <Field label="Country"><input name="shippingCountry" className={fieldClass} defaultValue="GB" required /></Field>
+          <Field label="Postcode"><input name="shippingPostalCode" className={fieldClass} /></Field>
+          <Field label="Country"><input name="shippingCountry" className={fieldClass} defaultValue="GB" /></Field>
           <Field label="Delivery method"><input name="shippingMethodName" className={fieldClass} defaultValue="Manual delivery" /></Field>
           <Field label="Delivery charge (£)"><input name="shippingMinor" type="number" min="0" step="0.01" className={fieldClass} defaultValue="0.00" /></Field>
         </div>

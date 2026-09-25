@@ -45,6 +45,11 @@ function clean(value?: string | null) {
   return trimmed || null;
 }
 
+function isSendableCustomerEmail(value?: string | null) {
+  const email = clean(value)?.toLowerCase();
+  return Boolean(email && !email.endsWith('@ironsprue.local'));
+}
+
 function siteUrl() {
   return clean(process.env.IRON_SPRUE_SITE_URL)
     ?? clean(process.env.NEXT_PUBLIC_IRON_SPRUE_SITE_URL)
@@ -243,7 +248,8 @@ async function sendIronSprueEmail(
   const orderRecord = await loadOrder(orderId, db);
   const order = mapEmailOrder(orderRecord);
   if (!order) return { outcome: 'not_found' };
-  if (!order.shippingEmail) return { outcome: 'missing_recipient' };
+  const recipient = clean(order.shippingEmail);
+  if (!recipient || !isSendableCustomerEmail(recipient)) return { outcome: 'missing_recipient' };
 
   const claim = await claimIronSprueTransactionalEmail(orderId, purpose, db);
   if (claim.outcome !== 'claimed') return { outcome: claim.outcome, deliveryId: claim.deliveryId };
@@ -251,7 +257,7 @@ async function sendIronSprueEmail(
   const config = emailConfig();
   try {
     const template = build(order, config);
-    const result = await sendViaResend(template, order.shippingEmail, claim.idempotencyKey, config);
+    const result = await sendViaResend(template, recipient, claim.idempotencyKey, config);
     if (result.outcome === 'provider_unconfigured') {
       await markIronSprueTransactionalEmailFailed(claim.deliveryId, 'PROVIDER_UNCONFIGURED', db);
       console.warn('iron_sprue_transactional_email_skipped', {

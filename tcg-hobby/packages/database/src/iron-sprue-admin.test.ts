@@ -1340,6 +1340,66 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     }));
   });
 
+  it('creates face-to-face manual orders without customer contact details', async () => {
+    const product = {
+      id: 'product-1',
+      storeCode: 'IRON_SPRUE',
+      sku: 'IS-AOS-05629',
+      customerTitle: 'Toyota 2000GT Silver',
+      slug: 'toyota-2000gt-silver',
+      grossPriceMinor: 1999,
+      inventory: { id: 'inventory-1', storeCode: 'IRON_SPRUE', productId: 'product-1', availableStock: 2 },
+      mediaAssets: [],
+    };
+    const tx = {
+      ironSprueAdminInventory: {
+        findUnique: vi.fn().mockResolvedValue(product.inventory),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      ironSprueAdminStockMovement: { create: vi.fn().mockResolvedValue({}) },
+      ironSprueOrder: { create: vi.fn().mockResolvedValue({ id: 'order-1', orderNumber: 'IS-20260821-ABC123', items: [] }) },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+    const client = {
+      ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue([product]) },
+      $transaction: vi.fn((callback) => callback(tx)),
+    };
+
+    await createIronSprueManualOrder({
+      sourceChannel: 'face to face',
+      paymentMethodLabel: 'Card machine',
+      lines: [{ productId: 'product-1', quantity: 1 }],
+    }, actor, client as never);
+
+    expect(tx.ironSprueOrder.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        sourceChannel: 'FACE_TO_FACE',
+        shippingMethodName: 'Face-to-face handover',
+        shippingFullName: 'Face-to-face customer',
+        shippingEmail: 'face-to-face-sale@ironsprue.local',
+        shippingLine1: 'Face-to-face sale',
+        shippingCity: 'In person',
+        shippingPostalCode: 'N/A',
+        shippingCountry: 'GB',
+      }),
+    }));
+  });
+
+  it('still requires customer contact details for non-face-to-face manual orders', async () => {
+    const client = {
+      ironSprueAdminProduct: { findMany: vi.fn() },
+      $transaction: vi.fn(),
+    };
+
+    await expect(createIronSprueManualOrder({
+      sourceChannel: 'PHONE',
+      lines: [{ productId: 'product-1', quantity: 1 }],
+    }, actor, client as never)).rejects.toThrow(/Required manual order field/);
+
+    expect(client.ironSprueAdminProduct.findMany).not.toHaveBeenCalled();
+    expect(client.$transaction).not.toHaveBeenCalled();
+  });
+
   it('rejects manual orders when sellable stock is insufficient', async () => {
     const product = {
       id: 'product-1',
