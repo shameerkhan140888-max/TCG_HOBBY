@@ -78,9 +78,14 @@ type StripePaymentElement = {
 type StripeExpressCheckoutElement = {
   mount(selector: string): void;
   unmount(): void;
-  on?(event: 'ready', handler: (event?: { availablePaymentMethods?: Record<string, boolean> | null }) => void): void;
-  on?(event: 'confirm', handler: (event?: { paymentFailed?: (payload?: { reason?: string }) => void }) => void | Promise<void>): void;
-  on?(event: 'loaderror', handler: (event?: { error?: { message?: string } }) => void): void;
+  on?(
+    event: 'ready' | 'availablepaymentmethodschange' | 'confirm' | 'loaderror',
+    handler: (event?: {
+      availablePaymentMethods?: Record<string, boolean> | null;
+      error?: { message?: string };
+      paymentFailed?: (payload?: { reason?: string }) => void;
+    }) => void | Promise<void>,
+  ): void;
 };
 
 type StripeElements = {
@@ -527,8 +532,12 @@ function StripePaymentElementForm({
         mountedExpressElement = nextElements.create('expressCheckout', {
           layout: {
             maxColumns: compactExpressCheckout ? 1 : 3,
-            maxRows: compactExpressCheckout ? 3 : 1,
             overflow: 'never',
+          },
+          paymentMethodOrder: ['apple_pay', 'paypal', 'amazon_pay', 'google_pay'],
+          paymentMethods: {
+            applePay: 'always',
+            googlePay: 'always',
           },
           buttonTheme: {
             applePay: 'black',
@@ -542,10 +551,13 @@ function StripePaymentElementForm({
             paypal: 'paypal',
           },
         });
-        mountedExpressElement.on?.('ready', (event) => {
+        const updateExpressAvailability = (event?: { availablePaymentMethods?: Record<string, boolean> | null }) => {
           if (cancelled) return;
-          setHasExpressCheckout(Boolean(Object.values(event?.availablePaymentMethods ?? {}).some(Boolean)));
-        });
+          const methods = event?.availablePaymentMethods;
+          setHasExpressCheckout(methods !== undefined);
+        };
+        mountedExpressElement.on?.('ready', updateExpressAvailability);
+        mountedExpressElement.on?.('availablepaymentmethodschange', updateExpressAvailability);
         mountedExpressElement.on?.('confirm', (event) => {
           void confirmStripePayment(stripeInstance, nextElements, {
             submitElements: false,
