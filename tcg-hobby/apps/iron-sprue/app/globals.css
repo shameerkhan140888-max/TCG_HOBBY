@@ -8101,12 +8101,16 @@ body:has(.product-detail-page) .payment-trust-banner {
 }
 
 .basket-layout {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   grid-template-columns: minmax(0, 1fr) minmax(380px, 460px);
   gap: clamp(16px, 2vw, 24px);
   align-items: start;
 }
 
 .basket-review-panel {
+  min-width: 0;
   align-self: start;
   grid-column: 2;
   grid-row: 1;
@@ -8927,6 +8931,13 @@ body:has(.product-detail-page) .payment-trust-banner {
 
 .payment-trust-banner {
   grid-template-columns: minmax(160px, 0.28fr) minmax(0, 1fr);
+  border-top-color: rgba(255, 250, 241, 0.08);
+  border-bottom: 1px solid rgba(255, 250, 241, 0.08);
+  background: var(--graphite);
+}
+
+.payment-trust-banner > strong {
+  color: var(--paper-soft);
 }
 
 .payment-trust-banner .payment-method-strip.compact {
