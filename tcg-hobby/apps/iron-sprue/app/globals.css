@@ -1857,15 +1857,17 @@ p {
 
 .basket-review-panel .payment-method-strip.compact ul,
 .checkout-panel .payment-method-strip.compact ul {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   width: 100%;
-  gap: 10px;
+  gap: 12px 18px;
 }
 
 .basket-review-panel .payment-method-strip.compact li,
 .checkout-panel .payment-method-strip.compact li {
+  flex: 0 0 auto;
   justify-items: center;
 }
 
@@ -9168,6 +9170,11 @@ body:has(.product-detail-page) .payment-trust-banner {
   filter: none;
 }
 
+.homepage-brand-carousel .brand-feature img[src*="deluxe-materials"] {
+  width: min(520px, 78vw);
+  max-height: 136px;
+}
+
 .homepage-brand-carousel .carousel-dots li,
 .homepage-brand-carousel .carousel-dots button {
   background: rgba(3, 4, 3, 0.28);
@@ -9313,6 +9320,11 @@ body:has(.product-detail-page) .payment-trust-banner {
   .homepage-brand-carousel .brand-feature img {
     width: min(210px, 70vw);
     max-height: 68px;
+  }
+
+  .homepage-brand-carousel .brand-feature img[src*="deluxe-materials"] {
+    width: min(300px, 78vw);
+    max-height: 96px;
   }
 }
 
