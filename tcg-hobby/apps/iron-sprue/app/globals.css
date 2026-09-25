@@ -3285,14 +3285,13 @@ p {
   gap: 18px;
   align-items: center;
   width: 100%;
-  border-top: 1px solid rgba(255, 250, 241, 0.08);
-  border-bottom: 1px solid rgba(255, 250, 241, 0.08);
-  background: var(--graphite);
+  border-top: 1px solid rgba(8, 10, 8, 0.1);
+  background: var(--paper-soft);
   padding: 14px clamp(20px, 5vw, 72px);
 }
 
 .payment-trust-banner > strong {
-  color: var(--paper-soft);
+  color: var(--ink);
   text-align: center;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -3300,8 +3299,8 @@ p {
 }
 
 .payment-trust-banner .payment-method-strip {
-  border-color: rgba(255, 250, 241, 0.12);
-  background: rgba(255, 250, 241, 0.04);
+  border-color: rgba(19, 21, 19, 0.12);
+  background: rgba(19, 21, 19, 0.04);
 }
 
 .payment-trust-banner .payment-method-strip.compact {
@@ -3312,7 +3311,7 @@ p {
 
 .payment-trust-banner .payment-method-strip span,
 .payment-trust-banner .payment-method-strip strong {
-  color: var(--paper-soft);
+  color: var(--ink);
 }
 
 .payment-trust-banner .payment-method-strip strong {
