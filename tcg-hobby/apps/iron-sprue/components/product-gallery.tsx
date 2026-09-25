@@ -72,7 +72,7 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
     updateLightboxZoom(lightboxZoom + direction * 0.18);
   }
 
-  function handlePanStart(event: PointerEvent<HTMLImageElement>) {
+  function handlePanStart(event: PointerEvent<HTMLDivElement>) {
     activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
     event.currentTarget.setPointerCapture(event.pointerId);
     if (activePointersRef.current.size >= 2) {
@@ -90,7 +90,7 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
     };
   }
 
-  function handlePanMove(event: PointerEvent<HTMLImageElement>) {
+  function handlePanMove(event: PointerEvent<HTMLDivElement>) {
     if (activePointersRef.current.has(event.pointerId)) {
       activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
     }
@@ -110,7 +110,7 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
     });
   }
 
-  function handlePanEnd(event: PointerEvent<HTMLImageElement>) {
+  function handlePanEnd(event: PointerEvent<HTMLDivElement>) {
     activePointersRef.current.delete(event.pointerId);
     if (activePointersRef.current.size < 2) pinchStartRef.current = null;
     if (panStartRef.current?.pointerId === event.pointerId) panStartRef.current = null;
@@ -183,7 +183,15 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
             <button ref={closeButtonRef} className="product-image-lightbox__close" type="button" onClick={() => setEnlarged(false)}>
               Close image
             </button>
-            <div className="product-image-lightbox__viewport" aria-label="Scroll or pinch to zoom. Drag enlarged image to pan." onWheel={handleWheelZoom}>
+            <div
+              className="product-image-lightbox__viewport"
+              aria-label="Scroll or pinch to zoom. Drag enlarged image to pan."
+              onWheel={handleWheelZoom}
+              onPointerDown={handlePanStart}
+              onPointerMove={handlePanMove}
+              onPointerUp={handlePanEnd}
+              onPointerCancel={handlePanEnd}
+            >
               <img
                 className={activeImageIsImage2 ? 'product-gallery-lightbox-image product-gallery-lightbox-image--image2' : 'product-gallery-lightbox-image'}
                 src={activeImage}
@@ -192,16 +200,8 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
                 width="1600"
                 height="1600"
                 draggable={false}
-                onPointerDown={handlePanStart}
-                onPointerMove={handlePanMove}
-                onPointerUp={handlePanEnd}
-                onPointerCancel={handlePanEnd}
                 style={{ transform: `translate3d(${lightboxOffset.x}px, ${lightboxOffset.y}px, 0) scale(${lightboxZoom})` }}
               />
-            </div>
-            <div className="product-image-lightbox__tools" aria-label="Image zoom controls">
-              <button type="button" onClick={() => updateLightboxZoom(lightboxZoom - 0.25)} aria-label="Zoom out">-</button>
-              <button type="button" onClick={() => updateLightboxZoom(lightboxZoom + 0.25)} aria-label="Zoom in">+</button>
             </div>
           </div>
         </div>

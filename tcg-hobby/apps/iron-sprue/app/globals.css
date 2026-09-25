@@ -1671,6 +1671,7 @@ p {
 .basket-review-panel {
   position: sticky;
   top: 148px;
+  min-width: 0;
 }
 
 .checkout-page-stack {
@@ -1706,6 +1707,7 @@ p {
 .basket-summary-items {
   display: grid;
   gap: 8px;
+  min-width: 0;
   border-top: 1px solid rgba(255, 250, 241, 0.14);
   border-bottom: 1px solid rgba(255, 250, 241, 0.14);
   padding: 12px 0;
@@ -1716,12 +1718,15 @@ p {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: baseline;
+  min-width: 0;
 }
 
 .basket-summary-items span {
   color: rgba(255, 250, 241, 0.78);
   font-size: 13px;
   line-height: 1.35;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .basket-summary-items strong {
@@ -1786,7 +1791,7 @@ p {
   width: 100%;
   flex-wrap: wrap;
   justify-content: flex-start;
-  gap: 10px 14px;
+  gap: 10px clamp(10px, 2vw, 14px);
 }
 
 .payment-method-strip li {
@@ -1832,12 +1837,12 @@ p {
 
 .payment-method-strip.compact img {
   width: auto;
-  max-width: 62px;
+  max-width: clamp(46px, 9vw, 62px);
   max-height: 28px;
 }
 
 .payment-method-strip.compact img[src*="american-express"] {
-  width: 62px;
+  width: clamp(52px, 10vw, 62px);
   height: auto;
   max-width: 62px;
   max-height: 30px;
@@ -1845,9 +1850,23 @@ p {
 }
 
 .payment-method-strip.compact img[src*="amazon-pay"] {
-  width: 76px;
+  width: clamp(58px, 12vw, 76px);
   max-width: 76px;
   max-height: 24px;
+}
+
+.basket-review-panel .payment-method-strip.compact ul,
+.checkout-panel .payment-method-strip.compact ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.basket-review-panel .payment-method-strip.compact li,
+.checkout-panel .payment-method-strip.compact li {
+  justify-items: center;
 }
 
 .checkout-grid {
@@ -2084,6 +2103,12 @@ p {
 
 .express-checkout-mount {
   min-height: 48px;
+}
+
+@media (max-width: 700px) {
+  .express-checkout-mount {
+    min-height: 164px;
+  }
 }
 
 .payment-element-divider {
@@ -8367,6 +8392,36 @@ body:has(.product-detail-page) .payment-trust-banner {
     inset 0 1px 0 rgba(255, 250, 241, 0.26),
     inset 0 -1px 0 rgba(67, 35, 6, 0.55);
   color: var(--ink);
+}
+
+.checkout-panel .address-suggestion-list button:not(.secondary):not(.text-button):not(.quantity-stepper),
+.checkout-panel .address-suggestion-list button:not(.secondary):not(.text-button):not(.quantity-stepper):not(:disabled) {
+  display: grid;
+  width: 100%;
+  min-height: 58px;
+  gap: 3px;
+  justify-items: start;
+  align-items: center;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 250, 241, 0.1);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: rgba(255, 250, 241, 0.84);
+  font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0;
+  padding: 12px 14px;
+  text-align: left;
+  text-transform: none;
+}
+
+.checkout-panel .address-suggestion-list button:hover,
+.checkout-panel .address-suggestion-list button:focus-visible {
+  background: rgba(199, 150, 67, 0.14);
+  color: var(--paper-soft);
+  outline: 2px solid rgba(199, 150, 67, 0.48);
+  outline-offset: -2px;
 }
 
 .checkout-step-actions .button.secondary,

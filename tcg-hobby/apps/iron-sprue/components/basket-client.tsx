@@ -523,7 +523,13 @@ function StripePaymentElementForm({
             },
           },
         });
+        const compactExpressCheckout = window.matchMedia('(max-width: 700px)').matches;
         mountedExpressElement = nextElements.create('expressCheckout', {
+          layout: {
+            maxColumns: compactExpressCheckout ? 1 : 3,
+            maxRows: compactExpressCheckout ? 3 : 1,
+            overflow: 'never',
+          },
           buttonTheme: {
             applePay: 'black',
             googlePay: 'black',
@@ -589,7 +595,7 @@ function StripePaymentElementForm({
       <div className={`express-checkout-shell${hasExpressCheckout === false ? ' express-checkout-shell--empty' : ''}`} aria-label="Express checkout">
         <div id={expressMountId} className="express-checkout-mount" />
       </div>
-      {hasExpressCheckout === true ? <p className="payment-element-divider"><span>or pay another way</span></p> : null}
+      {hasExpressCheckout === true ? <p className="payment-element-divider"><span>or pay by card</span></p> : null}
       <div id={mountId} className="payment-element-mount" />
       <button
         type="button"
