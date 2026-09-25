@@ -4841,8 +4841,13 @@ body:has(.product-not-found-page)::before {
 
 .footer-grid {
   display: grid;
-  grid-template-columns: minmax(230px, 1fr) repeat(2, minmax(118px, 0.36fr)) minmax(370px, 1.18fr);
-  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px clamp(24px, 7vw, 96px);
+  align-items: start;
+}
+
+.footer-brand {
+  grid-column: 1 / -1;
 }
 
 .site-footer img {
@@ -5032,13 +5037,13 @@ body:has(.product-not-found-page)::before {
   }
 
   .footer-grid {
-    grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(130px, 0.55fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .footer-company {
-    grid-column: 1 / -1;
-    justify-items: start;
-    text-align: left;
+    grid-column: auto;
+    justify-items: end;
+    text-align: right;
   }
 
   .trust-strip,
@@ -8971,8 +8976,13 @@ body:has(.product-detail-page) .payment-trust-banner {
 }
 
 .footer-grid {
-  grid-template-columns: minmax(260px, 1fr) repeat(2, minmax(132px, 0.34fr)) minmax(280px, 0.7fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px clamp(24px, 7vw, 96px);
   align-items: start;
+}
+
+.footer-brand {
+  grid-column: 1 / -1;
 }
 
 .site-footer nav[aria-label="Help links"] {
@@ -8994,18 +9004,18 @@ body:has(.product-detail-page) .payment-trust-banner {
 
 @media (max-width: 900px) {
   .footer-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .footer-brand,
-  .footer-company {
+  .footer-brand {
     grid-column: 1 / -1;
   }
 
   .footer-company {
-    justify-self: stretch;
-    justify-items: start;
-    text-align: left;
+    grid-column: auto;
+    justify-self: end;
+    justify-items: end;
+    text-align: right;
   }
 }
 
