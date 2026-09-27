@@ -7,6 +7,10 @@ export type IronSprueEmailOrderItem = {
   totalMinor: number;
   imageUrl?: string | null;
   imageAlt?: string | null;
+  inlineImageCid?: string | null;
+  inlineImageSourceUrl?: string | null;
+  inlineImageFilename?: string | null;
+  inlineImageContentType?: string | null;
 };
 
 export type IronSprueEmailOrder = {
@@ -55,6 +59,14 @@ export type IronSprueEmailTemplate = {
   subject: string;
   html: string;
   text: string;
+  attachments?: IronSprueEmailAttachment[];
+};
+
+export type IronSprueEmailAttachment = {
+  path: string;
+  filename: string;
+  content_id: string;
+  content_type?: string;
 };
 
 type CancellationOptions = {
@@ -169,7 +181,9 @@ function productHref(item: IronSprueEmailOrderItem, config: IronSprueEmailTempla
   return `${publicEmailLinkBaseUrl(config)}/products/${encodeURIComponent(item.productSlug)}`;
 }
 
-function imageSrc(item: IronSprueEmailOrderItem, config: IronSprueEmailTemplateConfig) {
+export function resolveIronSprueEmailImageSrc(item: IronSprueEmailOrderItem, config: IronSprueEmailTemplateConfig) {
+  if (item.inlineImageCid) return `cid:${item.inlineImageCid}`;
+
   const mediaImageUrl = (key: string, search = '') => {
     const base = `${publicEmailMediaRouteBaseUrl(config)}${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}`;
     const params = new URLSearchParams(search.replace(/^\?/, ''));
@@ -198,6 +212,26 @@ function imageSrc(item: IronSprueEmailOrderItem, config: IronSprueEmailTemplateC
   if (/^https?:\/\//i.test(item.imageUrl)) return item.imageUrl;
   if (item.imageUrl.startsWith('/')) return `${publicEmailAssetBaseUrl(config)}${item.imageUrl}`;
   return null;
+}
+
+function productImageAttachments(order: IronSprueEmailOrder): IronSprueEmailAttachment[] {
+  const seen = new Set<string>();
+  const attachments: IronSprueEmailAttachment[] = [];
+  for (const item of order.items) {
+    const sourceUrl = item.inlineImageSourceUrl?.trim();
+    const contentId = item.inlineImageCid?.trim();
+    if (!sourceUrl || !contentId || seen.has(contentId)) continue;
+    seen.add(contentId);
+    const attachment: IronSprueEmailAttachment = {
+      path: sourceUrl,
+      filename: item.inlineImageFilename?.trim() || `${contentId}.jpg`,
+      content_id: contentId,
+    };
+    const contentType = item.inlineImageContentType?.trim();
+    if (contentType) attachment.content_type = contentType;
+    attachments.push(attachment);
+  }
+  return attachments;
 }
 
 function addressLines(order: IronSprueEmailOrder) {
@@ -310,7 +344,7 @@ function customerFulfilmentStatus(status: string) {
 
 function itemRows(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig) {
   return order.items.map((item) => {
-    const src = imageSrc(item, config);
+    const src = resolveIronSprueEmailImageSrc(item, config);
     const image = src
       ? `<img class="thumb" src="${escapeHtml(src)}" width="72" height="72" alt="" role="presentation" style="display:block;width:72px;height:72px;object-fit:contain;border:1px solid #d6ddda;background:#fff;" />`
       : '<span class="thumbFallback">Iron Sprue</span>';
@@ -451,7 +485,7 @@ export function buildIronSprueOrderConfirmationEmail(
     '',
     `Shop more kits: ${shopHref(config)}`,
   ].filter(Boolean).join('\n');
-  return { subject, html, text };
+  return { subject, html, text, attachments: productImageAttachments(order) };
 }
 
 export function buildIronSprueCancellationEmail(
@@ -489,7 +523,7 @@ export function buildIronSprueCancellationEmail(
     '',
     `Visit Iron Sprue: ${shopHref(config)}`,
   ].join('\n');
-  return { subject, html, text };
+  return { subject, html, text, attachments: productImageAttachments(cancellationEmailOrder) };
 }
 
 export function buildIronSprueDispatchEmail(
@@ -524,7 +558,7 @@ export function buildIronSprueDispatchEmail(
     '',
     textOrderLines(order),
   ].filter(Boolean).join('\n');
-  return { subject, html, text };
+  return { subject, html, text, attachments: productImageAttachments(order) };
 }
 
 export function buildIronSprueCustomerRequestEmail(
@@ -565,5 +599,5 @@ export function buildIronSprueCustomerRequestEmail(
     '',
     `View order: ${orderHref(order, config)}`,
   ].filter(Boolean).join('\n');
-  return { subject, html, text };
+  return { subject, html, text, attachments: productImageAttachments(order) };
 }

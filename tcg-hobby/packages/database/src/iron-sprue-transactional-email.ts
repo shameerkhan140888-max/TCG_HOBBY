@@ -12,8 +12,10 @@ import {
   buildIronSprueDispatchEmail,
   buildIronSprueOrderConfirmationEmail,
   defaultIronSprueEmailLogoUrl,
+  resolveIronSprueEmailImageSrc,
   type CustomerRequestEmailOptions,
   type IronSprueEmailOrder,
+  type IronSprueEmailOrderItem,
   type IronSprueEmailTemplate,
   type IronSprueEmailTemplateConfig,
 } from './iron-sprue-email-templates.js';
@@ -81,6 +83,58 @@ function emailConfig(): IronSprueEmailTemplateConfig & { apiKey: string | null; 
     mediaBaseUrl: explicitMediaBaseUrl ?? 'https://media.ironsprue.co.uk',
     supportEmail,
     logoUrl: clean(process.env.IRON_SPRUE_EMAIL_LOGO_URL) ?? defaultIronSprueEmailLogoUrl(assetBaseUrl),
+  };
+}
+
+function inlineImageContentType(url: string) {
+  const pathname = (() => {
+    try {
+      return new URL(url).pathname.toLowerCase();
+    } catch {
+      return url.toLowerCase();
+    }
+  })();
+  if (pathname.endsWith('.png')) return 'image/png';
+  if (pathname.endsWith('.webp')) return 'image/webp';
+  if (pathname.endsWith('.gif')) return 'image/gif';
+  return 'image/jpeg';
+}
+
+function inlineImageFilename(item: IronSprueEmailOrderItem, sourceUrl: string) {
+  const fallback = `${item.productSku || item.productSlug || 'iron-sprue-product'}.jpg`;
+  try {
+    const pathname = new URL(sourceUrl).pathname;
+    const fileName = pathname.split('/').pop()?.trim();
+    return fileName || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function inlineImageCid(orderNumber: string, item: IronSprueEmailOrderItem, index: number) {
+  const key = `${orderNumber}-${item.productSku || item.productSlug || index + 1}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+  return `iron-sprue-product-${key || index + 1}`;
+}
+
+function withInlineProductImages(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig): IronSprueEmailOrder {
+  return {
+    ...order,
+    items: order.items.map((item, index) => {
+      const sourceUrl = resolveIronSprueEmailImageSrc({ ...item, inlineImageCid: null }, config);
+      if (!sourceUrl || !/^https?:\/\//i.test(sourceUrl)) return item;
+      const cid = inlineImageCid(order.orderNumber, item, index);
+      return {
+        ...item,
+        inlineImageCid: cid,
+        inlineImageSourceUrl: sourceUrl,
+        inlineImageFilename: inlineImageFilename(item, sourceUrl),
+        inlineImageContentType: inlineImageContentType(sourceUrl),
+      };
+    }),
   };
 }
 
@@ -294,6 +348,7 @@ async function sendViaResend(
       subject: template.subject,
       html: template.html,
       text: template.text,
+      attachments: template.attachments?.length ? template.attachments : undefined,
     }),
   });
 
@@ -322,7 +377,7 @@ async function sendIronSprueEmail(
 
   const config = emailConfig();
   try {
-    const template = build(order, config);
+    const template = build(withInlineProductImages(order, config), config);
     const result = await sendViaResend(template, recipient, claim.idempotencyKey, config);
     if (result.outcome === 'provider_unconfigured') {
       await markIronSprueTransactionalEmailFailed(claim.deliveryId, 'PROVIDER_UNCONFIGURED', db);
