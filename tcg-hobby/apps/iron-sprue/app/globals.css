@@ -4082,6 +4082,12 @@ label {
   object-position: center;
 }
 
+html.product-lightbox-open,
+html.product-lightbox-open body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 .product-image-lightbox {
   position: fixed;
   inset: 0;
@@ -4089,13 +4095,17 @@ label {
   display: grid;
   place-items: center;
   padding: 24px;
+  background: #050605;
+  isolation: isolate;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .product-image-lightbox__backdrop {
   position: absolute;
   inset: 0;
   border: 0;
-  background: rgba(0, 0, 0, 0.78);
+  background: #050605;
   cursor: zoom-out;
 }
 
@@ -7356,6 +7366,10 @@ body::before {
   z-index: 100000;
   display: grid;
   place-items: center;
+  background: #050605;
+  isolation: isolate;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .product-detail-page:has(.product-image-lightbox) {
@@ -7366,6 +7380,7 @@ body::before {
 .product-detail-page .product-image-lightbox__backdrop {
   position: absolute;
   inset: 0;
+  background: #050605;
 }
 
 .product-detail-page .product-image-lightbox__panel {
@@ -7606,6 +7621,10 @@ body::before {
     display: grid;
     place-items: center;
     z-index: 5000;
+    background: #050605;
+    isolation: isolate;
+    overscroll-behavior: contain;
+    touch-action: none;
     padding:
       max(12px, env(safe-area-inset-top))
       max(12px, env(safe-area-inset-right))
@@ -7616,6 +7635,7 @@ body::before {
   .product-detail-page .product-image-lightbox__backdrop {
     position: absolute;
     inset: 0;
+    background: #050605;
   }
 
   .product-image-lightbox__panel {
@@ -7657,6 +7677,10 @@ body::before {
   display: grid;
   place-items: center;
   padding: clamp(16px, 3vw, 32px);
+  background: #050605;
+  isolation: isolate;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .product-detail-page .product-image-lightbox__panel {

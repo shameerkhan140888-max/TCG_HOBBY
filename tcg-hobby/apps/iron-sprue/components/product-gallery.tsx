@@ -30,6 +30,14 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
     if (!enlarged) return;
 
     const previousActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const root = document.documentElement;
+    const scrollY = window.scrollY;
+    const previousRootOverflow = root.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyPosition = document.body.style.position;
+    const previousBodyTop = document.body.style.top;
+    const previousBodyWidth = document.body.style.width;
+    const previousBodyTouchAction = document.body.style.touchAction;
     closeButtonRef.current?.focus();
     const mobileViewport = window.matchMedia('(max-width: 700px)').matches;
     setLightboxZoom(mobileViewport ? 1.65 : 1.25);
@@ -45,11 +53,24 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
     }
 
     document.addEventListener('keydown', handleKeyDown);
+    root.classList.add('product-lightbox-open');
+    root.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.touchAction = 'none';
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
+      root.classList.remove('product-lightbox-open');
+      root.style.overflow = previousRootOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.position = previousBodyPosition;
+      document.body.style.top = previousBodyTop;
+      document.body.style.width = previousBodyWidth;
+      document.body.style.touchAction = previousBodyTouchAction;
+      window.scrollTo(0, scrollY);
       (previousActiveElement ?? openButtonRef.current)?.focus();
     };
   }, [enlarged]);
