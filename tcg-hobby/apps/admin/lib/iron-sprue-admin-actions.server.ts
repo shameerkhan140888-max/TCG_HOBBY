@@ -9,10 +9,10 @@ import {
   createIronSprueManualOrder,
   processIronSprueOrderReturn,
   receiveIronSprueStock,
+  resendIronSprueOrderConfirmationEmail,
   resolveIronSprueCustomerOrderRequest,
   sendIronSprueCancellationEmail,
   sendIronSprueDispatchEmail,
-  sendIronSprueOrderConfirmationEmail,
   promoteIronSprueAdminMediaToCataloguePrimary,
   publishIronSprueAdminProduct,
   publishIronSprueAdminProducts,
@@ -25,6 +25,7 @@ import {
   updateIronSprueAdminContentReviewStatus,
   updateIronSprueAdminHomepageProductSectionMetadata,
   updateIronSprueAdminMediaApproval,
+  updateIronSprueAdminOrderCustomerDetails,
   updateIronSprueAdminOrderFulfilmentStatus,
   updateIronSprueAdminOrderNotes,
   updateIronSprueAdminProduct,
@@ -897,6 +898,32 @@ export async function saveIronSprueOrderNotesAction(formData: FormData) {
   redirect(adminStatusPath('orders', 'saved', 'Order notes saved.'));
 }
 
+export async function saveIronSprueOrderCustomerDetailsAction(formData: FormData) {
+  const actor = await requireIronSprueActor();
+  const orderId = stringFromForm(formData.get('orderId'));
+  try {
+    if (!orderId) throw new Error('orderId is required.');
+    await updateIronSprueAdminOrderCustomerDetails(
+      orderId,
+      {
+        shippingFullName: stringFromForm(formData.get('shippingFullName')),
+        shippingEmail: stringFromForm(formData.get('shippingEmail')),
+        shippingLine1: stringFromForm(formData.get('shippingLine1')),
+        shippingLine2: stringFromForm(formData.get('shippingLine2')),
+        shippingCity: stringFromForm(formData.get('shippingCity')),
+        shippingRegion: stringFromForm(formData.get('shippingRegion')),
+        shippingPostalCode: stringFromForm(formData.get('shippingPostalCode')),
+        shippingCountry: stringFromForm(formData.get('shippingCountry')),
+      },
+      actor,
+    );
+  } catch (error) {
+    redirect(adminStatusPath('orders', 'error', actionError(error)));
+  }
+  revalidatePath('/iron-sprue-admin/orders');
+  redirect(adminStatusPath('orders', 'saved', 'Customer and delivery details saved. You can now resend the confirmation email if needed.'));
+}
+
 export async function createIronSprueManualOrderAction(formData: FormData) {
   const actor = await requireIronSprueActor();
   try {
@@ -1009,7 +1036,7 @@ export async function resendIronSprueOrderEmailAction(formData: FormData) {
     if (!orderId) throw new Error('orderId is required.');
     let result;
     if (purpose === 'confirmation') {
-      result = await sendIronSprueOrderConfirmationEmail(orderId);
+      result = await resendIronSprueOrderConfirmationEmail(orderId);
     } else if (purpose === 'dispatch') {
       result = await sendIronSprueDispatchEmail(orderId);
     } else if (purpose === 'cancellation') {

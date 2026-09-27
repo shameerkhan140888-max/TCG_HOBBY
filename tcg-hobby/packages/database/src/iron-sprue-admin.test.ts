@@ -29,6 +29,7 @@ import {
   summarizeIronSprueProductReadinessBlockers,
   synchronizeIronSprueProductPublicationReadiness,
   updateIronSprueAdminCategoryControls,
+  updateIronSprueAdminOrderCustomerDetails,
   updateIronSprueAdminOrderFulfilmentStatus,
   updateIronSprueAdminMediaApproval,
   upsertIronSprueAdminHero,
@@ -1260,6 +1261,64 @@ describe('Iron Sprue dedicated Admin foundation', () => {
     await expect(updateIronSprueAdminOrderFulfilmentStatus('order-1', 'SHIPPED', actor, client as never)).rejects.toThrow(/paid/);
     await expect(updateIronSprueAdminOrderFulfilmentStatus('order-2', 'SHIPPED', actor, client as never)).rejects.toThrow(/paid/);
     expect(client.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('updates customer contact and delivery details with an audit trail', async () => {
+    const order = {
+      id: 'order-1',
+      storeCode: 'IRON_SPRUE',
+      orderNumber: 'IS-20260927-ABC123',
+      shippingFullName: 'Wrong Name',
+      shippingEmail: 'wrong@example.test',
+      shippingLine1: '1 Old Street',
+      shippingLine2: null,
+      shippingCity: 'Old Town',
+      shippingRegion: null,
+      shippingPostalCode: 'OLD 1',
+      shippingCountry: 'GB',
+    };
+    const tx = {
+      ironSprueOrder: { update: vi.fn().mockResolvedValue({ ...order, shippingEmail: 'right@example.test' }) },
+      ironSprueAdminAuditLog: { create: vi.fn().mockResolvedValue({}) },
+    };
+    const client = {
+      ironSprueOrder: { findFirst: vi.fn().mockResolvedValue(order) },
+      $transaction: vi.fn((callback) => callback(tx)),
+    };
+
+    await updateIronSprueAdminOrderCustomerDetails(
+      'order-1',
+      {
+        shippingFullName: 'Right Name',
+        shippingEmail: 'Right@Example.Test',
+        shippingLine1: '2 New Street',
+        shippingLine2: 'Unit 4',
+        shippingCity: 'New Town',
+        shippingRegion: 'West Yorkshire',
+        shippingPostalCode: 'wf13 3ew',
+        shippingCountry: 'gb',
+      },
+      actor,
+      client as never,
+    );
+
+    expect(tx.ironSprueOrder.update).toHaveBeenCalledWith({
+      where: { id: 'order-1' },
+      data: expect.objectContaining({
+        shippingFullName: 'Right Name',
+        shippingEmail: 'right@example.test',
+        shippingPostalCode: 'WF13 3EW',
+        shippingCountry: 'GB',
+      }),
+    });
+    expect(tx.ironSprueAdminAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        action: 'order.customer_details.update',
+        entityId: 'order-1',
+        before: expect.objectContaining({ shippingEmail: 'wrong@example.test' }),
+        after: expect.objectContaining({ shippingEmail: 'right@example.test' }),
+      }),
+    }));
   });
 
   it('creates manual orders by snapshotting products and decrementing sellable stock', async () => {

@@ -17,6 +17,7 @@ import {
   sendIronSprueCustomerRequestAcknowledgementEmail,
   sendIronSprueDispatchEmail,
   sendIronSprueOrderConfirmationEmail,
+  resendIronSprueOrderConfirmationEmail,
 } from './iron-sprue-transactional-email.js';
 
 type TestOrder = IronSprueEmailOrder & {
@@ -134,6 +135,19 @@ describe('Iron Sprue transactional email delivery claims', () => {
       .resolves.toMatchObject({ outcome: 'in_progress' });
   });
 
+  it('can deliberately reclaim a sent confirmation for an admin resend', async () => {
+    const sentDb = createDb(sampleOrder(), 'SENT');
+    await expect(claimIronSprueTransactionalEmail('order-1', 'ORDER_CONFIRMATION', sentDb as never, { allowResend: true }))
+      .resolves.toMatchObject({
+        outcome: 'claimed',
+        deliveryId: 'delivery-1',
+        idempotencyKey: expect.stringContaining('iron-sprue-order:order-1:order_confirmation:resend:delivery-1:'),
+      });
+    expect(sentDb.ironSprueTransactionalEmailDelivery.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: 'SENDING', attempts: { increment: 1 } }),
+    }));
+  });
+
   it('records provider success and bounded failure codes', async () => {
     const db = createDb();
     await markIronSprueTransactionalEmailSent('delivery-1', 'resend-1', db as never);
@@ -210,6 +224,21 @@ describe('Iron Sprue transactional email sending', () => {
     await expect(sendIronSprueOrderConfirmationEmail('order-1', sentDb as never))
       .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('resends a paid confirmation after admin customer detail corrections', async () => {
+    const sentDb = createDb(sampleOrder({ shippingEmail: 'corrected@example.test' }), 'SENT');
+
+    await expect(resendIronSprueOrderConfirmationEmail('order-1', sentDb as never))
+      .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
+
+    expect(fetch).toHaveBeenCalledWith('https://api.resend.com/emails', expect.objectContaining({
+      headers: expect.objectContaining({
+        'Idempotency-Key': expect.stringContaining('iron-sprue-order:order-1:order_confirmation:resend:delivery-1:'),
+      }),
+    }));
+    const body = lastEmailPayload();
+    expect(body.to).toEqual(['corrected@example.test']);
   });
 
   it('does not send transactional emails to internal face-to-face placeholder recipients', async () => {

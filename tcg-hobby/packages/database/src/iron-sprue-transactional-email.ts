@@ -141,6 +141,7 @@ export async function claimIronSprueTransactionalEmail(
   orderId: string,
   purpose: string,
   db: IronSprueEmailDb = getIronSprueEmailPrisma(),
+  options: { allowResend?: boolean } = {},
 ): Promise<IronSprueTransactionalEmailClaim> {
   const delivery = await db.ironSprueTransactionalEmailDelivery.upsert({
     where: { orderId_purpose: { orderId, purpose } },
@@ -148,18 +149,21 @@ export async function claimIronSprueTransactionalEmail(
     update: {},
     select: { id: true, status: true },
   });
-  const idempotencyKey = deliveryKey(orderId, purpose);
+  const idempotencyKey = options.allowResend
+    ? `${deliveryKey(orderId, purpose)}:resend:${delivery.id}:${Date.now()}`
+    : deliveryKey(orderId, purpose);
 
-  if (delivery.status === 'SENT') {
+  if (delivery.status === 'SENT' && !options.allowResend) {
     return { outcome: 'sent', deliveryId: delivery.id, idempotencyKey };
   }
 
   const staleBefore = new Date(Date.now() - STALE_DELIVERY_CLAIM_MS);
+  const reusableStatuses = options.allowResend ? ['PENDING', 'FAILED', 'SENT'] : ['PENDING', 'FAILED'];
   const claimed = await db.ironSprueTransactionalEmailDelivery.updateMany({
     where: {
       id: delivery.id,
       OR: [
-        { status: { in: ['PENDING', 'FAILED'] } },
+        { status: { in: reusableStatuses } },
         { status: 'SENDING', updatedAt: { lt: staleBefore } },
       ],
     },
@@ -244,6 +248,7 @@ async function sendIronSprueEmail(
   purpose: string,
   build: (order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig) => IronSprueEmailTemplate,
   db: IronSprueEmailDb = getIronSprueEmailPrisma(),
+  options: { allowResend?: boolean } = {},
 ): Promise<IronSprueTransactionalEmailOutcome> {
   const orderRecord = await loadOrder(orderId, db);
   const order = mapEmailOrder(orderRecord);
@@ -251,7 +256,7 @@ async function sendIronSprueEmail(
   const recipient = clean(order.shippingEmail);
   if (!recipient || !isSendableCustomerEmail(recipient)) return { outcome: 'missing_recipient' };
 
-  const claim = await claimIronSprueTransactionalEmail(orderId, purpose, db);
+  const claim = await claimIronSprueTransactionalEmail(orderId, purpose, db, options);
   if (claim.outcome !== 'claimed') return { outcome: claim.outcome, deliveryId: claim.deliveryId };
 
   const config = emailConfig();
@@ -304,6 +309,24 @@ export async function sendIronSprueOrderConfirmationEmail(
     IRON_SPRUE_ORDER_CONFIRMATION_EMAIL_PURPOSE,
     buildIronSprueOrderConfirmationEmail,
     db,
+  );
+}
+
+export async function resendIronSprueOrderConfirmationEmail(
+  orderId: string,
+  db: IronSprueEmailDb = getIronSprueEmailPrisma(),
+): Promise<IronSprueTransactionalEmailOutcome> {
+  const order = await loadOrder(orderId, db);
+  if (!order) return { outcome: 'not_found' };
+  if (order.paymentStatus !== 'SUCCEEDED' || order.status !== 'PAID') {
+    return { outcome: 'not_payable' };
+  }
+  return sendIronSprueEmail(
+    orderId,
+    IRON_SPRUE_ORDER_CONFIRMATION_EMAIL_PURPOSE,
+    buildIronSprueOrderConfirmationEmail,
+    db,
+    { allowResend: true },
   );
 }
 

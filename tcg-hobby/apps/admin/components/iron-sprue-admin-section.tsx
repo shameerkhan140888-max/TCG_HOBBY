@@ -29,6 +29,7 @@ import {
   resolveIronSprueCustomerRequestAction,
   resendIronSprueOrderEmailAction,
   saveIronSprueTypographySettingsAction,
+  saveIronSprueOrderCustomerDetailsAction,
   saveIronSprueOrderNotesAction,
   saveIronSprueDiscountCodeAction,
   saveIronSprueHeroAction,
@@ -3193,6 +3194,42 @@ async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) 
                   </p>
                   <p className="mt-2 text-neutral-400">{order.shippingMethodName}</p>
                 </div>
+
+                <AdminDisclosure summary="Correct customer / delivery details">
+                  <form action={saveIronSprueOrderCustomerDetailsAction} className="grid gap-3 text-sm">
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <p className="text-xs text-neutral-500">
+                      Use when a customer contacts Iron Sprue after ordering with a corrected email or delivery address. This does not alter payment totals or fulfilment status.
+                    </p>
+                    <Field label="Full name">
+                      <input name="shippingFullName" className={fieldClass} defaultValue={order.shippingFullName} required />
+                    </Field>
+                    <Field label="Email">
+                      <input name="shippingEmail" type="email" className={fieldClass} defaultValue={order.shippingEmail} required />
+                    </Field>
+                    <Field label="Address line 1">
+                      <input name="shippingLine1" className={fieldClass} defaultValue={order.shippingLine1} required />
+                    </Field>
+                    <Field label="Address line 2">
+                      <input name="shippingLine2" className={fieldClass} defaultValue={order.shippingLine2 ?? ''} />
+                    </Field>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <Field label="Town / city">
+                        <input name="shippingCity" className={fieldClass} defaultValue={order.shippingCity} required />
+                      </Field>
+                      <Field label="Region">
+                        <input name="shippingRegion" className={fieldClass} defaultValue={order.shippingRegion ?? ''} />
+                      </Field>
+                      <Field label="Postcode">
+                        <input name="shippingPostalCode" className={fieldClass} defaultValue={order.shippingPostalCode} required />
+                      </Field>
+                      <Field label="Country">
+                        <input name="shippingCountry" className={fieldClass} defaultValue={order.shippingCountry} required />
+                      </Field>
+                    </div>
+                    <Button type="submit" size="sm" variant="outline">Save customer details</Button>
+                  </form>
+                </AdminDisclosure>
 
                 <form action={saveIronSprueOrderNotesAction} className="grid gap-3 rounded-md border border-surface-line bg-black/30 p-3 text-sm">
                   <input type="hidden" name="orderId" value={order.id} />

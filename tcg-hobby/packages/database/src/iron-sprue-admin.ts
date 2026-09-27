@@ -1588,6 +1588,77 @@ export async function updateIronSprueAdminOrderNotes(
   });
 }
 
+export type IronSprueOrderCustomerDetailsInput = {
+  shippingFullName?: string | null;
+  shippingEmail?: string | null;
+  shippingLine1?: string | null;
+  shippingLine2?: string | null;
+  shippingCity?: string | null;
+  shippingRegion?: string | null;
+  shippingPostalCode?: string | null;
+  shippingCountry?: string | null;
+};
+
+export async function updateIronSprueAdminOrderCustomerDetails(
+  orderId: string,
+  input: IronSprueOrderCustomerDetailsInput,
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const order = await client.ironSprueOrder.findFirst({ where: { id: orderId, storeCode: IRON_SPRUE_STORE_CODE } });
+  if (!order) throw new Error('Iron Sprue order not found.');
+  const shippingFullName = cleanNullable(input.shippingFullName);
+  const shippingEmail = cleanNullable(input.shippingEmail)?.toLowerCase();
+  const shippingLine1 = cleanNullable(input.shippingLine1);
+  const shippingLine2 = cleanNullable(input.shippingLine2);
+  const shippingCity = cleanNullable(input.shippingCity);
+  const shippingRegion = cleanNullable(input.shippingRegion);
+  const shippingPostalCode = cleanNullable(input.shippingPostalCode)?.toUpperCase();
+  const shippingCountry = cleanNullable(input.shippingCountry)?.toUpperCase() ?? 'GB';
+  if (!shippingFullName) throw new Error('Customer name is required.');
+  if (!shippingEmail || !shippingEmail.includes('@')) throw new Error('Customer email is required.');
+  if (!shippingLine1) throw new Error('Address line 1 is required.');
+  if (!shippingCity) throw new Error('Town or city is required.');
+  if (!shippingPostalCode) throw new Error('Postcode is required.');
+  if (!shippingCountry) throw new Error('Country is required.');
+  const before = {
+    shippingFullName: order.shippingFullName,
+    shippingEmail: order.shippingEmail,
+    shippingLine1: order.shippingLine1,
+    shippingLine2: order.shippingLine2,
+    shippingCity: order.shippingCity,
+    shippingRegion: order.shippingRegion,
+    shippingPostalCode: order.shippingPostalCode,
+    shippingCountry: order.shippingCountry,
+  };
+  const after = {
+    shippingFullName,
+    shippingEmail,
+    shippingLine1,
+    shippingLine2,
+    shippingCity,
+    shippingRegion,
+    shippingPostalCode,
+    shippingCountry,
+  };
+  return client.$transaction(async (tx) => {
+    const updated = await tx.ironSprueOrder.update({ where: { id: order.id }, data: after });
+    await tx.ironSprueAdminAuditLog.create({
+      data: {
+        storeCode: IRON_SPRUE_STORE_CODE,
+        actorId: actor.id,
+        action: 'order.customer_details.update',
+        entityType: 'order',
+        entityId: order.id,
+        summary: `Updated customer details for Iron Sprue order ${order.orderNumber}.`,
+        before,
+        after,
+      },
+    });
+    return updated;
+  });
+}
+
 export type IronSprueOrderReturnLineInput = {
   orderItemId: string;
   quantity: number;
