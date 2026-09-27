@@ -146,7 +146,19 @@ function displayBuildPromotionRank(product: IronSprueProduct) {
   const searchable = `${product.brand} ${product.name} ${product.category} ${product.productType} ${product.slug}`.toLowerCase();
   if (searchable.includes('magic box') && searchable.includes('london')) return 0;
   if (searchable.includes('magic box') && searchable.includes('underwater')) return 1;
+  if (product.sku === 'IS-CUB-C112H' || product.slug === 'cubicfun-c112h-basilica-of-the-national-shrine') return 2;
   return searchable.includes('magic box') ? 2 : 3;
+}
+
+function architecturePromotionRank(product: IronSprueProduct) {
+  if (product.sku === 'IS-CUB-C112H' || product.slug === 'cubicfun-c112h-basilica-of-the-national-shrine') return 0;
+  return 999;
+}
+
+function allProductsFeaturedRank(product: IronSprueProduct) {
+  const displayRank = displayBuildPromotionRank(product);
+  const architectureRank = architecturePromotionRank(product);
+  return Math.min(displayRank, architectureRank === 999 ? 999 : architectureRank + 2);
 }
 
 function ShopRangeBanner({ banner }: { banner: ShopBanner }) {
@@ -259,9 +271,15 @@ export async function CatalogueListing({
     if (selectedSort === 'price-desc') return (right.retailPriceMinor ?? right.priceMinor ?? 0) - (left.retailPriceMinor ?? left.priceMinor ?? 0) || left.name.localeCompare(right.name);
     if (selectedSort === 'newest') return Number(Boolean(right.launchRole || right.merchandisingRole)) - Number(Boolean(left.launchRole || left.merchandisingRole)) || left.name.localeCompare(right.name);
     if (!hasCatalogueScope) {
-      return catalogueFamilyRank(left) - catalogueFamilyRank(right)
+      return allProductsFeaturedRank(left) - allProductsFeaturedRank(right)
+        || catalogueFamilyRank(left) - catalogueFamilyRank(right)
         || left.brand.localeCompare(right.brand)
         || slugForCategory(left.category).localeCompare(slugForCategory(right.category))
+        || left.name.localeCompare(right.name);
+    }
+    if (selectedSort === 'featured' && search.toLowerCase().includes('architecture')) {
+      return architecturePromotionRank(left) - architecturePromotionRank(right)
+        || Number(Boolean(right.merchandisingRole)) - Number(Boolean(left.merchandisingRole))
         || left.name.localeCompare(right.name);
     }
     if (selectedSort === 'featured' && fixedCategory === '3d-puzzles-and-builds' && !search) {

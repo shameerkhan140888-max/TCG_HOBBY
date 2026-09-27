@@ -20,6 +20,7 @@ type ProductCardProps = {
 };
 
 const offerBadgeBySaving: Record<string, string> = {
+  '£1.50': '/assets/promo-save-1-50-banner.png',
   '£3.00': '/assets/promo-save-3-00-banner.png',
   '£3.50': '/assets/promo-save-banner.png',
   '£3.78': '/assets/promo-save-3-78-banner.png',

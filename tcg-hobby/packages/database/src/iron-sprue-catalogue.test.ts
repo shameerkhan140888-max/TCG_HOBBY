@@ -324,6 +324,110 @@ describe('Iron Sprue production catalogue adapter', () => {
     expect(result.products[0]?.specialOffer).toBe(true);
   });
 
+  it('projects manual compare-at pricing for public offer display', async () => {
+    const client = {
+      ironSprueAdminProduct: {
+        findMany: vi.fn().mockResolvedValue([
+          ironSprueProduct({
+            sku: 'IS-CUB-C112H',
+            slug: 'cubicfun-c112h-basilica-of-the-national-shrine',
+            customerTitle: 'Basilica of the National Shrine',
+            brand: { id: 'brand-cub', name: 'CubicFun', slug: 'cubicfun' },
+            category: { id: 'cat-architecture', name: 'Architecture', slug: 'architecture', description: 'Architecture', sortOrder: 20 },
+            buildType: '3D puzzle display build',
+            grossPriceMinor: 599,
+            compareAtPriceMinor: 749,
+            specialOffer: true,
+          }),
+        ]),
+      },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    const result = await getIronSprueCatalogueProducts({
+      search: '',
+      category: '',
+      sort: 'featured',
+      page: 1,
+      pageSize: 20,
+    }, client as never);
+
+    expect(result.products[0]).toMatchObject({
+      sku: 'IS-CUB-C112H',
+      price: { amountMinor: 599 },
+      compareAtPriceMinor: 749,
+      specialOffer: true,
+    });
+  });
+
+  it('prioritises Basilica first for architecture searches and third for display builds', async () => {
+    const products = [
+      ironSprueProduct({
+        sku: 'IS-CUB-MC139H',
+        slug: 'cubicfun-mc139h-chateau-de-chenonceau',
+        customerTitle: 'Chateau de Chenonceau',
+        brand: { id: 'brand-cub', name: 'CubicFun', slug: 'cubicfun' },
+        category: { id: 'cat-architecture', name: 'Architecture', slug: 'architecture', description: 'Architecture', sortOrder: 20 },
+        buildType: '3D puzzle display build',
+      }),
+      ironSprueProduct({
+        sku: 'IS-CUB-OM3606',
+        slug: 'cubicfun-om3606-magic-box-london-at-night',
+        customerTitle: 'Magic Box London at Night',
+        brand: { id: 'brand-cub', name: 'CubicFun', slug: 'cubicfun' },
+        category: { id: 'cat-magic', name: 'Magic Boxes', slug: 'magic-boxes', description: 'Magic Boxes', sortOrder: 21 },
+        buildType: '3D puzzle display build',
+      }),
+      ironSprueProduct({
+        sku: 'IS-CUB-OM3603',
+        slug: 'cubicfun-om3603-magic-box-underwater-world',
+        customerTitle: 'Magic Box Underwater World',
+        brand: { id: 'brand-cub', name: 'CubicFun', slug: 'cubicfun' },
+        category: { id: 'cat-magic', name: 'Magic Boxes', slug: 'magic-boxes', description: 'Magic Boxes', sortOrder: 21 },
+        buildType: '3D puzzle display build',
+      }),
+      ironSprueProduct({
+        sku: 'IS-CUB-C112H',
+        slug: 'cubicfun-c112h-basilica-of-the-national-shrine',
+        customerTitle: 'Basilica of the National Shrine',
+        brand: { id: 'brand-cub', name: 'CubicFun', slug: 'cubicfun' },
+        category: { id: 'cat-architecture', name: 'Architecture', slug: 'architecture', description: 'Architecture', sortOrder: 20 },
+        buildType: '3D puzzle display build',
+        searchKeywords: ['architecture'],
+      }),
+    ];
+    const client = {
+      ironSprueAdminProduct: { findMany: vi.fn().mockResolvedValue(products) },
+      ironSprueAdminCategory: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    const architecture = await getIronSprueCatalogueProducts({
+      search: 'architecture',
+      category: '3d-puzzles-and-builds',
+      sort: 'featured',
+      page: 1,
+      pageSize: 20,
+    }, client as never);
+    const display = await getIronSprueCatalogueProducts({
+      search: '',
+      category: '3d-puzzles-and-builds',
+      sort: 'featured',
+      page: 1,
+      pageSize: 20,
+    }, client as never);
+    const allProducts = await getIronSprueCatalogueProducts({
+      search: '',
+      category: '',
+      sort: 'featured',
+      page: 1,
+      pageSize: 20,
+    }, client as never);
+
+    expect(architecture.products[0]?.sku).toBe('IS-CUB-C112H');
+    expect(display.products.slice(0, 3).map((product) => product.sku)).toEqual(['IS-CUB-OM3606', 'IS-CUB-OM3603', 'IS-CUB-C112H']);
+    expect(allProducts.products.slice(0, 3).map((product) => product.sku)).toEqual(['IS-CUB-OM3606', 'IS-CUB-OM3603', 'IS-CUB-C112H']);
+  });
+
   it('filters customer-facing catalogue facts after specification projection', async () => {
     const client = {
       ironSprueAdminProduct: {

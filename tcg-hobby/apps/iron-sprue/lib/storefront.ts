@@ -94,7 +94,7 @@ export const promoPanels = [
   },
   {
     eyebrow: 'CubicFun display builds',
-    title: 'From £4.99',
+    title: 'From £5.99',
     copy: 'Landmark 3D builds with shelf-ready scale, detail and presence.',
     href: '/shop/cubicfun',
     cta: 'Shop now',

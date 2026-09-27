@@ -474,11 +474,51 @@ function specificationMinorValue(product: IronSprueCatalogueProductRow, key: str
 
 function compareAtMinor(product: IronSprueCatalogueProductRow) {
   const current = product.grossPriceMinor ?? 0;
+  if (product.compareAtPriceMinor != null && product.compareAtPriceMinor > current) return product.compareAtPriceMinor;
   const individualTotal = specificationMinorValue(product, 'individualTotalMinor');
   if (individualTotal != null && individualTotal > current) return individualTotal;
   const bundleSaving = specificationMinorValue(product, 'bundleSavingMinor');
   if (bundleSaving != null && bundleSaving > 0) return current + bundleSaving;
   return null;
+}
+
+function productSearchText(product: IronSprueCatalogueProductRow) {
+  return [
+    product.sku,
+    product.slug,
+    product.customerTitle,
+    product.sourceTitle,
+    product.brand?.name,
+    product.category?.name,
+    product.buildType,
+    product.shortDescription,
+    ...product.searchKeywords,
+    ...product.tags,
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+function isBasilicaOfferProduct(product: IronSprueCatalogueProductRow) {
+  return product.sku === 'IS-CUB-C112H' || product.slug === 'cubicfun-c112h-basilica-of-the-national-shrine';
+}
+
+function pageFeaturedRank(product: IronSprueCatalogueProductRow, filters: IronSprueCatalogueFilters) {
+  const category = normalizeSearch(filters.category);
+  const brand = normalizeSearch(filters.brand ?? filters.game);
+  const search = normalizeSearch(filters.search);
+  const searchable = productSearchText(product);
+  const isMagicBoxLondon = searchable.includes('magic box') && searchable.includes('london');
+  const isMagicBoxUnderwater = searchable.includes('magic box') && searchable.includes('underwater');
+  const isArchitectureScope = category === 'architecture' || search.includes('architecture');
+  const isDisplayBuildScope = category === '3d-puzzles-and-builds' || brand === 'cubicfun' || brand === 'pintoo' || !category && !brand && !search;
+
+  if (isArchitectureScope && isBasilicaOfferProduct(product)) return 0;
+  if (isDisplayBuildScope) {
+    if (isMagicBoxLondon) return 0;
+    if (isMagicBoxUnderwater) return 1;
+    if (isBasilicaOfferProduct(product)) return 2;
+  }
+
+  return 999;
 }
 
 async function buildBundleAvailabilityByProductId(products: IronSprueCatalogueProductRow[], db: DatabaseClient) {
@@ -669,12 +709,14 @@ function buildProductWhere(filters: IronSprueCatalogueFilters): Prisma.IronSprue
   return clauses.length ? { AND: [publicProductWhere, ...clauses] } : publicProductWhere;
 }
 
-function sortProducts(products: CatalogueProduct[], sort: CatalogueFilters['sort']) {
+function sortProductRows(products: IronSprueCatalogueProductRow[], filters: IronSprueCatalogueFilters) {
   return [...products].sort((left, right) => {
-    if (sort === 'price-desc') return right.price.amountMinor - left.price.amountMinor || left.name.localeCompare(right.name);
-    if (sort === 'price-asc') return left.price.amountMinor - right.price.amountMinor || left.name.localeCompare(right.name);
-    if (sort === 'newest') return Number(right.featured) - Number(left.featured) || left.name.localeCompare(right.name);
-    return Number(right.featured) - Number(left.featured) || left.name.localeCompare(right.name);
+    if (filters.sort === 'price-desc') return (right.grossPriceMinor ?? 0) - (left.grossPriceMinor ?? 0) || left.customerTitle.localeCompare(right.customerTitle);
+    if (filters.sort === 'price-asc') return (left.grossPriceMinor ?? 0) - (right.grossPriceMinor ?? 0) || left.customerTitle.localeCompare(right.customerTitle);
+    if (filters.sort === 'newest') return Number(right.featured) - Number(left.featured) || left.customerTitle.localeCompare(right.customerTitle);
+    return pageFeaturedRank(left, filters) - pageFeaturedRank(right, filters)
+      || Number(right.featured) - Number(left.featured)
+      || left.customerTitle.localeCompare(right.customerTitle);
   });
 }
 
@@ -715,7 +757,7 @@ export async function getIronSprueCatalogueProducts(
   });
   const visibleRows = rows.filter((product) => getIronSprueProductReadiness(product).isPubliclyVisible && rowMatchesRuntimeFilters(product, filters));
   const bundleComponentAvailability = await buildBundleAvailabilityByProductId(visibleRows, db);
-  const allProducts = sortProducts(visibleRows.map((product) => mapProduct(product, bundleComponentAvailability)), filters.sort);
+  const allProducts = sortProductRows(visibleRows, filters).map((product) => mapProduct(product, bundleComponentAvailability));
   const totalItems = allProducts.length;
   const pagination = resolvePagination(totalItems, page, pageSize);
   const offset = (pagination.page - 1) * pageSize;

@@ -12,7 +12,7 @@ describe('Iron Sprue storefront showcase cards', () => {
   });
 
   it('uses the live CubicFun starting price on the display-build showcase card', () => {
-    expect(promoPanels.find((panel) => panel.eyebrow === 'CubicFun display builds')?.title).toBe('From £4.99');
+    expect(promoPanels.find((panel) => panel.eyebrow === 'CubicFun display builds')?.title).toBe('From £5.99');
   });
 
   it('keeps homepage showcase copy balanced in length', () => {
@@ -75,6 +75,26 @@ describe('Iron Sprue storefront showcase cards', () => {
       compareAtPrice: '£35.97',
       saving: '£3.98',
       label: 'Save £3.98',
+    });
+  });
+
+  it('derives crossed-out Basilica offer pricing from compare-at pricing', () => {
+    const product = {
+      sku: 'IS-CUB-C112H',
+      slug: 'cubicfun-c112h-basilica-of-the-national-shrine',
+      name: 'Basilica of the National Shrine',
+      brand: 'CubicFun',
+      category: 'Architecture',
+      productType: '3D puzzle display build',
+      retailPriceMinor: 599,
+      compareAtPriceMinor: 749,
+    } as IronSprueProduct;
+
+    expect(productCardOffer(product)).toEqual({
+      currentPrice: '£5.99',
+      compareAtPrice: '£7.49',
+      saving: '£1.50',
+      label: 'Save £1.50',
     });
   });
 });
