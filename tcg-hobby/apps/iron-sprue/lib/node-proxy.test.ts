@@ -18,6 +18,7 @@ describe('Iron Sprue Node proxy contract', () => {
     expect(isAllowedProxyRoute('PATCH', '/api/cart/items/product_1')).toBe(true);
     expect(isAllowedProxyRoute('POST', '/api/cart/resolve')).toBe(true);
     expect(isAllowedProxyRoute('POST', '/api/checkout/session')).toBe(true);
+    expect(isAllowedProxyRoute('POST', '/api/checkout/quote')).toBe(true);
     expect(isAllowedProxyRoute('POST', '/api/checkout/payment-intent')).toBe(true);
     expect(isAllowedProxyRoute('POST', '/api/checkout/payment-intent/cancel')).toBe(true);
     expect(isAllowedProxyRoute('POST', '/api/checkout/cancel')).toBe(true);

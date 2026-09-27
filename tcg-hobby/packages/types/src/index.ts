@@ -373,6 +373,16 @@ export type PublicCheckoutRequest = {
   returnUrl?: string;
 };
 
+export type PublicCheckoutQuote = {
+  subtotalMinor: number;
+  shippingMinor: number;
+  discountMinor: number;
+  discountCode: string | null;
+  taxMinor: number;
+  totalMinor: number;
+  currency: CurrencyCode;
+};
+
 export type PublicCheckoutResponse = {
   orderNumber: string;
   checkoutUrl: string;

@@ -2041,6 +2041,30 @@ p {
   font: inherit;
 }
 
+.discount-code-field {
+  display: grid;
+  gap: 8px;
+}
+
+.discount-code-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.discount-code-actions input {
+  width: 100%;
+}
+
+.discount-code-actions button {
+  min-height: 42px;
+  padding-inline: 18px;
+}
+
+.discount-remove-button {
+  justify-self: start;
+}
+
 .checkout-totals {
   display: grid;
   grid-template-columns: minmax(0, 1fr) max-content;

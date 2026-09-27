@@ -15,6 +15,7 @@ import {
   getIronSprueCustomerOrders,
   reconcileIronSpruePaymentIntentCheckout,
   removeIronSprueCartItem,
+  quoteIronSprueCheckout,
   resolveIronSprueGuestCart,
   sendIronSprueOrderConfirmationEmail,
   updateIronSprueCartItemQuantity,
@@ -24,6 +25,7 @@ import type {
   CheckoutAddress,
   PublicBasket,
   PublicBasketInputItem,
+  PublicCheckoutQuote,
   PublicCheckoutRequest,
   PublicCheckoutResponse,
   PublicOrderDetail,
@@ -276,6 +278,30 @@ export class IronSprueCommerceService {
   async shipping(headers: Record<string, string | string[] | undefined>, country: string, subtotalMinor = 0): Promise<ShippingMethod[]> {
     requireIronSprueProxy(headers);
     return getIronSprueAvailableShippingMethods(country.trim().toUpperCase() || 'GB', Math.max(Math.trunc(subtotalMinor), 0));
+  }
+
+  async checkoutQuote(headers: Record<string, string | string[] | undefined>, authorization: string | undefined, input: PublicCheckoutRequest): Promise<PublicCheckoutQuote> {
+    requireIronSprueProxy(headers);
+    const user = await this.auth.getOptionalUser(authorization);
+    const cart = user ? await getIronSprueCustomerCartDetails(user.id) : await resolveIronSprueGuestCart(input.guestItems ?? []);
+    if (cart.items.length === 0) throw new BadRequestException('Your basket is empty.');
+    try {
+      return await quoteIronSprueCheckout({
+        userId: user?.id ?? null,
+        cart,
+        shippingMethodCode: input.shippingMethodCode,
+        country: input.shippingAddress?.country,
+        email: input.shippingAddress?.email,
+        ...(input.discountCode ? { discountCode: input.discountCode } : {}),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Basket total could not be updated. Please try again.';
+      if (isCustomerCheckoutError(message)) {
+        throw new BadRequestException(message);
+      }
+      console.error('iron_sprue_checkout_quote_failed', { reason: 'checkout_quote_failed' });
+      throw new ServiceUnavailableException('Basket total could not be updated. Please try again.');
+    }
   }
 
   async checkout(headers: Record<string, string | string[] | undefined>, authorization: string | undefined, input: PublicCheckoutRequest): Promise<PublicCheckoutResponse> {

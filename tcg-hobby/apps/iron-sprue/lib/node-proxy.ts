@@ -67,6 +67,7 @@ export const allowedProxyRoutes = [
   { method: 'POST', pattern: /^\/api\/cart\/merge-guest$/ },
   { method: 'GET', pattern: /^\/api\/shipping-methods$/ },
   { method: 'POST', pattern: /^\/api\/checkout\/session$/ },
+  { method: 'POST', pattern: /^\/api\/checkout\/quote$/ },
   { method: 'POST', pattern: /^\/api\/checkout\/payment-intent$/ },
   { method: 'POST', pattern: /^\/api\/checkout\/payment-intent\/cancel$/ },
   { method: 'POST', pattern: /^\/api\/checkout\/cancel$/ },

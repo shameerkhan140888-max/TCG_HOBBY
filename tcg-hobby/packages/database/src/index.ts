@@ -243,6 +243,7 @@ export {
   getIronSprueOrderByStripePaymentIntentId,
   IRON_SPRUE_STORE_CODE,
   processIronSprueStripeWebhookEvent,
+  quoteIronSprueCheckout,
   reconcileIronSpruePaymentIntentCheckout,
   releaseExpiredIronSprueCheckoutOrderReservations,
   releaseIronSprueCheckoutOrderReservation,
@@ -253,6 +254,7 @@ export {
 } from './iron-sprue-commerce.js';
 export type {
   IronSprueCheckoutSessionResult,
+  IronSprueCheckoutQuoteResult,
   IronSprueOrderWithItems,
   IronSpruePaymentIntentCheckoutResult,
   IronSprueStripeWebhookProcessingResult,

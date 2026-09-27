@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CheckoutAddress, PublicBasket, PublicBasketInputItem, ShippingMethodCode } from '@capital-hobby/types';
+import type { CheckoutAddress, PublicBasket, PublicBasketInputItem, PublicCheckoutQuote, ShippingMethodCode } from '@capital-hobby/types';
 import { trackIronSprueEcommerceEvent } from '../lib/analytics';
 import type { IronSprueProduct } from '../lib/catalogue';
 import {
@@ -682,7 +682,11 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     address: null,
   });
   const [shippingMethodCode, setShippingMethodCode] = useState<ShippingMethodCode>('UK_STANDARD');
-  const [discountCode, setDiscountCode] = useState('');
+  const [discountInput, setDiscountInput] = useState('');
+  const [appliedDiscountCode, setAppliedDiscountCode] = useState('');
+  const [checkoutQuote, setCheckoutQuote] = useState<PublicCheckoutQuote | null>(null);
+  const [discountStatus, setDiscountStatus] = useState('');
+  const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
   const [status, setStatus] = useState('');
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutPaymentIntent, setCheckoutPaymentIntent] = useState<CheckoutPaymentIntent | null>(null);
@@ -765,15 +769,18 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
   const deliveryMinor = useMemo(() => {
     return getIronSprueDeliveryChargeMinor(shippingMethodCode, address.country || 'GB', subtotalMinor) ?? 0;
   }, [address.country, shippingMethodCode, subtotalMinor]);
-  const totalMinor = checkoutPaymentIntent?.totalMinor ?? subtotalMinor + deliveryMinor;
-  const vatIncludedEstimateMinor = Math.round(totalMinor / 6);
+  const quoteMatchesBasket = checkoutQuote?.subtotalMinor === subtotalMinor && checkoutQuote.discountCode === (appliedDiscountCode || null);
+  const quotedDiscountMinor = quoteMatchesBasket ? checkoutQuote?.discountMinor ?? 0 : 0;
+  const quotedDeliveryMinor = quoteMatchesBasket ? checkoutQuote?.shippingMinor ?? deliveryMinor : deliveryMinor;
+  const totalMinor = checkoutPaymentIntent?.totalMinor ?? (quoteMatchesBasket ? checkoutQuote?.totalMinor ?? subtotalMinor + quotedDeliveryMinor - quotedDiscountMinor : subtotalMinor + deliveryMinor);
+  const vatIncludedEstimateMinor = quoteMatchesBasket ? checkoutQuote?.taxMinor ?? Math.round(totalMinor / 6) : Math.round(totalMinor / 6);
   const analyticsBasketPayload = useMemo(() => ({
     currency: 'GBP',
     value: totalMinor / 100,
-    shipping: deliveryMinor / 100,
-    coupon: discountCode.trim() || undefined,
+    shipping: quotedDeliveryMinor / 100,
+    coupon: appliedDiscountCode || undefined,
     items: analyticsItemsForBasket(basketLineItems),
-  }), [basketLineItems, deliveryMinor, discountCode, totalMinor]);
+  }), [appliedDiscountCode, basketLineItems, quotedDeliveryMinor, totalMinor]);
   const requiredDetailsComplete = Boolean(
     address.fullName.trim()
     && address.email.trim()
@@ -855,7 +862,50 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     if (mode === 'checkout') {
       setCheckoutStep((current) => (current === 'payment' ? 'review' : current));
     }
-  }, [address, discountCode, items, mode, shippingMethodCode]);
+  }, [address, appliedDiscountCode, items, mode, shippingMethodCode]);
+
+  useEffect(() => {
+    if (mode !== 'checkout' || !mounted || !items.length || !appliedDiscountCode) {
+      setCheckoutQuote(null);
+      setDiscountStatus('');
+      return;
+    }
+    let cancelled = false;
+    setIsApplyingDiscount(true);
+    fetch('/api/checkout/quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        guestItems: toInputItems(items),
+        shippingAddress: address,
+        shippingMethodCode,
+        discountCode: appliedDiscountCode,
+      }),
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.message ?? payload.error ?? 'Discount code could not be applied.');
+        return payload as PublicCheckoutQuote;
+      })
+      .then((payload) => {
+        if (cancelled) return;
+        setCheckoutQuote(payload);
+        setDiscountStatus(payload.discountMinor > 0 && payload.discountCode ? `${payload.discountCode} applied.` : '');
+        setStatus('');
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setCheckoutQuote(null);
+        setAppliedDiscountCode('');
+        setDiscountStatus(error instanceof Error ? error.message : 'Discount code could not be applied.');
+      })
+      .finally(() => {
+        if (!cancelled) setIsApplyingDiscount(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [address, appliedDiscountCode, items, mode, mounted, shippingMethodCode]);
 
   useEffect(() => {
     let changed = false;
@@ -1076,7 +1126,34 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
     }
   }
 
+  function applyDiscountCode() {
+    const normalized = discountInput.trim().toUpperCase().replace(/\s+/g, '');
+    if (!normalized) {
+      setAppliedDiscountCode('');
+      setCheckoutQuote(null);
+      setDiscountStatus('');
+      return;
+    }
+    setDiscountInput(normalized);
+    setAppliedDiscountCode(normalized);
+    setDiscountStatus('Checking discount code...');
+    setCheckoutPaymentIntent(null);
+  }
+
+  function removeDiscountCode() {
+    setDiscountInput('');
+    setAppliedDiscountCode('');
+    setCheckoutQuote(null);
+    setDiscountStatus('');
+    setCheckoutPaymentIntent(null);
+  }
+
   async function prepareSecurePayment() {
+    if (appliedDiscountCode && (!quoteMatchesBasket || isApplyingDiscount)) {
+      setCheckoutStep('details');
+      setStatus('Wait for the discount code to finish applying before payment.');
+      return;
+    }
     if (!addressReadyForCheckout) {
       setCheckoutStep('details');
       setStatus('Confirm your delivery address before payment.');
@@ -1092,7 +1169,7 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
           guestItems: toInputItems(items),
           shippingAddress: address,
           shippingMethodCode,
-          discountCode: discountCode.trim() || undefined,
+          discountCode: appliedDiscountCode || undefined,
         }),
       });
       const payload = await response.json();
@@ -1104,9 +1181,9 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
       setStatus('');
       const shippingInfoPayload = {
         currency: 'GBP',
-        value: (payload.totalMinor ?? subtotalMinor + deliveryMinor) / 100,
+        value: (payload.totalMinor ?? subtotalMinor + quotedDeliveryMinor - quotedDiscountMinor) / 100,
         shipping_tier: shippingMethodCode,
-        coupon: discountCode.trim() || undefined,
+        coupon: appliedDiscountCode || undefined,
         items: analyticsItemsForBasket(basketLineItems),
       };
       const shippingInfoKey = JSON.stringify(shippingInfoPayload);
@@ -1368,12 +1445,17 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
                 <button type="button" className="text-button" onClick={() => setCheckoutStep('details')}>Edit contact</button>
               </div>
               <p>{address.email}</p>
-              <p>{shippingMethodCode === 'UK_EXPRESS' ? 'Express delivery' : 'Standard delivery'} - {formatPrice(deliveryMinor)}</p>
+              <p>{shippingMethodCode === 'UK_EXPRESS' ? 'Express delivery' : 'Standard delivery'} - {formatPrice(quotedDeliveryMinor)}</p>
             </section>
           </div>
           <div className="checkout-totals receipt-totals">
             <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>
-            <span>Delivery</span><strong>{formatPrice(deliveryMinor)}</strong>
+            <span>Delivery</span><strong>{formatPrice(quotedDeliveryMinor)}</strong>
+            {quotedDiscountMinor > 0 ? (
+              <>
+                <span>Discount{appliedDiscountCode ? ` (${appliedDiscountCode})` : ''}</span><strong>-{formatPrice(quotedDiscountMinor)}</strong>
+              </>
+            ) : null}
             <span>VAT included estimate</span><strong>{formatPrice(vatIncludedEstimateMinor)}</strong>
             <span>Total</span><strong>{formatPrice(totalMinor)}</strong>
           </div>
@@ -1533,7 +1615,33 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
                   <option value="UK_EXPRESS">Express delivery</option>
                 </select>
               </label>
-              <label>Discount code<input value={discountCode} onChange={(event) => setDiscountCode(event.target.value.toUpperCase())} /></label>
+              <div className="discount-code-field">
+                <label htmlFor="checkout-discount-code">Discount code</label>
+                <div className="discount-code-actions">
+                  <input
+                    id="checkout-discount-code"
+                    value={discountInput}
+                    onChange={(event) => {
+                      setDiscountInput(event.target.value.toUpperCase());
+                      setDiscountStatus('');
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        applyDiscountCode();
+                      }
+                    }}
+                    placeholder="Enter code"
+                  />
+                  <button type="button" className="secondary" disabled={isApplyingDiscount || !discountInput.trim()} onClick={applyDiscountCode}>
+                    {isApplyingDiscount ? 'Checking...' : 'Apply'}
+                  </button>
+                </div>
+                {appliedDiscountCode ? <button type="button" className="text-button discount-remove-button" onClick={removeDiscountCode}>Remove discount</button> : null}
+                {discountStatus ? (
+                  <p className={`form-status ${isApplyingDiscount ? 'notice' : appliedDiscountCode && quoteMatchesBasket && quotedDiscountMinor > 0 ? 'success' : 'error'}`}>{discountStatus}</p>
+                ) : null}
+              </div>
             </div>
             {addressValidation.status === 'confirm' && addressValidation.address ? (
               <div className="address-confirmation-panel" role="status">
@@ -1556,11 +1664,16 @@ export function BasketClient({ mode = 'basket', upsellProducts = [] }: { mode?: 
           </fieldset>
           <div className="checkout-totals">
             <span>Subtotal</span><strong>{formatPrice(subtotalMinor)}</strong>
-            <span>Delivery</span><strong>{formatPrice(deliveryMinor)}</strong>
+            <span>Delivery</span><strong>{formatPrice(quotedDeliveryMinor)}</strong>
+            {quotedDiscountMinor > 0 ? (
+              <>
+                <span>Discount{appliedDiscountCode ? ` (${appliedDiscountCode})` : ''}</span><strong>-{formatPrice(quotedDiscountMinor)}</strong>
+              </>
+            ) : null}
             <span>VAT included estimate</span><strong>{formatPrice(vatIncludedEstimateMinor)}</strong>
             <span>Total</span><strong>{formatPrice(totalMinor)}</strong>
           </div>
-          <button type="submit" disabled={hasUnavailableItems || isAddressValidating || Boolean(deliveryEligibilityMessage)}>{isAddressValidating ? 'Checking address...' : 'Continue to review order'}</button>
+          <button type="submit" disabled={hasUnavailableItems || isAddressValidating || isApplyingDiscount || Boolean(deliveryEligibilityMessage)}>{isAddressValidating ? 'Checking address...' : isApplyingDiscount ? 'Applying discount...' : 'Continue to review order'}</button>
           {status ? <p className="form-status error">{status}</p> : null}
         </form>
         <section className="checkout-panel checkout-reassurance checkout-reassurance-icons" aria-label="Delivery returns and payment information">

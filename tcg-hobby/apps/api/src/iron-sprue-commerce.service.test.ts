@@ -17,6 +17,7 @@ const databaseMocks = vi.hoisted(() => ({
   getIronSprueOrderByStripePaymentIntentId: vi.fn(),
   reconcileIronSpruePaymentIntentCheckout: vi.fn(),
   removeIronSprueCartItem: vi.fn(),
+  quoteIronSprueCheckout: vi.fn(),
   resolveIronSprueGuestCart: vi.fn(),
   sendIronSprueOrderConfirmationEmail: vi.fn(),
   updateIronSprueCartItemQuantity: vi.fn(),
@@ -202,6 +203,33 @@ describe('IronSprueCommerceService payment status reconciliation', () => {
 
     expect(databaseMocks.createIronSpruePaymentIntentCheckout).toHaveBeenCalledWith(expect.objectContaining({
       environment: 'test',
+    }));
+  });
+
+  it('quotes an applied discount before payment is created', async () => {
+    databaseMocks.resolveIronSprueGuestCart.mockResolvedValue(checkoutCart);
+    databaseMocks.quoteIronSprueCheckout.mockResolvedValue({
+      subtotalMinor: 1999,
+      shippingMinor: 399,
+      discountMinor: 399,
+      discountCode: 'FREEDEL',
+      taxMinor: 333,
+      totalMinor: 1999,
+      currency: 'GBP',
+    });
+    const service = new IronSprueCommerceService({ getOptionalUser: vi.fn().mockResolvedValue(null) } as never);
+
+    const result = await service.checkoutQuote(
+      signedInternalHeaders({ method: 'POST', pathname: '/api/checkout/quote', body: '{}' }),
+      undefined,
+      { guestItems: [{ productId: 'product-1', quantity: 1 }], shippingAddress: checkoutAddress, shippingMethodCode: 'UK_STANDARD', discountCode: 'freedel' },
+    );
+
+    expect(result.discountCode).toBe('FREEDEL');
+    expect(databaseMocks.quoteIronSprueCheckout).toHaveBeenCalledWith(expect.objectContaining({
+      discountCode: 'freedel',
+      email: checkoutAddress.email,
+      country: checkoutAddress.country,
     }));
   });
 

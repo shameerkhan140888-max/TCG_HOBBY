@@ -222,6 +222,16 @@ export type IronSpruePaymentIntentCheckoutResult = {
   currency: CurrencyCode;
 };
 
+export type IronSprueCheckoutQuoteResult = {
+  subtotalMinor: number;
+  shippingMinor: number;
+  discountMinor: number;
+  discountCode: string | null;
+  taxMinor: number;
+  totalMinor: number;
+  currency: CurrencyCode;
+};
+
 export type IronSprueStripeWebhookProcessingResult = {
   eventId: string;
   eventType: string;
@@ -818,6 +828,41 @@ async function resolveIronSprueDiscount(input: {
   const discountMinor = Math.min(Math.max(rawDiscount, 0), input.subtotalMinor);
   if (discountMinor <= 0) throw new Error('Discount code does not apply to this basket.');
   return { id: record.id, code: record.code, discountMinor };
+}
+
+export async function quoteIronSprueCheckout(input: {
+  userId: string | null;
+  cart: CartSummary & { cartId?: string | null };
+  shippingMethodCode: ShippingMethodCode;
+  country?: string | null;
+  email?: string | null;
+  discountCode?: string | null;
+  db?: DatabaseClient;
+}): Promise<IronSprueCheckoutQuoteResult> {
+  const db = input.db ?? getIronSprueCommercePrisma();
+  const country = input.country?.trim().toUpperCase() || 'GB';
+  const subtotalMinor = input.cart.subtotalMinor;
+  const shippingMethod = getIronSprueShippingMethodByCode(input.shippingMethodCode, country, subtotalMinor);
+  if (!shippingMethod) throw new Error('Selected delivery method is not available for this address.');
+  const discount = await resolveIronSprueDiscount({
+    code: input.discountCode ?? null,
+    subtotalMinor,
+    userId: input.userId,
+    email: input.email ?? '',
+    db,
+  });
+  const shippingMinor = calculatePromotionalShippingMinor(shippingMethod, input.cart.items, country, subtotalMinor);
+  const discountMinor = discount?.discountMinor ?? 0;
+  const totalMinor = subtotalMinor + shippingMinor - discountMinor;
+  return {
+    subtotalMinor,
+    shippingMinor,
+    discountMinor,
+    discountCode: discount?.code ?? null,
+    taxMinor: calculateVatEstimateMinor(totalMinor),
+    totalMinor,
+    currency: CURRENCY,
+  };
 }
 
 type CreateIronSprueCheckoutOrderInput = {
