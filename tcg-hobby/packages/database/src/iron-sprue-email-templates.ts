@@ -81,7 +81,7 @@ const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
 const IRON_SPRUE_STAGING_HOST = 'staging.ironsprue.co.uk';
 const IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL = 'https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev';
 const IRON_SPRUE_PUBLIC_EMAIL_ASSET_BASE_URL = IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL;
-const IRON_SPRUE_EMAIL_AVATAR_URL = `https://${IRON_SPRUE_MEDIA_HOST}/brand/iron-sprue-email-avatar.png`;
+const IRON_SPRUE_EMAIL_LOGO_PATH = '/brand/iron-sprue-horizontal-email.png';
 
 function money(minor: number, currency = 'GBP') {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(minor / 100);
@@ -112,8 +112,12 @@ function isLocalUrl(value: string) {
   return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(value);
 }
 
-export function defaultIronSprueEmailLogoUrl(_siteUrl: string) {
-  return IRON_SPRUE_EMAIL_AVATAR_URL;
+export function defaultIronSprueEmailLogoUrl(siteUrl: string) {
+  return `${publicEmailUrlBase(normaliseSiteUrl(siteUrl))}${IRON_SPRUE_EMAIL_LOGO_PATH}`;
+}
+
+function isIconOnlyIronSprueAsset(value: string) {
+  return /(?:iron-sprue-email-avatar|favicon|apple-icon|\/icon\.)/i.test(value);
 }
 
 function assetBaseUrl(config: IronSprueEmailTemplateConfig) {
@@ -149,7 +153,21 @@ function publicEmailUrlBase(value: string) {
 }
 
 function publicEmailMediaBaseUrl(config: IronSprueEmailTemplateConfig) {
-  return normaliseSiteUrl(config.mediaBaseUrl || `https://${IRON_SPRUE_MEDIA_HOST}`);
+  const fallback = `https://${IRON_SPRUE_MEDIA_HOST}`;
+  const resolved = normaliseSiteUrl(config.mediaBaseUrl || fallback);
+  try {
+    const parsed = new URL(resolved);
+    const hostname = parsed.hostname.toLowerCase();
+    if (hostname === IRON_SPRUE_MEDIA_HOST) {
+      return `${parsed.protocol}//${parsed.host}${parsed.pathname.replace(/\/media\/iron-sprue\/?$/i, '').replace(/\/$/, '')}`;
+    }
+    if (hostname === 'ironsprue.co.uk' || hostname === 'www.ironsprue.co.uk' || hostname === IRON_SPRUE_STAGING_HOST || hostname.endsWith('.workers.dev')) {
+      return fallback;
+    }
+  } catch {
+    return fallback;
+  }
+  return resolved;
 }
 
 function orderHref(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig) {
@@ -210,7 +228,7 @@ function baseStyles() {
     .wrap{width:100%;background:#eef2f0;padding:24px 0;}
     .email{max-width:720px;margin:0 auto;background:${brand.surface};border:1px solid #d6ddda;}
     .header{background:${brand.graphite};color:#fff;padding:24px 28px;}
-    .logo{display:block;max-width:220px;height:auto;margin-bottom:16px;}
+    .logo{display:block;width:260px;max-width:100%;height:auto;margin-bottom:16px;}
     .wordmark{font-size:24px;letter-spacing:4px;text-transform:uppercase;font-weight:800;color:#fff;}
     .accent{color:${brand.accent};}
     .body{padding:28px;}
@@ -224,12 +242,16 @@ function baseStyles() {
     .label{display:block;color:${brand.muted};font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
     .value{font-size:15px;font-weight:700;color:${brand.ink};}
     table{width:100%;border-collapse:collapse;}
+    .items{table-layout:fixed;}
+    .itemsProduct{width:62%;}
+    .itemsQty{width:10%;}
+    .itemsMoney{width:14%;}
     th{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:${brand.muted};text-align:left;border-bottom:1px solid #d6ddda;padding:10px 0;}
-    td{border-bottom:1px solid #dde3e0;padding:12px 0;vertical-align:top;font-size:14px;}
+    td{border-bottom:1px solid #dde3e0;padding:14px 0;vertical-align:top;font-size:14px;}
     .product{display:flex;gap:12px;align-items:center;}
     .thumb{width:72px;height:72px;border:1px solid #d6ddda;background:#fff;object-fit:contain;}
     .thumbFallback{width:72px;height:72px;border:1px solid #d6ddda;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:${brand.muted};font-size:11px;text-align:center;}
-    .right{text-align:right;}
+    .right{text-align:right;padding-left:14px;}
     .totals{max-width:300px;margin-left:auto;}
     .totals td{padding:6px 0;border:0;}
     .total td{border-top:1px solid #d6ddda;padding-top:10px;font-size:18px;font-weight:800;}
@@ -241,11 +263,14 @@ function baseStyles() {
 }
 
 function header(config: IronSprueEmailTemplateConfig, heading: string, copy: string) {
-  const logoUrl = config.logoUrl && /^https?:\/\//i.test(config.logoUrl)
-    ? publicEmailUrlBase(config.logoUrl)
+  const requestedLogoUrl = config.logoUrl && /^https?:\/\//i.test(config.logoUrl)
+    ? config.logoUrl
     : null;
+  const logoUrl = requestedLogoUrl && !isIconOnlyIronSprueAsset(requestedLogoUrl)
+    ? publicEmailUrlBase(requestedLogoUrl)
+    : defaultIronSprueEmailLogoUrl(config.assetBaseUrl || config.siteUrl);
   const logo = logoUrl
-    ? `<img class="logo" src="${escapeHtml(logoUrl)}" alt="Iron Sprue" />`
+    ? `<img class="logo" src="${escapeHtml(logoUrl)}" width="260" alt="Iron Sprue" style="display:block;width:260px;max-width:100%;height:auto;margin-bottom:16px;border:0;" />`
     : '<div class="wordmark">IRON <span class="accent">SPRUE</span></div>';
   return `
     <div class="header">
@@ -288,7 +313,7 @@ function itemRows(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConf
   return order.items.map((item) => {
     const src = imageSrc(item, config);
     const image = src
-      ? `<img class="thumb" src="${escapeHtml(src)}" alt="${escapeHtml(item.imageAlt ?? item.productName)}" />`
+      ? `<img class="thumb" src="${escapeHtml(src)}" width="72" height="72" alt="${escapeHtml(item.imageAlt ?? item.productName)}" style="display:block;width:72px;height:72px;object-fit:contain;border:1px solid #d6ddda;background:#fff;" />`
       : '<span class="thumbFallback">Iron Sprue</span>';
     return `
       <tr>
@@ -312,7 +337,13 @@ function itemRows(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConf
 function itemsTable(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig) {
   return `
     <h2>Items</h2>
-    <table role="presentation">
+    <table class="items" role="presentation">
+      <colgroup>
+        <col class="itemsProduct" />
+        <col class="itemsQty" />
+        <col class="itemsMoney" />
+        <col class="itemsMoney" />
+      </colgroup>
       <thead><tr><th>Product</th><th class="right">Qty</th><th class="right">Each</th><th class="right">Total</th></tr></thead>
       <tbody>${itemRows(order, config)}</tbody>
     </table>
