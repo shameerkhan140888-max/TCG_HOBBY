@@ -11,6 +11,10 @@ describe('Iron Sprue storefront showcase cards', () => {
     ]);
   });
 
+  it('uses the live CubicFun starting price on the display-build showcase card', () => {
+    expect(promoPanels.find((panel) => panel.eyebrow === 'CubicFun display builds')?.title).toBe('From £4.99');
+  });
+
   it('keeps homepage showcase copy balanced in length', () => {
     const copyLengths = promoPanels.map((panel) => panel.copy.length);
     const shortest = Math.min(...copyLengths);
