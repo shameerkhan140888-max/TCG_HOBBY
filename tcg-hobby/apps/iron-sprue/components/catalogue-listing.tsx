@@ -11,6 +11,7 @@ import {
 } from '../lib/storefront';
 import { CatalogueAnalyticsEvents } from './catalogue-analytics-events';
 import { CatalogueFilterShell } from './catalogue-filter-shell';
+import { CatalogueSortSelect } from './catalogue-sort-select';
 import { ProductCard } from './product-card';
 
 type Params = Record<string, string | string[] | undefined>;
@@ -141,6 +142,13 @@ function catalogueFamilyRank(product: IronSprueProduct) {
   return navigationIndex >= 0 ? navigationIndex : 9;
 }
 
+function displayBuildPromotionRank(product: IronSprueProduct) {
+  const searchable = `${product.brand} ${product.name} ${product.category} ${product.productType} ${product.slug}`.toLowerCase();
+  if (searchable.includes('magic box') && searchable.includes('london')) return 0;
+  if (searchable.includes('magic box') && searchable.includes('underwater')) return 1;
+  return searchable.includes('magic box') ? 2 : 3;
+}
+
 function ShopRangeBanner({ banner }: { banner: ShopBanner }) {
   return (
     <section
@@ -254,6 +262,11 @@ export async function CatalogueListing({
       return catalogueFamilyRank(left) - catalogueFamilyRank(right)
         || left.brand.localeCompare(right.brand)
         || slugForCategory(left.category).localeCompare(slugForCategory(right.category))
+        || left.name.localeCompare(right.name);
+    }
+    if (selectedSort === 'featured' && fixedCategory === '3d-puzzles-and-builds' && !search) {
+      return displayBuildPromotionRank(left) - displayBuildPromotionRank(right)
+        || Number(Boolean(right.merchandisingRole)) - Number(Boolean(left.merchandisingRole))
         || left.name.localeCompare(right.name);
     }
     return Number(Boolean(right.merchandisingRole)) - Number(Boolean(left.merchandisingRole)) || left.name.localeCompare(right.name);
@@ -477,13 +490,8 @@ export async function CatalogueListing({
               {selectedBundles ? <input type="hidden" name="bundles" value={selectedBundles} /> : null}
               {selectedAvailability ? <input type="hidden" name="availability" value={selectedAvailability} /> : null}
               {selectedOffers ? <input type="hidden" name="offers" value={selectedOffers} /> : null}
-              <select aria-label="Sort products" name="sort" defaultValue={selectedSort}>
-                <option value="featured">Featured</option>
-                <option value="price-asc">Price: low to high</option>
-                <option value="price-desc">Price: high to low</option>
-                <option value="newest">Newest</option>
-              </select>
-              <button type="submit">Sort</button>
+              <CatalogueSortSelect defaultValue={selectedSort} />
+              <noscript><button type="submit">Sort</button></noscript>
             </form>
           </div>
 

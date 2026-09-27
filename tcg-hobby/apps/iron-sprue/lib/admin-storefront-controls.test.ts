@@ -434,7 +434,7 @@ describe('Iron Sprue Admin storefront controls', () => {
       sectionKey: 'architecture',
       heading: 'Architectural & landmark builds',
       ctaLabel: 'View architecture',
-      ctaHref: '/shop/3d-puzzles-and-builds?structure=Landmark',
+      ctaHref: '/shop/3d-puzzles-and-builds?search=architecture',
     });
     expect(sections[1]).toMatchObject({
       sectionKey: 'display-lights-and-screens',
@@ -448,6 +448,27 @@ describe('Iron Sprue Admin storefront controls', () => {
       'pintoo-q1035-jigsaw-screen-famous-architectures',
       'pintoo-q1061-jigsaw-screen-le-papillon-et-la-fleur',
     ]);
+  });
+
+  it('renders legacy saved architecture CTA destinations as the working architecture search', () => {
+    const products = [
+      { slug: 'cubicfun-c114h-st-patrick-s-cathedral', sku: 'C114H', storeCode: 'IRON_SPRUE', published: true },
+    ] as any[];
+
+    const sections = productSectionsFromPlacements(products, [
+      {
+        id: 'legacy-architecture',
+        placementKey: 'product-section:architecture:cubicfun-c114h-st-patrick-s-cathedral',
+        title: 'Architectural & landmark builds',
+        ctaLabel: 'View architecture',
+        ctaHref: '/shop/3d-puzzles-and-builds?structure=Landmark',
+        imageUrl: null,
+        active: true,
+        sortOrder: 0,
+      },
+    ]);
+
+    expect(sections[0]?.ctaHref).toBe('/shop/3d-puzzles-and-builds?search=architecture');
   });
 
   it('does not resurrect the default display section after Admin archives it', () => {

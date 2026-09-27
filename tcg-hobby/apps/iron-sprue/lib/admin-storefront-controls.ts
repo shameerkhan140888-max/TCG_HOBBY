@@ -653,13 +653,20 @@ function productSectionEyebrow(sectionKey: string) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function normaliseHomepageProductSectionCtaHref(sectionKey: string, href: string | null) {
+  if (sectionKey === 'architecture' && href === '/shop/3d-puzzles-and-builds?structure=Landmark') {
+    return '/shop/3d-puzzles-and-builds?search=architecture';
+  }
+  return href;
+}
+
 const defaultHomepageProductSections = [
   {
     sectionKey: 'architecture',
     heading: 'Architectural & landmark builds',
     eyebrow: 'Architecture',
     ctaLabel: 'View architecture',
-    ctaHref: '/shop/3d-puzzles-and-builds?structure=Landmark',
+    ctaHref: '/shop/3d-puzzles-and-builds?search=architecture',
     productSlugs: [
       'cubicfun-c114h-st-patrick-s-cathedral',
       'cubicfun-mc092h-st-peter-s-basilica',
@@ -709,16 +716,16 @@ export function productSectionsFromPlacements(products: IronSprueProduct[], plac
       heading: placement.title || defaultSection?.heading || productSectionEyebrow(parts.sectionKey),
       eyebrow: defaultSection?.eyebrow || productSectionEyebrow(parts.sectionKey),
       ctaLabel: placement.ctaLabel || defaultSection?.ctaLabel || null,
-      ctaHref: placement.ctaHref || defaultSection?.ctaHref || null,
+      ctaHref: normaliseHomepageProductSectionCtaHref(parts.sectionKey, placement.ctaHref || defaultSection?.ctaHref || null),
       rows: [],
     };
     if (existing.heading === productSectionEyebrow(parts.sectionKey) && (placement.title || defaultSection?.heading)) {
       existing.heading = placement.title || defaultSection?.heading || existing.heading;
     }
     if (!existing.ctaLabel && placement.ctaLabel) existing.ctaLabel = placement.ctaLabel;
-    if (!existing.ctaHref && placement.ctaHref) existing.ctaHref = placement.ctaHref;
+    if (!existing.ctaHref && placement.ctaHref) existing.ctaHref = normaliseHomepageProductSectionCtaHref(parts.sectionKey, placement.ctaHref);
     if (!existing.ctaLabel && defaultSection?.ctaLabel) existing.ctaLabel = defaultSection.ctaLabel;
-    if (!existing.ctaHref && defaultSection?.ctaHref) existing.ctaHref = defaultSection.ctaHref;
+    if (!existing.ctaHref && defaultSection?.ctaHref) existing.ctaHref = normaliseHomepageProductSectionCtaHref(parts.sectionKey, defaultSection.ctaHref);
     existing.rows.push({ sortOrder: placement.sortOrder, product });
     sections.set(parts.sectionKey, existing);
   }
@@ -743,7 +750,7 @@ export function productSectionsFromPlacements(products: IronSprueProduct[], plac
     heading: section.heading,
     eyebrow: section.eyebrow,
     ctaLabel: section.ctaLabel,
-    ctaHref: section.ctaHref,
+    ctaHref: normaliseHomepageProductSectionCtaHref(sectionKey, section.ctaHref),
     products: section.rows
       .sort((left, right) => left.sortOrder - right.sortOrder)
       .map((row) => row.product),

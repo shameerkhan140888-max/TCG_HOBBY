@@ -79,7 +79,7 @@ const IRON_SPRUE_ARCHITECTURE_SECTION_SUGGESTION = {
   sectionKey: 'architecture',
   heading: 'Architectural & landmark builds',
   ctaLabel: 'View architecture',
-  ctaHref: '/shop/3d-puzzles-and-builds?structure=Landmark',
+  ctaHref: '/shop/3d-puzzles-and-builds?search=architecture',
   productSlugs: [
     'cubicfun-c114h-st-patrick-s-cathedral',
     'cubicfun-mc092h-st-peter-s-basilica',

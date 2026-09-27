@@ -40,4 +40,34 @@ describe('Iron Sprue catalogue listing filters', () => {
     expect(markup).not.toContain('mobile-filter-drawer');
     expect(markup).not.toContain('filter-panel');
   });
+
+  it('uses architecture search for the 3D builds architecture view', async () => {
+    const markup = renderToStaticMarkup(await CatalogueListing({
+      fixedCategory: '3d-puzzles-and-builds',
+      searchParams: { search: 'architecture' },
+      title: '3D puzzles and builds',
+    }));
+
+    expect(markup).not.toContain('No products match those filters.');
+    expect(markup).toContain('Burj Khalifa');
+    expect(markup).toContain('Famous Architecture');
+  });
+
+  it('promotes Magic Boxes first on the default 3D display builds page', async () => {
+    const markup = renderToStaticMarkup(await CatalogueListing({
+      fixedCategory: '3d-puzzles-and-builds',
+      searchParams: {},
+      title: '3D puzzles and builds',
+    }));
+
+    const underwaterIndex = markup.indexOf('Magic Box  Underwater World');
+    const londonIndex = markup.indexOf('Magic Box  London at Night');
+    const architectureIndex = markup.indexOf('Basilica of the National Shrine');
+
+    expect(londonIndex).toBeGreaterThanOrEqual(0);
+    expect(underwaterIndex).toBeGreaterThanOrEqual(0);
+    expect(architectureIndex).toBeGreaterThanOrEqual(0);
+    expect(londonIndex).toBeLessThan(underwaterIndex);
+    expect(underwaterIndex).toBeLessThan(architectureIndex);
+  });
 });
