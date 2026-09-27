@@ -23,6 +23,7 @@ import {
   updateIronSprueAdminBrandControls,
   updateIronSprueAdminCategoryControls,
   updateIronSprueAdminContentReviewStatus,
+  updateIronSprueAdminHomepageProductSectionMetadata,
   updateIronSprueAdminMediaApproval,
   updateIronSprueAdminOrderFulfilmentStatus,
   updateIronSprueAdminOrderNotes,
@@ -641,6 +642,15 @@ export async function saveIronSprueHomepageProductSectionAction(formData: FormDa
         actor,
       );
     }
+    await updateIronSprueAdminHomepageProductSectionMetadata(
+      sectionKey,
+      {
+        title: sectionHeading,
+        ctaLabel: stringFromForm(formData.get('ctaLabel')),
+        ctaHref: stringFromForm(formData.get('ctaHref')),
+      },
+      actor,
+    );
   } catch (error) {
     redirect(adminStatusPath('homepage', 'error', actionError(error)));
   }

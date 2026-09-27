@@ -81,10 +81,10 @@ const IRON_SPRUE_ARCHITECTURE_SECTION_SUGGESTION = {
   ctaLabel: 'View architecture',
   ctaHref: '/shop/3d-puzzles-and-builds?search=architecture',
   productSlugs: [
+    'cubicfun-c112h-basilica-of-the-national-shrine',
+    'cubicfun-mc133h-burj-khalifa',
     'cubicfun-c114h-st-patrick-s-cathedral',
     'cubicfun-mc092h-st-peter-s-basilica',
-    'cubicfun-mc133h-burj-khalifa',
-    'cubicfun-c112h-basilica-of-the-national-shrine',
   ],
 };
 
@@ -2784,8 +2784,8 @@ function DiscountCodeForm({ record }: { record?: Awaited<ReturnType<typeof getIr
           <option value="FIXED">Fixed amount</option>
         </select>
       </Field>
-      <Field label={fixed ? 'Amount (£)' : 'Amount (%)'}>
-        <input name="amount" type="number" min="0" step={fixed ? '0.01' : '1'} defaultValue={record ? (fixed ? record.amount / 100 : record.amount) : ''} className={fieldClass} />
+      <Field label={fixed ? 'Amount (£)' : 'Amount (% or £)'}>
+        <input name="amount" type="number" min="0" step="0.01" defaultValue={record ? (fixed ? record.amount / 100 : record.amount) : ''} className={fieldClass} />
       </Field>
       <Field label="Minimum spend (£)">
         <input name="minimumSpendMinor" type="number" min="0" step="0.01" defaultValue={record?.minimumSpendMinor != null ? record.minimumSpendMinor / 100 : ''} className={fieldClass} />

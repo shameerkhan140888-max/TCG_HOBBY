@@ -3030,6 +3030,49 @@ export async function upsertIronSprueAdminHomepagePlacement(input: StorefrontRec
   return record;
 }
 
+export async function updateIronSprueAdminHomepageProductSectionMetadata(
+  sectionKey: string,
+  input: Pick<StorefrontRecordInput, 'title' | 'ctaLabel' | 'ctaHref'>,
+  actor: IronSprueAdminUser,
+  client = getIronSprueAdminPrisma(),
+) {
+  const cleanedSectionKey = sectionKey.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+  if (!cleanedSectionKey) throw new Error('Homepage product section key is required.');
+  const placementPrefix = `product-section:${cleanedSectionKey}:`;
+  const data = {
+    title: cleanNullable(input.title) ?? productSectionFallbackTitle(cleanedSectionKey),
+    ctaLabel: cleanNullable(input.ctaLabel),
+    ctaHref: cleanNullable(input.ctaHref),
+  };
+
+  const result = await client.ironSprueAdminHomepagePlacement.updateMany({
+    where: {
+      storeCode: IRON_SPRUE_STORE_CODE,
+      placementKey: { startsWith: placementPrefix },
+    },
+    data,
+  });
+
+  await client.ironSprueAdminAuditLog.create({
+    data: {
+      storeCode: IRON_SPRUE_STORE_CODE,
+      actorId: actor.id,
+      action: 'homepage.product_section.metadata.update',
+      entityType: 'homepage-placement',
+      summary: `Updated Iron Sprue homepage product section ${cleanedSectionKey}.`,
+      after: { sectionKey: cleanedSectionKey, updatedRows: result.count, ...data },
+    },
+  });
+
+  return result;
+}
+
+function productSectionFallbackTitle(sectionKey: string) {
+  return sectionKey
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
 export async function upsertIronSprueAdminHero(input: StorefrontRecordInput, actor: IronSprueAdminUser, client = getIronSprueAdminPrisma()) {
   const headline = cleanNullable(input.headline) ?? 'Built for the bench.';
   const data = {

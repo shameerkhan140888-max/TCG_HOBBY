@@ -436,6 +436,12 @@ describe('Iron Sprue Admin storefront controls', () => {
       ctaLabel: 'View architecture',
       ctaHref: '/shop/3d-puzzles-and-builds?search=architecture',
     });
+    expect(sections[0]?.products.map((product) => product.slug)).toEqual([
+      'cubicfun-c112h-basilica-of-the-national-shrine',
+      'cubicfun-mc133h-burj-khalifa',
+      'cubicfun-c114h-st-patrick-s-cathedral',
+      'cubicfun-mc092h-st-peter-s-basilica',
+    ]);
     expect(sections[1]).toMatchObject({
       sectionKey: 'display-lights-and-screens',
       heading: 'Night boxes and display screens.',

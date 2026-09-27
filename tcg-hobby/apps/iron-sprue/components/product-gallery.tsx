@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type PointerEvent, type WheelEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { ironSprueDisplayMediaSrcSet, ironSprueDisplayMediaUrl } from '../lib/responsive-media';
 
 type ProductGalleryProps = {
@@ -148,6 +149,40 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
     );
   }
 
+  const lightbox = enlarged && activeImage && typeof document !== 'undefined'
+    ? createPortal(
+        <div className="product-image-lightbox" role="dialog" aria-modal="true" aria-label={`${productName} enlarged image`}>
+          <button className="product-image-lightbox__backdrop" type="button" onClick={() => setEnlarged(false)} aria-label="Close image preview" />
+          <div className="product-image-lightbox__panel">
+            <button ref={closeButtonRef} className="product-image-lightbox__close" type="button" onClick={() => setEnlarged(false)}>
+              Close image
+            </button>
+            <div
+              className="product-image-lightbox__viewport"
+              aria-label="Scroll or pinch to zoom. Drag enlarged image to pan."
+              onWheel={handleWheelZoom}
+              onPointerDown={handlePanStart}
+              onPointerMove={handlePanMove}
+              onPointerUp={handlePanEnd}
+              onPointerCancel={handlePanEnd}
+            >
+              <img
+                className={activeImageIsImage2 ? 'product-gallery-lightbox-image product-gallery-lightbox-image--image2' : 'product-gallery-lightbox-image'}
+                src={activeImage}
+                sizes="100vw"
+                alt={productName}
+                width="1600"
+                height="1600"
+                draggable={false}
+                style={{ transform: `translate3d(${lightboxOffset.x}px, ${lightboxOffset.y}px, 0) scale(${lightboxZoom})` }}
+              />
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
+
   return (
     <div className="product-gallery">
       <button
@@ -197,36 +232,7 @@ export function ProductGallery({ images, productName, fallbackLabel }: ProductGa
         </div>
       ) : null}
 
-      {enlarged ? (
-        <div className="product-image-lightbox" role="dialog" aria-modal="true" aria-label={`${productName} enlarged image`}>
-          <button className="product-image-lightbox__backdrop" type="button" onClick={() => setEnlarged(false)} aria-label="Close image preview" />
-          <div className="product-image-lightbox__panel">
-            <button ref={closeButtonRef} className="product-image-lightbox__close" type="button" onClick={() => setEnlarged(false)}>
-              Close image
-            </button>
-            <div
-              className="product-image-lightbox__viewport"
-              aria-label="Scroll or pinch to zoom. Drag enlarged image to pan."
-              onWheel={handleWheelZoom}
-              onPointerDown={handlePanStart}
-              onPointerMove={handlePanMove}
-              onPointerUp={handlePanEnd}
-              onPointerCancel={handlePanEnd}
-            >
-              <img
-                className={activeImageIsImage2 ? 'product-gallery-lightbox-image product-gallery-lightbox-image--image2' : 'product-gallery-lightbox-image'}
-                src={activeImage}
-                sizes="100vw"
-                alt={productName}
-                width="1600"
-                height="1600"
-                draggable={false}
-                style={{ transform: `translate3d(${lightboxOffset.x}px, ${lightboxOffset.y}px, 0) scale(${lightboxZoom})` }}
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {lightbox}
     </div>
   );
 }

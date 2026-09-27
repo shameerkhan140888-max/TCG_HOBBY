@@ -668,10 +668,10 @@ const defaultHomepageProductSections = [
     ctaLabel: 'View architecture',
     ctaHref: '/shop/3d-puzzles-and-builds?search=architecture',
     productSlugs: [
+      'cubicfun-c112h-basilica-of-the-national-shrine',
+      'cubicfun-mc133h-burj-khalifa',
       'cubicfun-c114h-st-patrick-s-cathedral',
       'cubicfun-mc092h-st-peter-s-basilica',
-      'cubicfun-mc133h-burj-khalifa',
-      'cubicfun-c112h-basilica-of-the-national-shrine',
     ],
   },
   {
