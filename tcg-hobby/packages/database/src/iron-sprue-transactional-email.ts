@@ -16,6 +16,7 @@ import {
   type CustomerRequestEmailOptions,
   type IronSprueEmailOrder,
   type IronSprueEmailOrderItem,
+  type IronSprueEmailAttachment,
   type IronSprueEmailTemplate,
   type IronSprueEmailTemplateConfig,
 } from './iron-sprue-email-templates.js';
@@ -120,7 +121,13 @@ function inlineImageCid(orderNumber: string, item: IronSprueEmailOrderItem, inde
   return `iron-sprue-product-${key || index + 1}`;
 }
 
+function inlineProductImagesEnabled() {
+  return clean(process.env.IRON_SPRUE_EMAIL_INLINE_PRODUCT_IMAGES)?.toLowerCase() === 'enabled';
+}
+
 function withInlineProductImages(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig): IronSprueEmailOrder {
+  if (!inlineProductImagesEnabled()) return order;
+
   return {
     ...order,
     items: order.items.map((item, index) => {
@@ -136,6 +143,37 @@ function withInlineProductImages(order: IronSprueEmailOrder, config: IronSprueEm
       };
     }),
   };
+}
+
+async function materialiseInlineAttachments(template: IronSprueEmailTemplate) {
+  const attachments = template.attachments ?? [];
+  if (!attachments.length) return { html: template.html, attachments: undefined as IronSprueEmailAttachment[] | undefined };
+
+  const materialised: IronSprueEmailAttachment[] = [];
+  for (const attachment of attachments) {
+    try {
+      const response = await fetch(attachment.path);
+      if (!response.ok) throw new Error(`Image fetch failed with ${response.status}.`);
+      const contentType = response.headers.get('Content-Type')?.split(';')[0]?.trim() || attachment.content_type;
+      const bytes = await response.arrayBuffer();
+      const materialisedAttachment: IronSprueEmailAttachment = {
+        filename: attachment.filename,
+        content_id: attachment.content_id,
+        path: attachment.path,
+        content: Buffer.from(bytes).toString('base64'),
+      };
+      if (contentType) materialisedAttachment.content_type = contentType;
+      materialised.push(materialisedAttachment);
+    } catch (error) {
+      console.warn('iron_sprue_email_inline_image_failed', {
+        image: attachment.filename,
+        reason: error instanceof Error ? error.message : 'unknown_error',
+      });
+      return { html: template.html, attachments: undefined };
+    }
+  }
+
+  return { html: template.html, attachments: materialised };
 }
 
 type EmailOrderItem = NonNullable<Awaited<ReturnType<typeof loadOrder>>>['items'][number];
@@ -333,6 +371,7 @@ async function sendViaResend(
   if (!config.apiKey || !config.from) {
     return { outcome: 'provider_unconfigured' as const };
   }
+  const inline = await materialiseInlineAttachments(template);
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -346,9 +385,9 @@ async function sendViaResend(
       to: [to],
       reply_to: config.replyTo ?? undefined,
       subject: template.subject,
-      html: template.html,
+      html: inline.html,
       text: template.text,
-      attachments: template.attachments?.length ? template.attachments : undefined,
+      attachments: inline.attachments?.length ? inline.attachments : undefined,
     }),
   });
 

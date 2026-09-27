@@ -176,10 +176,19 @@ describe('Iron Sprue transactional email sending', () => {
     vi.stubEnv('IRON_SPRUE_EMAIL_ASSET_BASE_URL', 'https://ironsprue.co.uk');
     vi.stubEnv('RESEND_API_KEY', 'tcg_resend_should_not_be_used');
     vi.stubEnv('ORDER_EMAIL_FROM', 'TCG Hobby <orders@tcg.example.test>');
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: 'resend-1' }), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
-    })));
+    vi.stubGlobal('fetch', vi.fn(async (input: unknown) => {
+      const url = String(input);
+      if (url === 'https://api.resend.com/emails') {
+        return new Response(JSON.stringify({ id: 'resend-1' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response(new Uint8Array([1, 2, 3, 4]), {
+        status: 200,
+        headers: { 'content-type': url.endsWith('.png') ? 'image/png' : 'image/jpeg' },
+      });
+    }));
   });
 
   afterEach(() => {
@@ -206,15 +215,9 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.html).toContain('VAT included');
     expect(body.html).toContain('https://ironsprue.co.uk/brand/iron-sprue-horizontal-email.png');
     expect(body.html).not.toContain('https://media.ironsprue.co.uk/brand/iron-sprue-email-avatar.png');
-    expect(body.html).toContain('src="cid:iron-sprue-product-is-20260814-test-is-aos-05628"');
-    expect(body.attachments).toEqual([
-      expect.objectContaining({
-        path: 'https://media.example.test/toyota.png',
-        filename: 'toyota.png',
-        content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
-        content_type: 'image/png',
-      }),
-    ]);
+    expect(body.html).toContain('https://media.example.test/toyota.png');
+    expect(body.html).not.toContain('src="cid:');
+    expect(body.attachments).toBeUndefined();
     expect(body.html).toContain('width="72" height="72"');
     expect(body.html).toContain('alt="" role="presentation"');
     expect(body.html).toContain('<span class="itemMeasureLabel">Qty</span>');
@@ -274,15 +277,9 @@ describe('Iron Sprue transactional email sending', () => {
       .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
 
     const body = lastEmailPayload();
-    expect(body.html).toContain('src="cid:iron-sprue-product-is-20260814-test-is-aos-05628"');
-    expect(body.attachments).toEqual([
-      expect.objectContaining({
-        path: 'https://ironsprue.co.uk/media/iron-sprue/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg?emailImage=20260927-live-domain-v2',
-        filename: 'tasma-manufacturer-cb0f330a6941.jpg',
-        content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
-        content_type: 'image/jpeg',
-      }),
-    ]);
+    expect(body.html).toContain('https://ironsprue.co.uk/media/iron-sprue/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg?emailImage=20260927-live-domain-v2');
+    expect(body.html).not.toContain('src="cid:');
+    expect(body.attachments).toBeUndefined();
     expect(body.html).not.toContain('/archive/products/is-tas-carton24snapknife/original/old.jpg');
     expect(body.html).not.toContain('iron-sprue-storefront-staging.shameerkhan140888.workers.dev');
   });
@@ -321,6 +318,29 @@ describe('Iron Sprue transactional email sending', () => {
       .resolves.toEqual({ outcome: 'missing_recipient' });
     expect(fetch).not.toHaveBeenCalled();
     expect(db.ironSprueTransactionalEmailDelivery.upsert).not.toHaveBeenCalled();
+  });
+
+  it('can prepare inline product images only when explicitly enabled', async () => {
+    vi.stubEnv('IRON_SPRUE_EMAIL_INLINE_PRODUCT_IMAGES', 'enabled');
+    const db = createDb();
+
+    await expect(sendIronSprueOrderConfirmationEmail('order-1', db as never))
+      .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
+
+    const body = lastEmailPayload();
+    expect(body.html).toContain('src="cid:iron-sprue-product-is-20260814-test-is-aos-05628"');
+    expect(body.attachments).toEqual([
+      expect.objectContaining({
+        path: 'https://media.example.test/toyota.png',
+        filename: 'toyota.png',
+        content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
+        content_type: 'image/png',
+        content: 'AQIDBA==',
+      }),
+    ]);
+    expect(db.ironSprueTransactionalEmailDelivery.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: 'SENT' }),
+    }));
   });
 
   it('fails closed when Iron Sprue provider config is missing even if TCG email config exists', async () => {

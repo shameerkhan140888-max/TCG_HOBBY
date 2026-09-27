@@ -67,6 +67,7 @@ export type IronSprueEmailAttachment = {
   filename: string;
   content_id: string;
   content_type?: string;
+  content?: string;
 };
 
 type CancellationOptions = {
