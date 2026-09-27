@@ -135,17 +135,7 @@ function publicEmailLinkBaseUrl(config: IronSprueEmailTemplateConfig) {
 }
 
 function publicEmailMediaRouteBaseUrl(config: IronSprueEmailTemplateConfig) {
-  const resolved = normaliseSiteUrl(config.assetBaseUrl || config.siteUrl);
-  try {
-    const parsed = new URL(resolved);
-    const hostname = parsed.hostname.toLowerCase();
-    if (hostname === 'ironsprue.co.uk' || hostname === 'www.ironsprue.co.uk') return 'https://ironsprue.co.uk';
-    if (hostname === IRON_SPRUE_STAGING_HOST || hostname.endsWith('.workers.dev')) return IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL;
-    if (isLocalUrl(resolved)) return 'https://ironsprue.co.uk';
-  } catch {
-    return 'https://ironsprue.co.uk';
-  }
-  return resolved;
+  return publicEmailAssetBaseUrl(config);
 }
 
 function publicEmailUrlBase(value: string) {
