@@ -81,6 +81,7 @@ const IRON_SPRUE_MEDIA_ROUTE_PREFIX = '/media/iron-sprue/';
 const IRON_SPRUE_STAGING_HOST = 'staging.ironsprue.co.uk';
 const IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL = 'https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev';
 const IRON_SPRUE_EMAIL_LOGO_PATH = '/brand/iron-sprue-horizontal-email.png';
+const IRON_SPRUE_EMAIL_IMAGE_VERSION = '20260927-live-domain-v2';
 
 function money(minor: number, currency = 'GBP') {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(minor / 100);
@@ -169,20 +170,27 @@ function productHref(item: IronSprueEmailOrderItem, config: IronSprueEmailTempla
 }
 
 function imageSrc(item: IronSprueEmailOrderItem, config: IronSprueEmailTemplateConfig) {
+  const mediaImageUrl = (key: string, search = '') => {
+    const base = `${publicEmailMediaRouteBaseUrl(config)}${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}`;
+    const params = new URLSearchParams(search.replace(/^\?/, ''));
+    params.set('emailImage', IRON_SPRUE_EMAIL_IMAGE_VERSION);
+    return `${base}?${params.toString()}`;
+  };
+
   if (!item.imageUrl) return null;
   if (item.imageUrl.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) {
     const key = item.imageUrl.slice(IRON_SPRUE_MEDIA_ROUTE_PREFIX.length);
-    return key ? `${publicEmailMediaRouteBaseUrl(config)}${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : null;
+    return key ? mediaImageUrl(key) : null;
   }
   try {
     const parsed = new URL(item.imageUrl);
     if (parsed.pathname.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) {
       const key = parsed.pathname.slice(IRON_SPRUE_MEDIA_ROUTE_PREFIX.length);
-      return key ? `${publicEmailMediaRouteBaseUrl(config)}${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}${parsed.search}` : null;
+      return key ? mediaImageUrl(key, parsed.search) : null;
     }
     if (parsed.hostname.toLowerCase() === IRON_SPRUE_MEDIA_HOST) {
       const key = parsed.pathname.replace(/^\/+/, '');
-      return key ? `${publicEmailMediaRouteBaseUrl(config)}${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : null;
+      return key ? mediaImageUrl(key) : null;
     }
   } catch {
     // Non-URL values fall through to the relative-path handling below.
