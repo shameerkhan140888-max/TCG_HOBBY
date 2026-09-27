@@ -2,6 +2,11 @@ import type { Prisma } from '@prisma/client';
 import { getIronSprueAdminPrisma } from './client.js';
 import { IRON_SPRUE_STORE_CODE } from './iron-sprue-commerce.js';
 import {
+  isIronSprueDisplayableImageAsset,
+  isIronSprueOperationalMediaRole,
+  resolveIronSpruePublicMediaUrl,
+} from './iron-sprue-admin.js';
+import {
   buildIronSprueCancellationEmail,
   buildIronSprueCustomerRequestEmail,
   buildIronSprueDispatchEmail,
@@ -12,6 +17,7 @@ import {
   type IronSprueEmailTemplate,
   type IronSprueEmailTemplateConfig,
 } from './iron-sprue-email-templates.js';
+import { resolveIronSprueStorefrontMediaUrl } from './iron-sprue-media.js';
 
 export const IRON_SPRUE_ORDER_CONFIRMATION_EMAIL_PURPOSE = 'ORDER_CONFIRMATION';
 export const IRON_SPRUE_ORDER_CANCELLATION_EMAIL_PURPOSE = 'ORDER_CANCELLATION';
@@ -78,6 +84,42 @@ function emailConfig(): IronSprueEmailTemplateConfig & { apiKey: string | null; 
   };
 }
 
+type EmailOrderItem = NonNullable<Awaited<ReturnType<typeof loadOrder>>>['items'][number];
+
+function currentApprovedEmailImage(item: EmailOrderItem) {
+  const storefrontBaseUrl = siteUrl();
+  const preferred = [...(item.product?.mediaAssets ?? [])]
+    .filter((asset) => asset.approvalState === 'APPROVED' && isIronSprueOperationalMediaRole(asset.role) && isIronSprueDisplayableImageAsset(asset))
+    .map((asset) => ({
+      asset,
+      url: resolveIronSprueStorefrontMediaUrl(resolveIronSpruePublicMediaUrl(asset), storefrontBaseUrl),
+    }))
+    .filter((candidate): candidate is { asset: typeof candidate.asset; url: string } => Boolean(candidate.url))
+    .sort((left, right) => {
+      const roleRank = (role: string) => {
+        const normalized = role.toLowerCase().replace(/_/g, '-');
+        if (normalized === 'catalogue-primary') return 0;
+        if (normalized === 'manufacturer-original') return 1;
+        if (normalized === 'workshop-photography') return 2;
+        return 3;
+      };
+      return roleRank(left.asset.role) - roleRank(right.asset.role)
+        || Number(right.asset.isPrimary) - Number(left.asset.isPrimary)
+        || left.asset.sortOrder - right.asset.sortOrder
+        || left.asset.id.localeCompare(right.asset.id);
+    })[0];
+
+  return preferred
+    ? {
+      imageUrl: preferred.url,
+      imageAlt: preferred.asset.altText?.trim() || item.imageAlt || item.productName,
+    }
+    : {
+      imageUrl: item.imageUrl,
+      imageAlt: item.imageAlt,
+    };
+}
+
 function mapEmailOrder(order: Awaited<ReturnType<typeof loadOrder>>): IronSprueEmailOrder | null {
   if (!order) return null;
   return {
@@ -111,16 +153,19 @@ function mapEmailOrder(order: Awaited<ReturnType<typeof loadOrder>>): IronSprueE
         restock: line.restock,
       })),
     })),
-    items: order.items.map((item) => ({
-      productName: item.productName,
-      productSlug: item.productSlug,
-      productSku: item.productSku,
-      quantity: item.quantity,
-      unitPriceMinor: item.unitPriceMinor,
-      totalMinor: item.totalMinor,
-      imageUrl: item.imageUrl,
-      imageAlt: item.imageAlt,
-    })),
+    items: order.items.map((item) => {
+      const image = currentApprovedEmailImage(item);
+      return {
+        productName: item.productName,
+        productSlug: item.productSlug,
+        productSku: item.productSku,
+        quantity: item.quantity,
+        unitPriceMinor: item.unitPriceMinor,
+        totalMinor: item.totalMinor,
+        imageUrl: image.imageUrl,
+        imageAlt: image.imageAlt,
+      };
+    }),
   };
 }
 
@@ -128,7 +173,23 @@ async function loadOrder(orderId: string, db: IronSprueEmailDb) {
   return db.ironSprueOrder.findFirst({
     where: { id: orderId, storeCode: IRON_SPRUE_STORE_CODE },
     include: {
-      items: { orderBy: { createdAt: 'asc' } },
+      items: {
+        orderBy: { createdAt: 'asc' },
+        include: {
+          product: {
+            include: {
+              mediaAssets: {
+                where: { approvalState: 'APPROVED' },
+                orderBy: [
+                  { isPrimary: 'desc' },
+                  { sortOrder: 'asc' },
+                  { id: 'asc' },
+                ],
+              },
+            },
+          },
+        },
+      },
       returns: {
         include: { lines: true },
         orderBy: { createdAt: 'asc' },

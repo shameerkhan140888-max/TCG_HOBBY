@@ -134,6 +134,20 @@ function publicEmailLinkBaseUrl(config: IronSprueEmailTemplateConfig) {
   return publicEmailUrlBase(normaliseSiteUrl(config.siteUrl));
 }
 
+function publicEmailMediaRouteBaseUrl(config: IronSprueEmailTemplateConfig) {
+  const resolved = normaliseSiteUrl(config.assetBaseUrl || config.siteUrl);
+  try {
+    const parsed = new URL(resolved);
+    const hostname = parsed.hostname.toLowerCase();
+    if (hostname === 'ironsprue.co.uk' || hostname === 'www.ironsprue.co.uk') return 'https://ironsprue.co.uk';
+    if (hostname === IRON_SPRUE_STAGING_HOST || hostname.endsWith('.workers.dev')) return IRON_SPRUE_STAGING_WORKER_ASSET_BASE_URL;
+    if (isLocalUrl(resolved)) return 'https://ironsprue.co.uk';
+  } catch {
+    return 'https://ironsprue.co.uk';
+  }
+  return resolved;
+}
+
 function publicEmailUrlBase(value: string) {
   try {
     const parsed = new URL(value);
@@ -152,24 +166,6 @@ function publicEmailUrlBase(value: string) {
   }
 }
 
-function publicEmailMediaBaseUrl(config: IronSprueEmailTemplateConfig) {
-  const fallback = `https://${IRON_SPRUE_MEDIA_HOST}`;
-  const resolved = normaliseSiteUrl(config.mediaBaseUrl || fallback);
-  try {
-    const parsed = new URL(resolved);
-    const hostname = parsed.hostname.toLowerCase();
-    if (hostname === IRON_SPRUE_MEDIA_HOST) {
-      return `${parsed.protocol}//${parsed.host}${parsed.pathname.replace(/\/media\/iron-sprue\/?$/i, '').replace(/\/$/, '')}`;
-    }
-    if (hostname === 'ironsprue.co.uk' || hostname === 'www.ironsprue.co.uk' || hostname === IRON_SPRUE_STAGING_HOST || hostname.endsWith('.workers.dev')) {
-      return fallback;
-    }
-  } catch {
-    return fallback;
-  }
-  return resolved;
-}
-
 function orderHref(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig) {
   return `${publicEmailLinkBaseUrl(config)}/account/orders/${encodeURIComponent(order.orderNumber)}`;
 }
@@ -186,17 +182,17 @@ function imageSrc(item: IronSprueEmailOrderItem, config: IronSprueEmailTemplateC
   if (!item.imageUrl) return null;
   if (item.imageUrl.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) {
     const key = item.imageUrl.slice(IRON_SPRUE_MEDIA_ROUTE_PREFIX.length);
-    return key ? `${publicEmailMediaBaseUrl(config)}/${key}` : null;
+    return key ? `${publicEmailMediaRouteBaseUrl(config)}${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : null;
   }
   try {
     const parsed = new URL(item.imageUrl);
     if (parsed.pathname.startsWith(IRON_SPRUE_MEDIA_ROUTE_PREFIX)) {
       const key = parsed.pathname.slice(IRON_SPRUE_MEDIA_ROUTE_PREFIX.length);
-      return key ? `${publicEmailMediaBaseUrl(config)}/${key}${parsed.search}` : null;
+      return key ? `${publicEmailMediaRouteBaseUrl(config)}${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}${parsed.search}` : null;
     }
     if (parsed.hostname.toLowerCase() === IRON_SPRUE_MEDIA_HOST) {
       const key = parsed.pathname.replace(/^\/+/, '');
-      return key ? `${publicEmailMediaBaseUrl(config)}/${key}` : null;
+      return key ? `${publicEmailMediaRouteBaseUrl(config)}${IRON_SPRUE_MEDIA_ROUTE_PREFIX}${key}` : null;
     }
   } catch {
     // Non-URL values fall through to the relative-path handling below.
@@ -242,15 +238,20 @@ function baseStyles() {
     .label{display:block;color:${brand.muted};font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
     .value{font-size:15px;font-weight:700;color:${brand.ink};}
     table{width:100%;border-collapse:collapse;}
-    .items{table-layout:fixed;}
-    .itemsProduct{width:62%;}
-    .itemsQty{width:10%;}
-    .itemsMoney{width:14%;}
+    .itemCard{margin:0 0 14px;border-bottom:1px solid #dde3e0;}
+    .itemProductCell{padding:14px 0 10px;border:0;}
+    .itemMeasureCell{padding:8px 0 14px;border:0;}
+    .itemMeasure{border-collapse:collapse;width:auto;}
+    .itemMeasure td{border:0;padding:0 24px 0 0;vertical-align:top;white-space:nowrap;}
+    .itemMeasureLabel{display:block;color:${brand.muted};font-size:11px;line-height:1.2;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;white-space:nowrap;}
+    .itemMeasureValue{display:block;color:${brand.ink};font-size:15px;line-height:1.25;font-weight:700;white-space:nowrap;}
     th{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:${brand.muted};text-align:left;border-bottom:1px solid #d6ddda;padding:10px 0;}
     td{border-bottom:1px solid #dde3e0;padding:14px 0;vertical-align:top;font-size:14px;}
-    .product{display:flex;gap:12px;align-items:center;}
-    .thumb{width:72px;height:72px;border:1px solid #d6ddda;background:#fff;object-fit:contain;}
-    .thumbFallback{width:72px;height:72px;border:1px solid #d6ddda;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:${brand.muted};font-size:11px;text-align:center;}
+    .productTable{border-collapse:collapse;width:100%;}
+    .productTable td{border:0;padding:0;vertical-align:middle;}
+    .thumbCell{width:88px;padding-right:14px!important;}
+    .thumb{display:block;width:72px;height:72px;border:1px solid #d6ddda;background:#fff;object-fit:contain;}
+    .thumbFallback{display:block;width:72px;height:72px;border:1px solid #d6ddda;background:#fff;color:${brand.muted};font-size:11px;line-height:72px;text-align:center;}
     .right{text-align:right;padding-left:14px;}
     .totals{max-width:300px;margin-left:auto;}
     .totals td{padding:6px 0;border:0;}
@@ -258,7 +259,7 @@ function baseStyles() {
     .button{display:inline-block;background:${brand.gold};color:#111!important;text-decoration:none;padding:13px 18px;font-weight:800;letter-spacing:1px;text-transform:uppercase;}
     .footer{padding:20px 28px;background:${brand.graphite};color:#c9c2b7;font-size:12px;line-height:1.6;}
     .footer p{color:#c9c2b7;font-size:12px;margin:0 0 8px;}
-    @media(max-width:620px){.body,.header,.footer{padding:20px}.meta{display:block}.meta div{margin-bottom:10px}.product{display:block}.thumb,.thumbFallback{margin-bottom:8px}.right{text-align:left}.totals{max-width:none;margin-left:0}}
+    @media(max-width:620px){.body,.header,.footer{padding:20px}.meta{display:block}.meta div{margin-bottom:10px}.totals{max-width:none;margin-left:0}}
   `;
 }
 
@@ -313,22 +314,30 @@ function itemRows(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConf
   return order.items.map((item) => {
     const src = imageSrc(item, config);
     const image = src
-      ? `<img class="thumb" src="${escapeHtml(src)}" width="72" height="72" alt="${escapeHtml(item.imageAlt ?? item.productName)}" style="display:block;width:72px;height:72px;object-fit:contain;border:1px solid #d6ddda;background:#fff;" />`
+      ? `<img class="thumb" src="${escapeHtml(src)}" width="72" height="72" alt="" role="presentation" style="display:block;width:72px;height:72px;object-fit:contain;border:1px solid #d6ddda;background:#fff;" />`
       : '<span class="thumbFallback">Iron Sprue</span>';
     return `
-      <tr>
-        <td>
-          <div class="product">
-            <a href="${escapeHtml(productHref(item, config))}">${image}</a>
-            <div>
-              <strong>${escapeHtml(item.productName)}</strong><br />
+      <tr><td class="itemProductCell">
+        <table class="productTable" role="presentation">
+          <tr>
+            <td class="thumbCell" width="88">${image}</td>
+            <td>
+              <a href="${escapeHtml(productHref(item, config))}" style="color:${brand.ink};text-decoration:none;"><strong>${escapeHtml(item.productName)}</strong></a><br />
               <span class="muted">SKU ${escapeHtml(item.productSku)}</span>
-            </div>
-          </div>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+      <tr>
+        <td class="itemMeasureCell">
+          <table class="itemMeasure" role="presentation">
+            <tr>
+              <td><span class="itemMeasureLabel">Qty</span><span class="itemMeasureValue">${escapeHtml(String(item.quantity))}</span></td>
+              <td><span class="itemMeasureLabel">Each</span><span class="itemMeasureValue">${escapeHtml(money(item.unitPriceMinor, order.currency))}</span></td>
+              <td><span class="itemMeasureLabel">Total</span><span class="itemMeasureValue">${escapeHtml(money(item.totalMinor, order.currency))}</span></td>
+            </tr>
+          </table>
         </td>
-        <td class="right">${escapeHtml(String(item.quantity))}</td>
-        <td class="right">${escapeHtml(money(item.unitPriceMinor, order.currency))}</td>
-        <td class="right">${escapeHtml(money(item.totalMinor, order.currency))}</td>
       </tr>
     `;
   }).join('');
@@ -337,14 +346,7 @@ function itemRows(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConf
 function itemsTable(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig) {
   return `
     <h2>Items</h2>
-    <table class="items" role="presentation">
-      <colgroup>
-        <col class="itemsProduct" />
-        <col class="itemsQty" />
-        <col class="itemsMoney" />
-        <col class="itemsMoney" />
-      </colgroup>
-      <thead><tr><th>Product</th><th class="right">Qty</th><th class="right">Each</th><th class="right">Total</th></tr></thead>
+    <table class="itemCard" role="presentation">
       <tbody>${itemRows(order, config)}</tbody>
     </table>
   `;
