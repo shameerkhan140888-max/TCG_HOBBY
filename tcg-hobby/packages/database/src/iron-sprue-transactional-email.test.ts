@@ -204,7 +204,7 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.html).toContain('Iron Sprue');
     expect(body.html).toContain('VAT No. GB525204033');
     expect(body.html).toContain('VAT included');
-    expect(body.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/brand/iron-sprue-horizontal-email.png');
+    expect(body.html).toContain('https://ironsprue.co.uk/brand/iron-sprue-horizontal-email.png');
     expect(body.html).not.toContain('https://media.ironsprue.co.uk/brand/iron-sprue-email-avatar.png');
     expect(body.html).toContain('https://media.example.test/toyota.png');
     expect(body.html).toContain('width="72" height="72"');
@@ -217,6 +217,7 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.html).toContain('https://ironsprue.example.test/shop');
     expect(body.html).not.toContain('View order');
     expect(body.html).not.toContain('TCG Hobby');
+    expect(body.html).not.toContain('iron-sprue-storefront-staging.shameerkhan140888.workers.dev');
     expect(db.ironSprueTransactionalEmailDelivery.update).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: 'SENT' }),
     }));
@@ -265,8 +266,9 @@ describe('Iron Sprue transactional email sending', () => {
       .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
 
     const body = lastEmailPayload();
-    expect(body.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/media/iron-sprue/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg');
+    expect(body.html).toContain('https://ironsprue.co.uk/media/iron-sprue/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg');
     expect(body.html).not.toContain('/archive/products/is-tas-carton24snapknife/original/old.jpg');
+    expect(body.html).not.toContain('iron-sprue-storefront-staging.shameerkhan140888.workers.dev');
   });
 
   it('does not send confirmations for unpaid orders or already-sent deliveries', async () => {
@@ -349,7 +351,7 @@ describe('Iron Sprue transactional email sending', () => {
     body = lastEmailPayload();
     expect(body.subject).toContain('Order cancelled');
     expect(body.html).toContain('No payment was taken');
-    expect(body.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/brand/iron-sprue-horizontal-email.png');
+    expect(body.html).toContain('https://ironsprue.co.uk/brand/iron-sprue-horizontal-email.png');
     expect(body.html).not.toContain('Refund amount');
     expect(body.html).not.toContain('TCG Hobby');
   });
@@ -441,7 +443,7 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.html).toContain('Royal Mail');
     expect(body.html).toContain('ISPREVIEW123GB');
     expect(body.html).toContain('Track your order');
-    expect(body.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/brand/iron-sprue-horizontal-email.png');
+    expect(body.html).toContain('https://ironsprue.co.uk/brand/iron-sprue-horizontal-email.png');
     expect(body.html).not.toContain('TCG Hobby');
   });
 
@@ -519,7 +521,7 @@ describe('Iron Sprue email templates', () => {
       siteUrl: 'https://ironsprue.co.uk',
       assetBaseUrl: 'https://ironsprue.co.uk',
     });
-    expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/media/iron-sprue/toyota-red.webp');
+    expect(template.html).toContain('https://ironsprue.co.uk/media/iron-sprue/toyota-red.webp');
     expect(template.html).not.toContain('https://media.ironsprue.co.uk/toyota-red.webp');
   });
 
@@ -556,7 +558,7 @@ describe('Iron Sprue email templates', () => {
       siteUrl: 'https://ironsprue.co.uk',
       assetBaseUrl: 'https://ironsprue.co.uk',
     });
-    expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/media/iron-sprue/products/is-aos-05628/image-2/toyota-red.webp');
+    expect(template.html).toContain('https://ironsprue.co.uk/media/iron-sprue/products/is-aos-05628/image-2/toyota-red.webp');
     expect(template.html).not.toContain('https://media.ironsprue.co.uk/products/is-aos-05628/image-2/toyota-red.webp');
     expect(template.html).not.toContain('https://ironsprue.example.test/media/iron-sprue/products/is-aos-05628/image-2/toyota-red.webp');
   });
@@ -575,7 +577,7 @@ describe('Iron Sprue email templates', () => {
       mediaBaseUrl: 'https://media.ironsprue.example.test',
       logoUrl: null,
     });
-    expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/media/iron-sprue/toyota-red.webp');
+    expect(template.html).toContain('https://ironsprue.co.uk/media/iron-sprue/toyota-red.webp');
     expect(template.html).not.toContain('https://media.ironsprue.example.test/toyota-red.webp');
     expect(template.html).not.toContain('http://localhost:3004/media/iron-sprue/toyota-red.webp');
   });
@@ -596,7 +598,7 @@ describe('Iron Sprue email templates', () => {
     expect(template.html).not.toContain('https://media.ironsprue.co.uk/products/is-tas-carton24snapknife');
   });
 
-  it('uses the public media host for apex-domain default email logo assets', () => {
+  it('uses the production apex host for apex-domain default email logo assets', () => {
     const template = buildIronSprueOrderConfirmationEmail(sampleOrder(), {
       siteUrl: 'https://ironsprue.co.uk',
       assetBaseUrl: 'https://ironsprue.co.uk',
@@ -604,8 +606,8 @@ describe('Iron Sprue email templates', () => {
       supportEmail: 'support@example.test',
     });
 
-    expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/brand/iron-sprue-horizontal-email.png');
-    expect(template.html).not.toContain('https://ironsprue.co.uk/brand/iron-sprue-horizontal-email.png');
+    expect(template.html).toContain('https://ironsprue.co.uk/brand/iron-sprue-horizontal-email.png');
+    expect(template.html).not.toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/brand/iron-sprue-horizontal-email.png');
     expect(template.html).not.toContain('https://www.ironsprue.co.uk');
   });
 
@@ -615,7 +617,7 @@ describe('Iron Sprue email templates', () => {
       supportEmail: 'info@ironsprue.co.uk',
       logoUrl: defaultIronSprueEmailLogoUrl('https://www.ironsprue.co.uk/'),
     });
-    expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/brand/iron-sprue-horizontal-email.png');
+    expect(template.html).toContain('https://ironsprue.co.uk/brand/iron-sprue-horizontal-email.png');
     expect(template.html).toContain('alt="Iron Sprue"');
     expect(template.html).not.toContain('IRON <span');
   });
@@ -626,7 +628,7 @@ describe('Iron Sprue email templates', () => {
       supportEmail: 'info@ironsprue.co.uk',
       logoUrl: 'https://media.ironsprue.co.uk/brand/iron-sprue-email-avatar.png',
     });
-    expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/brand/iron-sprue-horizontal-email.png');
+    expect(template.html).toContain('https://ironsprue.co.uk/brand/iron-sprue-horizontal-email.png');
     expect(template.html).not.toContain('https://media.ironsprue.co.uk/brand/iron-sprue-email-avatar.png');
   });
 
