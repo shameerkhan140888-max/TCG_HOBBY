@@ -2773,18 +2773,23 @@ function SpecialOfferForm({
 }
 
 function DiscountCodeForm({ record }: { record?: Awaited<ReturnType<typeof getIronSprueAdminStorefrontControls>>['discountCodes'][number] }) {
-  const fixed = record?.discountType === 'FIXED';
+  const fixed = record?.discountType === 'FIXED' || record?.discountType?.endsWith('_FIXED');
   return (
     <form action={saveIronSprueDiscountCodeAction} className="grid gap-3 rounded-md border border-surface-line bg-surface-ink p-4 md:grid-cols-2">
       <input type="hidden" name="id" value={record?.id ?? ''} />
       <Field label="Code"><input name="code" defaultValue={record?.code ?? ''} required className={fieldClass} placeholder="WELCOME5" /></Field>
       <Field label="Discount type">
         <select name="discountType" defaultValue={record?.discountType ?? 'PERCENT'} className={fieldClass}>
-          <option value="PERCENT">Percentage</option>
-          <option value="FIXED">Fixed amount</option>
+          <option value="PRODUCT_PERCENT">Product percentage</option>
+          <option value="PRODUCT_FIXED">Product fixed amount</option>
+          <option value="DELIVERY_FIXED">Delivery fixed amount</option>
+          <option value="ORDER_PERCENT">Overall percentage</option>
+          <option value="ORDER_FIXED">Overall fixed amount</option>
+          <option value="PERCENT">Legacy percentage</option>
+          <option value="FIXED">Legacy fixed delivery amount</option>
         </select>
       </Field>
-      <Field label={fixed ? 'Amount (£)' : 'Amount (% or £)'}>
+      <Field label={fixed ? 'Amount (£)' : 'Amount (%)'}>
         <input name="amount" type="number" min="0" step="0.01" defaultValue={record ? (fixed ? record.amount / 100 : record.amount) : ''} className={fieldClass} />
       </Field>
       <Field label="Minimum spend (£)">

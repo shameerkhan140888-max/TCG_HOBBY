@@ -80,6 +80,8 @@ type IronSprueResolvedDiscount = {
   id: string;
   code: string;
   discountMinor: number;
+  discountType: string;
+  discountBasis: 'products' | 'delivery' | 'order';
 };
 
 type StripePaymentIntentSnapshot = {
@@ -793,6 +795,7 @@ function normalizeIronSprueDiscountCode(value: string | null | undefined) {
 async function resolveIronSprueDiscount(input: {
   code?: string | null;
   subtotalMinor: number;
+  shippingMinor?: number;
   userId: string | null;
   email: string;
   db: DatabaseClient;
@@ -822,12 +825,25 @@ async function resolveIronSprueDiscount(input: {
     });
     if (existing) throw new Error('Discount code has already been used.');
   }
-  const rawDiscount = record.discountType === 'PERCENT'
-    ? Math.floor((input.subtotalMinor * record.amount) / 100)
+  const shippingMinor = Math.max(Math.trunc(input.shippingMinor ?? 0), 0);
+  const discountType = record.discountType;
+  const discountBasis: IronSprueResolvedDiscount['discountBasis'] = discountType.startsWith('DELIVERY_') || discountType === 'FIXED'
+    ? 'delivery'
+    : discountType.startsWith('ORDER_')
+      ? 'order'
+      : 'products';
+  const capMinor = discountBasis === 'delivery'
+    ? shippingMinor
+    : discountBasis === 'order'
+      ? input.subtotalMinor + shippingMinor
+      : input.subtotalMinor;
+  const percentageBaseMinor = capMinor;
+  const rawDiscount = discountType === 'PERCENT' || discountType === 'PRODUCT_PERCENT' || discountType === 'ORDER_PERCENT'
+    ? Math.floor((percentageBaseMinor * record.amount) / 100)
     : record.amount;
-  const discountMinor = Math.min(Math.max(rawDiscount, 0), input.subtotalMinor);
+  const discountMinor = Math.min(Math.max(rawDiscount, 0), capMinor);
   if (discountMinor <= 0) throw new Error('Discount code does not apply to this basket.');
-  return { id: record.id, code: record.code, discountMinor };
+  return { id: record.id, code: record.code, discountMinor, discountType, discountBasis };
 }
 
 export async function quoteIronSprueCheckout(input: {
@@ -844,14 +860,15 @@ export async function quoteIronSprueCheckout(input: {
   const subtotalMinor = input.cart.subtotalMinor;
   const shippingMethod = getIronSprueShippingMethodByCode(input.shippingMethodCode, country, subtotalMinor);
   if (!shippingMethod) throw new Error('Selected delivery method is not available for this address.');
+  const shippingMinor = calculatePromotionalShippingMinor(shippingMethod, input.cart.items, country, subtotalMinor);
   const discount = await resolveIronSprueDiscount({
     code: input.discountCode ?? null,
     subtotalMinor,
+    shippingMinor,
     userId: input.userId,
     email: input.email ?? '',
     db,
   });
-  const shippingMinor = calculatePromotionalShippingMinor(shippingMethod, input.cart.items, country, subtotalMinor);
   const discountMinor = discount?.discountMinor ?? 0;
   const totalMinor = subtotalMinor + shippingMinor - discountMinor;
   return {
@@ -885,14 +902,15 @@ async function createIronSpruePendingCheckoutOrder(input: CreateIronSprueCheckou
   }
   const shippingMethod = getIronSprueShippingMethodByCode(input.shippingMethodCode, shippingAddress.country, subtotalMinor);
   if (!shippingMethod) throw new Error('Selected delivery method is not available for this address.');
+  const shippingMinor = calculatePromotionalShippingMinor(shippingMethod, input.cart.items, shippingAddress.country, subtotalMinor);
   const discount = await resolveIronSprueDiscount({
     code: input.discountCode ?? null,
     subtotalMinor,
+    shippingMinor,
     userId: input.userId,
     email: shippingAddress.email,
     db,
   });
-  const shippingMinor = calculatePromotionalShippingMinor(shippingMethod, input.cart.items, shippingAddress.country, subtotalMinor);
   const discountMinor = discount?.discountMinor ?? 0;
   const totalMinor = subtotalMinor + shippingMinor - discountMinor;
   const taxMinor = calculateVatEstimateMinor(totalMinor);

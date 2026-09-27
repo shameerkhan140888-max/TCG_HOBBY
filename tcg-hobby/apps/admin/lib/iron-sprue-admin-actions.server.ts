@@ -805,6 +805,7 @@ export async function saveIronSprueSpecialOfferAction(formData: FormData) {
 export async function saveIronSprueDiscountCodeAction(formData: FormData) {
   const actor = await requireIronSprueActor();
   const discountType = stringFromForm(formData.get('discountType')) || 'PERCENT';
+  const fixedAmountDiscount = discountType === 'FIXED' || discountType.endsWith('_FIXED');
   try {
     await upsertIronSprueDiscountCode(
       {
@@ -812,7 +813,7 @@ export async function saveIronSprueDiscountCodeAction(formData: FormData) {
         code: stringFromForm(formData.get('code')),
         enabled: boolFromForm(formData.get('enabled')),
         discountType,
-        amount: discountType === 'FIXED' ? optionalMoneyMinorFromForm(formData.get('amount')) : optionalNumberFromForm(formData.get('amount')),
+        amount: fixedAmountDiscount ? optionalMoneyMinorFromForm(formData.get('amount')) : optionalNumberFromForm(formData.get('amount')),
         expiresAt: optionalDateFromForm(formData.get('expiresAt')),
         minimumSpendMinor: optionalMoneyMinorFromForm(formData.get('minimumSpendMinor')),
         oneUsePerCustomer: boolFromForm(formData.get('oneUsePerCustomer')),

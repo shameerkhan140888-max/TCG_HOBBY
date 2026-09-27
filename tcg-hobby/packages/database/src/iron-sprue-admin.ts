@@ -3171,14 +3171,28 @@ function normalizeDiscountCode(value: string | null | undefined) {
   return (value ?? '').trim().toUpperCase().replace(/\s+/g, '');
 }
 
+const IRON_SPRUE_DISCOUNT_TYPES = new Set([
+  'PERCENT',
+  'FIXED',
+  'PRODUCT_PERCENT',
+  'PRODUCT_FIXED',
+  'DELIVERY_FIXED',
+  'ORDER_PERCENT',
+  'ORDER_FIXED',
+]);
+
+function isPercentageDiscountType(discountType: string) {
+  return discountType === 'PERCENT' || discountType.endsWith('_PERCENT');
+}
+
 export async function upsertIronSprueDiscountCode(input: IronSprueDiscountCodeInput, actor: IronSprueAdminUser, client = getIronSprueAdminPrisma()) {
   const code = normalizeDiscountCode(input.code);
   if (!code) throw new Error('Discount code is required.');
   const discountType = cleanNullable(input.discountType) ?? 'PERCENT';
-  if (!['PERCENT', 'FIXED'].includes(discountType)) throw new Error('Discount type must be PERCENT or FIXED.');
+  if (!IRON_SPRUE_DISCOUNT_TYPES.has(discountType)) throw new Error('Discount type is not valid.');
   const amount = Math.max(0, Math.trunc(input.amount ?? 0));
   if (amount <= 0) throw new Error('Discount amount must be greater than zero.');
-  if (discountType === 'PERCENT' && amount > 100) throw new Error('Percentage discount cannot exceed 100.');
+  if (isPercentageDiscountType(discountType) && amount > 100) throw new Error('Percentage discount cannot exceed 100.');
 
   const data = {
     storeCode: IRON_SPRUE_STORE_CODE,

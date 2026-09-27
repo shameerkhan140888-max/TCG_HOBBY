@@ -10,6 +10,7 @@ import {
   getIronSprueAvailableShippingMethods,
   getIronSprueCustomerOrders,
   processIronSprueStripeWebhookEvent,
+  quoteIronSprueCheckout,
   reconcileIronSpruePaymentIntentCheckout,
   reconcileIronSprueReservedStock,
   refundIronSprueOrderForMerchant,
@@ -561,6 +562,59 @@ describe('Iron Sprue Stripe commerce', () => {
       totalMinor: 6398,
       availableQuantity: 3,
       inStock: true,
+    });
+  });
+
+  it('applies legacy fixed discount codes against delivery rather than product subtotal', async () => {
+    const db = {
+      ironSprueDiscountCode: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'discount-1',
+          code: 'FREEDEL',
+          enabled: true,
+          discountType: 'FIXED',
+          amount: 399,
+          expiresAt: null,
+          minimumSpendMinor: null,
+          oneUsePerCustomer: false,
+        }),
+      },
+    } as any;
+
+    const quote = await quoteIronSprueCheckout({
+      userId: null,
+      cart: {
+        items: [{
+          id: 'line-1',
+          productId: 'product-1',
+          productName: 'Paint brush',
+          productSlug: 'paint-brush',
+          quantity: 1,
+          unitPriceMinor: 69,
+          totalMinor: 69,
+          inStock: true,
+          imageUrl: null,
+          imageAlt: null,
+          imageStorageKey: null,
+        }],
+        subtotalMinor: 69,
+        totalItems: 1,
+        currency: 'GBP',
+      },
+      shippingMethodCode: 'UK_STANDARD',
+      country: 'GB',
+      email: 'customer@example.com',
+      discountCode: 'freedel',
+      db,
+    });
+
+    expect(quote).toMatchObject({
+      subtotalMinor: 69,
+      shippingMinor: 399,
+      discountMinor: 399,
+      discountCode: 'FREEDEL',
+      totalMinor: 69,
+      currency: 'GBP',
     });
   });
 
