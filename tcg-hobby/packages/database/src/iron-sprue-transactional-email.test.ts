@@ -277,7 +277,7 @@ describe('Iron Sprue transactional email sending', () => {
       .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
 
     const body = lastEmailPayload();
-    expect(body.html).toContain('https://media.ironsprue.co.uk/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg');
+    expect(body.html).toContain('https://media.ironsprue.co.uk/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg?emailImage=20260928-raw-media-v3');
     expect(body.html).not.toContain('src="cid:');
     expect(body.attachments).toBeUndefined();
     expect(body.html).not.toContain('/archive/products/is-tas-carton24snapknife/original/old.jpg');
@@ -556,7 +556,7 @@ describe('Iron Sprue email templates', () => {
       siteUrl: 'https://ironsprue.co.uk',
       assetBaseUrl: 'https://ironsprue.co.uk',
     });
-    expect(template.html).toContain('https://media.ironsprue.co.uk/toyota-red.webp');
+    expect(template.html).toContain('https://media.ironsprue.co.uk/toyota-red.webp?emailImage=20260928-raw-media-v3');
     expect(template.html).not.toContain('https://ironsprue.co.uk/media/iron-sprue/toyota-red.webp');
   });
 
@@ -604,7 +604,7 @@ describe('Iron Sprue email templates', () => {
 
     expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/brand/iron-sprue-horizontal-email.png');
     expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/products/aoshima-05628-toyota-2000gt-red');
-    expect(template.html).toContain('https://media.ironsprue.co.uk/products/is-aos-05628/image-2/toyota-red.webp');
+    expect(template.html).toContain('https://media.ironsprue.co.uk/products/is-aos-05628/image-2/toyota-red.webp?emailImage=20260928-raw-media-v3');
     expect(template.html).toContain('https://iron-sprue-storefront-staging.shameerkhan140888.workers.dev/shop');
     expect(template.html).not.toContain('https://staging.ironsprue.co.uk');
   });
@@ -621,7 +621,7 @@ describe('Iron Sprue email templates', () => {
       siteUrl: 'https://ironsprue.co.uk',
       assetBaseUrl: 'https://ironsprue.co.uk',
     });
-    expect(template.html).toContain('https://media.ironsprue.co.uk/products/is-aos-05628/image-2/toyota-red.webp');
+    expect(template.html).toContain('https://media.ironsprue.co.uk/products/is-aos-05628/image-2/toyota-red.webp?emailImage=20260928-raw-media-v3');
     expect(template.html).not.toContain('https://ironsprue.co.uk/media/iron-sprue/products/is-aos-05628/image-2/toyota-red.webp');
     expect(template.html).not.toContain('https://ironsprue.example.test/media/iron-sprue/products/is-aos-05628/image-2/toyota-red.webp');
   });
@@ -640,7 +640,7 @@ describe('Iron Sprue email templates', () => {
       mediaBaseUrl: 'https://media.ironsprue.example.test',
       logoUrl: null,
     });
-    expect(template.html).toContain('https://media.ironsprue.example.test/toyota-red.webp');
+    expect(template.html).toContain('https://media.ironsprue.example.test/toyota-red.webp?emailImage=20260928-raw-media-v3');
     expect(template.html).not.toContain('https://media.ironsprue.co.uk/toyota-red.webp');
     expect(template.html).not.toContain('http://localhost:3004/media/iron-sprue/toyota-red.webp');
   });
@@ -657,7 +657,7 @@ describe('Iron Sprue email templates', () => {
       mediaBaseUrl: 'https://ironsprue.co.uk/media/iron-sprue',
       logoUrl: null,
     });
-    expect(template.html).toContain('https://media.ironsprue.co.uk/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg');
+    expect(template.html).toContain('https://media.ironsprue.co.uk/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg?emailImage=20260928-raw-media-v3');
     expect(template.html).not.toContain('https://ironsprue.co.uk/media/iron-sprue/products/is-tas-carton24snapknife');
   });
 
