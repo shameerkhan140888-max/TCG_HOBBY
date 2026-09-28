@@ -455,6 +455,7 @@ export async function resendIronSprueOrderConfirmationEmail(
 export async function sendIronSprueCancellationEmail(
   orderId: string,
   db: IronSprueEmailDb = getIronSprueEmailPrisma(),
+  options: { allowResend?: boolean } = {},
 ): Promise<IronSprueTransactionalEmailOutcome> {
   const order = await loadOrder(orderId, db);
   if (!order) return { outcome: 'not_found' };
@@ -467,12 +468,21 @@ export async function sendIronSprueCancellationEmail(
     refunded ? IRON_SPRUE_ORDER_REFUND_EMAIL_PURPOSE : IRON_SPRUE_ORDER_CANCELLATION_EMAIL_PURPOSE,
     (emailOrder, config) => buildIronSprueCancellationEmail(emailOrder, config, { refunded }),
     db,
+    options,
   );
+}
+
+export async function resendIronSprueCancellationEmail(
+  orderId: string,
+  db: IronSprueEmailDb = getIronSprueEmailPrisma(),
+): Promise<IronSprueTransactionalEmailOutcome> {
+  return sendIronSprueCancellationEmail(orderId, db, { allowResend: true });
 }
 
 export async function sendIronSprueDispatchEmail(
   orderId: string,
   db: IronSprueEmailDb = getIronSprueEmailPrisma(),
+  options: { allowResend?: boolean } = {},
 ): Promise<IronSprueTransactionalEmailOutcome> {
   const order = await loadOrder(orderId, db);
   if (!order) return { outcome: 'not_found' };
@@ -482,7 +492,15 @@ export async function sendIronSprueDispatchEmail(
     IRON_SPRUE_DISPATCH_EMAIL_PURPOSE,
     buildIronSprueDispatchEmail,
     db,
+    options,
   );
+}
+
+export async function resendIronSprueDispatchEmail(
+  orderId: string,
+  db: IronSprueEmailDb = getIronSprueEmailPrisma(),
+): Promise<IronSprueTransactionalEmailOutcome> {
+  return sendIronSprueDispatchEmail(orderId, db, { allowResend: true });
 }
 
 export async function sendIronSprueCustomerRequestAcknowledgementEmail(

@@ -9,6 +9,8 @@ import {
   createIronSprueManualOrder,
   processIronSprueOrderReturn,
   receiveIronSprueStock,
+  resendIronSprueCancellationEmail,
+  resendIronSprueDispatchEmail,
   resendIronSprueOrderConfirmationEmail,
   resolveIronSprueCustomerOrderRequest,
   sendIronSprueCancellationEmail,
@@ -1038,9 +1040,9 @@ export async function resendIronSprueOrderEmailAction(formData: FormData) {
     if (purpose === 'confirmation') {
       result = await resendIronSprueOrderConfirmationEmail(orderId);
     } else if (purpose === 'dispatch') {
-      result = await sendIronSprueDispatchEmail(orderId);
+      result = await resendIronSprueDispatchEmail(orderId);
     } else if (purpose === 'cancellation') {
-      result = await sendIronSprueCancellationEmail(orderId);
+      result = await resendIronSprueCancellationEmail(orderId);
     } else {
       throw new Error('Unsupported email type.');
     }

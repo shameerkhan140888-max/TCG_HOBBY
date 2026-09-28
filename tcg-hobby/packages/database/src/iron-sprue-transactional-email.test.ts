@@ -17,6 +17,8 @@ import {
   sendIronSprueCustomerRequestAcknowledgementEmail,
   sendIronSprueDispatchEmail,
   sendIronSprueOrderConfirmationEmail,
+  resendIronSprueCancellationEmail,
+  resendIronSprueDispatchEmail,
   resendIronSprueOrderConfirmationEmail,
 } from './iron-sprue-transactional-email.js';
 
@@ -309,6 +311,40 @@ describe('Iron Sprue transactional email sending', () => {
     }));
     const body = lastEmailPayload();
     expect(body.to).toEqual(['corrected@example.test']);
+  });
+
+  it('resends dispatch notifications from admin even when a delivery row already exists', async () => {
+    const sentDb = createDb(sampleOrder({
+      fulfilmentStatus: 'SHIPPED',
+      dispatchedAt: new Date('2026-08-14T14:00:00Z'),
+    }), 'SENT');
+
+    await expect(resendIronSprueDispatchEmail('order-1', sentDb as never))
+      .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
+
+    expect(fetch).toHaveBeenCalledWith('https://api.resend.com/emails', expect.objectContaining({
+      headers: expect.objectContaining({
+        'Idempotency-Key': expect.stringContaining('iron-sprue-order:order-1:dispatch_notification:resend:delivery-1:'),
+      }),
+    }));
+  });
+
+  it('resends cancellation notifications from admin even when a delivery row already exists', async () => {
+    const sentDb = createDb(sampleOrder({
+      status: 'CANCELLED',
+      paymentStatus: 'CANCELED',
+      fulfilmentStatus: 'CANCELLED',
+      cancelledAt: new Date('2026-08-14T14:00:00Z'),
+    }), 'SENT');
+
+    await expect(resendIronSprueCancellationEmail('order-1', sentDb as never))
+      .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
+
+    expect(fetch).toHaveBeenCalledWith('https://api.resend.com/emails', expect.objectContaining({
+      headers: expect.objectContaining({
+        'Idempotency-Key': expect.stringContaining('iron-sprue-order:order-1:order_cancellation:resend:delivery-1:'),
+      }),
+    }));
   });
 
   it('does not send transactional emails to internal face-to-face placeholder recipients', async () => {
