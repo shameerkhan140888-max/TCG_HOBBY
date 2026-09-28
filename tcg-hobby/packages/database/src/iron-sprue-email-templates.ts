@@ -11,6 +11,7 @@ export type IronSprueEmailOrderItem = {
   inlineImageSourceUrl?: string | null;
   inlineImageFilename?: string | null;
   inlineImageContentType?: string | null;
+  inlineImageContent?: string | null;
 };
 
 export type IronSprueEmailOrder = {
@@ -63,11 +64,11 @@ export type IronSprueEmailTemplate = {
 };
 
 export type IronSprueEmailAttachment = {
-  path: string;
+  path?: string;
+  content?: string;
   filename: string;
   content_id: string;
   content_type?: string;
-  content?: string;
 };
 
 type CancellationOptions = {
@@ -217,10 +218,15 @@ function productImageAttachments(order: IronSprueEmailOrder): IronSprueEmailAtta
     if (!sourceUrl || !contentId || seen.has(contentId)) continue;
     seen.add(contentId);
     const attachment: IronSprueEmailAttachment = {
-      path: sourceUrl,
       filename: item.inlineImageFilename?.trim() || `${contentId}.jpg`,
       content_id: contentId,
     };
+    const content = item.inlineImageContent?.trim();
+    if (content) {
+      attachment.content = content;
+    } else {
+      attachment.path = sourceUrl;
+    }
     const contentType = item.inlineImageContentType?.trim();
     if (contentType) attachment.content_type = contentType;
     attachments.push(attachment);

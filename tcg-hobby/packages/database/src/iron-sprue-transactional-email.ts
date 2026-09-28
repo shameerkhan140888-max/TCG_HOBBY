@@ -29,6 +29,8 @@ export const IRON_SPRUE_DISPATCH_EMAIL_PURPOSE = 'DISPATCH_NOTIFICATION';
 export const IRON_SPRUE_CUSTOMER_REQUEST_EMAIL_PURPOSE_PREFIX = 'CUSTOMER_REQUEST';
 
 const STALE_DELIVERY_CLAIM_MS = 10 * 60 * 1000;
+const INLINE_PRODUCT_IMAGE_MAX_BYTES = 4 * 1024 * 1024;
+const INLINE_PRODUCT_IMAGE_TIMEOUT_MS = 5000;
 
 type IronSprueEmailDb = ReturnType<typeof getIronSprueAdminPrisma> | Prisma.TransactionClient;
 
@@ -122,26 +124,58 @@ function inlineImageCid(orderNumber: string, item: IronSprueEmailOrderItem, inde
 }
 
 function inlineProductImagesEnabled() {
-  return clean(process.env.IRON_SPRUE_EMAIL_INLINE_PRODUCT_IMAGES)?.toLowerCase() === 'enabled';
+  return clean(process.env.IRON_SPRUE_EMAIL_INLINE_PRODUCT_IMAGES)?.toLowerCase() !== 'disabled';
 }
 
-function withInlineProductImages(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig): IronSprueEmailOrder {
+async function fetchInlineProductImage(sourceUrl: string, contentType: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), INLINE_PRODUCT_IMAGE_TIMEOUT_MS);
+  try {
+    const response = await fetch(sourceUrl, {
+      signal: controller.signal,
+      headers: { accept: contentType || 'image/*' },
+    });
+    if (!response.ok) return null;
+    const receivedContentType = response.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() || contentType;
+    if (!receivedContentType.startsWith('image/')) return null;
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > INLINE_PRODUCT_IMAGE_MAX_BYTES) return null;
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (!buffer.length || buffer.length > INLINE_PRODUCT_IMAGE_MAX_BYTES) return null;
+    return {
+      content: buffer.toString('base64'),
+      contentType: receivedContentType,
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function withInlineProductImages(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig): Promise<IronSprueEmailOrder> {
   if (!inlineProductImagesEnabled()) return order;
+
+  const items = await Promise.all(order.items.map(async (item, index) => {
+    const sourceUrl = resolveIronSprueEmailImageSrc({ ...item, inlineImageCid: null }, config);
+    if (!sourceUrl || !/^https?:\/\//i.test(sourceUrl)) return item;
+    const cid = inlineImageCid(order.orderNumber, item, index);
+    const fallbackContentType = inlineImageContentType(sourceUrl);
+    const inlineImage = await fetchInlineProductImage(sourceUrl, fallbackContentType);
+    if (!inlineImage) return item;
+    return {
+      ...item,
+      inlineImageCid: cid,
+      inlineImageSourceUrl: sourceUrl,
+      inlineImageFilename: inlineImageFilename(item, sourceUrl),
+      inlineImageContentType: inlineImage.contentType,
+      inlineImageContent: inlineImage.content,
+    };
+  }));
 
   return {
     ...order,
-    items: order.items.map((item, index) => {
-      const sourceUrl = resolveIronSprueEmailImageSrc({ ...item, inlineImageCid: null }, config);
-      if (!sourceUrl || !/^https?:\/\//i.test(sourceUrl)) return item;
-      const cid = inlineImageCid(order.orderNumber, item, index);
-      return {
-        ...item,
-        inlineImageCid: cid,
-        inlineImageSourceUrl: sourceUrl,
-        inlineImageFilename: inlineImageFilename(item, sourceUrl),
-        inlineImageContentType: inlineImageContentType(sourceUrl),
-      };
-    }),
+    items,
   };
 }
 
@@ -383,7 +417,16 @@ async function sendIronSprueEmail(
 
   const config = emailConfig();
   try {
-    const template = build(withInlineProductImages(order, config), config);
+    if (!config.apiKey || !config.from) {
+      await markIronSprueTransactionalEmailFailed(claim.deliveryId, 'PROVIDER_UNCONFIGURED', db);
+      console.warn('iron_sprue_transactional_email_skipped', {
+        orderId,
+        purpose,
+        reason: 'provider_unconfigured',
+      });
+      return { outcome: 'provider_unconfigured' };
+    }
+    const template = build(await withInlineProductImages(order, config), config);
     const result = await sendViaResend(template, recipient, claim.idempotencyKey, config);
     if (result.outcome === 'provider_unconfigured') {
       await markIronSprueTransactionalEmailFailed(claim.deliveryId, 'PROVIDER_UNCONFIGURED', db);
