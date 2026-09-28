@@ -122,7 +122,7 @@ function inlineImageCid(orderNumber: string, item: IronSprueEmailOrderItem, inde
 }
 
 function inlineProductImagesEnabled() {
-  return clean(process.env.IRON_SPRUE_EMAIL_INLINE_PRODUCT_IMAGES)?.toLowerCase() !== 'disabled';
+  return clean(process.env.IRON_SPRUE_EMAIL_INLINE_PRODUCT_IMAGES)?.toLowerCase() === 'enabled';
 }
 
 function withInlineProductImages(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig): IronSprueEmailOrder {
