@@ -29,6 +29,7 @@ export const IRON_SPRUE_DISPATCH_EMAIL_PURPOSE = 'DISPATCH_NOTIFICATION';
 export const IRON_SPRUE_CUSTOMER_REQUEST_EMAIL_PURPOSE_PREFIX = 'CUSTOMER_REQUEST';
 
 const STALE_DELIVERY_CLAIM_MS = 10 * 60 * 1000;
+const EMAIL_PRODUCT_IMAGE_VALIDATE_TIMEOUT_MS = 3000;
 type IronSprueEmailDb = ReturnType<typeof getIronSprueAdminPrisma> | Prisma.TransactionClient;
 
 class IronSprueEmailProviderError extends Error {
@@ -154,9 +155,46 @@ async function withInlineProductImages(order: IronSprueEmailOrder, config: IronS
 
 type EmailOrderItem = NonNullable<Awaited<ReturnType<typeof loadOrder>>>['items'][number];
 
-function currentApprovedEmailImage(item: EmailOrderItem) {
+function isArchivedIronSprueMediaUrl(url: string) {
+  try {
+    const parsed = new URL(url, siteUrl());
+    return parsed.pathname.includes('/media/iron-sprue/archive/');
+  } catch {
+    return url.includes('/media/iron-sprue/archive/');
+  }
+}
+
+async function isReachableEmailImageUrl(url: string) {
+  if (!/^https?:\/\//i.test(url)) return false;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), EMAIL_PRODUCT_IMAGE_VALIDATE_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      method: 'HEAD',
+      headers: { Accept: 'image/*' },
+      signal: controller.signal,
+    });
+    if (!response.ok) return false;
+    const contentType = response.headers.get('content-type')?.toLowerCase();
+    return !contentType || contentType.startsWith('image/');
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function firstReachableEmailImage<T extends { url: string }>(candidates: T[]) {
+  for (const candidate of candidates) {
+    if (await isReachableEmailImageUrl(candidate.url)) return candidate;
+  }
+  return null;
+}
+
+async function currentApprovedEmailImage(item: EmailOrderItem) {
   const storefrontBaseUrl = siteUrl();
-  const preferred = [...(item.product?.mediaAssets ?? [])]
+  const candidates = [...(item.product?.mediaAssets ?? [])]
     .filter((asset) => asset.approvalState === 'APPROVED' && isIronSprueOperationalMediaRole(asset.role) && isIronSprueDisplayableImageAsset(asset))
     .map((asset) => ({
       asset,
@@ -175,20 +213,23 @@ function currentApprovedEmailImage(item: EmailOrderItem) {
         || Number(right.asset.isPrimary) - Number(left.asset.isPrimary)
         || left.asset.sortOrder - right.asset.sortOrder
         || left.asset.id.localeCompare(right.asset.id);
-    })[0];
+    });
+
+  const currentCandidates = candidates.filter((candidate) => !isArchivedIronSprueMediaUrl(candidate.url));
+  const archivedCandidates = candidates.filter((candidate) => isArchivedIronSprueMediaUrl(candidate.url));
+  const preferred = await firstReachableEmailImage([...currentCandidates, ...archivedCandidates]);
 
   return preferred
     ? {
       imageUrl: preferred.url,
       imageAlt: preferred.asset.altText?.trim() || item.imageAlt || item.productName,
     }
-    : {
-      imageUrl: item.imageUrl,
-      imageAlt: item.imageAlt,
-    };
+    : item.imageUrl && !isArchivedIronSprueMediaUrl(item.imageUrl) && await isReachableEmailImageUrl(item.imageUrl)
+      ? { imageUrl: item.imageUrl, imageAlt: item.imageAlt }
+      : { imageUrl: null, imageAlt: item.imageAlt };
 }
 
-function mapEmailOrder(order: Awaited<ReturnType<typeof loadOrder>>): IronSprueEmailOrder | null {
+async function mapEmailOrder(order: Awaited<ReturnType<typeof loadOrder>>): Promise<IronSprueEmailOrder | null> {
   if (!order) return null;
   return {
     orderNumber: order.orderNumber,
@@ -221,8 +262,8 @@ function mapEmailOrder(order: Awaited<ReturnType<typeof loadOrder>>): IronSprueE
         restock: line.restock,
       })),
     })),
-    items: order.items.map((item) => {
-      const image = currentApprovedEmailImage(item);
+    items: await Promise.all(order.items.map(async (item) => {
+      const image = await currentApprovedEmailImage(item);
       return {
         productName: item.productName,
         productSlug: item.productSlug,
@@ -233,7 +274,7 @@ function mapEmailOrder(order: Awaited<ReturnType<typeof loadOrder>>): IronSprueE
         imageUrl: image.imageUrl,
         imageAlt: image.imageAlt,
       };
-    }),
+    })),
   };
 }
 
@@ -381,9 +422,8 @@ async function sendIronSprueEmail(
   options: { allowResend?: boolean } = {},
 ): Promise<IronSprueTransactionalEmailOutcome> {
   const orderRecord = await loadOrder(orderId, db);
-  const order = mapEmailOrder(orderRecord);
-  if (!order) return { outcome: 'not_found' };
-  const recipient = clean(order.shippingEmail);
+  if (!orderRecord) return { outcome: 'not_found' };
+  const recipient = clean(orderRecord.shippingEmail);
   if (!recipient || !isSendableCustomerEmail(recipient)) return { outcome: 'missing_recipient' };
 
   const claim = await claimIronSprueTransactionalEmail(orderId, purpose, db, options);
@@ -400,6 +440,8 @@ async function sendIronSprueEmail(
       });
       return { outcome: 'provider_unconfigured' };
     }
+    const order = await mapEmailOrder(orderRecord);
+    if (!order) return { outcome: 'not_found' };
     const template = build(await withInlineProductImages(order, config), config);
     const result = await sendViaResend(template, recipient, claim.idempotencyKey, config).catch(async (error) => {
       if (!template.attachments?.length) throw error;

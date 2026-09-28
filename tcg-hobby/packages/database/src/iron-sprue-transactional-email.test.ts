@@ -180,6 +180,12 @@ describe('Iron Sprue transactional email sending', () => {
     vi.stubEnv('ORDER_EMAIL_FROM', 'TCG Hobby <orders@tcg.example.test>');
     vi.stubGlobal('fetch', vi.fn(async (input: unknown) => {
       const url = String(input);
+      if (url.startsWith('https://media.example.test/') || url.startsWith('https://ironsprue.co.uk/media/iron-sprue/')) {
+        return new Response(null, {
+          status: url.includes('/missing/') || url.includes('/dead.') ? 404 : 200,
+          headers: { 'content-type': url.endsWith('.png') ? 'image/png' : 'image/jpeg' },
+        });
+      }
       if (url === 'https://api.resend.com/emails') {
         return new Response(JSON.stringify({ id: 'resend-1' }), {
           status: 200,
@@ -237,6 +243,12 @@ describe('Iron Sprue transactional email sending', () => {
     vi.stubEnv('IRON_SPRUE_EMAIL_INLINE_PRODUCT_IMAGES', 'enabled');
     vi.mocked(fetch).mockImplementation(async (input: unknown) => {
       const url = String(input);
+      if (url.startsWith('https://media.example.test/')) {
+        return new Response(null, {
+          status: 200,
+          headers: { 'content-type': url.endsWith('.png') ? 'image/png' : 'image/jpeg' },
+        });
+      }
       if (url !== 'https://api.resend.com/emails') {
         throw new Error(`Unexpected fetch: ${url}`);
       }
@@ -324,6 +336,92 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.attachments).toBeUndefined();
     expect(body.html).not.toContain('/archive/products/is-tas-carton24snapknife/original/old.jpg');
     expect(body.html).not.toContain('iron-sprue-storefront-staging.shameerkhan140888.workers.dev');
+  });
+
+  it('skips dead approved catalogue images and uses the next reachable approved product image', async () => {
+    vi.stubEnv('IRON_SPRUE_SITE_URL', 'https://ironsprue.co.uk');
+    const order = sampleOrder({
+      items: [
+        {
+          ...sampleOrder().items[0]!,
+          imageUrl: '/media/iron-sprue/archive/products/is-tas-carton24snapknife/original/old.jpg',
+          imageAlt: 'Old archived snapshot',
+          product: {
+            mediaAssets: [
+              {
+                id: 'media-dead',
+                role: 'catalogue-primary',
+                url: '/media/iron-sprue/products/is-tas-carton24snapknife/missing/dead.jpg',
+                storageKey: 'products/is-tas-carton24snapknife/missing/dead.jpg',
+                altText: 'Dead catalogue image',
+                mimeType: 'image/jpeg',
+                approvalState: 'APPROVED',
+                isPrimary: true,
+                sortOrder: 0,
+              },
+              {
+                id: 'media-live',
+                role: 'manufacturer-original',
+                url: '/media/iron-sprue/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg',
+                storageKey: 'products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg',
+                altText: 'Reachable manufacturer image',
+                mimeType: 'image/jpeg',
+                approvalState: 'APPROVED',
+                isPrimary: false,
+                sortOrder: 1,
+              },
+            ],
+          },
+        } as TestOrder['items'][number],
+      ],
+    });
+    const db = createDb(order);
+
+    await expect(sendIronSprueOrderConfirmationEmail('order-1', db as never))
+      .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
+
+    const body = lastEmailPayload();
+    expect(body.html).toContain('src="https://ironsprue.co.uk/media/iron-sprue/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg"');
+    expect(body.html).not.toContain('/media/iron-sprue/products/is-tas-carton24snapknife/missing/dead.jpg');
+    expect(body.html).not.toContain('/archive/products/is-tas-carton24snapknife/original/old.jpg');
+  });
+
+  it('does not render a broken product image when no approved image URL is reachable', async () => {
+    vi.stubEnv('IRON_SPRUE_SITE_URL', 'https://ironsprue.co.uk');
+    const order = sampleOrder({
+      items: [
+        {
+          ...sampleOrder().items[0]!,
+          imageUrl: '/media/iron-sprue/archive/products/is-tas-carton24snapknife/original/old.jpg',
+          imageAlt: 'Old archived snapshot',
+          product: {
+            mediaAssets: [
+              {
+                id: 'media-dead',
+                role: 'catalogue-primary',
+                url: '/media/iron-sprue/products/is-tas-carton24snapknife/missing/dead.jpg',
+                storageKey: 'products/is-tas-carton24snapknife/missing/dead.jpg',
+                altText: 'Dead catalogue image',
+                mimeType: 'image/jpeg',
+                approvalState: 'APPROVED',
+                isPrimary: true,
+                sortOrder: 0,
+              },
+            ],
+          },
+        } as TestOrder['items'][number],
+      ],
+    });
+    const db = createDb(order);
+
+    await expect(sendIronSprueOrderConfirmationEmail('order-1', db as never))
+      .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
+
+    const body = lastEmailPayload();
+    expect(body.html).not.toContain('<img class="thumb"');
+    expect(body.html).toContain('<span class="thumbFallback">Iron Sprue</span>');
+    expect(body.html).not.toContain('/media/iron-sprue/products/is-tas-carton24snapknife/missing/dead.jpg');
+    expect(body.html).not.toContain('/archive/products/is-tas-carton24snapknife/original/old.jpg');
   });
 
   it('does not send confirmations for unpaid orders or already-sent deliveries', async () => {
