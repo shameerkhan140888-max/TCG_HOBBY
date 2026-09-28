@@ -394,7 +394,19 @@ async function sendIronSprueEmail(
       return { outcome: 'provider_unconfigured' };
     }
     const template = build(await withInlineProductImages(order, config), config);
-    const result = await sendViaResend(template, recipient, claim.idempotencyKey, config);
+    const result = await sendViaResend(template, recipient, claim.idempotencyKey, config).catch(async (error) => {
+      if (!template.attachments?.length) throw error;
+      console.warn('iron_sprue_transactional_email_inline_images_retrying_without_attachments', {
+        orderId,
+        deliveryId: claim.deliveryId,
+        purpose,
+      });
+      const fallbackTemplate = build(order, config);
+      return sendViaResend(fallbackTemplate, recipient, `${claim.idempotencyKey}:remote-images`, config)
+        .catch(() => {
+          throw error;
+        });
+    });
     if (result.outcome === 'provider_unconfigured') {
       await markIronSprueTransactionalEmailFailed(claim.deliveryId, 'PROVIDER_UNCONFIGURED', db);
       console.warn('iron_sprue_transactional_email_skipped', {

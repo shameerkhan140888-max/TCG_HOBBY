@@ -222,7 +222,6 @@ describe('Iron Sprue transactional email sending', () => {
         filename: 'toyota.png',
         content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
         contentId: 'iron-sprue-product-is-20260814-test-is-aos-05628',
-        inline_content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
         content_type: 'image/png',
         contentType: 'image/png',
       }),
@@ -240,6 +239,48 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.html).not.toContain('iron-sprue-storefront-staging.shameerkhan140888.workers.dev');
     expect(db.ironSprueTransactionalEmailDelivery.update).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: 'SENT' }),
+    }));
+  });
+
+  it('falls back to public product image URLs if the provider rejects inline image attachments', async () => {
+    vi.mocked(fetch).mockImplementation(async (input: unknown) => {
+      const url = String(input);
+      if (url !== 'https://api.resend.com/emails') {
+        throw new Error(`Unexpected fetch: ${url}`);
+      }
+      const resendCalls = vi.mocked(fetch).mock.calls.filter(([calledUrl]) => String(calledUrl) === url).length;
+      if (resendCalls === 1) {
+        return new Response(JSON.stringify({ message: 'Invalid attachment' }), {
+          status: 400,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ id: 'resend-fallback' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    });
+
+    const db = createDb();
+    await expect(sendIronSprueOrderConfirmationEmail('order-1', db as never))
+      .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
+
+    const resendCalls = vi.mocked(fetch).mock.calls.filter(([url]) => String(url) === 'https://api.resend.com/emails');
+    expect(resendCalls).toHaveLength(2);
+    const firstBody = JSON.parse(String(resendCalls[0]![1]?.body));
+    const fallbackBody = JSON.parse(String(resendCalls[1]![1]?.body));
+    expect(firstBody.html).toContain('src="cid:iron-sprue-product-is-20260814-test-is-aos-05628"');
+    expect(firstBody.attachments).toEqual([
+      expect.objectContaining({
+        path: 'https://media.example.test/toyota.png',
+        content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
+      }),
+    ]);
+    expect(fallbackBody.html).toContain('src="https://media.example.test/toyota.png"');
+    expect(fallbackBody.html).not.toContain('src="cid:iron-sprue-product-is-20260814-test-is-aos-05628"');
+    expect(fallbackBody.attachments).toBeUndefined();
+    expect(db.ironSprueTransactionalEmailDelivery.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: 'SENT', providerMessageId: 'resend-fallback' }),
     }));
   });
 
@@ -294,7 +335,6 @@ describe('Iron Sprue transactional email sending', () => {
         filename: 'tasma-manufacturer-cb0f330a6941.jpg',
         content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
         contentId: 'iron-sprue-product-is-20260814-test-is-aos-05628',
-        inline_content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
         content_type: 'image/jpeg',
         contentType: 'image/jpeg',
       }),
@@ -387,7 +427,6 @@ describe('Iron Sprue transactional email sending', () => {
         filename: 'toyota.png',
         content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
         contentId: 'iron-sprue-product-is-20260814-test-is-aos-05628',
-        inline_content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
         content_type: 'image/png',
         contentType: 'image/png',
       }),
@@ -639,7 +678,6 @@ describe('Iron Sprue email templates', () => {
         filename: 'toyota-red.webp',
         content_id: 'iron-sprue-product-test',
         contentId: 'iron-sprue-product-test',
-        inline_content_id: 'iron-sprue-product-test',
         content_type: 'image/webp',
         contentType: 'image/webp',
       },
