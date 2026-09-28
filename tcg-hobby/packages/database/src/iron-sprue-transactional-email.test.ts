@@ -186,10 +186,7 @@ describe('Iron Sprue transactional email sending', () => {
           headers: { 'content-type': 'application/json' },
         });
       }
-      return new Response(new Uint8Array([1, 2, 3, 4]), {
-        status: 200,
-        headers: { 'content-type': url.endsWith('.png') ? 'image/png' : 'image/jpeg' },
-      });
+      throw new Error(`Unexpected fetch: ${url}`);
     }));
   });
 
@@ -221,10 +218,11 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.html).not.toContain('https://media.example.test/toyota.png');
     expect(body.attachments).toEqual([
       expect.objectContaining({
-        content: 'AQIDBA==',
+        path: 'https://media.example.test/toyota.png',
         filename: 'toyota.png',
         content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
         contentId: 'iron-sprue-product-is-20260814-test-is-aos-05628',
+        inline_content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
         content_type: 'image/png',
         contentType: 'image/png',
       }),
@@ -288,18 +286,15 @@ describe('Iron Sprue transactional email sending', () => {
       .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
 
     const body = lastEmailPayload();
-    expect(fetch).toHaveBeenCalledWith(
-      'https://ironsprue.co.uk/media/iron-sprue/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg',
-      expect.objectContaining({ headers: expect.objectContaining({ accept: 'image/jpeg' }) }),
-    );
     expect(body.html).toContain('src="cid:iron-sprue-product-is-20260814-test-is-aos-05628"');
     expect(body.html).not.toContain('https://ironsprue.co.uk/media/iron-sprue/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg');
     expect(body.attachments).toEqual([
       expect.objectContaining({
-        content: 'AQIDBA==',
+        path: 'https://ironsprue.co.uk/media/iron-sprue/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg',
         filename: 'tasma-manufacturer-cb0f330a6941.jpg',
         content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
         contentId: 'iron-sprue-product-is-20260814-test-is-aos-05628',
+        inline_content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
         content_type: 'image/jpeg',
         contentType: 'image/jpeg',
       }),
@@ -388,10 +383,11 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.html).toContain('src="cid:iron-sprue-product-is-20260814-test-is-aos-05628"');
     expect(body.attachments).toEqual([
       expect.objectContaining({
-        content: 'AQIDBA==',
+        path: 'https://media.example.test/toyota.png',
         filename: 'toyota.png',
         content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
         contentId: 'iron-sprue-product-is-20260814-test-is-aos-05628',
+        inline_content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
         content_type: 'image/png',
         contentType: 'image/png',
       }),
@@ -643,6 +639,7 @@ describe('Iron Sprue email templates', () => {
         filename: 'toyota-red.webp',
         content_id: 'iron-sprue-product-test',
         contentId: 'iron-sprue-product-test',
+        inline_content_id: 'iron-sprue-product-test',
         content_type: 'image/webp',
         contentType: 'image/webp',
       },

@@ -29,9 +29,6 @@ export const IRON_SPRUE_DISPATCH_EMAIL_PURPOSE = 'DISPATCH_NOTIFICATION';
 export const IRON_SPRUE_CUSTOMER_REQUEST_EMAIL_PURPOSE_PREFIX = 'CUSTOMER_REQUEST';
 
 const STALE_DELIVERY_CLAIM_MS = 10 * 60 * 1000;
-const INLINE_PRODUCT_IMAGE_MAX_BYTES = 4 * 1024 * 1024;
-const INLINE_PRODUCT_IMAGE_TIMEOUT_MS = 5000;
-
 type IronSprueEmailDb = ReturnType<typeof getIronSprueAdminPrisma> | Prisma.TransactionClient;
 
 export type IronSprueTransactionalEmailClaim =
@@ -127,51 +124,21 @@ function inlineProductImagesEnabled() {
   return clean(process.env.IRON_SPRUE_EMAIL_INLINE_PRODUCT_IMAGES)?.toLowerCase() !== 'disabled';
 }
 
-async function fetchInlineProductImage(sourceUrl: string, contentType: string) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), INLINE_PRODUCT_IMAGE_TIMEOUT_MS);
-  try {
-    const response = await fetch(sourceUrl, {
-      signal: controller.signal,
-      headers: { accept: contentType || 'image/*' },
-    });
-    if (!response.ok) return null;
-    const receivedContentType = response.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() || contentType;
-    if (!receivedContentType.startsWith('image/')) return null;
-    const contentLength = Number(response.headers.get('content-length') || 0);
-    if (contentLength > INLINE_PRODUCT_IMAGE_MAX_BYTES) return null;
-    const buffer = Buffer.from(await response.arrayBuffer());
-    if (!buffer.length || buffer.length > INLINE_PRODUCT_IMAGE_MAX_BYTES) return null;
-    return {
-      content: buffer.toString('base64'),
-      contentType: receivedContentType,
-    };
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 async function withInlineProductImages(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig): Promise<IronSprueEmailOrder> {
   if (!inlineProductImagesEnabled()) return order;
 
-  const items = await Promise.all(order.items.map(async (item, index) => {
+  const items = order.items.map((item, index) => {
     const sourceUrl = resolveIronSprueEmailImageSrc({ ...item, inlineImageCid: null }, config);
     if (!sourceUrl || !/^https?:\/\//i.test(sourceUrl)) return item;
     const cid = inlineImageCid(order.orderNumber, item, index);
-    const fallbackContentType = inlineImageContentType(sourceUrl);
-    const inlineImage = await fetchInlineProductImage(sourceUrl, fallbackContentType);
-    if (!inlineImage) return item;
     return {
       ...item,
       inlineImageCid: cid,
       inlineImageSourceUrl: sourceUrl,
       inlineImageFilename: inlineImageFilename(item, sourceUrl),
-      inlineImageContentType: inlineImage.contentType,
-      inlineImageContent: inlineImage.content,
+      inlineImageContentType: inlineImageContentType(sourceUrl),
     };
-  }));
+  });
 
   return {
     ...order,

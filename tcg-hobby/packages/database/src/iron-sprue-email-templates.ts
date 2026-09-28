@@ -69,6 +69,7 @@ export type IronSprueEmailAttachment = {
   filename: string;
   content_id: string;
   contentId: string;
+  inline_content_id: string;
   content_type?: string;
   contentType?: string;
 };
@@ -223,6 +224,7 @@ function productImageAttachments(order: IronSprueEmailOrder): IronSprueEmailAtta
       filename: item.inlineImageFilename?.trim() || `${contentId}.jpg`,
       content_id: contentId,
       contentId,
+      inline_content_id: contentId,
     };
     const content = item.inlineImageContent?.trim();
     if (content) {
