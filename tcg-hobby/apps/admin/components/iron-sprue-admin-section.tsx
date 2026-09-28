@@ -3025,6 +3025,15 @@ function cancellationActionLabel(order: IronSprueAdminOrder) {
   return order.paymentStatus === 'SUCCEEDED' ? 'Refund and cancel order' : 'Cancel checkout attempt';
 }
 
+function emailPurposeLabel(purpose: string) {
+  if (purpose === 'ORDER_CONFIRMATION') return 'Confirmation';
+  if (purpose === 'DISPATCH_NOTIFICATION') return 'Dispatch';
+  if (purpose === 'ORDER_CANCELLATION') return 'Cancellation/refund';
+  if (purpose === 'ORDER_REFUND') return 'Refund';
+  if (purpose.startsWith('CUSTOMER_REQUEST')) return 'Customer request';
+  return purpose.replaceAll('_', ' ').toLowerCase();
+}
+
 function ManualOrderForm({ products }: { products: Awaited<ReturnType<typeof listIronSprueAdminProducts>>['products'] }) {
   return (
     <AdminDisclosure summary="Create manual / offline order">
@@ -3258,6 +3267,25 @@ async function OrdersSection({ searchParams }: { searchParams?: SearchParams }) 
                       <Button type="submit" size="sm" variant="outline">Cancellation/refund email</Button>
                     </form>
                   </div>
+                  {order.transactionalEmailDeliveries.length ? (
+                    <div className="mt-3 grid gap-2">
+                      {order.transactionalEmailDeliveries.map((delivery) => (
+                        <div key={delivery.id} className="rounded-md border border-surface-line bg-black/30 p-2 text-xs text-neutral-400">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-bold text-neutral-100">{emailPurposeLabel(delivery.purpose)}</span>
+                            <StatePill>{delivery.status}</StatePill>
+                            <span>Attempts: {delivery.attempts}</span>
+                            <span>Updated: {date(delivery.updatedAt)}</span>
+                            {delivery.sentAt ? <span>Sent: {date(delivery.sentAt)}</span> : null}
+                          </div>
+                          {delivery.providerMessageId ? <p className="mt-1 break-all">Provider message: {delivery.providerMessageId}</p> : null}
+                          {delivery.lastErrorCode ? <p className="mt-1 break-all text-red-200">Last error: {delivery.lastErrorCode}</p> : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-xs text-neutral-500">No transactional email attempts have been recorded for this order yet.</p>
+                  )}
                 </div>
 
                 {order.returns.length ? (

@@ -31,6 +31,12 @@ export const IRON_SPRUE_CUSTOMER_REQUEST_EMAIL_PURPOSE_PREFIX = 'CUSTOMER_REQUES
 const STALE_DELIVERY_CLAIM_MS = 10 * 60 * 1000;
 type IronSprueEmailDb = ReturnType<typeof getIronSprueAdminPrisma> | Prisma.TransactionClient;
 
+class IronSprueEmailProviderError extends Error {
+  constructor(readonly safeCode: string) {
+    super(safeCode);
+  }
+}
+
 export type IronSprueTransactionalEmailClaim =
   | { outcome: 'claimed'; deliveryId: string; idempotencyKey: string }
   | { outcome: 'sent' | 'in_progress'; deliveryId: string; idempotencyKey: string };
@@ -121,7 +127,7 @@ function inlineImageCid(orderNumber: string, item: IronSprueEmailOrderItem, inde
 }
 
 function inlineProductImagesEnabled() {
-  return clean(process.env.IRON_SPRUE_EMAIL_INLINE_PRODUCT_IMAGES)?.toLowerCase() !== 'disabled';
+  return clean(process.env.IRON_SPRUE_EMAIL_INLINE_PRODUCT_IMAGES)?.toLowerCase() === 'enabled';
 }
 
 async function withInlineProductImages(order: IronSprueEmailOrder, config: IronSprueEmailTemplateConfig): Promise<IronSprueEmailOrder> {
@@ -361,7 +367,8 @@ async function sendViaResend(
 
   const payload = await response.json().catch(() => ({})) as { id?: string; message?: string };
   if (!response.ok || !payload.id) {
-    throw new Error(payload.message || 'PROVIDER_REJECTED');
+    const message = clean(payload.message);
+    throw new IronSprueEmailProviderError(message ? `PROVIDER_REJECTED: ${message}` : 'PROVIDER_REJECTED');
   }
   return { outcome: 'sent' as const, providerMessageId: payload.id };
 }
@@ -425,9 +432,11 @@ async function sendIronSprueEmail(
     });
     return { outcome: 'sent', deliveryId: claim.deliveryId };
   } catch (error) {
-    const errorCode = error instanceof Error && /^[A-Z0-9_]+$/.test(error.message)
-      ? error.message
-      : 'PROVIDER_REQUEST_FAILED';
+    const errorCode = error instanceof IronSprueEmailProviderError
+      ? error.safeCode
+      : error instanceof Error && /^[A-Z0-9_]+$/.test(error.message)
+        ? error.message
+        : 'PROVIDER_REQUEST_FAILED';
     await markIronSprueTransactionalEmailFailed(claim.deliveryId, errorCode, db);
     console.error('iron_sprue_transactional_email_failed', {
       orderId,

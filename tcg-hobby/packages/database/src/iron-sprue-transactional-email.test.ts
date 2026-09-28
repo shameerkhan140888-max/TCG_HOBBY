@@ -214,18 +214,9 @@ describe('Iron Sprue transactional email sending', () => {
     expect(body.html).toContain('VAT included');
     expect(body.html).toContain('https://ironsprue.co.uk/brand/iron-sprue-horizontal-email.png');
     expect(body.html).not.toContain('https://media.ironsprue.co.uk/brand/iron-sprue-email-avatar.png');
-    expect(body.html).toContain('src="cid:iron-sprue-product-is-20260814-test-is-aos-05628"');
-    expect(body.html).not.toContain('https://media.example.test/toyota.png');
-    expect(body.attachments).toEqual([
-      expect.objectContaining({
-        path: 'https://media.example.test/toyota.png',
-        filename: 'toyota.png',
-        content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
-        contentId: 'iron-sprue-product-is-20260814-test-is-aos-05628',
-        content_type: 'image/png',
-        contentType: 'image/png',
-      }),
-    ]);
+    expect(body.html).toContain('src="https://media.example.test/toyota.png"');
+    expect(body.html).not.toContain('src="cid:iron-sprue-product-is-20260814-test-is-aos-05628"');
+    expect(body.attachments).toBeUndefined();
     expect(body.html).toContain('width="72" height="72"');
     expect(body.html).toContain('alt="" role="presentation"');
     expect(body.html).toContain('<span class="itemMeasureLabel">Qty</span>');
@@ -243,6 +234,7 @@ describe('Iron Sprue transactional email sending', () => {
   });
 
   it('falls back to public product image URLs if the provider rejects inline image attachments', async () => {
+    vi.stubEnv('IRON_SPRUE_EMAIL_INLINE_PRODUCT_IMAGES', 'enabled');
     vi.mocked(fetch).mockImplementation(async (input: unknown) => {
       const url = String(input);
       if (url !== 'https://api.resend.com/emails') {
@@ -327,18 +319,9 @@ describe('Iron Sprue transactional email sending', () => {
       .resolves.toEqual({ outcome: 'sent', deliveryId: 'delivery-1' });
 
     const body = lastEmailPayload();
-    expect(body.html).toContain('src="cid:iron-sprue-product-is-20260814-test-is-aos-05628"');
-    expect(body.html).not.toContain('https://ironsprue.co.uk/media/iron-sprue/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg');
-    expect(body.attachments).toEqual([
-      expect.objectContaining({
-        path: 'https://ironsprue.co.uk/media/iron-sprue/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg',
-        filename: 'tasma-manufacturer-cb0f330a6941.jpg',
-        content_id: 'iron-sprue-product-is-20260814-test-is-aos-05628',
-        contentId: 'iron-sprue-product-is-20260814-test-is-aos-05628',
-        content_type: 'image/jpeg',
-        contentType: 'image/jpeg',
-      }),
-    ]);
+    expect(body.html).toContain('src="https://ironsprue.co.uk/media/iron-sprue/products/is-tas-carton24snapknife/organized-2026-09-14/manufacturer/tasma-manufacturer-cb0f330a6941.jpg"');
+    expect(body.html).not.toContain('src="cid:iron-sprue-product-is-20260814-test-is-aos-05628"');
+    expect(body.attachments).toBeUndefined();
     expect(body.html).not.toContain('/archive/products/is-tas-carton24snapknife/original/old.jpg');
     expect(body.html).not.toContain('iron-sprue-storefront-staging.shameerkhan140888.workers.dev');
   });
@@ -413,7 +396,8 @@ describe('Iron Sprue transactional email sending', () => {
     expect(db.ironSprueTransactionalEmailDelivery.upsert).not.toHaveBeenCalled();
   });
 
-  it('embeds product images inline by default', async () => {
+  it('embeds product images inline only when explicitly enabled', async () => {
+    vi.stubEnv('IRON_SPRUE_EMAIL_INLINE_PRODUCT_IMAGES', 'enabled');
     const db = createDb();
 
     await expect(sendIronSprueOrderConfirmationEmail('order-1', db as never))
@@ -614,7 +598,7 @@ describe('Iron Sprue transactional email sending', () => {
     await expect(sendIronSprueOrderConfirmationEmail('order-1', db as never))
       .resolves.toEqual({ outcome: 'failed' });
     expect(db.ironSprueTransactionalEmailDelivery.update).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ status: 'FAILED', lastErrorCode: 'RATE_LIMITED' }),
+      data: expect.objectContaining({ status: 'FAILED', lastErrorCode: 'PROVIDER_REJECTED: RATE_LIMITED' }),
     }));
   });
 });

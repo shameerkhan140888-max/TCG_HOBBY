@@ -813,6 +813,9 @@ describe('Iron Sprue dedicated Admin foundation', () => {
         storeCode: 'IRON_SPRUE',
         paymentStatus: { not: 'REQUIRES_PAYMENT' },
       }),
+      include: expect.objectContaining({
+        transactionalEmailDeliveries: { orderBy: { updatedAt: 'desc' } },
+      }),
     }));
   });
 

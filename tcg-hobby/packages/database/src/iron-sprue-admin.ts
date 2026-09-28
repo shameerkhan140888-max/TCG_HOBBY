@@ -1557,6 +1557,7 @@ export async function listIronSprueAdminOrders(filters: { search?: string } = {}
         include: { lines: { include: { orderItem: true } } },
       },
       customerRequests: { orderBy: { createdAt: 'desc' } },
+      transactionalEmailDeliveries: { orderBy: { updatedAt: 'desc' } },
     },
   });
 }
