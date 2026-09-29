@@ -14,10 +14,23 @@ const securityHeaders = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
 ];
 
+const immutableAssetHeaders = [
+  { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+];
+
+const publicAssetHeaders = [
+  { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
-    return [{ source: '/(.*)', headers: securityHeaders }];
+    return [
+      { source: '/_next/static/:path*', headers: immutableAssetHeaders },
+      { source: '/assets/:path*', headers: publicAssetHeaders },
+      { source: '/brand/:path*', headers: publicAssetHeaders },
+      { source: '/(.*)', headers: securityHeaders },
+    ];
   },
 };
 
