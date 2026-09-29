@@ -16,21 +16,8 @@ describe('Iron Sprue Cloudflare production headers', () => {
     expect(csp).toContain("img-src 'self' data: https:");
   });
 
-  it('sets one canonical cache policy for safe public storefront assets', async () => {
+  it('keeps static asset cache policy out of the dynamic Next header layer', async () => {
     const headers = await nextConfig.headers?.();
-    expect(headers).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        source: '/_next/static/:path*',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-      }),
-      expect.objectContaining({
-        source: '/assets/:path*',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
-      }),
-      expect.objectContaining({
-        source: '/brand/:path*',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
-      }),
-    ]));
+    expect(headers?.map((entry) => entry.source)).toEqual(['/(.*)']);
   });
 });
