@@ -9,6 +9,7 @@ const securityHeaders = [
     value: `default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'${developmentScriptPolicy} https://js.stripe.com https://www.googletagmanager.com https://connect.facebook.net; frame-src https://js.stripe.com https://hooks.stripe.com; font-src 'self'; connect-src 'self' ${railwayProductionApiOrigin} https://api.stripe.com https://r.stripe.com https://m.stripe.network https://q.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.facebook.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
   },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
