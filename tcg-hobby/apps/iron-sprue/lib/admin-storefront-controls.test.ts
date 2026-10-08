@@ -12,6 +12,7 @@ import {
   promoPanelsFromPlacements,
   productsFromFeaturedPlacements,
   publicIronSprueMediaUrl,
+  toIronSprueSearchSuggestionProducts,
 } from './admin-storefront-controls';
 
 describe('Iron Sprue Admin storefront controls', () => {
@@ -244,6 +245,47 @@ describe('Iron Sprue Admin storefront controls', () => {
     ]);
 
     vi.unstubAllEnvs();
+  });
+
+  it('projects a compact search suggestion payload instead of full catalogue records', () => {
+    const [suggestion] = toIronSprueSearchSuggestionProducts([
+      {
+        sku: 'IS-AOS-05628',
+        slug: 'aoshima-05628-toyota-2000gt-red',
+        name: 'Toyota 2000GT Red',
+        customerTitle: 'Aoshima 1:32 Toyota 2000GT Red Model Kit',
+        brand: 'Aoshima',
+        category: 'Model Kits',
+        productType: 'Plastic model kit',
+        storeCode: 'IRON_SPRUE',
+        priceMinor: 1999,
+        retailPriceMinor: 1899,
+        stockQuantity: 2,
+        availableQuantity: 2,
+        reorderLevel: 1,
+        published: true,
+        shortDescription: 'Toyota model kit.',
+        description: 'Long product description that should not be serialised into the header search payload.',
+        features: ['1:32 scale', 'Snap kit'],
+        specifications: { scale: '1:32', manufacturerReference: '05628' },
+        imageUrl: '/media/iron-sprue/products/is-aos-05628/image-2/catalogue.webp',
+      },
+    ] as any[]);
+
+    expect(suggestion).toEqual({
+      sku: 'IS-AOS-05628',
+      slug: 'aoshima-05628-toyota-2000gt-red',
+      name: 'Toyota 2000GT Red',
+      brand: 'Aoshima',
+      category: 'Model Kits',
+      priceMinor: 1899,
+      imageUrl: '/media/iron-sprue/products/is-aos-05628/image-2/catalogue.webp',
+      searchText: expect.stringContaining('toyota 2000gt red'),
+    });
+    expect(suggestion!.searchText).toContain('1:32');
+    expect(suggestion).not.toHaveProperty('description');
+    expect(suggestion).not.toHaveProperty('features');
+    expect(suggestion).not.toHaveProperty('specifications');
   });
 
   it('turns approved R2 catalogue-primary media into storefront image URLs', () => {

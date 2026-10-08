@@ -1,12 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { filterIronSprueProducts, type IronSprueProduct } from '../lib/catalogue';
+import type { IronSprueSearchSuggestionProduct } from '../lib/admin-storefront-controls';
 import { ironSprueDisplayMediaUrl } from '../lib/responsive-media';
-import { formatPrice, productImage } from '../lib/storefront';
 
 type ProductSearchSuggestionsProps = {
-  products: IronSprueProduct[];
+  products: IronSprueSearchSuggestionProduct[];
 };
 
 export function ProductSearchSuggestions({ products }: ProductSearchSuggestionsProps) {
@@ -15,7 +14,8 @@ export function ProductSearchSuggestions({ products }: ProductSearchSuggestionsP
 
   const searchResults = useMemo(() => {
     if (trimmedQuery.length < 2) return [];
-    return filterIronSprueProducts(products, { search: trimmedQuery });
+    const terms = trimmedQuery.toLowerCase().split(/\s+/).filter(Boolean);
+    return products.filter((product) => terms.every((term) => product.searchText.includes(term)));
   }, [products, trimmedQuery]);
   const matches = searchResults.slice(0, 6);
 
@@ -42,7 +42,7 @@ export function ProductSearchSuggestions({ products }: ProductSearchSuggestionsP
           {matches.length ? (
             <>
               {matches.map((product) => {
-                const imageUrl = productImage(product);
+                const imageUrl = product.imageUrl;
                 return (
                   <a className="site-search-result" href={`/products/${product.slug}`} key={product.sku} role="option">
                     <span className="site-search-result-image">
@@ -61,7 +61,7 @@ export function ProductSearchSuggestions({ products }: ProductSearchSuggestionsP
                       <span>{product.name}</span>
                       <small>{product.brand} / {product.category}</small>
                     </span>
-                    <strong>{formatPrice(product)}</strong>
+                    <strong>£{(product.priceMinor / 100).toFixed(2)}</strong>
                   </a>
                 );
               })}

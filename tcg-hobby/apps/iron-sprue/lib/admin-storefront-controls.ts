@@ -1,12 +1,12 @@
 import launchProducts from '../data/launch-products.json';
-import { brandSlug, deriveBrandsWeStock, type IronSprueBrandRecord, type IronSprueProduct } from './catalogue';
+import { brandSlug, deriveBrandsWeStock, productPriceMinor, type IronSprueBrandRecord, type IronSprueProduct } from './catalogue';
 import {
   getIronSprueProductionApiCatalogueProducts,
   getIronSprueProductionApiBrandPresentation,
   getIronSprueProductionApiHomepagePlacements,
   shouldUseIronSprueProductionApi,
 } from './production-api';
-import { brandLogoRegistry, categoryNavigation, featuredProducts, heroBodyCopyForProduct, heroScriptForProduct, heroSlides, promoPanels } from './storefront';
+import { brandLogoRegistry, categoryNavigation, featuredProducts, heroBodyCopyForProduct, heroScriptForProduct, heroSlides, productImage, promoPanels } from './storefront';
 
 const STORE_CODE = 'IRON_SPRUE';
 const fallbackPromoStripItems = ['Free UK delivery on orders over \u00a330', 'Fast dispatch on stocked lines', 'Safe and secure checkout'];
@@ -150,6 +150,17 @@ export type IronSprueHomepageProductSection = {
   ctaLabel: string | null;
   ctaHref: string | null;
   products: IronSprueProduct[];
+};
+
+export type IronSprueSearchSuggestionProduct = {
+  sku: string;
+  slug: string;
+  name: string;
+  brand: string;
+  category: string;
+  priceMinor: number;
+  imageUrl: string | null;
+  searchText: string;
 };
 
 export type IronSprueTypographySettings = {
@@ -612,6 +623,47 @@ export async function getIronSprueStorefrontProducts(products: IronSprueProduct[
   ]);
   const mediaAppliedProducts = applyApprovedMediaToProducts(products, approvedMediaBySku);
   return inventoryBySku ? applyInventoryToProducts(mediaAppliedProducts, inventoryBySku) : mediaAppliedProducts;
+}
+
+function searchableSpecificationText(product: IronSprueProduct) {
+  if (!product.specifications || typeof product.specifications !== 'object' || Array.isArray(product.specifications)) return '';
+  return Object.values(product.specifications)
+    .filter((value) => value != null && ['string', 'number', 'boolean'].includes(typeof value))
+    .join(' ');
+}
+
+function searchSuggestionText(product: IronSprueProduct) {
+  return [
+    product.sku,
+    product.slug,
+    product.name,
+    product.customerTitle,
+    product.brand,
+    product.category,
+    product.productType,
+    product.scale,
+    product.manufacturerReference,
+    ...(product.features ?? []),
+    searchableSpecificationText(product),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+}
+
+export function toIronSprueSearchSuggestionProducts(products: IronSprueProduct[]): IronSprueSearchSuggestionProduct[] {
+  return products
+    .filter((product) => product.published !== false)
+    .map((product) => ({
+      sku: product.sku,
+      slug: product.slug,
+      name: product.name,
+      brand: product.brand,
+      category: product.category,
+      priceMinor: productPriceMinor(product),
+      imageUrl: productImage(product),
+      searchText: searchSuggestionText(product),
+    }));
 }
 
 export function featuredProductSlugsFromPlacements(placements: IronSprueHomepagePlacement[]) {

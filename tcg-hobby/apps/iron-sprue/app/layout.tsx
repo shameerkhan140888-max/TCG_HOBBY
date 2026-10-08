@@ -7,6 +7,7 @@ import {
   getIronSpruePromoStripItems,
   getIronSprueTypographySettings,
   ironSprueTypographyCustomProperties,
+  toIronSprueSearchSuggestionProducts,
 } from '../lib/admin-storefront-controls';
 import launchProducts from '../data/launch-products.json';
 import type { IronSprueProduct } from '../lib/catalogue';
@@ -59,7 +60,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const [promoStripItems, typographySettings, searchProducts] = await Promise.all([
     getIronSpruePromoStripItems(),
     getIronSprueTypographySettings(),
-    getIronSprueStorefrontProducts(launchProducts as IronSprueProduct[]),
+    getIronSprueStorefrontProducts(launchProducts as IronSprueProduct[]).then(toIronSprueSearchSuggestionProducts),
   ]);
   const ga4Id = process.env.NEXT_PUBLIC_IRON_SPRUE_GA4_MEASUREMENT_ID?.trim() || null;
   const metaPixelId = process.env.NEXT_PUBLIC_IRON_SPRUE_META_PIXEL_ID?.trim() || null;
