@@ -36,7 +36,12 @@ function parseEnvFile(text) {
 }
 
 async function loadEnv() {
-  const fileEnv = parseEnvFile(await readFile(envPath, 'utf8'));
+  let fileEnv = {};
+  try {
+    fileEnv = parseEnvFile(await readFile(envPath, 'utf8'));
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
   return {
     endpoint: process.env.IRON_SPRUE_R2_ENDPOINT?.trim() || fileEnv.IRON_SPRUE_R2_ENDPOINT?.trim(),
     accessKeyId: process.env.IRON_SPRUE_R2_ACCESS_KEY_ID?.trim() || fileEnv.IRON_SPRUE_R2_ACCESS_KEY_ID?.trim(),

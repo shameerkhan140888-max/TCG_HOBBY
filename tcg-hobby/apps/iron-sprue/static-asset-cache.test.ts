@@ -9,5 +9,6 @@ describe('Iron Sprue static asset cache headers', () => {
     expect(headersFile).toContain('/_next/static/*\n  Cache-Control: public, max-age=31536000, immutable');
     expect(headersFile).toContain('/assets/*\n  Cache-Control: public, max-age=86400, stale-while-revalidate=604800');
     expect(headersFile).toContain('/brand/*\n  Cache-Control: public, max-age=86400, stale-while-revalidate=604800');
+    expect(headersFile).toContain('/payments/*\n  Cache-Control: public, max-age=86400, stale-while-revalidate=604800');
   });
 });

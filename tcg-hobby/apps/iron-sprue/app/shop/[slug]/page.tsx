@@ -38,6 +38,18 @@ const showcaseRoutes: Record<string, {
     lead: 'Architecture kits, puzzle objects and decorative display builds from CubicFun and Pintoo.',
     title: '3D puzzles and builds',
   },
+  '3d-puzzles': {
+    eyebrow: '3D puzzles and builds',
+    fixedCategory: '3d-puzzles-and-builds',
+    lead: 'Architecture kits, puzzle objects and decorative display builds from CubicFun and Pintoo.',
+    title: '3D puzzles and builds',
+  },
+  'display-builds': {
+    eyebrow: 'Display builds',
+    fixedCategory: '3d-puzzles-and-builds',
+    lead: 'Architecture kits, Magic Boxes and decorative display builds from CubicFun and Pintoo.',
+    title: 'Display builds',
+  },
   'model-kits': {
     eyebrow: 'Model kits',
     fixedCategory: 'model-kits',

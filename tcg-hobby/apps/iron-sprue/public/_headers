@@ -6,3 +6,6 @@
 
 /brand/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/payments/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
